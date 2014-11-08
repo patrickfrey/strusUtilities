@@ -30,7 +30,6 @@
 #include "strus/queryProcessorLib.hpp"
 #include "strus/queryEvalLib.hpp"
 #include "strus/iteratorInterface.hpp"
-#include "strus/accumulatorInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include <iostream>
 #include <cstring>
