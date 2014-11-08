@@ -142,17 +142,20 @@ int main( int argc, const char* argv[])
 	if (argc != 5 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
 		std::cerr << "usage: strusQuery <anprg> <storage> <qeprg> <query>" << std::endl;
-		std::cerr << "<anprg>     = path of query analyzer program" << std::endl;
 		std::cerr << "<storage>   = storage configuration string as used for strusCreate" << std::endl;
+		std::cerr << "<anprg>     = path of query analyzer program" << std::endl;
 		std::cerr << "<qeprg>     = path of query eval program" << std::endl;
 		std::cerr << "<query>     = path of query or '-' for stdin" << std::endl;
 		return 0;
 	}
 	try
 	{
+		boost::scoped_ptr<strus::StorageInterface> storage(
+			strus::createStorageClient( argv[1]));
+
 		unsigned int ec;
 		std::string analyzerProgramSource;
-		ec = strus::readFile( argv[1], analyzerProgramSource);
+		ec = strus::readFile( argv[2], analyzerProgramSource);
 		if (ec)
 		{
 			std::ostringstream msg;
@@ -165,9 +168,6 @@ int main( int argc, const char* argv[])
 
 		boost::scoped_ptr<strus::AnalyzerInterface> analyzer(
 			strus::createAnalyzer( *minerfac, analyzerProgramSource));
-
-		boost::scoped_ptr<strus::StorageInterface> storage(
-			strus::createStorageClient( argv[2]));
 
 		boost::scoped_ptr<strus::QueryProcessorInterface> qproc(
 			strus::createQueryProcessorInterface( storage.get()));

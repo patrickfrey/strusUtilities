@@ -192,6 +192,13 @@ int main( int argc, const char* argv[])
 		}
 		while (ee);
 		std::cerr << "<what>    : identifier of what to inspect" << std::endl;
+		std::cerr << "            \"pos\" <typeno> <valueno> <doc>" << std::endl;
+		std::cerr << "            \"ff\" <typeno> <valueno> <doc>" << std::endl;
+		std::cerr << "            \"df\" <typeno> <valueno>" << std::endl;
+		std::cerr << "            \"meta\" <name> <doc>" << std::endl;
+		std::cerr << "            \"attrib\" <name> <doc>" << std::endl;
+		std::cerr << "            \"content\" <typeno> <doc>" << std::endl;
+		std::cerr << "            \"token\" <typeno> <doc>" << std::endl;
 		std::cerr << "<key>     : key of the value to retrieve" << std::endl;
 		return 0;
 	}
