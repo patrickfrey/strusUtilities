@@ -128,6 +128,32 @@ static bool processQuery(
 	}
 }
 
+static bool getNextQuery( std::string& qs, std::string::const_iterator& si, const std::string::const_iterator& se)
+{
+	for (; si != se; ++si)
+	{
+		if ((unsigned char)*si > 32) break;
+	}
+	if (si == se)
+	{
+		return false;
+	}
+	if (*si != '<' || *(si+1) != '?')
+	{
+		throw std::runtime_error("query string is not an XML with header");
+	}
+	std::string::const_iterator start = si;
+	for (++si; si != se; ++si)
+	{
+		if (*si == '<' && *(si+1) == '?')
+		{
+			break;
+		}
+	}
+	qs = std::string( start, si);
+	return true;
+}
+
 int main( int argc, const char* argv[])
 {
 
@@ -203,10 +229,15 @@ int main( int argc, const char* argv[])
 				return 4;
 			}
 		}
-		if (!processQuery( storage.get(), analyzer.get(), qproc.get(), qeval.get(), querystring))
+		std::string::const_iterator si = querystring.begin(), se = querystring.end();
+		std::string qs;
+		while (getNextQuery( qs, si, se))
 		{
-			std::cerr << "ERROR query evaluation failed" << std::endl;
-			return 5;
+			if (!processQuery( storage.get(), analyzer.get(), qproc.get(), qeval.get(), qs))
+			{
+				std::cerr << "ERROR query evaluation failed" << std::endl;
+				return 5;
+			}
 		}
 	}
 	catch (const std::runtime_error& e)
