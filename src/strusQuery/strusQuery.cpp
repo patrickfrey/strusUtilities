@@ -108,7 +108,7 @@ static bool processQuery(
 		std::vector<strus::ResultDocument> ranklist
 			= qeval->getRankedDocumentList( *storage, *qproc, query, 0, 20);
 
-		std::cerr << "ranked list (maximum 20 matches):" << std::endl;
+		std::cout << "ranked list (maximum 20 matches):" << std::endl;
 		std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
 		for (int widx=1; wi != we; ++wi,++widx)
 		{

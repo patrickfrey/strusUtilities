@@ -27,9 +27,6 @@
 --------------------------------------------------------------------
 */
 #include "strus/storageLib.hpp"
-#include "strus/queryProcessorLib.hpp"
-#include "strus/queryEvalLib.hpp"
-#include "strus/iteratorInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include <iostream>
 #include <cstring>
