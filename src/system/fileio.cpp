@@ -71,12 +71,15 @@ DLL_PUBLIC unsigned int strus::readFile( const std::string& filename, std::strin
 	{
 		return errno;
 	}
-	unsigned char ch;
-	while (1 == ::fread( &ch, 1, 1, fh))
+	unsigned int nn;
+	enum {bufsize=(1<<12)};
+	char buf[ bufsize];
+
+	while (!!(nn=::fread( buf, 1, bufsize, fh)))
 	{
 		try
 		{
-			res.push_back( ch);
+			res.append( buf, nn);
 		}
 		catch (const std::bad_alloc&)
 		{
@@ -99,12 +102,15 @@ DLL_PUBLIC unsigned int strus::readFile( const std::string& filename, std::strin
 
 DLL_PUBLIC unsigned int strus::readStdin( std::string& res)
 {
-	unsigned char ch;
-	while (1 == ::fread( &ch, 1, 1, stdin))
+	unsigned int nn;
+	enum {bufsize=(1<<12)};
+	char buf[ bufsize];
+
+	while (!!(nn=::fread( buf, 1, bufsize, stdin)))
 	{
 		try
 		{
-			res.push_back( ch);
+			res.append( buf, nn);
 		}
 		catch (const std::bad_alloc&)
 		{
