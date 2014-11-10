@@ -36,7 +36,7 @@
 #include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/constants.hpp"
-#include "system/fileio.hpp"
+#include "strus/utils/fileio.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>

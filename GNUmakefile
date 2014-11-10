@@ -13,7 +13,6 @@ install:
 
 uninstall:
 	cd src; make uninstall; cd ..
-	@-rmdir $(INSTALL_BINDIR)
 
 
 

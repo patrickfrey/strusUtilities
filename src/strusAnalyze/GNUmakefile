@@ -5,8 +5,8 @@ CPP_OBJS=
 
 CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/private -I$(INSTALL_INCDIR)
 CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
-LDFLAGS=-L$(INSTALL_LIBDIR) -L$(TOPDIR)/src/system
-LIBS=-lstrus_analyzer -lstrus_tokenminer -lstemmer -lstrus_system -lboost_system
+LDFLAGS=-L$(INSTALL_LIBDIR)
+LIBS=-lstrus_analyzer -lstrus_tokenminer -lstemmer -lstrus_utils -lboost_system
 
 all: strusAnalyze
 

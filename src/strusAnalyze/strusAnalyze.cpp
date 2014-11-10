@@ -31,7 +31,7 @@
 #include "strus/tokenMiner.hpp"
 #include "strus/tokenMinerFactory.hpp"
 #include "strus/tokenMinerLib.hpp"
-#include "system/fileio.hpp"
+#include "strus/utils/fileio.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>

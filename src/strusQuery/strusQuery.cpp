@@ -36,7 +36,7 @@
 #include "strus/queryEvalLib.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/queryProcessorLib.hpp"
-#include "system/fileio.hpp"
+#include "strus/utils/fileio.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
