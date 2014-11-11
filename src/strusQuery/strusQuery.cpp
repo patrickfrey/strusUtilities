@@ -199,7 +199,7 @@ int main( int argc_, const char* argv_[])
 	}
 	if (argc != 4 || usage)
 	{
-		std::cerr << "usage: strusQuery [-s|--silent] <anprg> <storage> <qeprg> <query>" << std::endl;
+		std::cerr << "usage: strusQuery [-s|--silent] <storage> <anprg> <qeprg> <query>" << std::endl;
 		std::cerr << "<storage>   = storage configuration string as used for strusCreate" << std::endl;
 		std::cerr << "<anprg>     = path of query analyzer program" << std::endl;
 		std::cerr << "<qeprg>     = path of query eval program" << std::endl;
@@ -218,7 +218,7 @@ int main( int argc_, const char* argv_[])
 		if (ec)
 		{
 			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << argv[0] << " (file system error " << ec << ")" << std::endl;
+			std::cerr << "ERROR failed to load analyzer program " << argv[1] << " (file system error " << ec << ")" << std::endl;
 			return 2;
 		}
 		std::string tokenMinerSource;
