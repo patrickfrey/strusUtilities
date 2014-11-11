@@ -62,7 +62,8 @@ static bool processQuery(
 	const strus::AnalyzerInterface* analyzer,
 	const strus::QueryProcessorInterface* qproc,
 	const strus::QueryEvalInterface* qeval,
-	const std::string& querystring)
+	const std::string& querystring,
+	bool silent)
 {
 	try
 	{
@@ -81,11 +82,11 @@ static bool processQuery(
 		std::sort( termar.begin(), termar.end(), TermPosComparator());
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "analyzed query:" << std::endl;
+		if (!silent) std::cout << "analyzed query:" << std::endl;
 		std::vector<Term>::const_iterator ati = termar.begin(), ate = termar.end();
 		for (; ati!=ate; ++ati)
 		{
-			std::cerr << ati->pos()
+			if (!silent) std::cout << ati->pos()
 				  << " " << ati->type()
 				  << " '" << ati->value() << "'"
 				  << std::endl;
@@ -108,15 +109,15 @@ static bool processQuery(
 		std::vector<strus::ResultDocument> ranklist
 			= qeval->getRankedDocumentList( *storage, *qproc, query, 0, 20);
 
-		std::cout << "ranked list (maximum 20 matches):" << std::endl;
+		if (!silent) std::cout << "ranked list (maximum 20 matches):" << std::endl;
 		std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
 		for (int widx=1; wi != we; ++wi,++widx)
 		{
-			std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
+			if (!silent) std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
 			std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
 			for (; ai != ae; ++ai)
 			{
-				std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
+				if (!silent) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
 			}
 		}
 		return true;
@@ -154,38 +155,70 @@ static bool getNextQuery( std::string& qs, std::string::const_iterator& si, cons
 	return true;
 }
 
-int main( int argc, const char* argv[])
+int main( int argc_, const char* argv_[])
 {
+	int argc = argc_-1;
+	char const** argv = argv_+1;
 
-	if (argc > 5)
+	bool silent = false;
+	bool usage = false;
+
+	while (argc && argv[0][0] == '-')
 	{
-		std::cerr << "ERROR too many arguments" << std::endl;
+		if (0==std::strcmp( argv[0], "--help") || argv[0][1] == 'h')
+		{
+			usage = true;
+		}
+		else if (0==std::strcmp( argv[0], "--silent") || argv[0][1] == 's')
+		{
+			silent = true;
+			if (argv[0][2])
+			{
+				usage = true;
+				if (argv[0][2] != 'h')
+				{
+					std::cerr << "ERROR unknown option" << std::endl;
+				}
+			}
+		}
+		else
+		{
+			std::cerr << "ERROR unknown option" << std::endl;
+			usage = true;
+		}
+		++argv;
+		--argc;
 	}
-	if (argc < 5)
+	if (argc > 4)
+	{
+		std::cerr << "ERROR too many arguments (" << argc << ")" << std::endl;
+	}
+	if (argc < 4)
 	{
 		std::cerr << "ERROR too few arguments" << std::endl;
 	}
-	if (argc != 5 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
+	if (argc != 4 || usage)
 	{
-		std::cerr << "usage: strusQuery <anprg> <storage> <qeprg> <query>" << std::endl;
+		std::cerr << "usage: strusQuery [-s|--silent] <anprg> <storage> <qeprg> <query>" << std::endl;
 		std::cerr << "<storage>   = storage configuration string as used for strusCreate" << std::endl;
 		std::cerr << "<anprg>     = path of query analyzer program" << std::endl;
 		std::cerr << "<qeprg>     = path of query eval program" << std::endl;
 		std::cerr << "<query>     = path of query or '-' for stdin" << std::endl;
+		std::cerr << "option -s|--silent :No output of results (for measuring answering time)" << std::endl;
 		return 0;
 	}
 	try
 	{
 		boost::scoped_ptr<strus::StorageInterface> storage(
-			strus::createStorageClient( argv[1]));
+			strus::createStorageClient( argv[0]));
 
 		unsigned int ec;
 		std::string analyzerProgramSource;
-		ec = strus::readFile( argv[2], analyzerProgramSource);
+		ec = strus::readFile( argv[1], analyzerProgramSource);
 		if (ec)
 		{
 			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << argv[1] << " (file system error " << ec << ")" << std::endl;
+			std::cerr << "ERROR failed to load analyzer program " << argv[0] << " (file system error " << ec << ")" << std::endl;
 			return 2;
 		}
 		std::string tokenMinerSource;
@@ -199,17 +232,17 @@ int main( int argc, const char* argv[])
 			strus::createQueryProcessorInterface( storage.get()));
 
 		std::string qevalProgramSource;
-		ec = strus::readFile( argv[3], qevalProgramSource);
+		ec = strus::readFile( argv[2], qevalProgramSource);
 		if (ec)
 		{
 			std::ostringstream msg;
-			std::cerr << "ERROR failed to load query eval program " << argv[3] << " (file system error " << ec << ")" << std::endl;
+			std::cerr << "ERROR failed to load query eval program " << argv[2] << " (file system error " << ec << ")" << std::endl;
 			return 3;
 		}
 		boost::scoped_ptr<strus::QueryEvalInterface> qeval(
 			strus::createQueryEval( qevalProgramSource));
 
-		std::string querypath( argv[4]);
+		std::string querypath( argv[3]);
 		std::string querystring;
 		if (querypath == "-")
 		{
@@ -233,7 +266,7 @@ int main( int argc, const char* argv[])
 		std::string qs;
 		while (getNextQuery( qs, si, se))
 		{
-			if (!processQuery( storage.get(), analyzer.get(), qproc.get(), qeval.get(), qs))
+			if (!processQuery( storage.get(), analyzer.get(), qproc.get(), qeval.get(), qs, silent))
 			{
 				std::cerr << "ERROR query evaluation failed" << std::endl;
 				return 5;
