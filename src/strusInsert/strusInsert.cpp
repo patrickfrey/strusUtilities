@@ -64,19 +64,19 @@ static bool processDocument(
 			return false;
 		}
 
-		// Call the analyzer and open the insert transaction:
+		// Call the analyzer and open the inserter:
 		strus::AnalyzerInterface::Document doc
 			= analyzer->analyze( documentContent);
 
-		boost::scoped_ptr<strus::StorageInterface::TransactionInterface>
-			transaction( storage->createTransaction( path));
+		boost::scoped_ptr<strus::StorageInterface::InserterInterface>
+			inserter( storage->createInserter( path));
 
 		strus::Index lastPos = (doc.terms().empty())?0:doc.terms()[ doc.terms().size()-1].pos();
 
 		// Define hardcoded document meta data:
-		transaction->setAttribute(
+		inserter->setAttribute(
 			strus::Constants::DOC_ATTRIBUTE_DOCID, path);
-		transaction->setMetaData(
+		inserter->setMetaData(
 			strus::Constants::DOC_ATTRIBUTE_DOCLEN, lastPos);
 
 		// Define all term occurrencies:
@@ -84,7 +84,7 @@ static bool processDocument(
 			ti = doc.terms().begin(), te = doc.terms().end();
 		for (; ti != te; ++ti)
 		{
-			transaction->addTermOccurrence(
+			inserter->addTermOccurrence(
 				ti->type(), ti->value(), ti->pos());
 		}
 
@@ -93,7 +93,7 @@ static bool processDocument(
 			ai = doc.attributes().begin(), ae = doc.attributes().end();
 		for (; ai != ae; ++ai)
 		{
-			transaction->setAttribute( ai->type(), ai->value());
+			inserter->setAttribute( ai->type(), ai->value());
 		}
 
 		// Define all metadata elements extracted from the document analysis:
@@ -101,10 +101,10 @@ static bool processDocument(
 			mi = doc.metadata().begin(), me = doc.metadata().end();
 		for (; mi != me; ++mi)
 		{
-			transaction->setMetaData( mi->type(), mi->value());
+			inserter->setMetaData( mi->type(), mi->value());
 		}
 
-		transaction->commit();
+		inserter->done();
 
 		// Notify progress:
 		if (++loopCount == 10000)

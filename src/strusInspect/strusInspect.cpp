@@ -27,9 +27,9 @@
 --------------------------------------------------------------------
 */
 #include "strus/storageLib.hpp"
-#include "strus/iteratorInterface.hpp"
+#include "strus/postingIteratorInterface.hpp"
 #include "strus/storageInterface.hpp"
-#include "strus/forwardIndexViewerInterface.hpp"
+#include "strus/forwardIteratorInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/index.hpp"
 #include <iostream>
@@ -41,9 +41,9 @@
 
 namespace strus
 {
-	typedef boost::shared_ptr<IteratorInterface> IteratorReference;
+	typedef boost::shared_ptr<PostingIteratorInterface> PostingIteratorReference;
 	typedef boost::shared_ptr<StorageInterface> StorageReference;
-	typedef boost::shared_ptr<ForwardIndexViewerInterface> ForwardIndexViewerReference;
+	typedef boost::shared_ptr<ForwardIteratorInterface> ForwardIteratorReference;
 }
 
 static strus::Index stringToIndex( const char* value)
@@ -61,8 +61,8 @@ static void inspectPositions( strus::StorageInterface& storage, const char** key
 {
 	if (size > 3) throw std::runtime_error( "too many arguments");
 	if (size < 3) throw std::runtime_error( "too few arguments");
-	strus::IteratorReference itr(
-		storage.createTermOccurrenceIterator(
+	strus::PostingIteratorReference itr(
+		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1])));
 
 	strus::Index docno = isIndex(key[2])
@@ -86,8 +86,8 @@ static void inspectDocumentFrequency( strus::StorageInterface& storage, const ch
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
 
-	strus::IteratorReference itr(
-		storage.createTermOccurrenceIterator(
+	strus::PostingIteratorReference itr(
+		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1])));
 	std::cout << itr->documentFrequency();
 }
@@ -96,8 +96,8 @@ static void inspectFeatureFrequency( strus::StorageInterface& storage, const cha
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
-	strus::IteratorReference itr(
-		storage.createTermOccurrenceIterator(
+	strus::PostingIteratorReference itr(
+		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1])));
 
 	std::cout << (*itr).frequency() << std::endl;
@@ -141,7 +141,7 @@ static void inspectContent( strus::StorageInterface& storage, const char** key, 
 			?stringToIndex( key[1])
 			:storage.documentNumber( key[1]);
 
-	strus::ForwardIndexViewerReference viewer( storage.createForwardIndexViewer( std::string(key[0])));
+	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
 	viewer->initDoc( docno);
 	strus::Index pos=0;
 	while (0!=(pos=viewer->skipPos(pos+1)))
@@ -159,7 +159,7 @@ static void inspectToken( strus::StorageInterface& storage, const char** key, in
 			?stringToIndex( key[1])
 			:storage.documentNumber( key[1]);
 
-	strus::ForwardIndexViewerReference viewer( storage.createForwardIndexViewer( std::string(key[0])));
+	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
 	viewer->initDoc( docno);
 	strus::Index pos=0;
 	while (0!=(pos=viewer->skipPos(pos+1)))
