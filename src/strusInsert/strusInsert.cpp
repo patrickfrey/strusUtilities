@@ -86,7 +86,7 @@ static bool processDocument(
 		for (; ti != te; ++ti)
 		{
 			inserter->addTermOccurrence(
-				ti->type(), ti->value(), ti->pos());
+				ti->type(), ti->value(), ti->pos(), 0.0/*weight*/);
 		}
 
 		// Define all attributes extracted from the document analysis:
