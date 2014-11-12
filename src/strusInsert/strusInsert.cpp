@@ -35,6 +35,7 @@
 #include "strus/tokenMinerLib.hpp"
 #include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
+#include "strus/storageInserterInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/utils/fileio.hpp"
 #include <iostream>
@@ -68,7 +69,7 @@ static bool processDocument(
 		strus::AnalyzerInterface::Document doc
 			= analyzer->analyze( documentContent);
 
-		boost::scoped_ptr<strus::StorageInterface::InserterInterface>
+		boost::scoped_ptr<strus::StorageInserterInterface>
 			inserter( storage->createInserter( path));
 
 		strus::Index lastPos = (doc.terms().empty())?0:doc.terms()[ doc.terms().size()-1].pos();
