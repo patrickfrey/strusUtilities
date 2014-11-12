@@ -73,10 +73,10 @@ int main( int argc, const char* argv[])
 		boost::scoped_ptr<strus::AnalyzerInterface> analyzer(
 			strus::createAnalyzer( *minerfac, analyzerProgramSource));
 
-		strus::AnalyzerInterface::Document doc
+		strus::analyzer::Document doc
 			= analyzer->analyze( documentContent);
 
-		std::vector<strus::AnalyzerInterface::Term>::const_iterator
+		std::vector<strus::analyzer::Term>::const_iterator
 			ti = doc.terms().begin(), te = doc.terms().end();
 
 		std::cout << "terms:" << std::endl;
@@ -87,7 +87,7 @@ int main( int argc, const char* argv[])
 				  << " '" << ti->value() << "'"
 				  << std::endl;
 		}
-		std::vector<strus::AnalyzerInterface::MetaData>::const_iterator
+		std::vector<strus::analyzer::MetaData>::const_iterator
 			mi = doc.metadata().begin(), me = doc.metadata().end();
 
 		std::cout << std::endl << "metadata:" << std::endl;

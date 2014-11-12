@@ -49,7 +49,7 @@ namespace {
 class TermPosComparator
 {
 public:
-	typedef strus::AnalyzerInterface::Term Term;
+	typedef strus::analyzer::Term Term;
 	bool operator() (Term const& aa, Term const& bb) const
 	{
 		return (aa.pos() < bb.pos());
@@ -67,10 +67,10 @@ static bool processQuery(
 {
 	try
 	{
-		strus::QueryEvalInterface::Query query;
-		typedef strus::AnalyzerInterface::Term Term;
+		strus::Query query;
+		typedef strus::analyzer::Term Term;
 
-		strus::AnalyzerInterface::Document doc
+		strus::analyzer::Document doc
 			= analyzer->analyze( querystring);
 
 		if (doc.metadata().size())

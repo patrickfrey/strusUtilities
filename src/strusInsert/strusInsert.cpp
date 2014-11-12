@@ -66,7 +66,7 @@ static bool processDocument(
 		}
 
 		// Call the analyzer and open the inserter:
-		strus::AnalyzerInterface::Document doc
+		strus::analyzer::Document doc
 			= analyzer->analyze( documentContent);
 
 		boost::scoped_ptr<strus::StorageInserterInterface>
@@ -81,7 +81,7 @@ static bool processDocument(
 			strus::Constants::DOC_ATTRIBUTE_DOCLEN, lastPos);
 
 		// Define all term occurrencies:
-		std::vector<strus::AnalyzerInterface::Term>::const_iterator
+		std::vector<strus::analyzer::Term>::const_iterator
 			ti = doc.terms().begin(), te = doc.terms().end();
 		for (; ti != te; ++ti)
 		{
@@ -90,7 +90,7 @@ static bool processDocument(
 		}
 
 		// Define all attributes extracted from the document analysis:
-		std::vector<strus::AnalyzerInterface::Attribute>::const_iterator
+		std::vector<strus::analyzer::Attribute>::const_iterator
 			ai = doc.attributes().begin(), ae = doc.attributes().end();
 		for (; ai != ae; ++ai)
 		{
@@ -98,7 +98,7 @@ static bool processDocument(
 		}
 
 		// Define all metadata elements extracted from the document analysis:
-		std::vector<strus::AnalyzerInterface::MetaData>::const_iterator
+		std::vector<strus::analyzer::MetaData>::const_iterator
 			mi = doc.metadata().begin(), me = doc.metadata().end();
 		for (; mi != me; ++mi)
 		{
