@@ -67,7 +67,7 @@ static bool processQuery(
 {
 	try
 	{
-		strus::Query query;
+		strus::queryeval::Query query;
 		typedef strus::analyzer::Term Term;
 
 		strus::analyzer::Document doc
@@ -106,15 +106,15 @@ static bool processQuery(
 			}
 		}
 		
-		std::vector<strus::ResultDocument> ranklist
+		std::vector<strus::queryeval::ResultDocument> ranklist
 			= qeval->getRankedDocumentList( *storage, *qproc, query, 0, 20);
 
 		if (!silent) std::cout << "ranked list (maximum 20 matches):" << std::endl;
-		std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
+		std::vector<strus::queryeval::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
 		for (int widx=1; wi != we; ++wi,++widx)
 		{
 			if (!silent) std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
-			std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
+			std::vector<strus::queryeval::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
 			for (; ai != ae; ++ai)
 			{
 				if (!silent) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
