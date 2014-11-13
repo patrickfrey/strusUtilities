@@ -30,7 +30,6 @@
 #include "strus/postingIteratorInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/forwardIteratorInterface.hpp"
-#include "strus/metaDataReaderInterface.hpp"
 #include "strus/index.hpp"
 #include <iostream>
 #include <cstring>
@@ -126,10 +125,9 @@ static void inspectDocMetaData( const strus::StorageInterface& storage, const ch
 			?stringToIndex( key[1])
 			:storage.documentNumber( key[1]);
 
-	boost::scoped_ptr<strus::MetaDataReaderInterface> reader(
-		storage.createMetaDataReader( key[0][1]));
+	float value = storage.documentMetaData( docno, key[0][1]);
 
-	std::cout << reader->readValue( docno) << std::endl;
+	std::cout << value << std::endl;
 }
 
 static void inspectContent( strus::StorageInterface& storage, const char** key, int size)

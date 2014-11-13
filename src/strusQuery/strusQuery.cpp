@@ -78,7 +78,10 @@ static bool processQuery(
 			std::cerr << "unexpected meta data definitions in the query (ignored)" << std::endl;
 		}
 		std::vector<Term> termar = doc.terms();
-
+		if (termar.empty())
+		{
+			std::cerr << "query got empty after analyze (did you use the right analyzer program ?)" << std::endl;
+		}
 		std::sort( termar.begin(), termar.end(), TermPosComparator());
 
 #ifdef STRUS_LOWLEVEL_DEBUG
