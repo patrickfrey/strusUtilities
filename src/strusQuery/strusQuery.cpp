@@ -37,6 +37,7 @@
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/queryProcessorLib.hpp"
 #include "strus/utils/fileio.hpp"
+#include "strus/statCounterValue.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
@@ -164,30 +165,52 @@ int main( int argc_, const char* argv_[])
 	char const** argv = argv_+1;
 
 	bool silent = false;
+	bool statistics = false;
 	bool usage = false;
 
 	while (argc && argv[0][0] == '-')
 	{
-		if (0==std::strcmp( argv[0], "--help") || argv[0][1] == 'h')
+		if (argv[0][1] != '-')
 		{
-			usage = true;
-		}
-		else if (0==std::strcmp( argv[0], "--silent") || argv[0][1] == 's')
-		{
-			silent = true;
-			if (argv[0][2])
+			unsigned int oi = 1;
+			while (argv[0][oi])
 			{
-				usage = true;
-				if (argv[0][2] != 'h')
+				switch (argv[0][oi])
 				{
-					std::cerr << "ERROR unknown option" << std::endl;
+					case 'h':
+						usage = true;
+						break;
+					case 's':
+						silent = true;
+						break;
+					case 't':
+						statistics = true;
+						break;
+					default: 
+						std::cerr << "ERROR unknown option" << std::endl;
+						usage = true;
 				}
 			}
 		}
 		else
 		{
-			std::cerr << "ERROR unknown option" << std::endl;
-			usage = true;
+			if (0==std::strcmp( argv[0], "--help"))
+			{
+				usage = true;
+			}
+			else if (0==std::strcmp( argv[0], "--silent"))
+			{
+				silent = true;
+			}
+			else if (0==std::strcmp( argv[0], "--stats"))
+			{
+				statistics = true;
+			}
+			else
+			{
+				std::cerr << "ERROR unknown option" << std::endl;
+				usage = true;
+			}
 		}
 		++argv;
 		--argc;
@@ -202,12 +225,14 @@ int main( int argc_, const char* argv_[])
 	}
 	if (argc != 4 || usage)
 	{
-		std::cerr << "usage: strusQuery [-s|--silent] <storage> <anprg> <qeprg> <query>" << std::endl;
+		std::cerr << "usage: strusQuery [options] <storage> <anprg> <qeprg> <query>" << std::endl;
 		std::cerr << "<storage>   = storage configuration string as used for strusCreate" << std::endl;
 		std::cerr << "<anprg>     = path of query analyzer program" << std::endl;
 		std::cerr << "<qeprg>     = path of query eval program" << std::endl;
 		std::cerr << "<query>     = path of query or '-' for stdin" << std::endl;
+		std::cerr << "option -h|--help   :Print this usage and do nothing else" << std::endl;
 		std::cerr << "option -s|--silent :No output of results (for measuring answering time)" << std::endl;
+		std::cerr << "option -t|--stats  :Print the statistics provided by the storage" << std::endl;
 		return 0;
 	}
 	try
@@ -273,6 +298,17 @@ int main( int argc_, const char* argv_[])
 			{
 				std::cerr << "ERROR query evaluation failed" << std::endl;
 				return 5;
+			}
+		}
+		if (statistics)
+		{
+			std::vector<strus::StatCounterValue> stats = storage->getStatistics();
+			std::vector<strus::StatCounterValue>::const_iterator
+				si = stats.begin(), se = stats.end();
+			std::cerr << "Statistics:" << std::endl;
+			for (; si != se; ++si)
+			{
+				std::cerr << "\t" << si->name() << " = " << si->value() << std::endl;
 			}
 		}
 	}
