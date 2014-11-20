@@ -108,7 +108,7 @@ static bool processDocument(
 		inserter->done();
 
 		// Notify progress:
-		if (++loopCount == 10000)
+		if (++loopCount == 1000)
 		{
 			loopCount = 0;
 			std::cerr << "inserted " << (succeededOperations+1) << " documents" << std::endl;
@@ -206,15 +206,15 @@ int main( int argc, const char* argv[])
 			std::cerr << "ERROR failed to load analyzer program " << argv[1] << " (file system error " << ec << ")" << std::endl;
 			return 2;
 		}
-		boost::scoped_ptr<strus::StorageInterface> storage(
-					strus::createStorageClient( argv[1]));
+		boost::scoped_ptr<strus::StorageInterface>
+			storage( strus::createStorageClient( argv[1]));
 
 		std::string tokenMinerSource;
-		boost::scoped_ptr<strus::TokenMinerFactory> minerfac(
-			strus::createTokenMinerFactory( tokenMinerSource));
+		boost::scoped_ptr<strus::TokenMinerFactory>
+			minerfac( strus::createTokenMinerFactory( tokenMinerSource));
 
-		boost::scoped_ptr<strus::AnalyzerInterface> analyzer(
-			strus::createAnalyzer( *minerfac, analyzerProgramSource));
+		boost::scoped_ptr<strus::AnalyzerInterface>
+			analyzer( strus::createAnalyzer( *minerfac, analyzerProgramSource));
 
 		std::string path( argv[3]);
 		if (strus::isDir( path))
