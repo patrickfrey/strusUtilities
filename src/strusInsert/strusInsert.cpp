@@ -94,7 +94,7 @@ static bool processDocument(
 			ai = doc.attributes().begin(), ae = doc.attributes().end();
 		for (; ai != ae; ++ai)
 		{
-			inserter->setAttribute( ai->type(), ai->value());
+			inserter->setAttribute( ai->name(), ai->value());
 		}
 
 		// Define all metadata elements extracted from the document analysis:
@@ -102,7 +102,7 @@ static bool processDocument(
 			mi = doc.metadata().begin(), me = doc.metadata().end();
 		for (; mi != me; ++mi)
 		{
-			inserter->setMetaData( mi->type(), mi->value());
+			inserter->setMetaData( mi->name(), mi->value());
 		}
 
 		inserter->done();

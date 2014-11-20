@@ -93,8 +93,19 @@ int main( int argc, const char* argv[])
 		std::cout << std::endl << "metadata:" << std::endl;
 		for (; mi != me; ++mi)
 		{
-			std::cout << mi->type()
+			std::cout << mi->name()
 				  << " '" << mi->value() << "'"
+				  << std::endl;
+		}
+
+		std::vector<strus::analyzer::Attribute>::const_iterator
+			ai = doc.attributes().begin(), ae = doc.attributes().end();
+
+		std::cout << std::endl << "attributes:" << std::endl;
+		for (; ai != ae; ++ai)
+		{
+			std::cout << ai->name()
+				  << " '" << ai->value() << "'"
 				  << std::endl;
 		}
 		return 0;
