@@ -71,8 +71,7 @@ static bool processQuery(
 		strus::queryeval::Query query;
 		typedef strus::analyzer::Term Term;
 
-		strus::analyzer::Document doc
-			= analyzer->analyze( querystring);
+		strus::analyzer::Document doc = analyzer->analyze( querystring);
 
 		if (doc.metadata().size())
 		{

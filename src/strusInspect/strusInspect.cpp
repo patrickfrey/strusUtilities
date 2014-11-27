@@ -30,7 +30,10 @@
 #include "strus/postingIteratorInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/forwardIteratorInterface.hpp"
+#include "strus/attributeReaderInterface.hpp"
+#include "strus/metaDataReaderInterface.hpp"
 #include "strus/index.hpp"
+#include "arithmeticVariant.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -106,26 +109,38 @@ static void inspectDocAttribute( const strus::StorageInterface& storage, const c
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
-	if (std::strlen(key[0]) != 1) throw std::runtime_error( "single character for document metadata id expected");
+
+	strus::AttributeReaderInterface* attreader = storage.createAttributeReader();
 
 	strus::Index docno = isIndex(key[1])
 			?stringToIndex( key[1])
 			:storage.documentNumber( key[1]);
 
-	std::cout << storage.documentAttribute( docno, key[0][0]) << std::endl;
+	strus::AttributeReaderInterface::ElementHandle
+		hnd = attreader->elementHandle( key[0]);
+
+	attreader->skipDoc( docno);
+	std::string value = attreader->getValue( hnd);
+
+	std::cout << value << std::endl;
 }
 
 static void inspectDocMetaData( const strus::StorageInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
-	if (std::strlen(key[0]) != 1) throw std::runtime_error( "single character for document metadata id expected");
+
+	strus::MetaDataReaderInterface* metadata = storage.createMetaDataReader();
 
 	strus::Index docno = isIndex(key[1])
 			?stringToIndex( key[1])
 			:storage.documentNumber( key[1]);
 
-	float value = storage.documentMetaData( docno, key[0][1]);
+	strus::MetaDataReaderInterface::ElementHandle
+		hnd = metadata->elementHandle( key[0]);
+
+	metadata->skipDoc( docno);
+	strus::ArithmeticVariant value = metadata->getValue( hnd);
 
 	std::cout << value << std::endl;
 }
@@ -140,12 +155,14 @@ static void inspectContent( strus::StorageInterface& storage, const char** key, 
 			:storage.documentNumber( key[1]);
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	viewer->initDoc( docno);
+	viewer->skipDoc( docno);
 	strus::Index pos=0;
-	while (0!=(pos=viewer->skipPos(pos+1)))
+	for (int idx=0; 0!=(pos=viewer->skipPos(pos+1)); ++idx)
 	{
-		std::cout << viewer->fetch() << ' ';
+		if (idx) std::cout << ' ';
+		std::cout << viewer->fetch();
 	}
+	std::cout << std::endl;
 }
 
 static void inspectToken( strus::StorageInterface& storage, const char** key, int size)
@@ -158,7 +175,7 @@ static void inspectToken( strus::StorageInterface& storage, const char** key, in
 			:storage.documentNumber( key[1]);
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	viewer->initDoc( docno);
+	viewer->skipDoc( docno);
 	strus::Index pos=0;
 	while (0!=(pos=viewer->skipPos(pos+1)))
 	{

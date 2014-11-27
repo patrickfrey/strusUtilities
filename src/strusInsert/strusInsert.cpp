@@ -76,9 +76,9 @@ static bool processDocument(
 
 		// Define hardcoded document meta data:
 		inserter->setAttribute(
-			strus::Constants::DOC_ATTRIBUTE_DOCID, path);
+			strus::Constants::attribute_docid(), path);
 		inserter->setMetaData(
-			strus::Constants::DOC_ATTRIBUTE_DOCLEN, lastPos);
+			strus::Constants::metadata_doclen(), lastPos);
 
 		// Define all term occurrencies:
 		std::vector<strus::analyzer::Term>::const_iterator
