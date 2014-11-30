@@ -28,6 +28,8 @@
 */
 #include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
+#include "programOptions.hpp"
+#include "strus/utils/cmdLineOpt.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -37,22 +39,11 @@ int main( int argc, const char* argv[])
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
 		std::cerr << "usage: strusCreate <config>" << std::endl;
-		std::cerr << "<config>  : configuration string of the storage";
-		std::string indent;
-		char const* cc = strus::getStorageConfigDescription();
-		char const* ee;
-		do
-		{
-			ee = std::strchr( cc,'\n');
-			std::string line = ee?std::string( cc, ee-cc):std::string( cc);
-			std::cerr << indent << line << std::endl;
-			cc = ee + 1;
-			if (indent.empty())
-			{
-				indent = std::string( 12, ' ');
-			}
-		}
-		while (ee);
+		std::cerr << "<config>  : configuration string of the storage" << std::endl;
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getStorageConfigDescription(
+						strus::CmdCreateStorageDatabase));
 		return 0;
 	}
 	try

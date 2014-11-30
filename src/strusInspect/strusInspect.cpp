@@ -33,6 +33,7 @@
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/index.hpp"
+#include "strus/utils/cmdLineOpt.hpp"
 #include "arithmeticVariant.hpp"
 #include <iostream>
 #include <cstring>
@@ -116,8 +117,7 @@ static void inspectDocAttribute( const strus::StorageInterface& storage, const c
 			?stringToIndex( key[1])
 			:storage.documentNumber( key[1]);
 
-	strus::AttributeReaderInterface::ElementHandle
-		hnd = attreader->elementHandle( key[0]);
+	strus::Index hnd = attreader->elementHandle( key[0]);
 
 	attreader->skipDoc( docno);
 	std::string value = attreader->getValue( hnd);
@@ -136,8 +136,7 @@ static void inspectDocMetaData( const strus::StorageInterface& storage, const ch
 			?stringToIndex( key[1])
 			:storage.documentNumber( key[1]);
 
-	strus::MetaDataReaderInterface::ElementHandle
-		hnd = metadata->elementHandle( key[0]);
+	strus::Index hnd = metadata->elementHandle( key[0]);
 
 	metadata->skipDoc( docno);
 	strus::ArithmeticVariant value = metadata->getValue( hnd);
@@ -191,21 +190,10 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << "usage: strusInspect <config> <what> <key>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage" << std::endl;
-		std::string indent;
-		char const* cc = strus::getStorageConfigDescription();
-		char const* ee;
-		do
-		{
-			ee = std::strchr( cc,'\n');
-			std::string line = ee?std::string( cc, ee-cc):std::string( cc);
-			std::cerr << indent << line << std::endl;
-			cc = ee + 1;
-			if (indent.empty())
-			{
-				indent = std::string( 12, ' ');
-			}
-		}
-		while (ee);
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getStorageConfigDescription(
+						strus::CmdCreateStorageClient));
 		std::cerr << "<what>    : identifier of what to inspect" << std::endl;
 		std::cerr << "            \"pos\" <typeno> <valueno> <doc>" << std::endl;
 		std::cerr << "            \"ff\" <typeno> <valueno> <doc>" << std::endl;

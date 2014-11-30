@@ -6,7 +6,7 @@ CPP_OBJS=
 CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/private -I$(INSTALL_INCDIR)
 CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
 LDFLAGS=-L$(INSTALL_LIBDIR)
-LIBS=-lstrus_lvdbstorage -lleveldb -lboost_system
+LIBS=-lstrus_lvdbstorage -lstrus_utils -lleveldb -lboost_system
 
 all: strusInspect
 

@@ -32,6 +32,7 @@
 #include "strus/tokenMinerFactory.hpp"
 #include "strus/tokenMinerLib.hpp"
 #include "strus/utils/fileio.hpp"
+#include "strus/utils/cmdLineOpt.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
@@ -44,7 +45,7 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << "usage: strusAnalyze <program> <document>" << std::endl;
 		std::cerr << "<program>     = path of analyzer program" << std::endl;
-		std::cerr << "<document>    = path of document to analyze: ";
+		std::cerr << "<document>    = path of document to analyze" << std::endl;
 		return 0;
 	}
 	try

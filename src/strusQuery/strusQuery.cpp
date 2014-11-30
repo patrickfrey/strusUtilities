@@ -37,6 +37,7 @@
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/queryProcessorLib.hpp"
 #include "strus/utils/fileio.hpp"
+#include "strus/utils/cmdLineOpt.hpp"
 #include "strus/statCounterValue.hpp"
 #include <iostream>
 #include <sstream>
@@ -224,14 +225,18 @@ int main( int argc_, const char* argv_[])
 	}
 	if (argc != 4 || usage)
 	{
-		std::cerr << "usage: strusQuery [options] <storage> <anprg> <qeprg> <query>" << std::endl;
-		std::cerr << "<storage>   = storage configuration string as used for strusCreate" << std::endl;
-		std::cerr << "<anprg>     = path of query analyzer program" << std::endl;
-		std::cerr << "<qeprg>     = path of query eval program" << std::endl;
-		std::cerr << "<query>     = path of query or '-' for stdin" << std::endl;
+		std::cerr << "usage: strusQuery [options] <config> <anprg> <qeprg> <query>" << std::endl;
+		std::cerr << "<config>  = storage configuration string" << std::endl;
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getStorageConfigDescription(
+						strus::CmdCreateStorageClient));
+		std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
+		std::cerr << "<qeprg>   = path of query eval program" << std::endl;
+		std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
 		std::cerr << "option -h|--help   :Print this usage and do nothing else" << std::endl;
-		std::cerr << "option -s|--silent :No output of results (for measuring answering time)" << std::endl;
-		std::cerr << "option -t|--stats  :Print the statistics provided by the storage" << std::endl;
+		std::cerr << "option -s|--silent :No output of results" << std::endl;
+		std::cerr << "option -t|--stats  :Print some statistics available" << std::endl;
 		return 0;
 	}
 	try
