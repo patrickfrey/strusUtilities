@@ -26,64 +26,41 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
-#define _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
-#include "strus/utils/fileio.hpp"
+#ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
+#define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #include "strus/index.hpp"
+#include "strus/analyzerInterface.hpp"
+#include "strus/storageInterface.hpp"
 #include "docnoAllocatorInterface.hpp"
 #include "fileCrawlerInterface.hpp"
+#include "commitQueue.hpp"
 #include <vector>
 #include <string>
-#include <list>
-#include <deque>
 #include <boost/thread.hpp>
 #include <boost/atomic.hpp>
 
 namespace strus {
 
-class FileCrawler
-	:public FileCrawlerInterface
+class InsertProcessor
 {
 public:
-	FileCrawler(
-			const std::string& path_,
-			std::size_t transactionSize_,
-			std::size_t nofConsumers_,
-			DocnoAllocatorInterface* docnoAllocator_);
+	InsertProcessor(
+			StorageInterface* storage_,
+			AnalyzerInterface* analyzer_,
+			CommitQueue* commitque_,
+			FileCrawlerInterface* crawler_);
 
-	~FileCrawler();
-
-	virtual bool fetch( Index& docno, std::vector<std::string>& files);
+	~InsertProcessor();
 
 	void sigStop();
 	void run();
 
 private:
-	void findFilesToProcess();
-
-	void pushChunk( const std::vector<std::string>& chunk);
-
-	bool haveEnough()
-	{
-		return (m_chunkquesize > m_nofConsumers*4);
-	}
-
-private:
-	std::size_t m_transactionSize;
-	std::size_t m_nofConsumers;
-	std::list<std::string> m_directories;
-	std::list<std::string>::iterator m_diritr;
-
-	std::vector<std::string> m_openchunk;
-	std::deque<std::vector<std::string> > m_chunkque;
-	std::size_t m_chunkquesize;
-	boost::mutex m_chunkque_mutex;
-	boost::condition_variable m_chunkque_cond;
-
-	boost::condition_variable m_worker_cond;
-	boost::mutex m_worker_mutex;
+	StorageInterface* m_storage;
+	AnalyzerInterface* m_analyzer;
+	CommitQueue* m_commitque;
+	FileCrawlerInterface* m_crawler;
 	boost::atomic<bool> m_terminated;
-	DocnoAllocatorInterface* m_docnoAllocator;
 };
 
 }//namespace

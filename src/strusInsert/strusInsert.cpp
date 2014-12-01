@@ -27,8 +27,6 @@
 --------------------------------------------------------------------
 */
 #include "strus/index.hpp"
-#include "strus/constants.hpp"
-#include "strus/arithmeticVariant.hpp"
 #include "strus/analyzerInterface.hpp"
 #include "strus/analyzerLib.hpp"
 #include "strus/tokenMiner.hpp"
@@ -36,160 +34,21 @@
 #include "strus/tokenMinerLib.hpp"
 #include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
-#include "strus/storageTransactionInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
-#include "strus/metaDataReaderInterface.hpp"
-#include "strus/constants.hpp"
 #include "strus/utils/fileio.hpp"
 #include "strus/utils/cmdLineOpt.hpp"
+#include "programOptions.hpp"
+#include "fileCrawler.hpp"
+#include "commitQueue.hpp"
+#include "docnoAllocator.hpp"
+#include "insertProcessor.hpp"
+#include "thread.hpp"
 #include "programOptions.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
 #include <boost/scoped_ptr.hpp>
-
-static int failedOperations = 0;
-static int succeededOperations = 0;
-static int loopCount = 0;
-static int notifyProgress = 0;
-
-static bool processDocument( 
-	strus::StorageTransactionInterface* transaction,
-	const strus::AnalyzerInterface* analyzer,
-	const std::string& path,
-	bool hasDoclenAttribute)
-{
-	try
-	{
-		// Read the input file to analyze:
-		std::string documentContent;
-		unsigned int ec = strus::readFile( path, documentContent);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load document to analyze " << path << " (file system error " << ec << ")" << std::endl;
-			return false;
-		}
-
-		// Call the analyzer and create the document:
-		strus::analyzer::Document doc
-			= analyzer->analyze( documentContent);
-
-		boost::scoped_ptr<strus::StorageDocumentInterface>
-			storagedoc( transaction->createDocument( path));
-
-		strus::Index lastPos = (doc.terms().empty())?0:doc.terms()[ doc.terms().size()-1].pos();
-
-		// Define hardcoded document attributes:
-		storagedoc->setAttribute(
-			strus::Constants::attribute_docid(), path);
-
-		// Define hardcoded document metadata, if known:
-		if (hasDoclenAttribute)
-		{
-			storagedoc->setMetaData(
-				strus::Constants::metadata_doclen(),
-				strus::ArithmeticVariant( lastPos));
-		}
-		// Define all term occurrencies:
-		std::vector<strus::analyzer::Term>::const_iterator
-			ti = doc.terms().begin(), te = doc.terms().end();
-		for (; ti != te; ++ti)
-		{
-			storagedoc->addTermOccurrence(
-				ti->type(), ti->value(), ti->pos(), 0.0/*weight*/);
-		}
-
-		// Define all attributes extracted from the document analysis:
-		std::vector<strus::analyzer::Attribute>::const_iterator
-			ai = doc.attributes().begin(), ae = doc.attributes().end();
-		for (; ai != ae; ++ai)
-		{
-			storagedoc->setAttribute( ai->name(), ai->value());
-		}
-
-		// Define all metadata elements extracted from the document analysis:
-		std::vector<strus::analyzer::MetaData>::const_iterator
-			mi = doc.metadata().begin(), me = doc.metadata().end();
-		for (; mi != me; ++mi)
-		{
-			strus::ArithmeticVariant value( mi->value());
-			storagedoc->setMetaData( mi->name(), value);
-		}
-
-		storagedoc->done();
-
-		// Notify progress:
-		if (notifyProgress && ++loopCount == notifyProgress)
-		{
-			loopCount = 0;
-			std::cerr << "inserted " << (succeededOperations+1) << " documents" << std::endl;
-		}
-		return true;
-	}
-	catch (const std::runtime_error& err)
-	{
-		std::cerr << "ERROR failed to insert document '" << path << "': " << err.what() << std::endl;
-		return false;
-	}
-}
-
-static bool processDirectory( 
-	strus::StorageTransactionInterface* transaction,
-	const strus::AnalyzerInterface* analyzer,
-	const std::string& path,
-	bool hasDoclenAttribute)
-{
-	std::vector<std::string> filesToProcess;
-	unsigned int ec = strus::readDir( path, ".xml", filesToProcess);
-	if (ec)
-	{
-		std::cerr << "ERROR could not read directory to process '" << path << "' (file system error '" << ec << ")" << std::endl;
-		return false;
-	}
-
-	std::vector<std::string>::const_iterator pi = filesToProcess.begin(), pe = filesToProcess.end();
-	for (; pi != pe; ++pi)
-	{
-		std::string file( path);
-		if (file.size() && file[ file.size()-1] != strus::dirSeparator())
-		{
-			file.push_back( strus::dirSeparator());
-		}
-		file.append( *pi);
-		if (processDocument(
-			transaction, analyzer, file, hasDoclenAttribute))
-		{
-			++succeededOperations;
-		}
-		else
-		{
-			++failedOperations;
-		}
-	}
-	std::vector<std::string> subdirsToProcess;
-	ec = strus::readDir( path, "", subdirsToProcess);
-	if (ec)
-	{
-		std::cerr << "ERROR could not read subdirectories to process '" << path << "' (file system error " << ec << ")" << std::endl;
-		return false;
-	}
-	std::vector<std::string>::const_iterator di = subdirsToProcess.begin(), de = subdirsToProcess.end();
-	for (; di != de; ++di)
-	{
-		std::string subdir( path + strus::dirSeparator() + *di);
-		if (strus::isDir( subdir))
-		{
-			if (!processDirectory( transaction, analyzer, subdir, hasDoclenAttribute))
-			{
-				std::cerr << "ERROR failed to process subdirectory '" << subdir << "'" << std::endl;
-				return false;
-			}
-		}
-	}
-	return true;
-}
 
 
 int main( int argc_, const char* argv_[])
@@ -199,7 +58,9 @@ int main( int argc_, const char* argv_[])
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions( argc_, argv_, 2, "h,help", "p,notify-progress");
+		opt = strus::ProgramOptions(
+				argc_, argv_, 3,
+				"h,help", "t,threads", "c,commit");
 		if (opt("h","help")) printUsageAndExit = true;
 
 		if (opt.nofargs() > 3)
@@ -223,7 +84,7 @@ int main( int argc_, const char* argv_[])
 	}
 	if (printUsageAndExit)
 	{
-		std::cerr << "usage: strusInsert <config> <program> <docpath>" << std::endl;
+		std::cerr << "usage: strusInsert [options] <config> <program> <docpath>" << std::endl;
 		std::cerr << "<config>  = storage configuration string" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
@@ -231,10 +92,18 @@ int main( int argc_, const char* argv_[])
 						strus::CmdCreateStorageClient));
 		std::cerr << "<program> = path of analyzer program" << std::endl;
 		std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
+		std::cerr << "options:" << std::endl;
+		std::cerr << "-h,--help    : Print this usage info" << std::endl;
+		std::cerr << "-t,--threads : Number of inserter threads to use"  << std::endl;
+		std::cerr << "-s,--commit  : Number of files inserted per transaction (default 1000)" << std::endl;
 		return rt;
 	}
 	try
 	{
+		unsigned int nofThreads = opt.as<unsigned short>( "threads");
+		unsigned int nofDocsCommit = opt.as<unsigned int>( "commit");
+		if (!nofDocsCommit) nofDocsCommit = 1000;
+
 		unsigned int ec;
 		std::string analyzerProgramSource;
 		ec = strus::readFile( opt[1], analyzerProgramSource);
@@ -242,15 +111,10 @@ int main( int argc_, const char* argv_[])
 		{
 			std::ostringstream msg;
 			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
-			return 2;
+			return 4;
 		}
 		boost::scoped_ptr<strus::StorageInterface>
 			storage( strus::createStorageClient( opt[0]));
-
-		boost::scoped_ptr<strus::MetaDataReaderInterface>
-			metadata( storage->createMetaDataReader());
-		bool hasDoclenAttribute
-			= metadata->hasElement( strus::Constants::metadata_doclen());
 
 		std::string tokenMinerSource;
 		boost::scoped_ptr<strus::TokenMinerFactory>
@@ -259,44 +123,46 @@ int main( int argc_, const char* argv_[])
 		boost::scoped_ptr<strus::AnalyzerInterface>
 			analyzer( strus::createAnalyzer( *minerfac, analyzerProgramSource));
 
-		boost::scoped_ptr<strus::StorageTransactionInterface>
-			transaction( storage->createTransaction());
+		boost::scoped_ptr<strus::CommitQueue>
+			commitQue( new strus::CommitQueue( storage.get()));
 
-		std::string path( opt[2]);
-		if (strus::isDir( path))
+		boost::scoped_ptr<strus::DocnoAllocator>
+			docnoAllocator( new strus::DocnoAllocator( storage.get()));
+
+		strus::FileCrawler* fileCrawler
+			= new strus::FileCrawler(
+					opt[1], nofThreads, nofDocsCommit,
+					docnoAllocator.get());
+
+		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >
+			fileCrawlerThread(
+				new strus::Thread< strus::FileCrawler >( fileCrawler));
+		fileCrawlerThread->start();
+
+		if (nofThreads == 0)
 		{
-			if (!processDirectory( transaction.get(), analyzer.get(), path, hasDoclenAttribute))
-			{
-				std::cerr << "ERROR failed processing of directory '" << path << "'" << std::endl;
-				return 3;
-			}
-		}
-		else if (strus::isFile( path))
-		{
-			if (processDocument( transaction.get(), analyzer.get(), path, hasDoclenAttribute))
-			{
-				++succeededOperations;
-			}
-			else
-			{
-				++failedOperations;
-			}
+			strus::InsertProcessor inserter(
+				storage.get(), analyzer.get(),
+				commitQue.get(), fileCrawler);
+			inserter.run();
 		}
 		else
 		{
-			std::cerr << "ERROR item '" << path << "' to process is neither a file nor a directory" << std::endl;
-			return 5;
-		}
-		transaction->commit();
+			boost::scoped_ptr< strus::ThreadGroup< strus::InsertProcessor > >
+				inserterThreads(
+					new strus::ThreadGroup<strus::InsertProcessor>());
 
-		if (failedOperations > 0)
-		{
-			std::cerr << "total " << failedOperations << " inserts failed out of " << (succeededOperations + failedOperations) << std::endl;
+			for (unsigned int ti = 0; ti<nofThreads; ++ti)
+			{
+				inserterThreads->start(
+					new strus::InsertProcessor(
+						storage.get(), analyzer.get(), 
+						commitQue.get(), fileCrawler));
+			}
+			inserterThreads->wait_termination();
 		}
-		else
-		{
-			std::cerr << "successfully inserted " << (succeededOperations + failedOperations) << " documents" << std::endl;
-		}
+		fileCrawlerThread->wait_termination();
+		std::cerr << "done" << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{

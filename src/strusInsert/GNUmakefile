@@ -1,12 +1,15 @@
 TOPDIR=../..
 include $(TOPDIR)/variables.mk
 
-CPP_OBJS=
+CPP_OBJS= \
+	fileCrawler.o \
+	insertProcessor.o \
+	commitQueue.o
 
 CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/private -I$(INSTALL_INCDIR)
 CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
 LDFLAGS=-L$(INSTALL_LIBDIR)
-LIBS=-lstrus_analyzer -lstrus_tokenminer -lstemmer -lstrus_utils -lstrus_lvdbstorage -lboost_system
+LIBS=-lstrus_analyzer -lstrus_tokenminer -lstemmer -lstrus_utils -lstrus_lvdbstorage -lboost_system -lboost_thread
 
 all: strusInsert
 

@@ -26,64 +26,85 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
-#define _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
-#include "strus/utils/fileio.hpp"
-#include "strus/index.hpp"
-#include "docnoAllocatorInterface.hpp"
-#include "fileCrawlerInterface.hpp"
-#include <vector>
-#include <string>
-#include <list>
-#include <deque>
+#ifndef _STRUS_THREAD_HPP_INCLUDED
+#define _STRUS_THREAD_HPP_INCLUDED
 #include <boost/thread.hpp>
-#include <boost/atomic.hpp>
 
 namespace strus {
 
-class FileCrawler
-	:public FileCrawlerInterface
+template <class Task>
+class Thread
 {
 public:
-	FileCrawler(
-			const std::string& path_,
-			std::size_t transactionSize_,
-			std::size_t nofConsumers_,
-			DocnoAllocatorInterface* docnoAllocator_);
+	Thread( Task* task_)
+		:m_task(task_),m_thread(0){}
 
-	~FileCrawler();
-
-	virtual bool fetch( Index& docno, std::vector<std::string>& files);
-
-	void sigStop();
-	void run();
-
-private:
-	void findFilesToProcess();
-
-	void pushChunk( const std::vector<std::string>& chunk);
-
-	bool haveEnough()
+	~Thread()
 	{
-		return (m_chunkquesize > m_nofConsumers*4);
+		delete m_task;
+	}
+
+	void start()
+	{
+		if (m_thread) throw std::logic_error( "called subsequent start without wait termination in Thread");
+		m_thread = new boost::thread( boost::bind( &Task::run, m_task));
+	}
+
+	void stop()
+	{
+		m_task->sigStop();
+	}
+
+	void wait_termination()
+	{
+		m_thread->join();
+		delete m_thread;
+		m_thread = 0;
+	}
+
+	Task* task() const
+	{
+		return m_task;
 	}
 
 private:
-	std::size_t m_transactionSize;
-	std::size_t m_nofConsumers;
-	std::list<std::string> m_directories;
-	std::list<std::string>::iterator m_diritr;
+	Task* m_task;
+	boost::thread* m_thread;
+};
 
-	std::vector<std::string> m_openchunk;
-	std::deque<std::vector<std::string> > m_chunkque;
-	std::size_t m_chunkquesize;
-	boost::mutex m_chunkque_mutex;
-	boost::condition_variable m_chunkque_cond;
+template <class Task>
+class ThreadGroup
+{
+public:
+	ThreadGroup(){}
 
-	boost::condition_variable m_worker_cond;
-	boost::mutex m_worker_mutex;
-	boost::atomic<bool> m_terminated;
-	DocnoAllocatorInterface* m_docnoAllocator;
+	~ThreadGroup()
+	{
+		typename std::vector<Task*>::const_iterator ti = m_task.begin(), te = m_task.end();
+		for (; ti != te; ++ti) delete *ti;
+	}
+
+	void start( Task* task_)
+	{
+		m_task.push_back( task_);
+		m_thread_group.add_thread( 
+			new boost::thread( boost::bind( &Task::run, task_)));
+	}
+
+	void stop()
+	{
+		typename std::vector<Task*>::const_iterator ti = m_task.begin(), te = m_task.end();
+		for (; ti != te; ++ti) (*ti)->sigStop();
+	}
+
+	void wait_termination()
+	{
+		m_thread_group.join_all();
+	}
+
+private:
+	std::vector<Task*> m_task;
+	boost::thread_group m_thread_group;
 };
 
 }//namespace

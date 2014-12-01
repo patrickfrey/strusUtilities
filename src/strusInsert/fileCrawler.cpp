@@ -30,6 +30,45 @@
 
 using namespace strus;
 
+FileCrawler::FileCrawler(
+		const std::string& path_,
+		std::size_t transactionSize_,
+		std::size_t nofConsumers_,
+		DocnoAllocatorInterface* docnoAllocator_)
+
+	:m_transactionSize(transactionSize_)
+	,m_nofConsumers(nofConsumers_?nofConsumers_:1)
+	,m_chunkquesize(0)
+	,m_terminated(false)
+	,m_docnoAllocator(docnoAllocator_)
+{
+	if (strus::isDir( path_))
+	{
+		m_directories.push_back( path_);
+	}
+	else
+	{
+		m_openchunk.push_back( path_);
+	}
+	m_diritr = m_directories.begin();
+}
+
+FileCrawler::~FileCrawler()
+{
+}
+
+void FileCrawler::run()
+{
+	while (!m_terminated)
+	{
+		boost::unique_lock<boost::mutex> lock( m_worker_mutex);
+		m_worker_cond.wait( lock);
+		if (m_terminated) break;
+
+		findFilesToProcess();
+	}
+}
+
 void FileCrawler::findFilesToProcess()
 {
 	std::vector<std::string> files;
@@ -39,7 +78,7 @@ void FileCrawler::findFilesToProcess()
 		unsigned int ec = strus::readDir( path, ".xml", files);
 		if (ec)
 		{
-			std::cerr << "ERROR could not read directory to process '" << path << "' (file system error '" << ec << ")" << std::endl;
+			std::cerr << "could not read directory to process '" << path << "' (file system error '" << ec << ")" << std::endl;
 		}
 		else
 		{
@@ -61,7 +100,7 @@ void FileCrawler::findFilesToProcess()
 		m_diritr = m_directories.erase( m_diritr);
 		if (ec)
 		{
-			std::cerr << "ERROR could not read subdirectories to process '" << path << "' (file system error " << ec << ")" << std::endl;
+			std::cerr << "could not read subdirectories to process '" << path << "' (file system error " << ec << ")" << std::endl;
 			continue;
 		}
 		std::vector<std::string>::const_iterator
@@ -84,7 +123,7 @@ void FileCrawler::findFilesToProcess()
 }
 
 
-bool FileCrawler::fetch( std::vector<std::string>& files)
+bool FileCrawler::fetch( Index& docno, std::vector<std::string>& files)
 {
 	boost::unique_lock<boost::mutex> lock(m_chunkque_mutex);
 
@@ -102,8 +141,16 @@ bool FileCrawler::fetch( std::vector<std::string>& files)
 	{
 		m_worker_cond.notify_one();
 	}
-	files = m_chunkque.pop_front();
+	files = m_chunkque.front();
+	m_chunkque.pop_front();
+	docno = m_docnoAllocator->allocDocnoRange( files.size());
 	return true;
+}
+
+void FileCrawler::sigStop()
+{
+	m_terminated = true;
+	m_worker_cond.notify_one();
 }
 
 void FileCrawler::pushChunk( const std::vector<std::string>& chunk)

@@ -36,6 +36,7 @@
 #include <stdexcept>
 #include <cstdarg>
 #include <iostream>
+#include <boost/lexical_cast.hpp>
 
 namespace strus {
 
@@ -59,6 +60,7 @@ public:
 		:m_argc(argc_-1),m_argv(argv_+1)
 	{
 		std::set<std::string> defoptmap;
+		std::map<char,std::string> aliasmap;
 		va_list ap;
 		va_start( ap, nofopt);
 		for (int ai=0; ai<nofopt; ai++)
@@ -67,7 +69,11 @@ public:
 			const char* sp = std::strchr( av, ',');
 			if (sp)
 			{
-				defoptmap.insert( std::string( av, sp-av));
+				if (sp-av > 1)
+				{
+					throw std::runtime_error( "one character option expected before comma ',' in option definition string");
+				}
+				aliasmap[ av[0]] = std::string( sp+1);
 				defoptmap.insert( std::string( sp+1));
 			}
 			else
@@ -84,12 +90,13 @@ public:
 				unsigned int oi = 1;
 				for (;m_argv[0][oi]; ++oi)
 				{
-					std::string optname( m_argv[0]+oi, 1);
-					if (defoptmap.find( optname) == defoptmap.end())
+					std::map<char,std::string>::const_iterator
+						ai = aliasmap.find( m_argv[0][oi]);
+					if (ai == aliasmap.end())
 					{
-						throw std::runtime_error( std::string( "unknown option '-") + optname + "'");
+						throw std::runtime_error( std::string( "unknown option '-") + m_argv[0][oi] + "'");
 					}
-
+					std::string optname( ai->second);
 					if (!m_argv[0][oi+1] && m_argc>1 && m_argv[1][0] != '-')
 					{
 						Parent::operator[]( optname)
@@ -146,6 +153,21 @@ public:
 		const_iterator oi = find( optname);
 		if (oi == end()) return 0;
 		return oi->second.c_str();
+	}
+
+	template <typename ValueType>
+	int as( const std::string& optname)
+	{
+		const_iterator oi = find( optname);
+		if (oi == end()) return 0;
+		try
+		{
+			return boost::lexical_cast<ValueType>( oi->second);
+		}
+		catch (const boost::bad_lexical_cast&)
+		{
+			throw std::runtime_error( std::string("option '") + optname + "' has not the requested value type");
+		}
 	}
 
 	int nofargs() const
