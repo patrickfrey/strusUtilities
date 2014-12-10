@@ -41,7 +41,7 @@
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "docnoAllocator.hpp"
-#include "insertProcessor.hpp"
+#include "checkInsertProcessor.hpp"
 #include "thread.hpp"
 #include "programOptions.hpp"
 #include <iostream>
@@ -59,8 +59,8 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 4,
-				"h,help", "t,threads", "c,commit", "n,new");
+				argc_, argv_, 3,
+				"h,help", "t,threads", "l,logfile");
 		if (opt( "help")) printUsageAndExit = true;
 
 		if (opt.nofargs() > 3)
@@ -84,28 +84,28 @@ int main( int argc_, const char* argv_[])
 	}
 	if (printUsageAndExit)
 	{
-		std::cerr << "usage: strusInsert [options] <config> <program> <docpath>" << std::endl;
+		std::cerr << "usage: strusCheckInsert [options] <config> <program> <docpath>" << std::endl;
 		std::cerr << "<config>  = storage configuration string" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getStorageConfigDescription(
 						strus::CmdCreateStorageClient));
 		std::cerr << "<program> = path of analyzer program" << std::endl;
-		std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
+		std::cerr << "<docpath> = path of document or directory to check" << std::endl;
 		std::cerr << "options:" << std::endl;
 		std::cerr << "-h,--help    : Print this usage info" << std::endl;
-		std::cerr << "-t,--threads : Number of inserter threads to use"  << std::endl;
-		std::cerr << "-s,--commit  : Number of files inserted per transaction (default 1000)" << std::endl;
-		std::cerr << "-n,--new     : All inserts are new; use preallocated document numbers" << std::endl;
+		std::cerr << "-t,--threads : Number of check insert threads to use"  << std::endl;
+		std::cerr << "-l,--logfile : File to use for output (default stdout)"  << std::endl;
 		return rt;
 	}
 	try
 	{
-		bool allInsertsNew = opt( "new");
 		unsigned int nofThreads = opt.as<unsigned int>( "threads");
-		unsigned int transactionSize = opt.as<unsigned int>( "commit");
-		if (!transactionSize) transactionSize = 1000;
-
+		std::string logfile = "-";
+		if (opt("logfile"))
+		{
+			logfile = opt[ "logfile"];
+		}
 		unsigned int ec;
 		std::string analyzerProgramSource;
 		ec = strus::readFile( opt[1], analyzerProgramSource);
@@ -125,19 +125,8 @@ int main( int argc_, const char* argv_[])
 		boost::scoped_ptr<strus::AnalyzerInterface>
 			analyzer( strus::createAnalyzer( *minerfac, analyzerProgramSource));
 
-		boost::scoped_ptr<strus::CommitQueue>
-			commitQue( new strus::CommitQueue( storage.get()));
-
-		boost::scoped_ptr<strus::DocnoAllocator> docnoAllocator;
-		if (allInsertsNew)
-		{
-			docnoAllocator.reset( 
-				new strus::DocnoAllocator( storage.get()));
-		}
 		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler(
-					opt[2], docnoAllocator.get(),
-					transactionSize, nofThreads*5+5);
+			= new strus::FileCrawler( opt[2], 0, 100, nofThreads*5+5);
 
 		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(
@@ -148,26 +137,25 @@ int main( int argc_, const char* argv_[])
 
 		if (nofThreads == 0)
 		{
-			strus::InsertProcessor inserter(
-				storage.get(), analyzer.get(),
-				commitQue.get(), fileCrawler);
-			inserter.run();
+			strus::CheckInsertProcessor checker(
+				storage.get(), analyzer.get(), fileCrawler, logfile);
+			checker.run();
 		}
 		else
 		{
-			boost::scoped_ptr< strus::ThreadGroup< strus::InsertProcessor > >
-				inserterThreads(
-					new strus::ThreadGroup<strus::InsertProcessor>(
-					"inserter"));
+			boost::scoped_ptr< strus::ThreadGroup< strus::CheckInsertProcessor > >
+				checkInsertThreads(
+					new strus::ThreadGroup<strus::CheckInsertProcessor>(
+					"checker"));
 
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)
 			{
-				inserterThreads->start(
-					new strus::InsertProcessor(
-						storage.get(), analyzer.get(), 
-						commitQue.get(), fileCrawler));
+				checkInsertThreads->start(
+					new strus::CheckInsertProcessor(
+						storage.get(), analyzer.get(),
+						fileCrawler, logfile));
 			}
-			inserterThreads->wait_termination();
+			checkInsertThreads->wait_termination();
 		}
 		fileCrawlerThread->wait_termination();
 		std::cerr << "done" << std::endl;

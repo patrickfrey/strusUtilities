@@ -1,0 +1,36 @@
+TOPDIR=../..
+include $(TOPDIR)/variables.mk
+
+CPP_OBJS=
+
+CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/private -I$(INSTALL_INCDIR)
+CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
+LDFLAGS=-L$(INSTALL_LIBDIR)
+LIBS=-lstrus_lvdbstorage -lstrus_queryeval -lstrus_queryproc -lstrus_utils -lleveldb -lboost_system
+
+all: strusDestroy
+
+-include $(CPP_OBJS:.o=.d)
+
+%.o : %.cpp GNUmakefile
+	$(CXX) -c -o $@ $(CXXFLAGS) $(CPP_INCLUDE) $*.cpp
+	$(CXX) -MM $(CXXFLAGS) $(CPP_INCLUDE) $*.cpp > $*.d
+
+strusDestroy: $(CPP_OBJS) strusDestroy.o
+	$(CXX) -o $@ strusDestroy.o $(CPP_OBJS) $(LDFLAGS) $(LIBS)
+
+.PHONY: clean
+clean:
+	rm -f ${CPP_OBJS} strusDestroy strusDestroy.o strusDestroy.d
+
+.PHONY: install
+install:
+	@mkdir -p $(INSTALL_BINDIR)
+	@cp strusDestroy $(INSTALL_BINDIR)
+
+.PHONY: uninstall
+uninstall:
+	@rm $(INSTALL_BINDIR)/strusDestroy
+
+
+

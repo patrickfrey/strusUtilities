@@ -41,17 +41,104 @@
 namespace strus {
 
 class ProgramOptions
-	:public std::map<std::string,std::string>
 {
 private:
-	typedef std::map<std::string,std::string> Parent;
+	struct OptMap
+	{
+		std::map<std::string,bool> longnamemap;
+		std::map<char,std::string> aliasmap;
+
+		OptMap(){}
+
+		void add( const char* arg)
+		{
+			bool hasArg = false;
+			char alias = '\0';
+			char const* aa = arg;
+			const char* longnamestart = arg;
+			const char* longnameend = arg + std::strlen(arg);
+			for (;*aa;++aa)
+			{
+				if (*aa == ',')
+				{
+					if (aa - arg != 1)
+					{
+						throw std::runtime_error( "one character option expected before comma ',' in option definition string");
+					}
+					alias = *arg;
+					longnamestart = aa+1;
+				}
+				if (*aa == ':')
+				{
+					if (longnameend - aa != 1)
+					{
+						throw std::runtime_error( "colon expected only at end of option definition string");
+					}
+					longnameend = aa;
+					hasArg = true;
+				}
+			}
+			std::string longname( longnamestart, longnameend-longnamestart);
+			if (longname.empty())
+			{
+				if (!alias)
+				{
+					throw std::runtime_error( "empty option definition");
+				}
+				longname.push_back( alias);
+			}
+			if (alias)
+			{
+				aliasmap[ alias] = longname;
+			}
+			longnamemap[ longname] = hasArg;
+		}
+
+		bool getOpt( const char* argv, std::vector<std::string>& optlist, std::string& optarg)
+		{
+			optlist.clear();
+			optarg.clear();
+
+			if (argv[0] != '-') return false;
+			if (argv[1] == '-')
+			{
+				const char* oo = argv+2;
+				const char* aa = std::strchr( oo, '=');
+				if (aa)
+				{
+					optlist.push_back( std::string( oo, aa-oo));
+					optarg = std::string( aa+1);
+				}
+				else
+				{
+					optlist.push_back( std::string( oo));
+				}
+			}
+			else
+			{
+				const char* oo = argv+1;
+				for (;*oo; ++oo)
+				{
+					std::map<char,std::string>::const_iterator oi = aliasmap.find( *oo);
+					if (oi == aliasmap.end())
+					{
+						if (oo == argv+1) throw std::runtime_error( std::string( "unknown option '-") + *oo +"'");
+						optarg = std::string( oo);
+						break;
+					}
+					optlist.push_back( std::string( oi->second));
+				}
+			}
+			return true;
+		}
+	};
 
 public:
 	ProgramOptions()
 		:m_argc(0),m_argv(0){}
 
 	ProgramOptions( const ProgramOptions& o)
-		:Parent(o),m_argc(o.m_argc),m_argv(o.m_argv){}
+		:m_argc(o.m_argc),m_argv(o.m_argv),m_opt(o.m_opt){}
 
 	ProgramOptions(
 			int argc_, const char** argv_,
@@ -59,87 +146,60 @@ public:
 
 		:m_argc(argc_-1),m_argv(argv_+1)
 	{
-		std::set<std::string> defoptmap;
-		std::map<char,std::string> aliasmap;
+		//[1] Initialize options map:
+		OptMap optmap;
 		va_list ap;
 		va_start( ap, nofopt);
+
 		for (int ai=0; ai<nofopt; ai++)
 		{
 			const char* av = va_arg( ap, const char*);
-			const char* sp = std::strchr( av, ',');
-			if (sp)
-			{
-				if (sp-av > 1)
-				{
-					throw std::runtime_error( "one character option expected before comma ',' in option definition string");
-				}
-				aliasmap[ av[0]] = std::string( sp+1);
-				defoptmap.insert( std::string( sp+1));
-			}
-			else
-			{
-				defoptmap.insert( std::string( av));
-			}
+			optmap.add( av);
 		}
 		va_end(ap);
 
-		for (; m_argc && m_argv[0][0] == '-'; --m_argc,++m_argv)
+		//[2] Parse options and fill m_opt:
+		std::vector<std::string> optlist;
+		std::string optarg;
+
+		for (; m_argc && optmap.getOpt( *m_argv, optlist, optarg); ++m_argv,--m_argc)
 		{
-			if (m_argv[0][1] != '-')
+			std::vector<std::string>::const_iterator oi = optlist.begin(), oe = optlist.end();
+			for (; oi != oe; ++oi)
 			{
-				unsigned int oi = 1;
-				for (;m_argv[0][oi]; ++oi)
+				std::map<std::string,bool>::iterator li = optmap.longnamemap.find( *oi);
+				if (li == optmap.longnamemap.end()) throw std::runtime_error( std::string( "unknown option '--") + *oi +"'");
+				if (li->second && oi+1 == oe)
 				{
-					std::map<char,std::string>::const_iterator
-						ai = aliasmap.find( m_argv[0][oi]);
-					if (ai == aliasmap.end())
+					if (optarg.empty() && m_argc > 1 && m_argv[1][0] != '-')
 					{
-						throw std::runtime_error( std::string( "unknown option '-") + m_argv[0][oi] + "'");
-					}
-					std::string optname( ai->second);
-					if (!m_argv[0][oi+1] && m_argc>1 && m_argv[1][0] != '-')
-					{
-						Parent::operator[]( optname)
-							= std::string( m_argv[1]);
-						m_argc -= 1;
-						m_argv += 1;
-						break;
+						if (m_argv[1][0] == '=')
+						{
+							m_opt[ *oi] = std::string( m_argv[1]+1);
+						}
+						else
+						{
+							m_opt[ *oi] = std::string( m_argv[1]);
+						}
+						++m_argc;
+						--m_argv;
 					}
 					else
 					{
-						Parent::operator[]( optname)
-							= std::string();
+						m_opt[ *oi] = optarg;
 					}
-				}
-			}
-			else
-			{
-				std::string optname( m_argv[0]+2);
-				if (defoptmap.find( optname) == defoptmap.end())
-				{
-					throw std::runtime_error( std::string( "unknown option '--") + optname + "'");
-				}
-
-				if (m_argc>1 && m_argv[1][0] != '-')
-				{
-					Parent::operator[]( optname)
-						= std::string( m_argv[1]);
-					m_argc -= 1;
-					m_argv += 1;
 				}
 				else
 				{
-					Parent::operator[]( optname) = std::string();
+					m_opt[ *oi] = std::string();
 				}
 			}
 		}
 	}
 
-	bool operator()( const std::string& opt, const std::string& alt="") const
+	bool operator()( const std::string& optname) const
 	{
-		if (Parent::find( opt) != Parent::end()) return true;
-		if (alt.size() && Parent::find( alt) != Parent::end()) return true;
-		return false;
+		return (m_opt.find( optname) != m_opt.end());
 	}
 
 	const char* operator[]( std::size_t idx) const
@@ -150,16 +210,18 @@ public:
 
 	const char* operator[]( const std::string& optname) const
 	{
-		const_iterator oi = find( optname);
-		if (oi == end()) return 0;
+		std::map<std::string,std::string>::const_iterator
+			oi = m_opt.find( optname);
+		if (oi == m_opt.end()) return 0;
 		return oi->second.c_str();
 	}
 
 	template <typename ValueType>
 	int as( const std::string& optname)
 	{
-		const_iterator oi = find( optname);
-		if (oi == end()) return 0;
+		std::map<std::string,std::string>::const_iterator
+			oi = m_opt.find( optname);
+		if (oi == m_opt.end()) return 0;
 		try
 		{
 			return boost::lexical_cast<ValueType>( oi->second);
@@ -178,6 +240,7 @@ public:
 private:
 	std::size_t m_argc;
 	char const** m_argv;
+	std::map<std::string,std::string> m_opt;
 };
 
 }//namespace

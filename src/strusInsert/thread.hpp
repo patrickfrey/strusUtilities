@@ -35,12 +35,23 @@ namespace strus {
 template <class Task>
 class Thread
 {
+private:
+	Thread( const Thread&){}		//... non copyable
+	Thread& operator=(const Thread&){}	//... non copyable
+
 public:
-	Thread( Task* task_)
-		:m_task(task_),m_thread(0){}
+	explicit Thread( Task* task_, const char* name_)
+		:m_task(task_),m_thread(0),m_name(name_)
+	{
+	}
 
 	~Thread()
 	{
+		if (m_thread)
+		{
+			m_task->sigStop();
+			wait_termination();
+		}
 		delete m_task;
 	}
 
@@ -70,13 +81,18 @@ public:
 private:
 	Task* m_task;
 	boost::thread* m_thread;
+	const char* m_name;
 };
 
 template <class Task>
 class ThreadGroup
 {
+private:
+	ThreadGroup( const ThreadGroup&){}		//... non copyable
+	ThreadGroup& operator=(const ThreadGroup&){}	//... non copyable
 public:
-	ThreadGroup(){}
+	ThreadGroup( const char* name_)
+		:m_name(name_){}
 
 	~ThreadGroup()
 	{
@@ -105,6 +121,7 @@ public:
 private:
 	std::vector<Task*> m_task;
 	boost::thread_group m_thread_group;
+	const char* m_name;
 };
 
 }//namespace

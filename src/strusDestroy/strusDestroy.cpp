@@ -26,43 +26,42 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
-#define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
-#include "strus/index.hpp"
-#include "strus/analyzerInterface.hpp"
-#include "strus/tokenMinerFactory.hpp"
+#include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
-#include "docnoAllocatorInterface.hpp"
-#include "fileCrawlerInterface.hpp"
-#include "commitQueue.hpp"
-#include <vector>
-#include <string>
-#include <boost/thread.hpp>
-#include <boost/atomic.hpp>
+#include "programOptions.hpp"
+#include "strus/utils/cmdLineOpt.hpp"
+#include <iostream>
+#include <cstring>
+#include <stdexcept>
 
-namespace strus {
-
-class InsertProcessor
+int main( int argc, const char* argv[])
 {
-public:
-	InsertProcessor(
-			StorageInterface* storage_,
-			AnalyzerInterface* analyzer_,
-			CommitQueue* commitque_,
-			FileCrawlerInterface* crawler_);
+	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
+	{
+		std::cerr << "usage: strusDestroy <config>" << std::endl;
+		std::cerr << "<config>  : configuration string of the storage" << std::endl;
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getStorageConfigDescription(
+						strus::CmdCreateStorageDatabase));
+		return 0;
+	}
+	try
+	{
+		if (argc < 2) throw std::runtime_error( "too few arguments (expected storage configuration string)");
+		if (argc > 2) throw std::runtime_error( "too many arguments for strusDestroy");
 
-	~InsertProcessor();
+		strus::destroyStorageDatabase( argv[1]);
+	}
+	catch (const std::runtime_error& e)
+	{
+		std::cerr << "ERROR " << e.what() << std::endl;
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "EXCEPTION " << e.what() << std::endl;
+	}
+	return -1;
+}
 
-	void sigStop();
-	void run();
 
-private:
-	StorageInterface* m_storage;
-	AnalyzerInterface* m_analyzer;
-	CommitQueue* m_commitque;
-	FileCrawlerInterface* m_crawler;
-	boost::atomic<bool> m_terminated;
-};
-
-}//namespace
-#endif

@@ -91,80 +91,95 @@ void InsertProcessor::run()
 
 	while (m_crawler->fetch( docno, files))
 	{
-		unique_ptr<strus::StorageTransactionInterface>
-			transaction( m_storage->createTransaction());
-
-		fitr = files.begin();
-		for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
+		try
 		{
-			try
+			unique_ptr<strus::StorageTransactionInterface>
+				transaction( m_storage->createTransaction());
+	
+			fitr = files.begin();
+			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
 			{
-				// Read the input file to analyze:
-				std::string documentContent;
-				unsigned int ec = strus::readFile( *fitr, documentContent);
-				if (ec)
+				try
 				{
-					std::ostringstream msg;
-					std::cerr << "failed to load document to analyze " << *fitr << " (file system error " << ec << ")" << std::endl;
+					// Read the input file to analyze:
+					std::string documentContent;
+					unsigned int ec = strus::readFile( *fitr, documentContent);
+					if (ec)
+					{
+						std::ostringstream msg;
+						std::cerr << "failed to load document to analyze " << *fitr << " (file system error " << ec << ")" << std::endl;
+					}
+			
+					// Call the analyzer and create the document:
+					strus::analyzer::Document doc
+						= m_analyzer->analyze( documentContent);
+			
+					boost::scoped_ptr<strus::StorageDocumentInterface>
+						storagedoc( transaction->createDocument(
+								*fitr, docno?(docno + fidx):0));
+			
+					strus::Index lastPos = (doc.terms().empty())
+							?0:doc.terms()[ doc.terms().size()-1].pos();
+	
+					// Define hardcoded document attributes:
+					storagedoc->setAttribute(
+						strus::Constants::attribute_docid(), *fitr);
+			
+					// Define hardcoded document metadata, if known:
+					if (hasDoclenAttribute)
+					{
+						storagedoc->setMetaData(
+							strus::Constants::metadata_doclen(),
+							strus::ArithmeticVariant( lastPos));
+					}
+					// Define all term occurrencies:
+					std::vector<strus::analyzer::Term>::const_iterator
+						ti = doc.terms().begin(), te = doc.terms().end();
+					for (; ti != te; ++ti)
+					{
+						storagedoc->addTermOccurrence(
+							ti->type(), ti->value(), ti->pos(), 0.0/*weight*/);
+					}
+			
+					// Define all attributes extracted from the document analysis:
+					std::vector<strus::analyzer::Attribute>::const_iterator
+						ai = doc.attributes().begin(), ae = doc.attributes().end();
+					for (; ai != ae; ++ai)
+					{
+						storagedoc->setAttribute( ai->name(), ai->value());
+					}
+			
+					// Define all metadata elements extracted from the document analysis:
+					std::vector<strus::analyzer::MetaData>::const_iterator
+						mi = doc.metadata().begin(), me = doc.metadata().end();
+					for (; mi != me; ++mi)
+					{
+						strus::ArithmeticVariant value( mi->value());
+						storagedoc->setMetaData( mi->name(), value);
+					}
+					storagedoc->done();
 				}
-		
-				// Call the analyzer and create the document:
-				strus::analyzer::Document doc
-					= m_analyzer->analyze( documentContent);
-		
-				boost::scoped_ptr<strus::StorageDocumentInterface>
-					storagedoc( transaction->createDocument(
-							*fitr, docno + fidx));
-		
-				strus::Index lastPos = (doc.terms().empty())
-						?0:doc.terms()[ doc.terms().size()-1].pos();
-
-				// Define hardcoded document attributes:
-				storagedoc->setAttribute(
-					strus::Constants::attribute_docid(), *fitr);
-		
-				// Define hardcoded document metadata, if known:
-				if (hasDoclenAttribute)
+				catch (const std::bad_alloc& err)
 				{
-					storagedoc->setMetaData(
-						strus::Constants::metadata_doclen(),
-						strus::ArithmeticVariant( lastPos));
+					std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
 				}
-				// Define all term occurrencies:
-				std::vector<strus::analyzer::Term>::const_iterator
-					ti = doc.terms().begin(), te = doc.terms().end();
-				for (; ti != te; ++ti)
+				catch (const std::runtime_error& err)
 				{
-					storagedoc->addTermOccurrence(
-						ti->type(), ti->value(), ti->pos(), 0.0/*weight*/);
+					std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
 				}
-		
-				// Define all attributes extracted from the document analysis:
-				std::vector<strus::analyzer::Attribute>::const_iterator
-					ai = doc.attributes().begin(), ae = doc.attributes().end();
-				for (; ai != ae; ++ai)
-				{
-					storagedoc->setAttribute( ai->name(), ai->value());
-				}
-		
-				// Define all metadata elements extracted from the document analysis:
-				std::vector<strus::analyzer::MetaData>::const_iterator
-					mi = doc.metadata().begin(), me = doc.metadata().end();
-				for (; mi != me; ++mi)
-				{
-					strus::ArithmeticVariant value( mi->value());
-					storagedoc->setMetaData( mi->name(), value);
-				}
-				storagedoc->done();
 			}
-			catch (const std::runtime_error& err)
+			if (!m_terminated)
 			{
-				std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+				m_commitque->push( transaction.release(), docno, files.size());
 			}
 		}
-		if (!m_terminated)
+		catch (const std::bad_alloc& err)
 		{
-			m_commitque->push( transaction.release(), docno, files.size());
+			std::cerr << "out of memory when processing chunk of " << files.size() << " documents: " << err.what() << std::endl;
+		}
+		catch (const std::runtime_error& err)
+		{
+			std::cerr << "failed to process chunk of " << files.size() << " documents: " << err.what() << std::endl;
 		}
 	}
 }

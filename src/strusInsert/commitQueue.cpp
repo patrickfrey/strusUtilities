@@ -39,7 +39,7 @@ void CommitQueue::push(
 	bool myCommit = false;
 	{
 		boost::mutex::scoped_lock( m_mutex);
-		if (m_minDocno == minDocno)
+		if (m_minDocno == minDocno || minDocno == 0)
 		{
 			myCommit = true;
 		}
@@ -55,7 +55,9 @@ void CommitQueue::push(
 		do
 		{
 			transaction->commit();
-			std::cerr << "inserted " << (m_minDocno + nofDocs) << " documents " << std::endl;
+			Index totalNofDocuments = m_storage->nofDocumentsInserted();
+			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
+			std::cerr << "inserted " << nofDocsInserted << " documents (total " << totalNofDocuments << ")" << std::endl;
 			delete transaction;
 			{
 				boost::mutex::scoped_lock( m_mutex);

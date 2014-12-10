@@ -43,11 +43,12 @@ namespace strus {
 class CommitQueue
 {
 public:
-	CommitQueue(
+	explicit CommitQueue(
 			StorageInterface* storage_)
 		:m_storage(storage_)
 	{
 		m_minDocno = m_storage->maxDocumentNumber() + 1;
+		m_nofDocuments = m_storage->nofDocumentsInserted();
 	}
 
 	void push(
@@ -97,6 +98,7 @@ private:
 private:
 	StorageInterface* m_storage;
 	Index m_minDocno;
+	Index m_nofDocuments;
 	std::set<OpenTransaction> m_openTransactions;
 	boost::mutex m_mutex;
 };
