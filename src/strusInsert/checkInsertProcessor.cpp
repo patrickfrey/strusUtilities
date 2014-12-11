@@ -89,6 +89,7 @@ void CheckInsertProcessor::run()
 	bool hasDoclenAttribute
 		= metadata->hasElement( strus::Constants::metadata_doclen());
 
+	unsigned int filesChecked = 0;
 	while (m_crawler->fetch( docno, files))
 	{
 		fitr = files.begin();
@@ -162,6 +163,8 @@ void CheckInsertProcessor::run()
 				std::cerr << "failed to check document '" << *fitr << "': " << err.what() << std::endl;
 			}
 		}
+		filesChecked += files.size();
+		std::cerr << "checked " << filesChecked << " documents" << std::endl;
 	}
 }
 

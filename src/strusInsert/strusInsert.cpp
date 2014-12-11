@@ -60,7 +60,7 @@ int main( int argc_, const char* argv_[])
 	{
 		opt = strus::ProgramOptions(
 				argc_, argv_, 4,
-				"h,help", "t,threads", "c,commit", "n,new");
+				"h,help", "t,threads:", "c,commit:", "n,new");
 		if (opt( "help")) printUsageAndExit = true;
 
 		if (opt.nofargs() > 3)

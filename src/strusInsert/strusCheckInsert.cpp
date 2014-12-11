@@ -59,8 +59,8 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 3,
-				"h,help", "t,threads", "l,logfile");
+				argc_, argv_, 4,
+				"h,help", "t,threads:", "l,logfile:", "n,notify:");
 		if (opt( "help")) printUsageAndExit = true;
 
 		if (opt.nofargs() > 3)
@@ -96,6 +96,7 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "-h,--help    : Print this usage info" << std::endl;
 		std::cerr << "-t,--threads : Number of check insert threads to use"  << std::endl;
 		std::cerr << "-l,--logfile : File to use for output (default stdout)"  << std::endl;
+		std::cerr << "-n,--notify  : Notification interval (number of documents)" << std::endl;
 		return rt;
 	}
 	try
@@ -105,6 +106,11 @@ int main( int argc_, const char* argv_[])
 		if (opt("logfile"))
 		{
 			logfile = opt[ "logfile"];
+		}
+		unsigned int notificationInterval = 1000;
+		if (opt("notify"))
+		{
+			notificationInterval = opt.as<unsigned int>( "notify");
 		}
 		unsigned int ec;
 		std::string analyzerProgramSource;
@@ -126,7 +132,8 @@ int main( int argc_, const char* argv_[])
 			analyzer( strus::createAnalyzer( *minerfac, analyzerProgramSource));
 
 		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler( opt[2], 0, 100, nofThreads*5+5);
+			= new strus::FileCrawler(
+				opt[2], 0, notificationInterval, nofThreads*5+5);
 
 		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(

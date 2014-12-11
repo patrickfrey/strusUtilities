@@ -74,16 +74,16 @@ StorageTransactionInterface* CommitQueue::getNextTransaction( Index& nofDocs)
 	StorageTransactionInterface* rt = 0;
 	boost::mutex::scoped_lock( m_mutex);
 
-	std::set<OpenTransaction>::reverse_iterator
-		ti = m_openTransactions.rbegin();
+	std::set<OpenTransaction>::iterator
+		ti = m_openTransactions.begin();
 
-	if (ti != m_openTransactions.rend())
+	if (ti != m_openTransactions.end())
 	{
 		if (ti->minDocno() == m_minDocno)
 		{
 			rt = ti->transaction();
 			nofDocs = ti->nofDocuments();
-			m_openTransactions.erase( --ti.base());
+			m_openTransactions.erase( ti++);
 		}
 	}
 	return rt;
