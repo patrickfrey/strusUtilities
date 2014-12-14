@@ -71,6 +71,7 @@ void FileCrawler::run()
 
 		findFilesToProcess();
 	}
+	m_chunkque_cond.notify_all();
 }
 
 void FileCrawler::findFilesToProcess()
