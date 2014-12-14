@@ -51,7 +51,7 @@ public:
 			std::size_t transactionSize_,
 			std::size_t nofChunksReadAhead_=10);
 
-	~FileCrawler();
+	virtual ~FileCrawler();
 
 	virtual bool fetch( Index& docno, std::vector<std::string>& files);
 

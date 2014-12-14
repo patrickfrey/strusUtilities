@@ -3,36 +3,33 @@ Helper programs for strus
 
 strusCreate
 ===========
-
 Create a strus repository
+
+
+strusDestroy
+===========
+Remove a strus repository
 
 
 strusInspect
 ============
-
 Inspect elements of items inserted in a strus repository.
 
 
-strusAnalyzer
-=============
-
+strusAnalyze
+============
 Analyzer for feeding the IR engine.
 Currently processing XML documents for german.
 
 
-
 strusInsert
 ===========
-
 Insert a document or all files with extension .xml in a directory or any 
 descendant directory of it.
 
 
-
 strusQuery
 ==========
-
 Evaluate a query per command line.
-
 
 
