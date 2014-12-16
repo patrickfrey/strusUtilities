@@ -181,8 +181,8 @@ public:
 						{
 							m_opt[ *oi] = std::string( m_argv[1]);
 						}
-						++m_argc;
-						--m_argv;
+						--m_argc;
+						++m_argv;
 					}
 					else
 					{
@@ -235,6 +235,20 @@ public:
 	int nofargs() const
 	{
 		return m_argc;
+	}
+
+	void print( std::ostream& out)
+	{
+		std::map<std::string,std::string>::const_iterator oi = m_opt.begin(), oe = m_opt.end();
+		for (; oi != oe; ++oi)
+		{
+			out << "--" << oi->first << "=" << oi->second << std::endl;
+		}
+		std::size_t ai = 0, ae = m_argc;
+		for (; ai != ae; ++ai)
+		{
+			out << "[" << ai << "] " << m_argv[ai] << std::endl;
+		}
 	}
 
 private:
