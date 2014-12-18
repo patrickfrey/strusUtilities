@@ -82,9 +82,7 @@ int main( int argc_, const char* argv_[])
 		printUsageAndExit = true;
 		rt = 3;
 	}
-	/*[-]*/std::cout << "OPTIONS:" << std::endl;
-	/*[-]*/opt.print( std::cout);
-	/*[-]*/std::cout << "------" << std::endl;
+
 	if (printUsageAndExit)
 	{
 		std::cerr << "usage: strusInsert [options] <config> <program> <docpath>" << std::endl;
