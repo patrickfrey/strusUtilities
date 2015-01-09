@@ -80,7 +80,7 @@ static bool processQuery(
 		{
 			std::cerr << "unexpected meta data definitions in the query (ignored)" << std::endl;
 		}
-		std::vector<Term> termar = doc.terms();
+		std::vector<Term> termar = doc.searchIndexTerms();
 		if (termar.empty())
 		{
 			std::cerr << "query got empty after analyze (did you use the right analyzer program ?)" << std::endl;

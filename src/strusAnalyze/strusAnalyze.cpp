@@ -78,9 +78,9 @@ int main( int argc, const char* argv[])
 			= analyzer->analyze( documentContent);
 
 		std::vector<strus::analyzer::Term>::const_iterator
-			ti = doc.terms().begin(), te = doc.terms().end();
+			ti = doc.searchIndexTerms().begin(), te = doc.searchIndexTerms().end();
 
-		std::cout << "terms:" << std::endl;
+		std::cout << "search index terms:" << std::endl;
 		for (; ti != te; ++ti)
 		{
 			std::cout << ti->pos()
@@ -88,6 +88,19 @@ int main( int argc, const char* argv[])
 				  << " '" << ti->value() << "'"
 				  << std::endl;
 		}
+
+		std::vector<strus::analyzer::Term>::const_iterator
+			fi = doc.forwardIndexTerms().begin(), fe = doc.forwardIndexTerms().end();
+
+		std::cout << "forward index terms:" << std::endl;
+		for (; fi != fe; ++fi)
+		{
+			std::cout << fi->pos()
+				  << " " << fi->type()
+				  << " '" << fi->value() << "'"
+				  << std::endl;
+		}
+
 		std::vector<strus::analyzer::MetaData>::const_iterator
 			mi = doc.metadata().begin(), me = doc.metadata().end();
 

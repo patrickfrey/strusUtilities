@@ -188,13 +188,13 @@ int main( int argc, const char* argv[])
 {
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
-		std::cerr << "usage: strusInspect <config> <what> <key>" << std::endl;
+		std::cerr << "usage: strusInspect <config> <what...>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getStorageConfigDescription(
 						strus::CmdCreateStorageClient));
-		std::cerr << "<what>    : identifier of what to inspect" << std::endl;
+		std::cerr << "<what>    : what to inspect:" << std::endl;
 		std::cerr << "            \"pos\" <typeno> <valueno> <doc>" << std::endl;
 		std::cerr << "            \"ff\" <typeno> <valueno> <doc>" << std::endl;
 		std::cerr << "            \"df\" <typeno> <valueno>" << std::endl;
@@ -202,7 +202,6 @@ int main( int argc, const char* argv[])
 		std::cerr << "            \"attrib\" <name> <doc>" << std::endl;
 		std::cerr << "            \"content\" <typeno> <doc>" << std::endl;
 		std::cerr << "            \"token\" <typeno> <doc>" << std::endl;
-		std::cerr << "<key>     : key of the value to retrieve" << std::endl;
 		return 0;
 	}
 	try

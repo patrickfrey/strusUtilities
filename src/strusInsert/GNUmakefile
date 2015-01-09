@@ -4,6 +4,7 @@ include $(TOPDIR)/variables.mk
 CPP_OBJS= \
 	fileCrawler.o \
 	insertProcessor.o \
+	keyMapGenProcessor.o \
 	checkInsertProcessor.o \
 	commitQueue.o
 

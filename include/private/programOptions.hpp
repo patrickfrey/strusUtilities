@@ -175,7 +175,16 @@ public:
 					{
 						if (m_argv[1][0] == '=')
 						{
-							m_opt[ *oi] = std::string( m_argv[1]+1);
+							if (!m_argv[1][1] && m_argc > 2)
+							{
+								--m_argc;
+								++m_argv;
+								m_opt[ *oi] = std::string( m_argv[1]);
+							}
+							else
+							{
+								m_opt[ *oi] = std::string( m_argv[1]+1);
+							}
 						}
 						else
 						{

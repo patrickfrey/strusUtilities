@@ -26,36 +26,94 @@
 
 --------------------------------------------------------------------
 */
-#include "insertProcessor.hpp"
+#include "keyMapGenProcessor.hpp"
 #include "strus/constants.hpp"
-#include "strus/metaDataReaderInterface.hpp"
-#include "strus/storageTransactionInterface.hpp"
-#include "strus/storageInterface.hpp"
-#include "strus/arithmeticVariant.hpp"
 #include "strus/utils/fileio.hpp"
 #include <boost/scoped_ptr.hpp>
 #include <boost/interprocess/smart_ptr/unique_ptr.hpp>
 
 using namespace strus;
 
-InsertProcessor::InsertProcessor(
-		StorageInterface* storage_,
+static bool compareKeyMapOccurrenceFrequency( const KeyOccurrence& aa, const KeyOccurrence& bb)
+{
+	if (aa.frequency() < bb.frequency()) return true;
+	if (aa.frequency() > bb.frequency()) return false;
+	return aa.name() < bb.name();
+}
+
+void KeyMapQueue::push( KeyOccurrenceList& lst)
+{
+	boost::mutex::scoped_lock( m_mutex);
+	m_keyOccurrenceListBuf.push_back( KeyOccurrenceList());
+	m_keyOccurrenceListBuf.back().swap( lst);
+}
+
+void KeyMapQueue::printKeyOccurrenceList( std::ostream& out, std::size_t maxNofResults)
+{
+	// Merge lists:
+	std::vector<KeyOccurrenceList>::const_iterator
+		ki = m_keyOccurrenceListBuf.begin(),
+		ke = m_keyOccurrenceListBuf.end();
+
+	KeyOccurrenceList result = *ki;
+	for (++ki; ki != ke; ++ki)
+	{
+		KeyOccurrenceList prev;
+		prev.swap( result);
+
+		KeyOccurrenceList::const_iterator ai = prev.begin(), ae = prev.end();
+		KeyOccurrenceList::const_iterator bi = ki->begin(), be = ki->end();
+
+		while (ai != ae && bi != be)
+		{
+			if (ai->name() <= bi->name())
+			{
+				if (ai->name() == bi->name())
+				{
+					result.push_back( KeyOccurrence( ai->name(), ai->frequency() + bi->frequency()));
+					++ai;
+					++bi;
+				}
+				else
+				{
+					result.push_back( KeyOccurrence( ai->name(), ai->frequency()));
+					++ai;
+				}
+			}
+			else
+			{
+				result.push_back( KeyOccurrence( bi->name(), bi->frequency()));
+				++bi;
+			}
+		}
+	}
+	// Sort result:
+	std::sort( result.begin(), result.end(), compareKeyMapOccurrenceFrequency);
+
+	// Print result:
+	std::size_t ri = 0, re = maxNofResults<result.size()?maxNofResults:result.size();
+	for (; ri != re; ++ri)
+	{
+		out << result[ ri].name() << std::endl;
+	}
+}
+
+KeyMapGenProcessor::KeyMapGenProcessor(
 		AnalyzerInterface* analyzer_,
-		CommitQueue* commitque_,
+		KeyMapQueue* que_,
 		FileCrawlerInterface* crawler_)
 
-	:m_storage(storage_)
-	,m_analyzer(analyzer_)
-	,m_commitque(commitque_)
+	:m_analyzer(analyzer_)
+	,m_que(que_)
 	,m_crawler(crawler_)
 	,m_terminated(false)
 {}
 
-InsertProcessor::~InsertProcessor()
+KeyMapGenProcessor::~KeyMapGenProcessor()
 {
 }
 
-void InsertProcessor::sigStop()
+void KeyMapGenProcessor::sigStop()
 {
 	m_terminated = true;
 }
@@ -77,25 +135,18 @@ public:
 		:boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >(p){}
 };
 
-void InsertProcessor::run()
+void KeyMapGenProcessor::run()
 {
 	Index docno;
 	std::vector<std::string> files;
 	std::vector<std::string>::const_iterator fitr;
 
-	boost::scoped_ptr<strus::MetaDataReaderInterface> metadata( 
-		m_storage->createMetaDataReader());
-
-	bool hasDoclenAttribute
-		= metadata->hasElement( strus::Constants::metadata_doclen());
-
 	while (m_crawler->fetch( docno, files))
 	{
 		try
 		{
-			unique_ptr<strus::StorageTransactionInterface>
-				transaction( m_storage->createTransaction());
-	
+			KeyOccurrenceList keyOccurrenceList;
+
 			fitr = files.begin();
 			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
 			{
@@ -114,64 +165,14 @@ void InsertProcessor::run()
 					strus::analyzer::Document doc
 						= m_analyzer->analyze( documentContent);
 			
-					boost::scoped_ptr<strus::StorageDocumentInterface>
-						storagedoc( transaction->createDocument(
-								*fitr, docno?(docno + fidx):0));
-			
-					strus::Index lastPos = (doc.searchIndexTerms().empty())
-							?0:doc.searchIndexTerms()[ 
-								doc.searchIndexTerms().size()-1].pos();
-	
-					// Define hardcoded document attributes:
-					storagedoc->setAttribute(
-						strus::Constants::attribute_docid(), *fitr);
-			
-					// Define hardcoded document metadata, if known:
-					if (hasDoclenAttribute)
-					{
-						storagedoc->setMetaData(
-							strus::Constants::metadata_doclen(),
-							strus::ArithmeticVariant( lastPos));
-					}
 					// Define all search index term occurrencies:
 					std::vector<strus::analyzer::Term>::const_iterator
 						ti = doc.searchIndexTerms().begin(),
 						te = doc.searchIndexTerms().end();
 					for (; ti != te; ++ti)
 					{
-						storagedoc->addSearchIndexTerm(
-							ti->type(), ti->value(), ti->pos(), 0.0/*weight*/);
+						keyOccurrenceList.push_back( KeyOccurrence( ti->value()));
 					}
-
-					// Define all forward index terms:
-					std::vector<strus::analyzer::Term>::const_iterator
-						fi = doc.forwardIndexTerms().begin(),
-						fe = doc.forwardIndexTerms().end();
-					for (; fi != fe; ++fi)
-					{
-						storagedoc->addForwardIndexTerm(
-							fi->type(), fi->value(), fi->pos());
-					}
-
-					// Define all attributes extracted from the document analysis:
-					std::vector<strus::analyzer::Attribute>::const_iterator
-						ai = doc.attributes().begin(), ae = doc.attributes().end();
-					for (; ai != ae; ++ai)
-					{
-						storagedoc->setAttribute( ai->name(), ai->value());
-					}
-			
-					// Define all metadata elements extracted from the document analysis:
-					std::vector<strus::analyzer::MetaData>::const_iterator
-						mi = doc.metadata().begin(), me = doc.metadata().end();
-					for (; mi != me; ++mi)
-					{
-						strus::ArithmeticVariant value( mi->value());
-						storagedoc->setMetaData( mi->name(), value);
-					}
-
-					// Finish document completed:
-					storagedoc->done();
 				}
 				catch (const std::bad_alloc& err)
 				{
@@ -184,7 +185,7 @@ void InsertProcessor::run()
 			}
 			if (!m_terminated)
 			{
-				m_commitque->push( transaction.release(), docno, files.size());
+				m_que->push( keyOccurrenceList);
 			}
 		}
 		catch (const std::bad_alloc& err)

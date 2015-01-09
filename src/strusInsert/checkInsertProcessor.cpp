@@ -113,8 +113,9 @@ void CheckInsertProcessor::run()
 				boost::scoped_ptr<strus::StorageDocumentInterface>
 					storagedoc( m_storage->createDocumentChecker( *fitr, m_logfile));
 
-				strus::Index lastPos = (doc.terms().empty())
-						?0:doc.terms()[ doc.terms().size()-1].pos();
+				strus::Index lastPos = (doc.searchIndexTerms().empty())
+						?0:doc.searchIndexTerms()[
+							doc.searchIndexTerms().size()-1].pos();
 
 				// Define hardcoded document attributes:
 				storagedoc->setAttribute(
@@ -127,15 +128,26 @@ void CheckInsertProcessor::run()
 						strus::Constants::metadata_doclen(),
 						strus::ArithmeticVariant( lastPos));
 				}
-				// Define all term occurrencies:
+				// Define all search index term occurrencies:
 				std::vector<strus::analyzer::Term>::const_iterator
-					ti = doc.terms().begin(), te = doc.terms().end();
+					ti = doc.searchIndexTerms().begin(),
+					te = doc.searchIndexTerms().end();
 				for (; ti != te; ++ti)
 				{
-					storagedoc->addTermOccurrence(
+					storagedoc->addSearchIndexTerm(
 						ti->type(), ti->value(), ti->pos(), 0.0/*weight*/);
 				}
-		
+
+				// Define all forward index term occurrencies:
+				std::vector<strus::analyzer::Term>::const_iterator
+					fi = doc.forwardIndexTerms().begin(),
+					fe = doc.forwardIndexTerms().end();
+				for (; fi != fe; ++fi)
+				{
+					storagedoc->addForwardIndexTerm(
+						fi->type(), fi->value(), fi->pos());
+				}
+
 				// Define all attributes extracted from the document analysis:
 				std::vector<strus::analyzer::Attribute>::const_iterator
 					ai = doc.attributes().begin(), ae = doc.attributes().end();
