@@ -29,15 +29,15 @@
 #ifndef _STRUS_KEYMAP_GENERATE_PROCESSOR_HPP_INCLUDED
 #define _STRUS_KEYMAP_GENERATE_PROCESSOR_HPP_INCLUDED
 #include "strus/index.hpp"
-#include "strus/analyzerInterface.hpp"
-#include "strus/tokenMinerFactory.hpp"
-#include "fileCrawlerInterface.hpp"
 #include <vector>
 #include <string>
 #include <boost/thread/mutex.hpp>
 #include <boost/atomic.hpp>
 
 namespace strus {
+
+class AnalyzerInterface;
+class FileCrawlerInterface;
 
 class KeyOccurrence
 {
@@ -59,13 +59,13 @@ private:
 typedef std::vector<KeyOccurrence> KeyOccurrenceList;
 
 
-class KeyMapQueue
+class KeyMapGenResultList
 {
 public:
-	KeyMapQueue(){}
+	KeyMapGenResultList(){}
 	void push( KeyOccurrenceList& lst);
 
-	void printKeyOccurrenceList( std::ostream& out, std::size_t maxNofResults);
+	void printKeyOccurrenceList( std::ostream& out, std::size_t maxNofResults) const;
 
 private:
 	boost::mutex m_mutex;
@@ -78,7 +78,7 @@ class KeyMapGenProcessor
 public:
 	KeyMapGenProcessor(
 			AnalyzerInterface* analyzer_,
-			KeyMapQueue* que_,
+			KeyMapGenResultList* que_,
 			FileCrawlerInterface* crawler_);
 
 	~KeyMapGenProcessor();
@@ -88,7 +88,7 @@ public:
 
 private:
 	AnalyzerInterface* m_analyzer;
-	KeyMapQueue* m_que;
+	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
 	boost::atomic<bool> m_terminated;
 };

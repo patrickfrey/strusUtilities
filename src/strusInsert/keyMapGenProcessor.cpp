@@ -27,28 +27,29 @@
 --------------------------------------------------------------------
 */
 #include "keyMapGenProcessor.hpp"
+#include "strus/analyzerInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/utils/fileio.hpp"
+#include "fileCrawlerInterface.hpp"
 #include <boost/scoped_ptr.hpp>
-#include <boost/interprocess/smart_ptr/unique_ptr.hpp>
 
 using namespace strus;
 
 static bool compareKeyMapOccurrenceFrequency( const KeyOccurrence& aa, const KeyOccurrence& bb)
 {
-	if (aa.frequency() < bb.frequency()) return true;
-	if (aa.frequency() > bb.frequency()) return false;
+	if (aa.frequency() > bb.frequency()) return true;
+	if (aa.frequency() < bb.frequency()) return false;
 	return aa.name() < bb.name();
 }
 
-void KeyMapQueue::push( KeyOccurrenceList& lst)
+void KeyMapGenResultList::push( KeyOccurrenceList& lst)
 {
-	boost::mutex::scoped_lock( m_mutex);
+	boost::mutex::scoped_lock lock( m_mutex);
 	m_keyOccurrenceListBuf.push_back( KeyOccurrenceList());
 	m_keyOccurrenceListBuf.back().swap( lst);
 }
 
-void KeyMapQueue::printKeyOccurrenceList( std::ostream& out, std::size_t maxNofResults)
+void KeyMapGenResultList::printKeyOccurrenceList( std::ostream& out, std::size_t maxNofResults) const
 {
 	// Merge lists:
 	std::vector<KeyOccurrenceList>::const_iterator
@@ -100,7 +101,7 @@ void KeyMapQueue::printKeyOccurrenceList( std::ostream& out, std::size_t maxNofR
 
 KeyMapGenProcessor::KeyMapGenProcessor(
 		AnalyzerInterface* analyzer_,
-		KeyMapQueue* que_,
+		KeyMapGenResultList* que_,
 		FileCrawlerInterface* crawler_)
 
 	:m_analyzer(analyzer_)
@@ -118,22 +119,6 @@ void KeyMapGenProcessor::sigStop()
 	m_terminated = true;
 }
 
-template<typename T>
-struct ShouldBeDefaultDeleter {
-	void operator()(T *p)
-	{
-		delete p;
-	}
-};
-
-template<typename T>
-class unique_ptr
-	:public boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >
-{
-public:
-	unique_ptr( T* p)
-		:boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >(p){}
-};
 
 void KeyMapGenProcessor::run()
 {
@@ -145,7 +130,8 @@ void KeyMapGenProcessor::run()
 	{
 		try
 		{
-			KeyOccurrenceList keyOccurrenceList;
+			typedef std::map<std::string,int> KeyOccurrenceMap;
+			KeyOccurrenceMap keyOccurrenceMap;
 
 			fitr = files.begin();
 			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
@@ -171,7 +157,16 @@ void KeyMapGenProcessor::run()
 						te = doc.searchIndexTerms().end();
 					for (; ti != te; ++ti)
 					{
-						keyOccurrenceList.push_back( KeyOccurrence( ti->value()));
+						KeyOccurrenceMap::iterator
+							ki = keyOccurrenceMap.find( ti->value());
+						if (ki == keyOccurrenceMap.end())
+						{
+							keyOccurrenceMap[ ti->value()] = 1;
+						}
+						else
+						{
+							++ki->second;
+						}
 					}
 				}
 				catch (const std::bad_alloc& err)
@@ -185,7 +180,15 @@ void KeyMapGenProcessor::run()
 			}
 			if (!m_terminated)
 			{
+				KeyOccurrenceList keyOccurrenceList;
+				KeyOccurrenceMap::const_iterator
+					ki = keyOccurrenceMap.begin(), ke = keyOccurrenceMap.end();
+				for (; ki != ke; ++ki)
+				{
+					keyOccurrenceList.push_back( KeyOccurrence( ki->first, ki->second));
+				}
 				m_que->push( keyOccurrenceList);
+				std::cerr << ".";
 			}
 		}
 		catch (const std::bad_alloc& err)

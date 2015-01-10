@@ -182,6 +182,13 @@ static void inspectToken( strus::StorageInterface& storage, const char** key, in
 	}
 }
 
+static void inspectDocid( strus::StorageInterface& storage, const char** key, int size)
+{
+	if (size > 1) throw std::runtime_error( "too many arguments");
+	if (size < 1) throw std::runtime_error( "too few arguments");
+
+	std::cout << storage.documentNumber( key[0]) << std::endl;
+}
 
 
 int main( int argc, const char* argv[])
@@ -195,13 +202,14 @@ int main( int argc, const char* argv[])
 					12, strus::getStorageConfigDescription(
 						strus::CmdCreateStorageClient));
 		std::cerr << "<what>    : what to inspect:" << std::endl;
-		std::cerr << "            \"pos\" <typeno> <valueno> <doc>" << std::endl;
-		std::cerr << "            \"ff\" <typeno> <valueno> <doc>" << std::endl;
+		std::cerr << "            \"pos\" <typeno> <valueno> <doc-id/no>" << std::endl;
+		std::cerr << "            \"ff\" <typeno> <valueno> <doc-id/no>" << std::endl;
 		std::cerr << "            \"df\" <typeno> <valueno>" << std::endl;
-		std::cerr << "            \"meta\" <name> <doc>" << std::endl;
-		std::cerr << "            \"attrib\" <name> <doc>" << std::endl;
-		std::cerr << "            \"content\" <typeno> <doc>" << std::endl;
-		std::cerr << "            \"token\" <typeno> <doc>" << std::endl;
+		std::cerr << "            \"meta\" <name> <doc-id/no>" << std::endl;
+		std::cerr << "            \"attrib\" <name> <doc-id/no>" << std::endl;
+		std::cerr << "            \"content\" <typeno> <doc-id/no>" << std::endl;
+		std::cerr << "            \"token\" <typeno> <doc-id/no>" << std::endl;
+		std::cerr << "            \"docno\" <docid>" << std::endl;
 		return 0;
 	}
 	try
@@ -234,6 +242,10 @@ int main( int argc, const char* argv[])
 		else if (0==std::strcmp( argv[2], "content"))
 		{
 			inspectContent( *storage, argv+3, argc-3);
+		}
+		else if (0==std::strcmp( argv[2], "docno"))
+		{
+			inspectDocid( *storage, argv+3, argc-3);
 		}
 		else if (0==std::strcmp( argv[2], "token"))
 		{

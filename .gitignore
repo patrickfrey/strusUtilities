@@ -30,5 +30,6 @@ src/strusInspect/strusInspect
 src/strusAnalyze/strusAnalyze
 src/strusInsert/strusInsert
 src/strusInsert/strusCheckInsert
+src/strusInsert/strusGenerateKeyMap
 src/strusDestroy/strusDestroy
 src/strusQuery/strusQuery

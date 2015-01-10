@@ -13,7 +13,7 @@ CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
 LDFLAGS=-L$(INSTALL_LIBDIR)
 LIBS=-lstrus_analyzer -lstrus_tokenminer -lstemmer -lstrus_utils -lstrus_lvdbstorage -lboost_system -lboost_thread
 
-all: strusInsert strusCheckInsert
+all: strusInsert strusCheckInsert strusGenerateKeyMap
 
 -include $(CPP_OBJS:.o=.d)
 
@@ -27,22 +27,29 @@ strusInsert: $(CPP_OBJS) strusInsert.o
 strusCheckInsert: $(CPP_OBJS) strusCheckInsert.o
 		$(CXX) -o $@ strusCheckInsert.o $(CPP_OBJS) $(LDFLAGS) $(LIBS)
 
+strusGenerateKeyMap: $(CPP_OBJS) strusGenerateKeyMap.o
+		$(CXX) -o $@ strusGenerateKeyMap.o $(CPP_OBJS) $(LDFLAGS) $(LIBS)
+
+
 .PHONY: clean
 clean:
 	rm -f ${CPP_OBJS} ${CPP_OBJS:.o=.d} \
 		strusInsert strusInsert.o strusInsert.d \
-		strusCheckInsert strusCheckInsert.o strusCheckInsert.d
+		strusCheckInsert strusCheckInsert.o strusCheckInsert.d \
+		strusGenerateKeyMap strusGenerateKeyMap.o strusGenerateKeyMap.d
 
 .PHONY: install
 install:
 	@mkdir -p $(INSTALL_BINDIR)
 	@cp strusInsert $(INSTALL_BINDIR)
 	@cp strusCheckInsert $(INSTALL_BINDIR)
+	@cp strusGenerateKeyMap $(INSTALL_BINDIR)
 
 .PHONY: uninstall
 uninstall:
 	@rm $(INSTALL_BINDIR)/strusInsert
 	@rm $(INSTALL_BINDIR)/strusCheckInsert
+	@rm $(INSTALL_BINDIR)/strusGenerateKeyMap
 
 
 

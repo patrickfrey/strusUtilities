@@ -43,7 +43,6 @@
 #include "docnoAllocator.hpp"
 #include "insertProcessor.hpp"
 #include "thread.hpp"
-#include "programOptions.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>

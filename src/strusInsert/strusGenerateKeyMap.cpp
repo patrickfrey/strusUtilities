@@ -32,18 +32,12 @@
 #include "strus/tokenMiner.hpp"
 #include "strus/tokenMinerFactory.hpp"
 #include "strus/tokenMinerLib.hpp"
-#include "strus/storageLib.hpp"
-#include "strus/storageInterface.hpp"
-#include "strus/storageDocumentInterface.hpp"
 #include "strus/utils/fileio.hpp"
 #include "strus/utils/cmdLineOpt.hpp"
 #include "programOptions.hpp"
 #include "fileCrawler.hpp"
-#include "commitQueue.hpp"
-#include "docnoAllocator.hpp"
-#include "insertProcessor.hpp"
+#include "keyMapGenProcessor.hpp"
 #include "thread.hpp"
-#include "programOptions.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
@@ -60,16 +54,16 @@ int main( int argc_, const char* argv_[])
 	{
 		opt = strus::ProgramOptions(
 				argc_, argv_, 4,
-				"h,help", "t,threads:", "c,commit:", "n,new");
+				"h,help", "t,threads:", "u,unit:", "n,results:");
 		if (opt( "help")) printUsageAndExit = true;
 
-		if (opt.nofargs() > 3)
+		if (opt.nofargs() > 2)
 		{
 			std::cerr << "ERROR too many arguments" << std::endl;
 			printUsageAndExit = true;
 			rt = 1;
 		}
-		if (opt.nofargs() < 3)
+		if (opt.nofargs() < 2)
 		{
 			std::cerr << "ERROR too few arguments" << std::endl;
 			printUsageAndExit = true;
@@ -84,40 +78,33 @@ int main( int argc_, const char* argv_[])
 	}
 	if (printUsageAndExit)
 	{
-		std::cerr << "usage: strusInsert [options] <config> <program> <docpath>" << std::endl;
-		std::cerr << "<config>  = storage configuration string" << std::endl;
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, strus::getStorageConfigDescription(
-						strus::CmdCreateStorageClient));
+		std::cerr << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
 		std::cerr << "<program> = path of analyzer program" << std::endl;
 		std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
 		std::cerr << "options:" << std::endl;
-		std::cerr << "-h,--help    : Print this usage info" << std::endl;
-		std::cerr << "-t,--threads : Number of inserter threads to use"  << std::endl;
-		std::cerr << "-s,--commit  : Number of files inserted per transaction (default 1000)" << std::endl;
-		std::cerr << "-n,--new     : All inserts are new; use preallocated document numbers" << std::endl;
+		std::cerr << "-h,--help     : Print this usage info" << std::endl;
+		std::cerr << "-t,--threads  : Number of inserter threads to use"  << std::endl;
+		std::cerr << "-u,--unit     : Number of files processed as one chunk (default 1000)" << std::endl;
+		std::cerr << "-n,--results  : Number of elements in the key map generated" << std::endl;
 		return rt;
 	}
 	try
 	{
-		bool allInsertsNew = opt( "new");
+		// [1] Build objects:
 		unsigned int nofThreads = opt.as<unsigned int>( "threads");
-		unsigned int transactionSize = opt.as<unsigned int>( "commit");
-		if (!transactionSize) transactionSize = 1000;
+		unsigned int unitSize = opt.as<unsigned int>( "unit");
+		unsigned int nofResults = opt.as<unsigned int>( "results");
+		if (!unitSize) unitSize = 1000;
 
 		unsigned int ec;
 		std::string analyzerProgramSource;
-		ec = strus::readFile( opt[1], analyzerProgramSource);
+		ec = strus::readFile( opt[0], analyzerProgramSource);
 		if (ec)
 		{
 			std::ostringstream msg;
 			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
-		boost::scoped_ptr<strus::StorageInterface>
-			storage( strus::createStorageClient( opt[0]));
-
 		std::string tokenMinerSource;
 		boost::scoped_ptr<strus::TokenMinerFactory>
 			minerfac( strus::createTokenMinerFactory( tokenMinerSource));
@@ -125,20 +112,13 @@ int main( int argc_, const char* argv_[])
 		boost::scoped_ptr<strus::AnalyzerInterface>
 			analyzer( strus::createAnalyzer( *minerfac, analyzerProgramSource));
 
-		boost::scoped_ptr<strus::CommitQueue>
-			commitQue( new strus::CommitQueue( storage.get()));
+		strus::KeyMapGenResultList resultList;
 
-		boost::scoped_ptr<strus::DocnoAllocator> docnoAllocator;
-		if (allInsertsNew)
-		{
-			docnoAllocator.reset( 
-				new strus::DocnoAllocator( storage.get()));
-		}
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
-					opt[2], docnoAllocator.get(),
-					transactionSize, nofThreads*5+5);
+				opt[1], 0, unitSize, nofThreads*5+5);
 
+		// [2] Start threads:
 		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(
 				new strus::Thread< strus::FileCrawler >( fileCrawler,
@@ -148,28 +128,29 @@ int main( int argc_, const char* argv_[])
 
 		if (nofThreads == 0)
 		{
-			strus::InsertProcessor inserter(
-				storage.get(), analyzer.get(),
-				commitQue.get(), fileCrawler);
-			inserter.run();
+			strus::KeyMapGenProcessor processor(
+				analyzer.get(), &resultList, fileCrawler);
+			processor.run();
 		}
 		else
 		{
-			boost::scoped_ptr< strus::ThreadGroup< strus::InsertProcessor > >
-				inserterThreads(
-					new strus::ThreadGroup<strus::InsertProcessor>(
-					"inserter"));
+			boost::scoped_ptr< strus::ThreadGroup< strus::KeyMapGenProcessor > >
+				processors( new strus::ThreadGroup<strus::KeyMapGenProcessor>( "keymapgen"));
 
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)
 			{
-				inserterThreads->start(
-					new strus::InsertProcessor(
-						storage.get(), analyzer.get(), 
-						commitQue.get(), fileCrawler));
+				processors->start(
+					new strus::KeyMapGenProcessor(
+						analyzer.get(), &resultList, fileCrawler));
 			}
-			inserterThreads->wait_termination();
+			processors->wait_termination();
 		}
 		fileCrawlerThread->wait_termination();
+
+		// [3] Final merge:
+		std::cerr << std::endl << "merging results:" << std::endl;
+		resultList.printKeyOccurrenceList( std::cout, nofResults);
+		
 		std::cerr << "done" << std::endl;
 	}
 	catch (const std::runtime_error& e)
