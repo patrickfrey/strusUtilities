@@ -41,12 +41,23 @@
 
 int main( int argc, const char* argv[])
 {
-	if (argc <= 2 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
+	int rt = 0;
+	if (argc > 3)
+	{
+		std::cerr << "ERROR too many arguments" << std::endl;
+		rt = 1;
+	}
+	if (argc < 3)
+	{
+		std::cerr << "ERROR too few arguments" << std::endl;
+		rt = 2;
+	}
+	if (rt || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
 		std::cerr << "usage: strusAnalyze <program> <document>" << std::endl;
 		std::cerr << "<program>     = path of analyzer program" << std::endl;
 		std::cerr << "<document>    = path of document to analyze" << std::endl;
-		return 0;
+		return rt;
 	}
 	try
 	{

@@ -8,7 +8,7 @@ CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
 LDFLAGS=-L$(INSTALL_LIBDIR)
 LIBS=-lstrus_lvdbstorage -lstrus_utils -lleveldb -lboost_system
 
-all: strusCreate
+all: strusAlterMetaData
 
 -include $(CPP_OBJS:.o=.d)
 
@@ -16,21 +16,21 @@ all: strusCreate
 	$(CXX) -c -o $@ $(CXXFLAGS) $(CPP_INCLUDE) $*.cpp
 	$(CXX) -MM $(CXXFLAGS) $(CPP_INCLUDE) $*.cpp > $*.d
 
-strusCreate: $(CPP_OBJS) strusCreate.o
-	$(CXX) -o $@ strusCreate.o $(CPP_OBJS) $(LDFLAGS) $(LIBS)
+strusAlterMetaData: $(CPP_OBJS) strusAlterMetaData.o
+	$(CXX) -o $@ strusAlterMetaData.o $(CPP_OBJS) $(LDFLAGS) $(LIBS)
 
 .PHONY: clean
 clean:
-	rm -f ${CPP_OBJS} strusCreate strusCreate.o strusCreate.d
+	rm -f ${CPP_OBJS} strusAlterMetaData strusAlterMetaData.o strusAlterMetaData.d
 
 .PHONY: install
 install:
 	@mkdir -p $(INSTALL_BINDIR)
-	@cp strusCreate $(INSTALL_BINDIR)
+	@cp strusAlterMetaData $(INSTALL_BINDIR)
 
 .PHONY: uninstall
 uninstall:
-	@rm $(INSTALL_BINDIR)/strusCreate
+	@rm $(INSTALL_BINDIR)/strusAlterMetaData
 
 
 

@@ -33,3 +33,4 @@ src/strusInsert/strusCheckInsert
 src/strusInsert/strusGenerateKeyMap
 src/strusDestroy/strusDestroy
 src/strusQuery/strusQuery
+src/strusAlterMetaData/strusAlterMetaData

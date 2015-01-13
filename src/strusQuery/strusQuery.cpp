@@ -170,7 +170,7 @@ int main( int argc_, const char* argv_[])
 	{
 		opt = strus::ProgramOptions(
 				argc_, argv_, 4,
-				"h,help", "t,stats:", "s,silent:", "u,user");
+				"h,help", "t,stats", "s,silent", "u,user:");
 		if (opt( "help")) printUsageAndExit = true;
 
 		if (opt.nofargs() > 4)
@@ -204,7 +204,7 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "<qeprg>   = path of query eval program" << std::endl;
 		std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
 		std::cerr << "option -h|--help   :Print this usage and do nothing else" << std::endl;
-		std::cerr << "option -u|--user   :User this name as username for the query" << std::endl;
+		std::cerr << "option -u|--user   :User name for the query" << std::endl;
 		std::cerr << "option -s|--silent :No output of results" << std::endl;
 		std::cerr << "option -t|--stats  :Print some statistics available" << std::endl;
 		return rt;

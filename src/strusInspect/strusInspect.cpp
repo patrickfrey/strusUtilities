@@ -44,9 +44,10 @@
 
 namespace strus
 {
-	typedef boost::shared_ptr<PostingIteratorInterface> PostingIteratorReference;
-	typedef boost::shared_ptr<StorageInterface> StorageReference;
-	typedef boost::shared_ptr<ForwardIteratorInterface> ForwardIteratorReference;
+	typedef boost::scoped_ptr<PostingIteratorInterface> PostingIteratorReference;
+	typedef boost::scoped_ptr<StorageInterface> StorageReference;
+	typedef boost::scoped_ptr<ForwardIteratorInterface> ForwardIteratorReference;
+	typedef boost::scoped_ptr<MetaDataReaderInterface> MetaDataReaderReference;
 }
 
 static strus::Index stringToIndex( const char* value)
@@ -111,7 +112,8 @@ static void inspectDocAttribute( const strus::StorageInterface& storage, const c
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
 
-	strus::AttributeReaderInterface* attreader = storage.createAttributeReader();
+	boost::scoped_ptr<strus::AttributeReaderInterface>
+		attreader( storage.createAttributeReader());
 
 	strus::Index docno = isIndex(key[1])
 			?stringToIndex( key[1])
@@ -130,7 +132,7 @@ static void inspectDocMetaData( const strus::StorageInterface& storage, const ch
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
 
-	strus::MetaDataReaderInterface* metadata = storage.createMetaDataReader();
+	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
 
 	strus::Index docno = isIndex(key[1])
 			?stringToIndex( key[1])
@@ -142,6 +144,22 @@ static void inspectDocMetaData( const strus::StorageInterface& storage, const ch
 	strus::ArithmeticVariant value = metadata->getValue( hnd);
 
 	std::cout << value << std::endl;
+}
+
+static void inspectDocMetaTable( const strus::StorageInterface& storage, const char**, int size)
+{
+	if (size > 0) throw std::runtime_error( "too many arguments");
+
+	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
+
+	std::vector<std::string> elemnames( metadata->elements());
+	std::vector<std::string>::const_iterator ei = elemnames.begin(), ee = elemnames.end();
+	for (; ei != ee; ++ei)
+	{
+		strus::Index hnd = metadata->elementHandle( *ei);
+		std::cout << metadata->getType( hnd) << "  " << *ei << std::endl;
+	}
+	std::cout << std::endl;
 }
 
 static void inspectContent( strus::StorageInterface& storage, const char** key, int size)
@@ -205,8 +223,9 @@ int main( int argc, const char* argv[])
 		std::cerr << "            \"pos\" <typeno> <valueno> <doc-id/no>" << std::endl;
 		std::cerr << "            \"ff\" <typeno> <valueno> <doc-id/no>" << std::endl;
 		std::cerr << "            \"df\" <typeno> <valueno>" << std::endl;
-		std::cerr << "            \"meta\" <name> <doc-id/no>" << std::endl;
-		std::cerr << "            \"attrib\" <name> <doc-id/no>" << std::endl;
+		std::cerr << "            \"metadata\" <name> <doc-id/no>" << std::endl;
+		std::cerr << "            \"metatable\"" << std::endl;
+		std::cerr << "            \"attribute\" <name> <doc-id/no>" << std::endl;
 		std::cerr << "            \"content\" <typeno> <doc-id/no>" << std::endl;
 		std::cerr << "            \"token\" <typeno> <doc-id/no>" << std::endl;
 		std::cerr << "            \"docno\" <docid>" << std::endl;
@@ -231,11 +250,15 @@ int main( int argc, const char* argv[])
 		{
 			inspectDocumentFrequency( *storage, argv+3, argc-3);
 		}
-		else if (0==std::strcmp( argv[2], "meta"))
+		else if (0==std::strcmp( argv[2], "metadata"))
 		{
 			inspectDocMetaData( *storage, argv+3, argc-3);
 		}
-		else if (0==std::strcmp( argv[2], "attrib"))
+		else if (0==std::strcmp( argv[2], "metatable"))
+		{
+			inspectDocMetaTable( *storage, argv+3, argc-3);
+		}
+		else if (0==std::strcmp( argv[2], "attribute"))
 		{
 			inspectDocAttribute( *storage, argv+3, argc-3);
 		}

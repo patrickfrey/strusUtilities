@@ -99,7 +99,8 @@ private:
 			optlist.clear();
 			optarg.clear();
 
-			if (argv[0] != '-') return false;
+			if (argv[0] != '-' || argv[1] == '\0') return false;
+
 			if (argv[1] == '-')
 			{
 				const char* oo = argv+2;
