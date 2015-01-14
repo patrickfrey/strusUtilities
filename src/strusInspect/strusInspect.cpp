@@ -157,7 +157,7 @@ static void inspectDocMetaTable( const strus::StorageInterface& storage, const c
 	for (; ei != ee; ++ei)
 	{
 		strus::Index hnd = metadata->elementHandle( *ei);
-		std::cout << metadata->getType( hnd) << "  " << *ei << std::endl;
+		std::cout << *ei << " " << metadata->getType( hnd) << std::endl;
 	}
 	std::cout << std::endl;
 }

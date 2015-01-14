@@ -59,7 +59,7 @@ public:
 
 	static AlterMetaDataCommand RenameElement( const std::string& name_, const std::string& newname_)
 	{
-		return AlterMetaDataCommand( Add, name_, newname_, "");
+		return AlterMetaDataCommand( Rename, name_, newname_, "");
 	}
 
 	static AlterMetaDataCommand DeleteElement( const std::string& name_)
@@ -86,7 +86,7 @@ private:
 
 static std::string::const_iterator skipSpaces( std::string::const_iterator si, const std::string::const_iterator& se)
 {
-	for (; si != se && (unsigned char)*si < 32; ++si){}
+	for (; si != se && (unsigned char)*si <= 32; ++si){}
 	return si;
 }
 
@@ -103,7 +103,7 @@ static std::string parseIdentifier( std::string::const_iterator& si, const std::
 	si = skipSpaces( si, se);
 	if (!isIdentifier( *si))
 	{
-		throw std::runtime_error( std::string( "identifier (") + idname + ") expected at '..." + std::string( si, si+30));
+		throw std::runtime_error( std::string( "identifier (") + idname + ") expected at '" + std::string( si, se) + "'");
 	}
 	std::string rt;
 	for (; si != se && isIdentifier( *si); ++si)
