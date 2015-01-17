@@ -28,7 +28,7 @@
 */
 #ifndef _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
 #define _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
-#include "strus/utils/fileio.hpp"
+#include "strus/fileio.hpp"
 #include "strus/index.hpp"
 #include "docnoAllocatorInterface.hpp"
 #include "fileCrawlerInterface.hpp"

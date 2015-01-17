@@ -31,8 +31,8 @@
 #include "strus/tokenMiner.hpp"
 #include "strus/tokenMinerFactory.hpp"
 #include "strus/tokenMinerLib.hpp"
-#include "strus/utils/fileio.hpp"
-#include "strus/utils/cmdLineOpt.hpp"
+#include "strus/fileio.hpp"
+#include "strus/cmdLineOpt.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>

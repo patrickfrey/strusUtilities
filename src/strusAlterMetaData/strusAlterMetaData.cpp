@@ -30,7 +30,7 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
 #include "programOptions.hpp"
-#include "strus/utils/cmdLineOpt.hpp"
+#include "strus/cmdLineOpt.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>

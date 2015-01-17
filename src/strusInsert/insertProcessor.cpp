@@ -32,7 +32,7 @@
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/arithmeticVariant.hpp"
-#include "strus/utils/fileio.hpp"
+#include "strus/fileio.hpp"
 #include <boost/scoped_ptr.hpp>
 #include <boost/interprocess/smart_ptr/unique_ptr.hpp>
 

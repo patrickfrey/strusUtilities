@@ -35,8 +35,8 @@
 #include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
-#include "strus/utils/fileio.hpp"
-#include "strus/utils/cmdLineOpt.hpp"
+#include "strus/fileio.hpp"
+#include "strus/cmdLineOpt.hpp"
 #include "programOptions.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
@@ -94,7 +94,7 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "options:" << std::endl;
 		std::cerr << "-h,--help    : Print this usage info" << std::endl;
 		std::cerr << "-t,--threads : Number of inserter threads to use"  << std::endl;
-		std::cerr << "-s,--commit  : Number of files inserted per transaction (default 1000)" << std::endl;
+		std::cerr << "-c,--commit  : Number of files inserted per transaction (default 1000)" << std::endl;
 		std::cerr << "-n,--new     : All inserts are new; use preallocated document numbers" << std::endl;
 		return rt;
 	}

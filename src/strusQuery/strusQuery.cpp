@@ -37,8 +37,8 @@
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/queryProcessorLib.hpp"
-#include "strus/utils/fileio.hpp"
-#include "strus/utils/cmdLineOpt.hpp"
+#include "strus/fileio.hpp"
+#include "strus/cmdLineOpt.hpp"
 #include "strus/statCounterValue.hpp"
 #include "programOptions.hpp"
 #include <iostream>
@@ -110,15 +110,15 @@ static bool processQuery(
 		query->setMinRank( 0);
 		query->setUserName( username);
 
-		std::vector<strus::queryeval::ResultDocument>
+		std::vector<strus::ResultDocument>
 			ranklist = query->evaluate( storage);
 
 		if (!silent) std::cout << "ranked list (maximum 20 matches):" << std::endl;
-		std::vector<strus::queryeval::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
+		std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
 		for (int widx=1; wi != we; ++wi,++widx)
 		{
 			if (!silent) std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
-			std::vector<strus::queryeval::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
+			std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
 			for (; ai != ae; ++ai)
 			{
 				if (!silent) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
