@@ -35,6 +35,7 @@
 #include "strus/queryEvalInterface.hpp"
 #include "strus/queryEvalLib.hpp"
 #include "strus/queryProcessorInterface.hpp"
+#include "strus/queryInterface.hpp"
 #include "strus/queryProcessorLib.hpp"
 #include "strus/utils/fileio.hpp"
 #include "strus/utils/cmdLineOpt.hpp"
@@ -71,7 +72,7 @@ static bool processQuery(
 {
 	try
 	{
-		strus::queryeval::Query query;
+		boost::scoped_ptr<strus::QueryInterface> query( qeval->createQuery());
 		typedef strus::analyzer::Term Term;
 
 		strus::analyzer::Document doc = analyzer->analyze( querystring);
@@ -98,22 +99,19 @@ static bool processQuery(
 				  << std::endl;
 		}
 #endif
+		
 		std::vector<Term>::const_iterator ti = termar.begin(), tv = termar.begin(), te = termar.end();
 		for (; ti!=te; tv=ti,++ti)
 		{
-			query.addTerm( ti->type()/*set*/, ti->type(), ti->value());
-			if (tv->pos() == ti->pos())
-			{
-				if (tv->type() != ti->type())
-				{
-					throw std::runtime_error( "analyzing query failed (cannot implicitely create unions of terms grouped by position in query, because they have different type)");
-				}
-				query.joinTerms( ti->type()/*set*/, "union", 0, 2);
-			}
+			query->pushTerm( ti->type(), ti->value());
+			query->defineFeature( ti->type()/*set*/);
 		}
-		
-		std::vector<strus::queryeval::ResultDocument> ranklist
-			= qeval->getRankedDocumentList( *storage, *qproc, username, query, 0, 20);
+		query->setMaxNofRanks( 20);
+		query->setMinRank( 0);
+		query->setUserName( username);
+
+		std::vector<strus::queryeval::ResultDocument>
+			ranklist = query->evaluate( storage);
 
 		if (!silent) std::cout << "ranked list (maximum 20 matches):" << std::endl;
 		std::vector<strus::queryeval::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
@@ -254,7 +252,7 @@ int main( int argc_, const char* argv_[])
 			return 3;
 		}
 		boost::scoped_ptr<strus::QueryEvalInterface> qeval(
-			strus::createQueryEval( qevalProgramSource));
+			strus::createQueryEval( qproc.get(), qevalProgramSource));
 
 		std::string querystring;
 		if (querypath == "-")
