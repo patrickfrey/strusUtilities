@@ -33,8 +33,9 @@
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/index.hpp"
-#include "strus/cmdLineOpt.hpp"
-#include "arithmeticVariant.hpp"
+#include "strus/private/cmdLineOpt.hpp"
+#include "strus/arithmeticVariant.hpp"
+#include "strus/private/arithmeticVariantAsString.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>

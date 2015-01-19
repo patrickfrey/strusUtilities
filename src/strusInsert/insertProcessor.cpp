@@ -32,7 +32,8 @@
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/arithmeticVariant.hpp"
-#include "strus/fileio.hpp"
+#include "strus/private/arithmeticVariantAsString.hpp"
+#include "strus/private/fileio.hpp"
 #include <boost/scoped_ptr.hpp>
 #include <boost/interprocess/smart_ptr/unique_ptr.hpp>
 
@@ -166,7 +167,8 @@ void InsertProcessor::run()
 						mi = doc.metadata().begin(), me = doc.metadata().end();
 					for (; mi != me; ++mi)
 					{
-						strus::ArithmeticVariant value( mi->value());
+						strus::ArithmeticVariant value(
+							strus::arithmeticVariantFromString( mi->value()));
 						storagedoc->setMetaData( mi->name(), value);
 					}
 

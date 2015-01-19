@@ -29,7 +29,7 @@
 #include "keyMapGenProcessor.hpp"
 #include "strus/analyzerInterface.hpp"
 #include "strus/constants.hpp"
-#include "strus/fileio.hpp"
+#include "strus/private/fileio.hpp"
 #include "fileCrawlerInterface.hpp"
 #include <boost/scoped_ptr.hpp>
 

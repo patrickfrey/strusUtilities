@@ -37,8 +37,8 @@
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/queryProcessorLib.hpp"
-#include "strus/fileio.hpp"
-#include "strus/cmdLineOpt.hpp"
+#include "strus/private/fileio.hpp"
+#include "strus/private/cmdLineOpt.hpp"
 #include "strus/statCounterValue.hpp"
 #include "programOptions.hpp"
 #include <iostream>
