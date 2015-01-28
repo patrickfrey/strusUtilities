@@ -72,7 +72,7 @@ static bool processQuery(
 {
 	try
 	{
-		boost::scoped_ptr<strus::QueryInterface> query( qeval->createQuery());
+		boost::scoped_ptr<strus::QueryInterface> query( qeval->createQuery( storage));
 		typedef strus::analyzer::Term Term;
 
 		strus::analyzer::Document doc = analyzer->analyze( querystring);
@@ -111,7 +111,7 @@ static bool processQuery(
 		query->setUserName( username);
 
 		std::vector<strus::ResultDocument>
-			ranklist = query->evaluate( storage);
+			ranklist = query->evaluate();
 
 		if (!silent) std::cout << "ranked list (maximum 20 matches):" << std::endl;
 		std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();

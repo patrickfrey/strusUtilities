@@ -153,12 +153,10 @@ static void inspectDocMetaTable( const strus::StorageInterface& storage, const c
 
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
 
-	std::vector<std::string> elemnames( metadata->elements());
-	std::vector<std::string>::const_iterator ei = elemnames.begin(), ee = elemnames.end();
+	strus::Index ei = 0, ee = metadata->nofElements();
 	for (; ei != ee; ++ei)
 	{
-		strus::Index hnd = metadata->elementHandle( *ei);
-		std::cout << *ei << " " << metadata->getType( hnd) << std::endl;
+		std::cout << metadata->getName( ei) << " " << metadata->getType( ei) << std::endl;
 	}
 	std::cout << std::endl;
 }
