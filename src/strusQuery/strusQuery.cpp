@@ -276,7 +276,8 @@ int main( int argc_, const char* argv_[])
 			return 3;
 		}
 		boost::scoped_ptr<strus::QueryEvalInterface> qeval(
-			strus::createQueryEval( qproc.get(), qevalProgramSource));
+			strus::createQueryEval( qproc.get()));
+		qeval->loadProgram( qevalProgramSource);
 
 		std::string querystring;
 		if (querypath == "-")
