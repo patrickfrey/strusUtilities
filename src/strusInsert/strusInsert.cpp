@@ -32,11 +32,14 @@
 #include "strus/tokenMiner.hpp"
 #include "strus/tokenMinerFactory.hpp"
 #include "strus/tokenMinerLib.hpp"
+#include "strus/databaseInterface.hpp"
+#include "strus/databaseLib.hpp"
 #include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/private/configParser.hpp"
 #include "programOptions.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
@@ -85,6 +88,11 @@ int main( int argc_, const char* argv_[])
 	{
 		std::cerr << "usage: strusInsert [options] <config> <program> <docpath>" << std::endl;
 		std::cerr << "<config>  = storage configuration string" << std::endl;
+		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getDatabaseConfigDescription(
+						strus::CmdCreateDatabaseClient));
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getStorageConfigDescription(
@@ -114,8 +122,25 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
+		std::string database_cfg( opt[0]);
+		strus::removeKeysFromConfigString(
+				database_cfg,
+				strus::getStorageConfigParameters( strus::CmdCreateStorageClient));
+		//... In database_cfg is now the pure database configuration without the storage settings
+
+		std::string storage_cfg( opt[0]);
+		strus::removeKeysFromConfigString(
+				storage_cfg,
+				strus::getDatabaseConfigParameters( strus::CmdCreateDatabaseClient));
+		//... In storage_cfg is now the pure storage configuration without the database settings
+
+		boost::scoped_ptr<strus::DatabaseInterface>
+			database( strus::createDatabaseClient(
+				database_cfg.c_str()));
+
 		boost::scoped_ptr<strus::StorageInterface>
-			storage( strus::createStorageClient( opt[0]));
+			storage( strus::createStorageClient(
+				storage_cfg.c_str(), database.get()));
 
 		std::string tokenMinerSource;
 		boost::scoped_ptr<strus::TokenMinerFactory>

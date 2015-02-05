@@ -30,6 +30,8 @@
 #include "strus/tokenMinerLib.hpp"
 #include "strus/analyzerInterface.hpp"
 #include "strus/analyzerLib.hpp"
+#include "strus/databaseInterface.hpp"
+#include "strus/databaseLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageLib.hpp"
 #include "strus/queryEvalInterface.hpp"
@@ -39,6 +41,7 @@
 #include "strus/queryProcessorLib.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/private/configParser.hpp"
 #include "strus/statCounterValue.hpp"
 #include "programOptions.hpp"
 #include <iostream>
@@ -194,6 +197,11 @@ int main( int argc_, const char* argv_[])
 	{
 		std::cerr << "usage: strusQuery [options] <config> <anprg> <qeprg> <query>" << std::endl;
 		std::cerr << "<config>  = storage configuration string" << std::endl;
+		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getDatabaseConfigDescription(
+						strus::CmdCreateDatabaseClient));
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getStorageConfigDescription(
@@ -216,13 +224,29 @@ int main( int argc_, const char* argv_[])
 		{
 			username = opt[ "user"];
 		}
-		std::string storagecfg = opt[0];
+		std::string databasecfg( opt[0]);
+		std::string storagecfg( opt[0]);
 		std::string analyzerprg = opt[1];
 		std::string queryprg = opt[2];
 		std::string querypath = opt[3];
 
-		boost::scoped_ptr<strus::StorageInterface> storage(
-			strus::createStorageClient( storagecfg.c_str()));
+		strus::removeKeysFromConfigString(
+				databasecfg,
+				strus::getStorageConfigParameters( strus::CmdCreateStorageClient));
+		//... In database_cfg is now the pure database configuration without the storage settings
+
+		strus::removeKeysFromConfigString(
+				storagecfg,
+				strus::getDatabaseConfigParameters( strus::CmdCreateDatabaseClient));
+		//... In storage_cfg is now the pure storage configuration without the database settings
+
+		boost::scoped_ptr<strus::DatabaseInterface>
+			database( strus::createDatabaseClient(
+				databasecfg.c_str()));
+
+		boost::scoped_ptr<strus::StorageInterface>
+			storage( strus::createStorageClient(
+				storagecfg.c_str(), database.get()));
 
 		unsigned int ec;
 		std::string analyzerProgramSource;

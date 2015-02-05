@@ -26,11 +26,16 @@
 
 --------------------------------------------------------------------
 */
+#include "strus/databaseLib.hpp"
+#include "strus/databaseInterface.hpp"
 #include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
+#include "strus/databaseLib.hpp"
 #include "programOptions.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/private/cmdLineOpt.hpp"
+#include "strus/private/configParser.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -179,10 +184,11 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << "usage: strusAlterMetaData <config> <cmds>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage:" << std::endl;
+		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getStorageConfigDescription(
-						strus::CmdCreateStorageDatabase));
+					12, strus::getDatabaseConfigDescription(
+						strus::CmdCreateDatabaseClient));
 		std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
 		std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
 		std::cerr << "              <name>    :name of the element to change" << std::endl;
@@ -217,8 +223,12 @@ int main( int argc, const char* argv[])
 		std::string config = argv[1];
 		std::vector<AlterMetaDataCommand> cmds = parseCommands( argv[2]);
 
+		boost::scoped_ptr<strus::DatabaseInterface>
+			database( strus::createDatabaseClient(
+				config.c_str()));
+
 		boost::scoped_ptr<strus::StorageAlterMetaDataTableInterface>
-			md( strus::createAlterMetaDataTable( config.c_str()));
+			md( strus::createAlterMetaDataTable( database.get()));
 
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();
 		for (; ci != ce; ++ci)

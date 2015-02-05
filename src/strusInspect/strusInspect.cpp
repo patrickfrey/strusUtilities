@@ -26,9 +26,11 @@
 
 --------------------------------------------------------------------
 */
+#include "strus/databaseLib.hpp"
+#include "strus/databaseInterface.hpp"
 #include "strus/storageLib.hpp"
-#include "strus/postingIteratorInterface.hpp"
 #include "strus/storageInterface.hpp"
+#include "strus/postingIteratorInterface.hpp"
 #include "strus/forwardIteratorInterface.hpp"
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
@@ -36,6 +38,7 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/arithmeticVariant.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
+#include "strus/private/configParser.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -94,18 +97,29 @@ static void inspectDocumentFrequency( strus::StorageInterface& storage, const ch
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1])));
-	std::cout << itr->documentFrequency();
+	std::cout << itr->documentFrequency() << std::endl;
 }
 
 static void inspectFeatureFrequency( strus::StorageInterface& storage, const char** key, int size)
 {
-	if (size > 2) throw std::runtime_error( "too many arguments");
-	if (size < 2) throw std::runtime_error( "too few arguments");
+	if (size > 3) throw std::runtime_error( "too many arguments");
+	if (size < 3) throw std::runtime_error( "too few arguments");
+
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1])));
 
-	std::cout << (*itr).frequency() << std::endl;
+	strus::Index docno = isIndex(key[2])
+			?stringToIndex( key[2])
+			:storage.documentNumber( key[2]);
+	if (docno == itr->skipDoc( docno))
+	{
+		std::cout << (*itr).frequency() << std::endl;
+	}
+	else
+	{
+		std::cout << '0' << std::endl;
+	}
 }
 
 static void inspectDocAttribute( const strus::StorageInterface& storage, const char** key, int size)
@@ -214,19 +228,24 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << "usage: strusInspect <config> <what...>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage" << std::endl;
+		std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getDatabaseConfigDescription(
+						strus::CmdCreateDatabaseClient));
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getStorageConfigDescription(
 						strus::CmdCreateStorageClient));
 		std::cerr << "<what>    : what to inspect:" << std::endl;
-		std::cerr << "            \"pos\" <typeno> <valueno> <doc-id/no>" << std::endl;
-		std::cerr << "            \"ff\" <typeno> <valueno> <doc-id/no>" << std::endl;
-		std::cerr << "            \"df\" <typeno> <valueno>" << std::endl;
+		std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
+		std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
+		std::cerr << "            \"df\" <type> <value>" << std::endl;
 		std::cerr << "            \"metadata\" <name> <doc-id/no>" << std::endl;
 		std::cerr << "            \"metatable\"" << std::endl;
 		std::cerr << "            \"attribute\" <name> <doc-id/no>" << std::endl;
-		std::cerr << "            \"content\" <typeno> <doc-id/no>" << std::endl;
-		std::cerr << "            \"token\" <typeno> <doc-id/no>" << std::endl;
+		std::cerr << "            \"content\" <type> <doc-id/no>" << std::endl;
+		std::cerr << "            \"token\" <type> <doc-id/no>" << std::endl;
 		std::cerr << "            \"docno\" <docid>" << std::endl;
 		return 0;
 	}
@@ -234,9 +253,26 @@ int main( int argc, const char* argv[])
 	{
 		if (argc < 3) throw std::runtime_error( "too few arguments (expected storage configuration string)");
 
-		strus::StorageReference storage(
-			strus::createStorageClient( argv[1]));
-		
+		std::string database_cfg( argv[1]);
+		strus::removeKeysFromConfigString(
+				database_cfg,
+				strus::getStorageConfigParameters( strus::CmdCreateStorageClient));
+		//... In database_cfg is now the pure database configuration without the storage settings
+
+		std::string storage_cfg( argv[1]);
+		strus::removeKeysFromConfigString(
+				storage_cfg,
+				strus::getDatabaseConfigParameters( strus::CmdCreateDatabaseClient));
+		//... In storage_cfg is now the pure storage configuration without the database settings
+
+		boost::scoped_ptr<strus::DatabaseInterface>
+			database( strus::createDatabaseClient(
+				database_cfg.c_str()));
+
+		boost::scoped_ptr<strus::StorageInterface>
+			storage( strus::createStorageClient(
+				storage_cfg.c_str(), database.get()));
+
 		if (0==std::strcmp( argv[2], "pos"))
 		{
 			inspectPositions( *storage, argv+3, argc-3);

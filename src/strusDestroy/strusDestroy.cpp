@@ -26,8 +26,8 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/storageLib.hpp"
-#include "strus/storageInterface.hpp"
+#include "strus/databaseLib.hpp"
+#include "strus/databaseInterface.hpp"
 #include "programOptions.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include <iostream>
@@ -40,10 +40,11 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << "usage: strusDestroy <config>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage" << std::endl;
+		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getStorageConfigDescription(
-						strus::CmdCreateStorageDatabase));
+					12, strus::getDatabaseConfigDescription(
+						strus::CmdDestroyDatabase));
 		return 0;
 	}
 	try
@@ -51,7 +52,7 @@ int main( int argc, const char* argv[])
 		if (argc < 2) throw std::runtime_error( "too few arguments (expected storage configuration string)");
 		if (argc > 2) throw std::runtime_error( "too many arguments for strusDestroy");
 
-		strus::destroyStorageDatabase( argv[1]);
+		strus::destroyDatabase( argv[1]);
 	}
 	catch (const std::runtime_error& e)
 	{

@@ -11,7 +11,7 @@ CPP_OBJS= \
 CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/private -I$(INSTALL_INCDIR)
 CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
 LDFLAGS=-L$(INSTALL_LIBDIR)
-LIBS=-lstrus_analyzer -lstrus_tokenminer -lstemmer -lstrus_utils -lstrus_lvdbstorage -lboost_system -lboost_thread
+LIBS=-lstrus_database_leveldb -lstrus_storage -lstrus_analyzer -lstrus_tokenminer -lstemmer -lstrus_utils -lboost_system -lboost_thread
 
 all: strusInsert strusCheckInsert strusGenerateKeyMap
 

@@ -26,13 +26,17 @@
 
 --------------------------------------------------------------------
 */
+#include "strus/databaseLib.hpp"
+#include "strus/databaseInterface.hpp"
 #include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "programOptions.hpp"
+#include "strus/private/configParser.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+#include <boost/scoped_ptr.hpp>
 
 int main( int argc, const char* argv[])
 {
@@ -40,10 +44,15 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << "usage: strusCreate <config>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage" << std::endl;
+		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getDatabaseConfigDescription(
+						strus::CmdCreateDatabase));
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getStorageConfigDescription(
-						strus::CmdCreateStorageDatabase));
+						strus::CmdCreateStorage));
 		return 0;
 	}
 	try
@@ -51,7 +60,26 @@ int main( int argc, const char* argv[])
 		if (argc < 2) throw std::runtime_error( "too few arguments (expected storage configuration string)");
 		if (argc > 2) throw std::runtime_error( "too many arguments for strusCreate");
 
-		strus::createStorageDatabase( argv[1]);
+		std::string databasecfg( argv[1]);
+		std::string storagecfg( argv[1]);
+
+		strus::removeKeysFromConfigString(
+				databasecfg,
+				strus::getStorageConfigParameters( strus::CmdCreateStorageClient));
+		//... In database_cfg is now the pure database configuration without the storage settings
+
+		strus::removeKeysFromConfigString(
+				storagecfg,
+				strus::getDatabaseConfigParameters( strus::CmdCreateDatabaseClient));
+		//... In storage_cfg is now the pure storage configuration without the database settings
+
+		strus::createDatabase( databasecfg.c_str());
+
+		boost::scoped_ptr<strus::DatabaseInterface>
+			database( strus::createDatabaseClient(
+				databasecfg.c_str()));
+
+		strus::createStorage( storagecfg.c_str(), database.get());
 	}
 	catch (const std::runtime_error& e)
 	{

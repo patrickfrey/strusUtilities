@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <map>
 #include <set>
+#include <vector>
 #include <algorithm>
 #include <stdexcept>
 #include <cstdarg>
