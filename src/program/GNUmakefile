@@ -10,7 +10,7 @@ CXXFLAGS=-g -Werror -Wall -Wfatal-errors -pedantic $(OPTIMIZE) -std=c++98
 LDFLAGS=-L/usr/lib
 LIBS=
 
-all: libstrus_parser.so
+all: libstrus_program.so
 
 -include $(CPP_OBJS:.o=.d)
 
@@ -18,20 +18,20 @@ all: libstrus_parser.so
 	$(CXX) -fPIC $(VISIBILITY) -c -o $@ $(CXXFLAGS) $(CPP_INCLUDE) $*.cpp
 	$(CXX) -MM $(CXXFLAGS) $(CPP_INCLUDE) $*.cpp > $*.d
 
-libstrus_parser.so: $(CPP_OBJS)
+libstrus_program.so: $(CPP_OBJS)
 	$(CXX)  -shared -o $@ $(CPP_OBJS) $(LDFLAGS) $(LIBS)
 
 .PHONY: clean
 clean:
-	rm -f $(CPP_OBJS) $(CPP_OBJS:.o=.d) libstrus_parser.so
+	rm -f $(CPP_OBJS) $(CPP_OBJS:.o=.d) libstrus_program.so
 
 .PHONY: install
 install:
 	@mkdir -p $(INSTALL_LIBDIR)
-	@cp libstrus_parser.so $(INSTALL_LIBDIR)
+	@cp libstrus_program.so $(INSTALL_LIBDIR)
 
 .PHONY: uninstall
 uninstall:
-	@-rm -f $(INSTALL_LIBDIR)/libstrus_parser.so
+	@-rm -f $(INSTALL_LIBDIR)/libstrus_program.so
 
 

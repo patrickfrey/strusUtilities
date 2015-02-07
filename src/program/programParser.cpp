@@ -26,8 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "parser.hpp"
+#include "strus/programParser.hpp"
 #include "lexems.hpp"
+#include "dll_tags.hpp"
 #include "strus/arithmeticVariant.hpp"
 #include "strus/weightingConfigInterface.hpp"
 #include "strus/summarizerConfigInterface.hpp"
@@ -338,7 +339,7 @@ static void parseSummarizerConfig(
 }
 
 
-void strus::loadQueryEvalProgram(
+DLL_PUBLIC void strus::loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
 		const QueryProcessorInterface& qproc,
 		const std::string& source)

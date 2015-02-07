@@ -7,7 +7,7 @@ all: subdirs
 
 .PHONY: subdirs
 subdirs:
-	cd parser; make all; cd -
+	cd program; make all; cd -
 	cd strusAnalyze; make all; cd -
 	cd strusInsert; make all; cd -
 	cd strusQuery; make all; cd -
@@ -18,7 +18,7 @@ subdirs:
 
 .PHONY: clean
 clean:
-	cd parser; make clean; cd -
+	cd program; make clean; cd -
 	cd strusAnalyze; make clean; cd -
 	cd strusInsert; make clean; cd -
 	cd strusQuery; make clean; cd -
@@ -29,7 +29,7 @@ clean:
 
 .PHONY: install
 install:
-	cd parser; make install; cd -
+	cd program; make install; cd -
 	cd strusAnalyze; make install; cd -
 	cd strusInsert; make install; cd -
 	cd strusQuery; make install; cd -
@@ -40,7 +40,7 @@ install:
 
 .PHONY: uninstall
 uninstall:
-	cd parser; make uninstall; cd -
+	cd program; make uninstall; cd -
 	cd strusAnalyze; make uninstall; cd -
 	cd strusInsert; make uninstall; cd -
 	cd strusQuery; make uninstall; cd -

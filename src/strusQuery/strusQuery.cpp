@@ -43,7 +43,7 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/statCounterValue.hpp"
-#include "strus/parser.hpp"
+#include "strus/programParser.hpp"
 #include "programOptions.hpp"
 #include <iostream>
 #include <sstream>
@@ -278,7 +278,7 @@ int main( int argc_, const char* argv_[])
 		}
 		boost::scoped_ptr<strus::QueryEvalInterface> qeval(
 			strus::createQueryEval( qproc.get()));
-		qeval->loadProgram( qevalProgramSource);
+		strus::loadQueryEvalProgram( *qeval, *qproc, qevalProgramSource);
 
 		std::string querystring;
 		if (querypath == "-")
