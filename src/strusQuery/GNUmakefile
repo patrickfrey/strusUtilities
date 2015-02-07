@@ -5,8 +5,8 @@ CPP_OBJS=
 
 CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/private -I$(INSTALL_INCDIR)
 CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
-LDFLAGS=-L$(INSTALL_LIBDIR)
-LIBS=-lstrus_database_leveldb -lstrus_storage -lstrus_queryeval -lstrus_queryproc -lstrus_analyzer -lstrus_tokenminer -lstrus_utils -lstemmer -lboost_system
+LDFLAGS=-L$(INSTALL_LIBDIR) -L$(TOPDIR)/src/program
+LIBS=-lstrus_program -lstrus_database_leveldb -lstrus_storage -lstrus_queryeval -lstrus_queryproc -lstrus_analyzer -lstrus_tokenminer -lstrus_utils -lstemmer -lboost_system
 
 all: strusQuery
 

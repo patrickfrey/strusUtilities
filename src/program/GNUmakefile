@@ -27,7 +27,7 @@ clean:
 
 .PHONY: install
 install:
-	@mkdir -p $(INSTALL_LIBDIR)
+	@-mkdir -p $(INSTALL_LIBDIR)
 	@cp libstrus_program.so $(INSTALL_LIBDIR)
 
 .PHONY: uninstall
