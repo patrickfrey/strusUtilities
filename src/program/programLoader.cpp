@@ -26,7 +26,7 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/programParser.hpp"
+#include "strus/programLoader.hpp"
 #include "lexems.hpp"
 #include "dll_tags.hpp"
 #include "strus/arithmeticVariant.hpp"

@@ -38,6 +38,9 @@ class QueryProcessorInterface;
 class QueryEvalInterface;
 
 /// \brief Load a query evaluation program from source
+/// \param[in] qeval query evaluation interface to instrument
+/// \param[in] qproc query processor interface for info about objects loaded
+/// \param[in] source source string (not a file name!) to parse
 void loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
 		const QueryProcessorInterface& qproc,

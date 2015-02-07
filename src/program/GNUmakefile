@@ -3,7 +3,7 @@ include $(TOPDIR)/variables.mk
 
 CPP_OBJS=\
 	lexems.o \
-	programParser.o
+	programLoader.o
 
 CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/tests -I$(TOPDIR)/include/private -I.
 CXXFLAGS=-g -Werror -Wall -Wfatal-errors -pedantic $(OPTIMIZE) -std=c++98
