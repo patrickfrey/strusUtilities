@@ -43,7 +43,7 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/statCounterValue.hpp"
-#include "strus/programParser.hpp"
+#include "strus/programLoader.hpp"
 #include "programOptions.hpp"
 #include <iostream>
 #include <sstream>

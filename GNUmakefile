@@ -15,6 +15,7 @@ install:
 
 uninstall:
 	cd src; make uninstall; cd ..
-
-
+	@-rm -f $(INSTALL_INCDIR)/strus/programLoader.hpp
+	@-rm -f $(INSTALL_INCDIR)/strus/strus.hpp
+	@-rmdir $(INSTALL_INCDIR)
 

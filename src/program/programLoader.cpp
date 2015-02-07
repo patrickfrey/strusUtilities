@@ -112,6 +112,7 @@ static void parseTermConfig(
 
 static bool isMember( const char** set, const std::string& name)
 {
+	if (!set) return false;
 	std::size_t sidx = 0;
 	for (; set[sidx]; ++sidx)
 	{
