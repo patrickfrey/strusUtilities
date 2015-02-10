@@ -36,6 +36,24 @@ namespace strus {
 class QueryProcessorInterface;
 /// \brief Forward declaration
 class QueryEvalInterface;
+/// \brief Forward declaration
+class DocumentAnalyzerInterface;
+/// \brief Forward declaration
+class QueryAnalyzerInterface;
+
+/// \brief Load a document analyzer program from source
+/// \param[in] analyzer analyzer program to instatiate
+/// \param[in] source source string (not a file name!) to parse
+void loadDocumentAnalyzerProgram(
+		DocumentAnalyzerInterface& analyzer,
+		const std::string& source);
+
+/// \brief Load a query analyzer program from source
+/// \param[in] analyzer analyzer program to instatiate
+/// \param[in] source source string (not a file name!) to parse
+void loadQueryAnalyzerProgram(
+		QueryAnalyzerInterface& analyzer,
+		const std::string& source);
 
 /// \brief Load a query evaluation program from source
 /// \param[in] qeval query evaluation interface to instrument
@@ -44,6 +62,15 @@ class QueryEvalInterface;
 void loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
 		const QueryProcessorInterface& qproc,
+		const std::string& source);
+
+/// \brief Load a query from source (query language)
+/// \param[in] query query interface to instrument
+/// \param[in] analyzer program for analyzing text segments in the query
+/// \param[in] source source string (not a file name!) to parse
+void loadQuery(
+		QueryInterface& query,
+		const QueryAnalyzerInterface& analyzer,
 		const std::string& source);
 
 }//namespace

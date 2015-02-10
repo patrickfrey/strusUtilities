@@ -30,8 +30,7 @@
 #define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
 #include "strus/index.hpp"
 #include "strus/storageInterface.hpp"
-#include "strus/analyzerInterface.hpp"
-#include "strus/tokenMinerFactory.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
 #include "fileCrawlerInterface.hpp"
 #include <vector>
 #include <string>

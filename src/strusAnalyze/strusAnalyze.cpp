@@ -26,11 +26,13 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/analyzerInterface.hpp"
-#include "strus/analyzerLib.hpp"
-#include "strus/tokenMiner.hpp"
-#include "strus/tokenMinerFactory.hpp"
-#include "strus/tokenMinerLib.hpp"
+#include "strus/lib/analyzer.hpp"
+#include "strus/lib/textprocessor.hpp"
+#include "strus/lib/segmenter_textwolf.hpp"
+#include "strus/textProcessorInterface.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/segmenterInterface.hpp"
+#include "strus/programLoader.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include <iostream>
@@ -78,12 +80,15 @@ int main( int argc, const char* argv[])
 			msg << "failed to load document to analyze " << argv[2] << " (file system error '" << ec << ")";
 			throw std::runtime_error( msg.str());
 		}
-		std::string tokenMinerSource;
-		boost::scoped_ptr<strus::TokenMinerFactory> minerfac(
-			strus::createTokenMinerFactory( tokenMinerSource));
+		boost::scoped_ptr<strus::TextProcessorInterface>
+			textproc( strus::createTextProcessor());
 
-		boost::scoped_ptr<strus::AnalyzerInterface> analyzer(
-			strus::createAnalyzer( *minerfac, analyzerProgramSource));
+		boost::scoped_ptr<strus::SegmenterInterface>
+			segmenter( strus::createSegmenter_textwolf());
+
+		boost::scoped_ptr<strus::DocumentAnalyzerInterface> analyzer(
+			strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
+		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
 		strus::analyzer::Document doc
 			= analyzer->analyze( documentContent);

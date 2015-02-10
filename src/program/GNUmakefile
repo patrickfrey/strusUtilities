@@ -7,7 +7,7 @@ CPP_OBJS=\
 
 CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/tests -I$(TOPDIR)/include/private -I.
 CXXFLAGS=-g -Werror -Wall -Wfatal-errors -pedantic $(OPTIMIZE) -std=c++98
-LDFLAGS=-L/usr/lib
+LDFLAGS=-L$(INSTALL_LIBDIR)
 LIBS=
 
 all: libstrus_program.so

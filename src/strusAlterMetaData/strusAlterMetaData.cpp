@@ -26,12 +26,11 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/databaseLib.hpp"
+#include "strus/lib/database_leveldb.hpp"
+#include "strus/lib/storage.hpp"
 #include "strus/databaseInterface.hpp"
-#include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
-#include "strus/databaseLib.hpp"
 #include "programOptions.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/cmdLineOpt.hpp"

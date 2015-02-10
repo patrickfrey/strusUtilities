@@ -26,9 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/databaseLib.hpp"
+#include "strus/lib/database_leveldb.hpp"
+#include "strus/lib/storage.hpp"
 #include "strus/databaseInterface.hpp"
-#include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/postingIteratorInterface.hpp"
 #include "strus/forwardIteratorInterface.hpp"

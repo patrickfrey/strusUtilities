@@ -26,18 +26,15 @@
 
 --------------------------------------------------------------------
 */
+#include "strus/lib/database_leveldb.hpp"
+#include "strus/lib/storage.hpp"
+#include "strus/lib/analyzer.hpp"
+#include "strus/lib/textprocessor.hpp"
 #include "strus/index.hpp"
 #include "strus/analyzerInterface.hpp"
-#include "strus/analyzerLib.hpp"
-#include "strus/tokenMiner.hpp"
-#include "strus/tokenMinerFactory.hpp"
-#include "strus/tokenMinerLib.hpp"
-#include "strus/databaseLib.hpp"
 #include "strus/databaseInterface.hpp"
-#include "strus/storageLib.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
-#include "strus/databaseLib.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"

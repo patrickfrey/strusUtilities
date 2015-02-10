@@ -35,15 +35,15 @@
 #include "strus/reference.hpp"
 #include "strus/statCounterValue.hpp"
 
-// Key/value store database for the storage:
-#include "strus/databaseLib.hpp"
+// Key/value store database used by the storage to store its persistent data:
+#include "strus/lib/database_leveldb.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseCursorInterface.hpp"
 #include "strus/databaseBackupCursorInterface.hpp"
 #include "strus/databaseTransactionInterface.hpp"
 
-// Storage:
-#include "strus/storageLib.hpp"
+// Storage (storage structure that defines all data tables needed for query evaluation):
+#include "strus/lib/storage.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
@@ -58,8 +58,8 @@
 #include "strus/storagePeerInterface.hpp"
 #include "strus/peerStorageTransactionInterface.hpp"
 
-// Query processor:
-#include "strus/queryProcessorLib.hpp"
+// Query processor (functions for the query evaluation used for ranking and summarization):
+#include "strus/lib/queryproc.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/summarizerFunctionInterface.hpp"
 #include "strus/summarizerClosureInterface.hpp"
@@ -68,29 +68,45 @@
 #include "strus/weightingFunctionInterface.hpp"
 #include "strus/weightingConfigInterface.hpp"
 
-// Query evaluation:
-#include "strus/queryEvalLib.hpp"
+// Query evaluation (processing a query to get a ranked list of documents with attributes):
+#include "strus/lib/queryeval.hpp"
 #include "strus/queryEvalInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/weightedDocument.hpp"
 #include "strus/resultDocument.hpp"
 
-// Analyzer:
-#include "strus/tokenizer/position.hpp"
+// Document/query analyzer (create from text a structure suitable to insert into a storage):
+#include "strus/lib/analyzer.hpp"
 #include "strus/analyzer.hpp"
-#include "strus/analyzerInterface.hpp"
-#include "strus/analyzerLib.hpp"
+#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
 #include "strus/analyzer/attribute.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/analyzer/metaData.hpp"
 #include "strus/analyzer/term.hpp"
+
+// Text processor (functions for the document analysis to produce index terms, attributes and meta data out of segments of text):
+#include "strus/lib/textprocessor.hpp"
+#include "strus/textProcessorInterface.hpp"
+
+// Document segmenter (segmenting a document into typed text segments that can be processed by the analyzer):
+#include "strus/lib/segmenter_textwolf.hpp"
+#include "strus/segmenterInstanceInterface.hpp"
+#include "strus/segmenterInterface.hpp"
+
+// Tokenizer (functions for the text processor to split a text segment into tokens):
+#include "strus/lib/tokenizer_word.hpp"
+#include "strus/lib/tokenizer_punctuation.hpp"
+#include "strus/tokenizer/token.hpp"
+#include "strus/tokenizerConfig.hpp"
 #include "strus/tokenizerInterface.hpp"
-#include "strus/tokenMinerFactory.hpp"
-#include "strus/tokenMiner.hpp"
-#include "strus/tokenMinerLib.hpp"
+
+// Token normalizer (functions for the text processor to map tokens to normalized terms for the storage):
+#include "strus/lib/normalizer_snowball.hpp"
+#include "strus/normalizerConfig.hpp"
 #include "strus/normalizerInterface.hpp"
 
-// Loading and building strus objects from source:
+// Loading and building strus objects from source (some parsers for languages to configure strus objects from source):
 #include "strus/programLoader.hpp"
 #endif
 

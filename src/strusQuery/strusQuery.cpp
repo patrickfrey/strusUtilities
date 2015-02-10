@@ -26,19 +26,21 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/tokenMinerFactory.hpp"
-#include "strus/tokenMinerLib.hpp"
-#include "strus/analyzerInterface.hpp"
-#include "strus/analyzerLib.hpp"
+#include "strus/lib/database_leveldb.hpp"
+#include "strus/lib/storage.hpp"
+#include "strus/lib/analyzer.hpp"
+#include "strus/lib/textprocessor.hpp"
+#include "strus/lib/queryproc.hpp"
+#include "strus/lib/queryeval.hpp"
+#include "strus/lib/segmenter_textwolf.hpp"
+#include "strus/textProcessorInterface.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/segmenterInterface.hpp"
 #include "strus/databaseInterface.hpp"
-#include "strus/databaseLib.hpp"
 #include "strus/storageInterface.hpp"
-#include "strus/storageLib.hpp"
 #include "strus/queryEvalInterface.hpp"
-#include "strus/queryEvalLib.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/queryInterface.hpp"
-#include "strus/queryProcessorLib.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
@@ -76,6 +78,12 @@ static bool processQuery(
 {
 	try
 	{
+		boost::scoped_ptr<strus::TextProcessorInterface>
+			textproc( strus::createTextProcessor());
+
+		boost::scoped_ptr<strus::QueryAnalyzerInterface>
+			analyzer( strus::createQueryAnalyzer( textproc.get());
+
 		boost::scoped_ptr<strus::QueryInterface> query( qeval->createQuery( storage));
 		typedef strus::analyzer::Term Term;
 

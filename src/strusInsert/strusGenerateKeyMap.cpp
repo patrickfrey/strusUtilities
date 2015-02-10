@@ -26,12 +26,10 @@
 
 --------------------------------------------------------------------
 */
+#include "strus/lib/analyzer.hpp"
+#include "strus/lib/textprocessor.hpp"
 #include "strus/index.hpp"
 #include "strus/analyzerInterface.hpp"
-#include "strus/analyzerLib.hpp"
-#include "strus/tokenMiner.hpp"
-#include "strus/tokenMinerFactory.hpp"
-#include "strus/tokenMinerLib.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "programOptions.hpp"

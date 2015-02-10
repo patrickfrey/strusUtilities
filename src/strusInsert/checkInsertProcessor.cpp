@@ -28,6 +28,7 @@
 */
 #include "checkInsertProcessor.hpp"
 #include "strus/constants.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -41,7 +42,7 @@ using namespace strus;
 
 CheckInsertProcessor::CheckInsertProcessor(
 		StorageInterface* storage_,
-		AnalyzerInterface* analyzer_,
+		DocumentAnalyzerInterface* analyzer_,
 		FileCrawlerInterface* crawler_,
 		const std::string& logfile_)
 
