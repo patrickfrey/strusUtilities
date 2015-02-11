@@ -28,26 +28,26 @@
 */
 #ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
-#include "strus/index.hpp"
-#include "strus/analyzerInterface.hpp"
-#include "strus/tokenMinerFactory.hpp"
-#include "strus/storageInterface.hpp"
-#include "docnoAllocatorInterface.hpp"
-#include "fileCrawlerInterface.hpp"
-#include "commitQueue.hpp"
-#include <vector>
-#include <string>
-#include <boost/thread.hpp>
+#include <stdint.h>
 #include <boost/atomic.hpp>
 
 namespace strus {
+
+/// \brief Forward declaration
+class StorageInterface;
+/// \brief Forward declaration
+class DocumentAnalyzerInterface;
+/// \brief Forward declaration
+class CommitQueue;
+/// \brief Forward declaration
+class FileCrawlerInterface;
 
 class InsertProcessor
 {
 public:
 	InsertProcessor(
 			StorageInterface* storage_,
-			AnalyzerInterface* analyzer_,
+			DocumentAnalyzerInterface* analyzer_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_);
 
@@ -58,7 +58,7 @@ public:
 
 private:
 	StorageInterface* m_storage;
-	AnalyzerInterface* m_analyzer;
+	DocumentAnalyzerInterface* m_analyzer;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
 	boost::atomic<bool> m_terminated;

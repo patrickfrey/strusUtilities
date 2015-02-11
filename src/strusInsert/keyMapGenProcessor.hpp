@@ -36,7 +36,9 @@
 
 namespace strus {
 
-class AnalyzerInterface;
+/// \brief Forward declaration
+class DocumentAnalyzerInterface;
+/// \brief Forward declaration
 class FileCrawlerInterface;
 
 class KeyOccurrence
@@ -77,7 +79,7 @@ class KeyMapGenProcessor
 {
 public:
 	KeyMapGenProcessor(
-			AnalyzerInterface* analyzer_,
+			DocumentAnalyzerInterface* analyzer_,
 			KeyMapGenResultList* que_,
 			FileCrawlerInterface* crawler_);
 
@@ -87,7 +89,7 @@ public:
 	void run();
 
 private:
-	AnalyzerInterface* m_analyzer;
+	DocumentAnalyzerInterface* m_analyzer;
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
 	boost::atomic<bool> m_terminated;

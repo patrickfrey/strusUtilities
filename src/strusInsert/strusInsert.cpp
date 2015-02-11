@@ -30,14 +30,18 @@
 #include "strus/lib/storage.hpp"
 #include "strus/lib/analyzer.hpp"
 #include "strus/lib/textprocessor.hpp"
+#include "strus/lib/segmenter_textwolf.hpp"
 #include "strus/index.hpp"
-#include "strus/analyzerInterface.hpp"
+#include "strus/textProcessorInterface.hpp"
+#include "strus/segmenterInterface.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
+#include "strus/programLoader.hpp"
 #include "programOptions.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
@@ -111,15 +115,6 @@ int main( int argc_, const char* argv_[])
 		unsigned int transactionSize = opt.as<unsigned int>( "commit");
 		if (!transactionSize) transactionSize = 1000;
 
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( opt[1], analyzerProgramSource);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
-			return 4;
-		}
 		std::string database_cfg( opt[0]);
 		strus::removeKeysFromConfigString(
 				database_cfg,
@@ -140,12 +135,25 @@ int main( int argc_, const char* argv_[])
 			storage( strus::createStorageClient(
 				storage_cfg.c_str(), database.get()));
 
-		std::string tokenMinerSource;
-		boost::scoped_ptr<strus::TokenMinerFactory>
-			minerfac( strus::createTokenMinerFactory( tokenMinerSource));
+		boost::scoped_ptr<strus::TextProcessorInterface>
+			textproc( strus::createTextProcessor());
 
-		boost::scoped_ptr<strus::AnalyzerInterface>
-			analyzer( strus::createAnalyzer( *minerfac, analyzerProgramSource));
+		boost::scoped_ptr<strus::SegmenterInterface>
+			segmenter( strus::createSegmenter_textwolf());
+
+		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
+			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
+
+		unsigned int ec;
+		std::string analyzerProgramSource;
+		ec = strus::readFile( opt[1], analyzerProgramSource);
+		if (ec)
+		{
+			std::ostringstream msg;
+			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
+			return 4;
+		}
+		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
 		boost::scoped_ptr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get()));

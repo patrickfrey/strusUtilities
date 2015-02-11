@@ -37,6 +37,8 @@ class QueryProcessorInterface;
 /// \brief Forward declaration
 class QueryEvalInterface;
 /// \brief Forward declaration
+class QueryInterface;
+/// \brief Forward declaration
 class DocumentAnalyzerInterface;
 /// \brief Forward declaration
 class QueryAnalyzerInterface;
@@ -72,6 +74,20 @@ void loadQuery(
 		QueryInterface& query,
 		const QueryAnalyzerInterface& analyzer,
 		const std::string& source);
+
+/// \brief Scan a source for the next program segment in a source that contains multiple programs.
+///		The programs are separated by "\r\n.\r\n" or "\n.\n".
+///		No escaping of this sequence possible.
+/// \param[out] the program segment scanned
+/// \param[in] itr scanning iterator on a source containing one or multiple programs
+/// \param[in] end end iterator of the source to scan
+/// \return true, if there was a segment left to scan
+/// \note This function is mainly used for loading test programs
+/// \remark The scanner skips whitespaces at the start of each program segment and returns initial end of line that belongs to the separator. So whitespaces should have no meaning in the languages of the programs loaded this way.
+bool scanNextProgram(
+		std::string& segment,
+		std::string::const_iterator& itr,
+		const std::string::const_iterator& end);
 
 }//namespace
 #endif

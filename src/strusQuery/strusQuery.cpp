@@ -34,7 +34,7 @@
 #include "strus/lib/queryeval.hpp"
 #include "strus/lib/segmenter_textwolf.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -55,121 +55,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
-namespace {
-class TermPosComparator
-{
-public:
-	typedef strus::analyzer::Term Term;
-	bool operator() (Term const& aa, Term const& bb) const
-	{
-		return (aa.pos() < bb.pos());
-	}
-};
-}//anonymous namespace
 
-static bool processQuery( 
-	const strus::StorageInterface* storage,
-	const strus::AnalyzerInterface* analyzer,
-	const strus::QueryProcessorInterface* qproc,
-	const strus::QueryEvalInterface* qeval,
-	const std::string& username,
-	const std::string& querystring,
-	bool silent)
-{
-	try
-	{
-		boost::scoped_ptr<strus::TextProcessorInterface>
-			textproc( strus::createTextProcessor());
-
-		boost::scoped_ptr<strus::QueryAnalyzerInterface>
-			analyzer( strus::createQueryAnalyzer( textproc.get());
-
-		boost::scoped_ptr<strus::QueryInterface> query( qeval->createQuery( storage));
-		typedef strus::analyzer::Term Term;
-
-		strus::analyzer::Document doc = analyzer->analyze( querystring);
-
-		if (doc.metadata().size())
-		{
-			std::cerr << "unexpected meta data definitions in the query (ignored)" << std::endl;
-		}
-		std::vector<Term> termar = doc.searchIndexTerms();
-		if (termar.empty())
-		{
-			std::cerr << "query got empty after analyze (did you use the right analyzer program ?)" << std::endl;
-		}
-		std::sort( termar.begin(), termar.end(), TermPosComparator());
-
-#ifdef STRUS_LOWLEVEL_DEBUG
-		if (!silent) std::cout << "analyzed query:" << std::endl;
-		std::vector<Term>::const_iterator ati = termar.begin(), ate = termar.end();
-		for (; ati!=ate; ++ati)
-		{
-			if (!silent) std::cout << ati->pos()
-				  << " " << ati->type()
-				  << " '" << ati->value() << "'"
-				  << std::endl;
-		}
-#endif
-		
-		std::vector<Term>::const_iterator ti = termar.begin(), tv = termar.begin(), te = termar.end();
-		for (; ti!=te; tv=ti,++ti)
-		{
-			query->pushTerm( ti->type(), ti->value());
-			query->defineFeature( ti->type()/*set*/);
-		}
-		query->setMaxNofRanks( 20);
-		query->setMinRank( 0);
-		query->setUserName( username);
-
-		std::vector<strus::ResultDocument>
-			ranklist = query->evaluate();
-
-		if (!silent) std::cout << "ranked list (maximum 20 matches):" << std::endl;
-		std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
-		for (int widx=1; wi != we; ++wi,++widx)
-		{
-			if (!silent) std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
-			std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
-			for (; ai != ae; ++ai)
-			{
-				if (!silent) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
-			}
-		}
-		return true;
-	}
-	catch (const std::runtime_error& err)
-	{
-		std::cerr << "ERROR failed to evaluate query: " << err.what() << std::endl;
-		return false;
-	}
-}
-
-static bool getNextQuery( std::string& qs, std::string::const_iterator& si, const std::string::const_iterator& se)
-{
-	for (; si != se; ++si)
-	{
-		if ((unsigned char)*si > 32) break;
-	}
-	if (si == se)
-	{
-		return false;
-	}
-	if (*si != '<' || *(si+1) != '?')
-	{
-		throw std::runtime_error("query string is not an XML with header");
-	}
-	std::string::const_iterator start = si;
-	for (++si; si != se; ++si)
-	{
-		if (*si == '<' && *(si+1) == '?')
-		{
-			break;
-		}
-	}
-	qs = std::string( start, si);
-	return true;
-}
 
 int main( int argc_, const char* argv_[])
 {
@@ -179,8 +65,8 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 4,
-				"h,help", "t,stats", "s,silent", "u,user:");
+				argc_, argv_, 5,
+				"h,help", "t,stats", "s,silent", "u,user:", "n,nofranks:");
 		if (opt( "help")) printUsageAndExit = true;
 
 		if (opt.nofargs() > 4)
@@ -218,10 +104,11 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
 		std::cerr << "<qeprg>   = path of query eval program" << std::endl;
 		std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
-		std::cerr << "option -h|--help   :Print this usage and do nothing else" << std::endl;
-		std::cerr << "option -u|--user   :User name for the query" << std::endl;
-		std::cerr << "option -s|--silent :No output of results" << std::endl;
-		std::cerr << "option -t|--stats  :Print some statistics available" << std::endl;
+		std::cerr << "option -h|--help     :Print this usage and do nothing else" << std::endl;
+		std::cerr << "option -u|--user     :User name for the query" << std::endl;
+		std::cerr << "option -n|--nofranks :Number of result ranks to return" << std::endl;
+		std::cerr << "option -s|--silent   :No output of results" << std::endl;
+		std::cerr << "option -t|--stats    :Print some statistics available" << std::endl;
 		return rt;
 	}
 	try
@@ -229,9 +116,14 @@ int main( int argc_, const char* argv_[])
 		bool silent = opt( "silent");
 		bool statistics = opt( "stats");
 		std::string username;
+		std::size_t nofRanks = 20;
 		if (opt("user"))
 		{
 			username = opt[ "user"];
+		}
+		if (opt("nofranks"))
+		{
+			nofRanks = opt.as<std::size_t>( "nofranks");
 		}
 		std::string databasecfg( opt[0]);
 		std::string storagecfg( opt[0]);
@@ -249,6 +141,7 @@ int main( int argc_, const char* argv_[])
 				strus::getDatabaseConfigParameters( strus::CmdCreateDatabaseClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
+		// Create objects for query evaluation:
 		boost::scoped_ptr<strus::DatabaseInterface>
 			database( strus::createDatabaseClient(
 				databasecfg.c_str()));
@@ -257,6 +150,19 @@ int main( int argc_, const char* argv_[])
 			storage( strus::createStorageClient(
 				storagecfg.c_str(), database.get()));
 
+		boost::scoped_ptr<strus::TextProcessorInterface> textproc(
+			strus::createTextProcessor());
+
+		boost::scoped_ptr<strus::QueryAnalyzerInterface> analyzer(
+			strus::createQueryAnalyzer( textproc.get()));
+
+		boost::scoped_ptr<strus::QueryProcessorInterface> qproc(
+			strus::createQueryProcessorInterface( storage.get()));
+
+		boost::scoped_ptr<strus::QueryEvalInterface> qeval(
+			strus::createQueryEval( qproc.get()));
+
+		// Load query analyzer program:
 		unsigned int ec;
 		std::string analyzerProgramSource;
 		ec = strus::readFile( analyzerprg, analyzerProgramSource);
@@ -266,16 +172,9 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
 			return 2;
 		}
-		std::string tokenMinerSource;
-		boost::scoped_ptr<strus::TokenMinerFactory> minerfac(
-			strus::createTokenMinerFactory( tokenMinerSource));
+		strus::loadQueryAnalyzerProgram( *analyzer, analyzerProgramSource);
 
-		boost::scoped_ptr<strus::AnalyzerInterface> analyzer(
-			strus::createAnalyzer( *minerfac, analyzerProgramSource));
-
-		boost::scoped_ptr<strus::QueryProcessorInterface> qproc(
-			strus::createQueryProcessorInterface( storage.get()));
-
+		// Load query evaluation program:
 		std::string qevalProgramSource;
 		ec = strus::readFile( queryprg, qevalProgramSource);
 		if (ec)
@@ -284,10 +183,9 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load query eval program " << queryprg << " (file system error " << ec << ")" << std::endl;
 			return 3;
 		}
-		boost::scoped_ptr<strus::QueryEvalInterface> qeval(
-			strus::createQueryEval( qproc.get()));
 		strus::loadQueryEvalProgram( *qeval, *qproc, qevalProgramSource);
 
+		// Load query:
 		std::string querystring;
 		if (querypath == "-")
 		{
@@ -309,12 +207,32 @@ int main( int argc_, const char* argv_[])
 		}
 		std::string::const_iterator si = querystring.begin(), se = querystring.end();
 		std::string qs;
-		while (getNextQuery( qs, si, se))
+		while (strus::scanNextProgram( qs, si, se))
 		{
-			if (!processQuery( storage.get(), analyzer.get(), qproc.get(), qeval.get(), username, qs, silent))
+			boost::scoped_ptr<strus::QueryInterface> query(
+				qeval->createQuery( storage.get()));
+
+			strus::loadQuery( *query, *analyzer, qs);
+
+			query->setMaxNofRanks( nofRanks);
+			query->setMinRank( 0);
+			if (!username.empty())
 			{
-				std::cerr << "ERROR query evaluation failed" << std::endl;
-				return 5;
+				query->setUserName( username);
+			}
+			std::vector<strus::ResultDocument>
+				ranklist = query->evaluate();
+	
+			if (!silent) std::cout << "ranked list (maximum 20 matches):" << std::endl;
+			std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
+			for (int widx=1; wi != we; ++wi,++widx)
+			{
+				if (!silent) std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
+				std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
+				for (; ai != ae; ++ai)
+				{
+					if (!silent) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
+				}
 			}
 		}
 		if (statistics)

@@ -28,23 +28,25 @@
 */
 #ifndef _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
 #define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#include "strus/index.hpp"
-#include "strus/storageInterface.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
-#include "fileCrawlerInterface.hpp"
-#include <vector>
 #include <string>
-#include <boost/thread.hpp>
+#include <stdint.h>
 #include <boost/atomic.hpp>
 
 namespace strus {
+
+/// \brief Forward declaration
+class StorageInterface;
+/// \brief Forward declaration
+class DocumentAnalyzerInterface;
+/// \brief Forward declaration
+class FileCrawlerInterface;
 
 class CheckInsertProcessor
 {
 public:
 	CheckInsertProcessor(
 			StorageInterface* storage_,
-			AnalyzerInterface* analyzer_,
+			DocumentAnalyzerInterface* analyzer_,
 			FileCrawlerInterface* crawler_,
 			const std::string& logfile_);
 
@@ -55,7 +57,7 @@ public:
 
 private:
 	StorageInterface* m_storage;
-	AnalyzerInterface* m_analyzer;
+	DocumentAnalyzerInterface* m_analyzer;
 	FileCrawlerInterface* m_crawler;
 	boost::atomic<bool> m_terminated;
 	std::string m_logfile;

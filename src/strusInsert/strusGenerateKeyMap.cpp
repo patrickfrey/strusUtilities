@@ -28,10 +28,14 @@
 */
 #include "strus/lib/analyzer.hpp"
 #include "strus/lib/textprocessor.hpp"
+#include "strus/lib/segmenter_textwolf.hpp"
 #include "strus/index.hpp"
-#include "strus/analyzerInterface.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/textProcessorInterface.hpp"
+#include "strus/segmenterInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/programLoader.hpp"
 #include "programOptions.hpp"
 #include "fileCrawler.hpp"
 #include "keyMapGenProcessor.hpp"
@@ -103,12 +107,14 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
-		std::string tokenMinerSource;
-		boost::scoped_ptr<strus::TokenMinerFactory>
-			minerfac( strus::createTokenMinerFactory( tokenMinerSource));
+		boost::scoped_ptr<strus::TextProcessorInterface>
+			textproc( strus::createTextProcessor());
 
-		boost::scoped_ptr<strus::AnalyzerInterface>
-			analyzer( strus::createAnalyzer( *minerfac, analyzerProgramSource));
+		boost::scoped_ptr<strus::SegmenterInterface>
+			segmenter( strus::createSegmenter_textwolf());
+
+		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
+			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
 
 		strus::KeyMapGenResultList resultList;
 

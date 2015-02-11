@@ -28,13 +28,19 @@
 */
 #include "checkInsertProcessor.hpp"
 #include "strus/constants.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
-#include "strus/metaDataReaderInterface.hpp"
-#include "strus/storageTransactionInterface.hpp"
-#include "strus/storageInterface.hpp"
+#include "strus/index.hpp"
 #include "strus/arithmeticVariant.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/textProcessorInterface.hpp"
+#include "strus/storageInterface.hpp"
+#include "strus/storageTransactionInterface.hpp"
+#include "strus/metaDataReaderInterface.hpp"
+#include "strus/analyzer/document.hpp"
 #include "strus/private/fileio.hpp"
+#include "docnoAllocatorInterface.hpp"
+#include "fileCrawlerInterface.hpp"
+#include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/interprocess/smart_ptr/unique_ptr.hpp>
 

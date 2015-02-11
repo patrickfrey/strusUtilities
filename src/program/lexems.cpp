@@ -66,6 +66,14 @@ std::string parser::parse_IDENTIFIER( char const*& src)
 	return rt;
 }
 
+std::string parser::parse_TEXTWORD( char const*& src)
+{
+	std::string rt;
+	while (isTextChar( *src)) rt.push_back( *src++);
+	skipSpaces( src);
+	return rt;
+}
+
 std::string parser::parse_STRING( char const*& src)
 {
 	std::string rt;
@@ -146,6 +154,18 @@ char parser::parse_OPERATOR( char const*& src)
 	char rt = *src++;
 	skipSpaces( src);
 	return rt;
+}
+
+void parser::parse_ARROW( char const*& src)
+{
+	if (src[0] == '-' && src[1] == '>')
+	{
+		++src;
+	}
+	else
+	{
+		throw std::runtime_error( "expected arrow '->'");
+	}
 }
 
 int parser::parse_INTEGER( char const*& src)

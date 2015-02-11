@@ -45,9 +45,17 @@ static inline bool isMinus( char ch)
 {
 	return (ch == '-');
 }
+static inline bool isPlus( char ch)
+{
+	return (ch == '+');
+}
 static inline bool isAlnum( char ch)
 {
 	return isAlpha(ch) || isDigit(ch);
+}
+static inline bool isTextChar( char ch)
+{
+	return isAlnum(ch) || (unsigned char)ch >= 128;
 }
 static inline bool isAssign( char ch)
 {
@@ -105,6 +113,10 @@ static inline bool isSpace( char ch)
 {
 	return ch == ' ' || ch == '\t' || ch == '\n';
 }
+static inline bool isArrow( const char* src)
+{
+	return (src[0] == '-' && src[1] == '>');
+}
 static inline void skipToEoln( char const*& src)
 {
 	while (*src && *src != '\n') ++src;
@@ -125,15 +137,16 @@ static inline void skipSpaces( char const*& src)
 		}
 	}
 }
-
 bool is_INTEGER( const char* src);
 bool isEqual( const std::string& id, const char* idstr);
 std::string parse_IDENTIFIER( char const*& src);
+std::string parse_TEXTWORD( char const*& src);
 std::string parse_STRING( char const*& src);
 unsigned int parse_UNSIGNED( char const*& src);
 unsigned int parse_UNSIGNED1( char const*& src);
 float parse_FLOAT( char const*& src);
 char parse_OPERATOR( char const*& src);
+void parse_ARROW( char const*& src);
 int parse_INTEGER( char const*& src);
 int parse_KEYWORD( char const*& src, unsigned int nof, ...);
 int parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsigned int nof, ...);

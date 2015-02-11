@@ -27,7 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "keyMapGenProcessor.hpp"
-#include "strus/analyzerInterface.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/fileio.hpp"
 #include "fileCrawlerInterface.hpp"
@@ -100,7 +100,7 @@ void KeyMapGenResultList::printKeyOccurrenceList( std::ostream& out, std::size_t
 }
 
 KeyMapGenProcessor::KeyMapGenProcessor(
-		AnalyzerInterface* analyzer_,
+		DocumentAnalyzerInterface* analyzer_,
 		KeyMapGenResultList* que_,
 		FileCrawlerInterface* crawler_)
 
