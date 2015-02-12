@@ -33,12 +33,14 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
+#include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <memory>
 #include <boost/scoped_ptr.hpp>
 
 int main( int argc, const char* argv[])
@@ -83,11 +85,12 @@ int main( int argc, const char* argv[])
 		boost::scoped_ptr<strus::TextProcessorInterface>
 			textproc( strus::createTextProcessor());
 
-		boost::scoped_ptr<strus::SegmenterInterface>
+		std::auto_ptr<strus::SegmenterInterface>
 			segmenter( strus::createSegmenter_textwolf());
 
-		boost::scoped_ptr<strus::DocumentAnalyzerInterface> analyzer(
-			strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
+		boost::scoped_ptr<strus::DocumentAnalyzerInterface> 
+			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.release()));
+
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
 		strus::analyzer::Document doc

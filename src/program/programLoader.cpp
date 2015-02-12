@@ -197,48 +197,28 @@ static void parseWeightingConfig(
 	}
 	(void)parse_OPERATOR(src);
 	wcfg->done();
-}
 
-
-static void parseFeatureSets(
-		QueryEvalInterface& qeval,
-		char const*& src)
-{
-	enum QueryEvalKeyword {e_ON, e_WITH};
-
-	while (!isSemiColon(*src))
+	if (isOpenSquareBracket( *src))
 	{
-		switch ((QueryEvalKeyword)parse_KEYWORD( src, 2, "ON", "WITH"))
+		(void)parse_OPERATOR( src);
+	
+		while (*src && isAlnum( *src))
 		{
-			case e_ON:
-				while (*src)
-				{
-					qeval.defineSelectorFeature( parse_IDENTIFIER(src));
-					if (isComma( *src))
-					{
-						(void)parse_OPERATOR( src);
-					}
-					else
-					{
-						break;
-					}
-				}
+			qeval.defineWeightingFeature( parse_IDENTIFIER(src));
+			if (isComma( *src))
+			{
+				(void)parse_OPERATOR( src);
+			}
+			else
+			{
 				break;
-			case e_WITH:
-				while (*src)
-				{
-					qeval.defineWeightingFeature( parse_IDENTIFIER(src));
-					if (isComma( *src))
-					{
-						(void)parse_OPERATOR( src);
-					}
-					else
-					{
-						break;
-					}
-				}
-				break;
+			}
 		}
+		if (!isCloseSquareBracket( *src))
+		{
+			throw std::runtime_error( "close square bracket ']' expected at end of weighting feature set list");
+		}
+		(void)parse_OPERATOR( src);
 	}
 }
 
@@ -357,7 +337,7 @@ DLL_PUBLIC void strus::loadQueryEvalProgram(
 		const std::string& source)
 {
 	char const* src = source.c_str();
-	enum StatementKeyword {e_EVAL, e_TERM, e_SUMMARIZE};
+	enum StatementKeyword {e_EVAL, e_SELECTION, e_RESTRICTION, e_TERM, e_SUMMARIZE};
 	std::string id;
 
 	skipSpaces( src);
@@ -365,14 +345,41 @@ DLL_PUBLIC void strus::loadQueryEvalProgram(
 	{
 		while (*src)
 		{
-			switch ((StatementKeyword)parse_KEYWORD( src, 3, "EVAL", "TERM", "SUMMARIZE"))
+			switch ((StatementKeyword)parse_KEYWORD( src, 5, "EVAL", "SELECTION", "RESTRICTION", "TERM", "SUMMARIZE"))
 			{
 				case e_TERM:
 					parseTermConfig( qeval, src);
 					break;
+				case e_SELECTION:
+					while (*src && isAlnum( *src))
+					{
+						qeval.defineSelectionFeature( parse_IDENTIFIER(src));
+						if (isComma( *src))
+						{
+							(void)parse_OPERATOR( src);
+						}
+						else
+						{
+							break;
+						}
+					}
+					break;
+				case e_RESTRICTION:
+					while (*src && isAlnum( *src))
+					{
+						qeval.defineRestrictionFeature( parse_IDENTIFIER(src));
+						if (isComma( *src))
+						{
+							(void)parse_OPERATOR( src);
+						}
+						else
+						{
+							break;
+						}
+					}
+					break;
 				case e_EVAL:
 					parseWeightingConfig( qeval, src);
-					parseFeatureSets( qeval, src);
 					break;
 				case e_SUMMARIZE:
 					parseSummarizerConfig( qeval, qproc, src);
@@ -579,26 +586,29 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 		
 		while (*src)
 		{
-			if (!isAlnum(*src))
-			{
-				throw std::runtime_error( "alphanumeric identifier (feature class name or feature name) expected at start of a feature declaration");
-			}
-			std::string name = parse_IDENTIFIER( src);
-			if (isColon( *src))
+			if (isOpenSquareBracket( *src))
 			{
 				(void)parse_OPERATOR(src);
-				featclass = featureClassFromName( name);
-
 				if (!isAlnum(*src))
 				{
-					throw std::runtime_error( "alphanumeric identifier (feature set name) expected at start of a feature declaration after class name declaration");
+					throw std::runtime_error( "feature class identifier expected after open square bracket '['");
 				}
-				name = parse_IDENTIFIER( src);
+				featclass = featureClassFromName( parse_IDENTIFIER( src));
+				if (!isCloseSquareBracket( *src))
+				{
+					throw std::runtime_error( "close square bracket ']' expected to close feature class section definition");
+				}
+				(void)parse_OPERATOR(src);
 			}
+			if (!isAlnum(*src))
+			{
+				throw std::runtime_error( "feature type name (identifier) expected at start of a feature declaration");
+			}
+			std::string featuretype = parse_IDENTIFIER( src);
 			if (isAssign( *src))
 			{
 				(void)parse_OPERATOR(src);
-				parseFeatureDef( analyzer, name, src, featclass);
+				parseFeatureDef( analyzer, featuretype, src, featclass);
 			}
 			else
 			{
@@ -631,18 +641,24 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 	{
 		while (*src)
 		{
+			if (!isOpenSquareBracket( *src))
+			{
+				throw std::runtime_error( "open square bracket '[' expected to start phrase type declaration");
+			}
+			(void)parse_OPERATOR(src);
+
 			if (!isAlnum(*src))
 			{
 				throw std::runtime_error( "alphanumeric identifier (phrase type) expected at start of a query feature declaration");
 			}
 			std::string phraseType = parse_IDENTIFIER( src);
 
-			if (!isColon( *src))
+			if (!isCloseSquareBracket( *src))
 			{
-				throw std::runtime_error( "colon ':' expected after phrase type identifier in a query phrase type declaration");
+				throw std::runtime_error( "close square bracket ']' expected to end phrase type declaration");
 			}
 			(void)parse_OPERATOR(src);
-	
+
 			if (!isAlpha(*src))
 			{
 				throw std::runtime_error( "identifier (feature type name) expected after assign '=' in a query phrase type declaration");
@@ -988,10 +1004,7 @@ DLL_PUBLIC void strus::loadQuery(
 		const QueryAnalyzerInterface& analyzer,
 		const std::string& source)
 {
-	std::string featureSet;
-	float featureWeight = 1.0;
 	char const* src = source.c_str();
-	skipSpaces(src);
 	try
 	{
 		enum Section
@@ -1000,20 +1013,28 @@ DLL_PUBLIC void strus::loadQuery(
 			SectionCondition
 		};
 		Section section = SectionFeature;
+		std::string featureSet = Constants::query_default_feature_set();
+		float featureWeight = 1.0;
 
+		skipSpaces(src);
 		while (*src)
 		{
 			// Parse query section, if defined:
-			std::string name;
-			if (isAlnum( *src))
+			if (isOpenSquareBracket( *src))
 			{
-				char const* src_bk = src;
-				name = parse_IDENTIFIER( src);
+				(void)parse_OPERATOR( src);
+				if (!isAlnum(*src))
+				{
+					throw std::runtime_error("query section identifier expected after open square bracket '['");
+				}
+				std::string name = parse_IDENTIFIER( src);
 				if (isEqual( name, "Feature"))
 				{
+					section = SectionFeature;
+
 					if (!isAlnum( *src))
 					{
-						throw std::runtime_error("feature set identifier expected after keyword 'Feature'");
+						throw std::runtime_error("feature set identifier expected after keyword 'Feature' in query section definition");
 					}
 					featureSet = parse_IDENTIFIER( src);
 					
@@ -1025,34 +1046,27 @@ DLL_PUBLIC void strus::loadQuery(
 					{
 						featureWeight = 1.0;
 					}
-					if (isColon(*src))
-					{
-						(void)parse_OPERATOR( src);
-						section = SectionFeature;
-					}
-					else
-					{
-						throw std::runtime_error("colon ':' expected to terminate feature section start declaration");
-					}
 				}
 				else if (isEqual( name, "Condition"))
 				{
-					if (isColon( *src))
-					{
-						(void)parse_OPERATOR( src);
-						section = SectionCondition;
-						featureSet.clear();
-						featureWeight = 1.0;
-					}
-					else
-					{
-						throw std::runtime_error("colon ':' expected to terminate feature section start declaration");
-					}
+					section = SectionCondition;
+
+					featureSet.clear();
+					featureWeight = 1.0;
 				}
 				else
 				{
-					src = src_bk; // fallback after failed lookahead for section definition
+					throw std::runtime_error( std::string( "unknown query section identifier '") + name + "'");
 				}
+				if (isCloseSquareBracket( *src))
+				{
+					(void)parse_OPERATOR( src);
+				}
+				else
+				{
+					throw std::runtime_error( "close square bracket ']' expected to terminate query section declaration");
+				}
+				
 			}
 			// Parse expression, depending on section defined:
 			switch (section)
