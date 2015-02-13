@@ -89,7 +89,8 @@ int main( int argc, const char* argv[])
 			segmenter( strus::createSegmenter_textwolf());
 
 		boost::scoped_ptr<strus::DocumentAnalyzerInterface> 
-			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.release()));
+			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
+		(void)segmenter.release();
 
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 

@@ -15,6 +15,7 @@ subdirs:
 	cd strusDestroy; make all; cd -
 	cd strusInspect; make all; cd -
 	cd strusAlterMetaData; make all; cd -
+	cd strusDumpStatistics; make all; cd -
 
 .PHONY: clean
 clean:
@@ -26,6 +27,7 @@ clean:
 	cd strusDestroy; make clean; cd -
 	cd strusInspect; make clean; cd -
 	cd strusAlterMetaData; make clean; cd -
+	cd strusDumpStatistics; make clean; cd -
 
 .PHONY: install
 install:
@@ -37,6 +39,7 @@ install:
 	cd strusDestroy; make install; cd -
 	cd strusInspect; make install; cd -
 	cd strusAlterMetaData; make install; cd -
+	cd strusDumpStatistics; make install; cd -
 
 .PHONY: uninstall
 uninstall:
@@ -48,6 +51,7 @@ uninstall:
 	cd strusDestroy; make uninstall; cd -
 	cd strusInspect; make uninstall; cd -
 	cd strusAlterMetaData; make uninstall; cd -
+	cd strusDumpStatistics; make uninstall; cd -
 
 
 

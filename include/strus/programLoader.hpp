@@ -29,6 +29,7 @@
 #ifndef _STRUS_PARSER_HPP_INCLUDED
 #define _STRUS_PARSER_HPP_INCLUDED
 #include <string>
+#include <istream>
 
 namespace strus {
 
@@ -42,6 +43,8 @@ class QueryInterface;
 class DocumentAnalyzerInterface;
 /// \brief Forward declaration
 class QueryAnalyzerInterface;
+/// \brief Forward declaration
+class StorageInterface;
 
 /// \brief Load a document analyzer program from source
 /// \param[in] analyzer analyzer program to instatiate
@@ -88,6 +91,13 @@ bool scanNextProgram(
 		std::string& segment,
 		std::string::const_iterator& itr,
 		const std::string::const_iterator& end);
+
+/// \brief Load the global statistics for a storage from a stream
+/// \param[in,out] storage the storage to instrument
+/// \param[in,out] stream the stream to read from
+void loadGlobalStatistics(
+		StorageInterface& storage,
+		std::istream& stream);
 
 }//namespace
 #endif

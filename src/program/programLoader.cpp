@@ -30,6 +30,7 @@
 #include "lexems.hpp"
 #include "dll_tags.hpp"
 #include "strus/constants.hpp"
+#include "strus/private/protocol.hpp"
 #include "strus/arithmeticVariant.hpp"
 #include "strus/weightingConfigInterface.hpp"
 #include "strus/summarizerConfigInterface.hpp"
@@ -39,6 +40,8 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/queryInterface.hpp"
+#include "strus/storageInterface.hpp"
+#include "strus/peerStorageTransactionInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include <string>
 #include <vector>
@@ -1128,6 +1131,101 @@ DLL_PUBLIC bool strus::scanNextProgram(
 	return true;
 }
 
+
+static std::string readToken( std::string::const_iterator& si, const std::string::const_iterator& se)
+{
+	std::string rt;
+	for (;*si && !isSpace( *si); ++si)
+	{
+		rt.push_back( *si);
+	}
+	for (; *si && isSpace( *si); ++si){}
+	return rt;
+}
+
+static int readInteger( std::string::const_iterator& si, const std::string::const_iterator& se)
+{
+	int rt = 0, prev_rt = 0;
+	bool sign = false;
+	if (*si == '-')
+	{
+		sign = true;
+		++si;
+	}
+	for (;*si && isDigit( *si); ++si)
+	{
+		rt = rt * 10 + *si - '0';
+		if (prev_rt > rt)
+		{
+			throw std::runtime_error( "integer value out of range");
+		}
+		prev_rt = rt;
+	}
+	for (; isSpace( *si); ++si){}
+	return (sign)?-rt:rt;
+}
+
+
+DLL_PUBLIC void strus::loadGlobalStatistics(
+		StorageInterface& storage,
+		std::istream& stream)
+{
+	boost::scoped_ptr<PeerStorageTransactionInterface>
+		transaction( storage.createPeerStorageTransaction());
+	std::size_t linecnt = 1;
+	try
+	{
+		std::string line;
+		while (std::getline( stream, line))
+		{
+			std::string::const_iterator li = line.begin(), le = line.end();
+			if (li != le)
+			{
+				std::string tok = readToken( li, le);
+				if (tok == Constants::storage_statistics_document_frequency())
+				{
+					int df = readInteger( li, le);
+					std::string termtype = readToken( li, le);
+					std::string termvalue = Protocol::decodeString( readToken( li, le));
+
+					transaction->updateDocumentFrequencyChange(
+							termtype.c_str(), termvalue.c_str(), df);
+				}
+				else if (tok == Constants::storage_statistics_number_of_documents())
+				{
+					int nofDocs = readInteger( li, le);
+					transaction->updateNofDocumentsInsertedChange( nofDocs);
+				}
+				else
+				{
+					throw std::runtime_error( "unexpected token at start of line");
+				}
+			}
+			if (li != le)
+			{
+				throw std::runtime_error( "unconsumed characters at end of line");
+			}
+		}
+		transaction->commit();
+	}
+	catch (const std::istream::failure& err)
+	{
+		if (stream.eof())
+		{
+			transaction->commit();
+			return;
+		}
+		throw std::runtime_error( std::string( "file read error on line ")
+			+ boost::lexical_cast<std::string>( linecnt)
+			+ ": " + err.what());
+	}
+	catch (const std::runtime_error& err)
+	{
+		throw std::runtime_error( std::string( "error on line ")
+			+ boost::lexical_cast<std::string>( linecnt)
+			+ ": " + err.what());
+	}
+}
 
 
 

@@ -50,6 +50,7 @@
 #include "thread.hpp"
 #include <iostream>
 #include <sstream>
+#include <memory>
 #include <cstring>
 #include <stdexcept>
 #include <boost/scoped_ptr.hpp>
@@ -138,11 +139,12 @@ int main( int argc_, const char* argv_[])
 		boost::scoped_ptr<strus::TextProcessorInterface>
 			textproc( strus::createTextProcessor());
 
-		boost::scoped_ptr<strus::SegmenterInterface>
+		std::auto_ptr<strus::SegmenterInterface>
 			segmenter( strus::createSegmenter_textwolf());
 
 		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
 			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
+		(void)segmenter.release();
 
 		unsigned int ec;
 		std::string analyzerProgramSource;

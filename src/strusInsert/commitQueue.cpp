@@ -55,7 +55,7 @@ void CommitQueue::push(
 		do
 		{
 			transaction->commit();
-			Index totalNofDocuments = m_storage->nofDocumentsInserted();
+			Index totalNofDocuments = m_storage->localNofDocumentsInserted();
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
 			std::cerr << "inserted " << nofDocsInserted << " documents (total " << totalNofDocuments << ")" << std::endl;
 			delete transaction;

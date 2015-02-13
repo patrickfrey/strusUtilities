@@ -48,7 +48,7 @@ public:
 		:m_storage(storage_)
 	{
 		m_minDocno = m_storage->maxDocumentNumber() + 1;
-		m_nofDocuments = m_storage->nofDocumentsInserted();
+		m_nofDocuments = m_storage->localNofDocumentsInserted();
 	}
 
 	void push(
