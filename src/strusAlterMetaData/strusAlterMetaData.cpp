@@ -186,7 +186,7 @@ int main( int argc, const char* argv[])
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription(
+					12, strus::getDatabaseConfigDescription_leveldb(
 						strus::CmdCreateDatabaseClient));
 		std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
 		std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
@@ -223,8 +223,7 @@ int main( int argc, const char* argv[])
 		std::vector<AlterMetaDataCommand> cmds = parseCommands( argv[2]);
 
 		boost::scoped_ptr<strus::DatabaseInterface>
-			database( strus::createDatabaseClient(
-				config.c_str()));
+			database( strus::createDatabaseClient_leveldb( config));
 
 		boost::scoped_ptr<strus::StorageAlterMetaDataTableInterface>
 			md( strus::createAlterMetaDataTable( database.get()));

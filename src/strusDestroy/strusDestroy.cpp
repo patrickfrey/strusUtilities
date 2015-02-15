@@ -43,7 +43,7 @@ int main( int argc, const char* argv[])
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription(
+					12, strus::getDatabaseConfigDescription_leveldb(
 						strus::CmdDestroyDatabase));
 		return 0;
 	}
@@ -52,7 +52,7 @@ int main( int argc, const char* argv[])
 		if (argc < 2) throw std::runtime_error( "too few arguments (expected storage configuration string)");
 		if (argc > 2) throw std::runtime_error( "too many arguments for strusDestroy");
 
-		strus::destroyDatabase( argv[1]);
+		strus::destroyDatabase_leveldb( argv[1]);
 	}
 	catch (const std::runtime_error& e)
 	{

@@ -116,7 +116,7 @@ static void parseTermConfig(
 			throw std::runtime_error( "term type identifier expected after colon and term value");
 		}
 		std::string termtype = boost::algorithm::to_lower_copy( parse_IDENTIFIER( src));
-		qeval.defineTerm( termset, termtype, termvalue);
+		qeval.addTerm( termset, termtype, termvalue);
 	}
 	else
 	{
@@ -207,7 +207,7 @@ static void parseWeightingConfig(
 	
 		while (*src && isAlnum( *src))
 		{
-			qeval.defineWeightingFeature( parse_IDENTIFIER(src));
+			qeval.addWeightingFeature( parse_IDENTIFIER(src));
 			if (isComma( *src))
 			{
 				(void)parse_OPERATOR( src);
@@ -356,7 +356,7 @@ DLL_PUBLIC void strus::loadQueryEvalProgram(
 				case e_SELECTION:
 					while (*src && isAlnum( *src))
 					{
-						qeval.defineSelectionFeature( parse_IDENTIFIER(src));
+						qeval.addSelectionFeature( parse_IDENTIFIER(src));
 						if (isComma( *src))
 						{
 							(void)parse_OPERATOR( src);
@@ -370,7 +370,7 @@ DLL_PUBLIC void strus::loadQueryEvalProgram(
 				case e_RESTRICTION:
 					while (*src && isAlnum( *src))
 					{
-						qeval.defineRestrictionFeature( parse_IDENTIFIER(src));
+						qeval.addRestrictionFeature( parse_IDENTIFIER(src));
 						if (isComma( *src))
 						{
 							(void)parse_OPERATOR( src);
@@ -547,28 +547,28 @@ static void parseFeatureDef(
 	switch (featureClass)
 	{
 		case FeatSearchIndexTerm:
-			analyzer.defineSearchIndexFeature(
+			analyzer.addSearchIndexFeature(
 				featurename, xpathexpr,
 				TokenizerConfig( tokenizerName, tokenizerArg),
 				NormalizerConfig( normalizerName, normalizerArg));
 			break;
 
 		case FeatForwardIndexTerm:
-			analyzer.defineForwardIndexFeature(
+			analyzer.addForwardIndexFeature(
 				featurename, xpathexpr,
 				TokenizerConfig( tokenizerName, tokenizerArg),
 				NormalizerConfig( normalizerName, normalizerArg));
 			break;
 
 		case FeatMetaData:
-			analyzer.defineMetaDataFeature(
+			analyzer.defineMetaData(
 				featurename, xpathexpr,
 				TokenizerConfig( tokenizerName, tokenizerArg),
 				NormalizerConfig( normalizerName, normalizerArg));
 			break;
 
 		case FeatAttribute:
-			analyzer.defineAttributeFeature(
+			analyzer.defineAttribute(
 				featurename, xpathexpr,
 				TokenizerConfig( tokenizerName, tokenizerArg),
 				NormalizerConfig( normalizerName, normalizerArg));

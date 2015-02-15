@@ -58,7 +58,6 @@
 #include <boost/lexical_cast.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define STRUS_MEASURE_TIME
 
 int main( int argc_, const char* argv_[])
 {
@@ -68,8 +67,8 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 6,
-				"h,help", "t,stats", "s,silent", "u,user:", "n,nofranks:", "g,globalstats:");
+				argc_, argv_, 7,
+				"h,help", "t,stats", "s,silent", "u,user:", "n,nofranks:", "g,globalstats:", "m,measure");
 		if (opt( "help")) printUsageAndExit = true;
 
 		if (opt.nofargs() > 4)
@@ -98,7 +97,7 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription(
+					12, strus::getDatabaseConfigDescription_leveldb(
 						strus::CmdCreateDatabaseClient));
 		strus::printIndentMultilineString(
 					std::cerr,
@@ -113,12 +112,14 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "option -s|--silent     :No output of results" << std::endl;
 		std::cerr << "option -t|--stats      :Print some statistics available" << std::endl;
 		std::cerr << "option -g|--globalstats:Load global statistics of peers from this file" << std::endl;
+		std::cerr << "option -m|--measure    :Measure duration of query evaluation" << std::endl;
 		return rt;
 	}
 	try
 	{
 		bool silent = opt( "silent");
 		bool statistics = opt( "stats");
+		bool measureDuration = opt( "measure");
 		std::string username;
 		std::size_t nofRanks = 20;
 		if (opt("user"))
@@ -142,17 +143,15 @@ int main( int argc_, const char* argv_[])
 
 		strus::removeKeysFromConfigString(
 				storagecfg,
-				strus::getDatabaseConfigParameters( strus::CmdCreateDatabaseClient));
+				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateDatabaseClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
 		// Create objects for query evaluation:
 		boost::scoped_ptr<strus::DatabaseInterface>
-			database( strus::createDatabaseClient(
-				databasecfg.c_str()));
+			database( strus::createDatabaseClient_leveldb( databasecfg));
 
 		boost::scoped_ptr<strus::StorageInterface>
-			storage( strus::createStorageClient(
-				storagecfg.c_str(), database.get()));
+			storage( strus::createStorageClient( storagecfg, database.get()));
 
 		boost::scoped_ptr<strus::TextProcessorInterface> textproc(
 			strus::createTextProcessor());
@@ -161,7 +160,7 @@ int main( int argc_, const char* argv_[])
 			strus::createQueryAnalyzer( textproc.get()));
 
 		boost::scoped_ptr<strus::QueryProcessorInterface> qproc(
-			strus::createQueryProcessorInterface( storage.get()));
+			strus::createQueryProcessor( storage.get()));
 
 		boost::scoped_ptr<strus::QueryEvalInterface> qeval(
 			strus::createQueryEval( qproc.get()));
@@ -231,11 +230,10 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 
-#ifdef STRUS_MEASURE_TIME
 		std::clock_t start;
 		unsigned int nofQueries = 0;
 		start = std::clock();
-#endif
+
 		std::string::const_iterator si = querystring.begin(), se = querystring.end();
 		std::string qs;
 		while (strus::scanNextProgram( qs, si, se))
@@ -267,12 +265,13 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
-#ifdef STRUS_MEASURE_TIME
-		float duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
-		std::cerr << "evaluated " << nofQueries << " queries in "
-				<< std::fixed << std::setw(6) << std::setprecision(3)
-				<< duration << " seconds" << std::endl;
-#endif
+		if (measureDuration)
+		{
+			float duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+			std::cerr << "evaluated " << nofQueries << " queries in "
+					<< std::fixed << std::setw(6) << std::setprecision(3)
+					<< duration << " seconds" << std::endl;
+		}
 		if (statistics)
 		{
 			std::vector<strus::StatCounterValue> stats = storage->getStatistics();

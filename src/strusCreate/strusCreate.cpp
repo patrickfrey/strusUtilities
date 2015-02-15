@@ -47,7 +47,7 @@ int main( int argc, const char* argv[])
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription(
+					12, strus::getDatabaseConfigDescription_leveldb(
 						strus::CmdCreateDatabase));
 		strus::printIndentMultilineString(
 					std::cerr,
@@ -70,16 +70,15 @@ int main( int argc, const char* argv[])
 
 		strus::removeKeysFromConfigString(
 				storagecfg,
-				strus::getDatabaseConfigParameters( strus::CmdCreateDatabaseClient));
+				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateDatabaseClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
-		strus::createDatabase( databasecfg.c_str());
+		strus::createDatabase_leveldb( databasecfg);
 
 		boost::scoped_ptr<strus::DatabaseInterface>
-			database( strus::createDatabaseClient(
-				databasecfg.c_str()));
+			database( strus::createDatabaseClient_leveldb( databasecfg));
 
-		strus::createStorage( storagecfg.c_str(), database.get());
+		strus::createStorage( storagecfg, database.get());
 	}
 	catch (const std::runtime_error& e)
 	{

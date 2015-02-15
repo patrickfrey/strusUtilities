@@ -143,7 +143,7 @@ void CheckInsertProcessor::run()
 				for (; ti != te; ++ti)
 				{
 					storagedoc->addSearchIndexTerm(
-						ti->type(), ti->value(), ti->pos(), 0.0/*weight*/);
+						ti->type(), ti->value(), ti->pos());
 				}
 
 				// Define all forward index term occurrencies:
