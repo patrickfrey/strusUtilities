@@ -165,8 +165,8 @@ static void parseWeightingConfig(
 	{
 		throw std::runtime_error( "weighting function identifier expected");
 	}
-	boost::scoped_ptr<WeightingConfigInterface> wcfg(
-		qeval.createWeightingConfig( parse_IDENTIFIER( src)));
+	std::string functionName = parse_IDENTIFIER( src);
+	WeightingConfig wcfg;
 
 	if (!isOpenOvalBracket( *src))
 	{
@@ -186,7 +186,7 @@ static void parseWeightingConfig(
 			throw std::runtime_error( "assingment operator '=' expected after weighting function parameter name");
 		}
 		(void)parse_OPERATOR(src);
-		wcfg->defineNumericParameter( parameterName, parseNumericValue( src));
+		wcfg.defineNumericParameter( parameterName, parseNumericValue( src));
 
 		if (!isComma( *src))
 		{
@@ -199,7 +199,7 @@ static void parseWeightingConfig(
 		throw std::runtime_error( "close oval bracket ')' expected at end of weighting function parameter list");
 	}
 	(void)parse_OPERATOR(src);
-	wcfg->done();
+	qeval.setWeighting( functionName, wcfg);
 
 	if (isOpenSquareBracket( *src))
 	{
@@ -249,8 +249,7 @@ static void parseSummarizerConfig(
 		throw std::runtime_error( "name of summarizer function expected after assignment in summarizer definition");
 	}
 	functionName = boost::algorithm::to_lower_copy( parse_IDENTIFIER( src));
-	boost::scoped_ptr<SummarizerConfigInterface> summarizer(
-		qeval.createSummarizerConfig( resultAttribute, functionName));
+	SummarizerConfig summarizer;
 	const SummarizerFunctionInterface* function = qproc.getSummarizerFunction( functionName);
 
 	if (!isOpenOvalBracket( *src))
@@ -284,16 +283,16 @@ static void parseSummarizerConfig(
 			}
 			if (isMember( function->textualParameterNames(), parameterName))
 			{
-				summarizer->defineTextualParameter( parameterName, parameterValue);
+				summarizer.defineTextualParameter( parameterName, parameterValue);
 			}
 			else if (isMember( function->featureParameterClassNames(), parameterName))
 			{
-				summarizer->defineFeatureParameter( parameterName, parameterValue);
+				summarizer.defineFeatureParameter( parameterName, parameterValue);
 			}
 			else if (isMember( function->numericParameterNames(), parameterName))
 			{
 				char const* cc = parameterValue.c_str();
-				summarizer->defineNumericParameter( parameterName, parseNumericValue( cc));
+				summarizer.defineNumericParameter( parameterName, parseNumericValue( cc));
 			}
 			else
 			{
@@ -312,7 +311,7 @@ static void parseSummarizerConfig(
 			}
 			else if (isMember( function->numericParameterNames(), parameterName))
 			{
-				summarizer->defineNumericParameter( parameterName, parseNumericValue( src));
+				summarizer.defineNumericParameter( parameterName, parseNumericValue( src));
 			}
 			else
 			{
@@ -330,7 +329,7 @@ static void parseSummarizerConfig(
 		throw std::runtime_error( "close oval bracket ')' expected at end of summarizer function parameter list");
 	}
 	(void)parse_OPERATOR(src);
-	summarizer->done();
+	qeval.addSummarizer( resultAttribute, functionName, summarizer);
 }
 
 

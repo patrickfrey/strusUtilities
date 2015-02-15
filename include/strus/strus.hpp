@@ -63,10 +63,10 @@
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/summarizerFunctionInterface.hpp"
 #include "strus/summarizerClosureInterface.hpp"
-#include "strus/summarizerConfigInterface.hpp"
+#include "strus/summarizerConfig.hpp"
 #include "strus/weightingClosureInterface.hpp"
 #include "strus/weightingFunctionInterface.hpp"
-#include "strus/weightingConfigInterface.hpp"
+#include "strus/weightingConfig.hpp"
 
 // Query evaluation (processing a query to get a ranked list of documents with attributes):
 #include "strus/lib/queryeval.hpp"
