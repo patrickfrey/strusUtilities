@@ -6,7 +6,7 @@ CPP_OBJS=
 CPP_INCLUDE=-I$(TOPDIR)/include -I$(TOPDIR)/include/private -I$(INSTALL_INCDIR)
 CXXFLAGS=-g -Werror -Wall -pedantic $(OPTIMIZE) -std=c++98
 LDFLAGS=-L$(INSTALL_LIBDIR) -L$(TOPDIR)/src/program
-LIBS=-lstrus_analyzer -lstrus_textprocessor -lstrus_segmenter_textwolf -lstrus_tokenizer_word -lstrus_tokenizer_punctuation -lstrus_normalizer_snowball -lstrus_utils -lstrus_program -lboost_system -lstemmer
+LIBS=-lstrus_analyzer -lstrus_textproc -lstrus_segmenter_textwolf -lstrus_tokenizer_word -lstrus_tokenizer_punctuation -lstrus_normalizer_snowball -lstrus_utils -lstrus_program -lboost_system -lstemmer
 
 all: strusAnalyze
 
