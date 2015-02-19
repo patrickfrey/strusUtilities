@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 2.8)
+
+add_subdirectory( program )
+add_subdirectory( strusAlterMetaData )
+add_subdirectory( strusAnalyze )
+add_subdirectory( strusCreate )
+add_subdirectory( strusDestroy )
+add_subdirectory( strusDumpStatistics )
+add_subdirectory( strusInsert )
+add_subdirectory( strusInspect )
+add_subdirectory( strusQuery )

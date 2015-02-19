@@ -39,6 +39,7 @@
 #include "strus/arithmeticVariant.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/configParser.hpp"
+#include "private/version.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -224,9 +225,14 @@ static void inspectDocid( strus::StorageInterface& storage, const char** key, in
 
 int main( int argc, const char* argv[])
 {
+	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
+	{
+		std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		return 0;
+	}
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
-		std::cerr << "usage: strusInspect <config> <what...>" << std::endl;
+		std::cerr << "usage: strusInspect [options] <config> <what...>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage" << std::endl;
 		std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
@@ -247,6 +253,9 @@ int main( int argc, const char* argv[])
 		std::cerr << "            \"content\" <type> <doc-id/no>" << std::endl;
 		std::cerr << "            \"token\" <type> <doc-id/no>" << std::endl;
 		std::cerr << "            \"docno\" <docid>" << std::endl;
+		std::cerr << "options:" << std::endl;
+		std::cerr << "-h|--help     :Print this usage and do nothing else" << std::endl;
+		std::cerr << "-v|--version  :Print the program version and do nothing else" << std::endl;
 		return 0;
 	}
 	try

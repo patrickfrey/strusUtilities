@@ -28,23 +28,32 @@
 */
 #include "strus/lib/database_leveldb.hpp"
 #include "strus/databaseInterface.hpp"
-#include "programOptions.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "private/programOptions.hpp"
+#include "private/version.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
 
 int main( int argc, const char* argv[])
 {
+	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
+	{
+		std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		return 0;
+	}
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
-		std::cerr << "usage: strusDestroy <config>" << std::endl;
+		std::cerr << "usage: strusDestroy [options] <config>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage" << std::endl;
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getDatabaseConfigDescription_leveldb(
 						strus::CmdDestroyDatabase));
+		std::cerr << "options:" << std::endl;
+		std::cerr << "-h,--help     : Print this usage info and exit" << std::endl;
+		std::cerr << "-v,--version  : Print the version info and exit" << std::endl;
 		return 0;
 	}
 	try

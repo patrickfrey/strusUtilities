@@ -42,7 +42,8 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/programLoader.hpp"
-#include "programOptions.hpp"
+#include "private/version.hpp"
+#include "private/programOptions.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "docnoAllocator.hpp"
@@ -64,10 +65,14 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 4,
-				"h,help", "t,threads:", "c,commit:", "n,new");
+				argc_, argv_, 5,
+				"h,help", "t,threads:", "c,commit:", "n,new", "v,version");
 		if (opt( "help")) printUsageAndExit = true;
-
+		if (opt( "version"))
+		{
+			std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			return 0;
+		}
 		if (opt.nofargs() > 3)
 		{
 			std::cerr << "ERROR too many arguments" << std::endl;
@@ -103,7 +108,8 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "<program> = path of analyzer program" << std::endl;
 		std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
 		std::cerr << "options:" << std::endl;
-		std::cerr << "-h,--help    : Print this usage info" << std::endl;
+		std::cerr << "-h,--help    : Print this usage info and exit" << std::endl;
+		std::cerr << "-v,--version : Print this version info and exit" << std::endl;
 		std::cerr << "-t,--threads : Number of inserter threads to use"  << std::endl;
 		std::cerr << "-c,--commit  : Number of files inserted per transaction (default 1000)" << std::endl;
 		std::cerr << "-n,--new     : All inserts are new; use preallocated document numbers" << std::endl;

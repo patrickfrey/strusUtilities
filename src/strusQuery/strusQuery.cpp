@@ -46,7 +46,8 @@
 #include "strus/private/configParser.hpp"
 #include "strus/statCounterValue.hpp"
 #include "strus/programLoader.hpp"
-#include "programOptions.hpp"
+#include "private/version.hpp"
+#include "private/programOptions.hpp"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -67,9 +68,14 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 7,
-				"h,help", "t,stats", "s,silent", "u,user:", "n,nofranks:", "g,globalstats:", "m,measure");
+				argc_, argv_, 8,
+				"h,help", "t,stats", "s,silent", "u,user:", "n,nofranks:", "g,globalstats:", "m,measure", "v,version");
 		if (opt( "help")) printUsageAndExit = true;
+		if (opt( "version"))
+		{
+			std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			return 0;
+		}
 
 		if (opt.nofargs() > 4)
 		{
@@ -106,13 +112,15 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
 		std::cerr << "<qeprg>   = path of query eval program" << std::endl;
 		std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
-		std::cerr << "option -h|--help       :Print this usage and do nothing else" << std::endl;
-		std::cerr << "option -u|--user       :User name for the query" << std::endl;
-		std::cerr << "option -n|--nofranks   :Number of result ranks to return" << std::endl;
-		std::cerr << "option -s|--silent     :No output of results" << std::endl;
-		std::cerr << "option -t|--stats      :Print some statistics available" << std::endl;
-		std::cerr << "option -g|--globalstats:Load global statistics of peers from this file" << std::endl;
-		std::cerr << "option -m|--measure    :Measure duration of query evaluation" << std::endl;
+		std::cerr << "options:" << std::endl;
+		std::cerr << "-h|--help       :Print this usage and do nothing else" << std::endl;
+		std::cerr << "-v|--version    :Print the program version and do nothing else" << std::endl;
+		std::cerr << "-u|--user       :User name for the query" << std::endl;
+		std::cerr << "-n|--nofranks   :Number of result ranks to return" << std::endl;
+		std::cerr << "-s|--silent     :No output of results" << std::endl;
+		std::cerr << "-t|--stats      :Print some statistics available" << std::endl;
+		std::cerr << "-g|--globalstats:Load global statistics of peers from this file" << std::endl;
+		std::cerr << "-m|--measure    :Measure duration of query evaluation" << std::endl;
 		return rt;
 	}
 	try

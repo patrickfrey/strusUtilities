@@ -36,6 +36,7 @@
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "private/version.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
@@ -56,11 +57,19 @@ int main( int argc, const char* argv[])
 		std::cerr << "ERROR too few arguments" << std::endl;
 		rt = 2;
 	}
+	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
+	{
+		std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		return 0;
+	}
 	if (rt || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
-		std::cerr << "usage: strusAnalyze <program> <document>" << std::endl;
+		std::cerr << "usage: strusAnalyze [options] <program> <document>" << std::endl;
 		std::cerr << "<program>     = path of analyzer program" << std::endl;
 		std::cerr << "<document>    = path of document to analyze" << std::endl;
+		std::cerr << "options:" << std::endl;
+		std::cerr << "-h|--help     :Print this usage and do nothing else" << std::endl;
+		std::cerr << "-v|--version  :Print the program version and do nothing else" << std::endl;
 		return rt;
 	}
 	try

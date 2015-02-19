@@ -31,10 +31,11 @@
 #include "strus/databaseInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
-#include "programOptions.hpp"
+#include "private/programOptions.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
+#include "private/version.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -179,9 +180,14 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 
 int main( int argc, const char* argv[])
 {
+	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
+	{
+		std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		return 0;
+	}
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
-		std::cerr << "usage: strusAlterMetaData <config> <cmds>" << std::endl;
+		std::cerr << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
 		std::cerr << "<config>  : configuration string of the storage:" << std::endl;
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
@@ -212,6 +218,9 @@ int main( int argc, const char* argv[])
 		std::cerr << "              UINT32    :four bytes unsigned integer value" << std::endl;
 		std::cerr << "              FLOAT16   :two bytes floating point value (IEEE 754 small)" << std::endl;
 		std::cerr << "              FLOAT32   :four bytes floating point value (IEEE 754 single)" << std::endl;
+		std::cerr << "options:" << std::endl;
+		std::cerr << "-h|--help     :Print this usage and do nothing else" << std::endl;
+		std::cerr << "-v|--version  :Print the program version and do nothing else" << std::endl;
 		return 0;
 	}
 	try

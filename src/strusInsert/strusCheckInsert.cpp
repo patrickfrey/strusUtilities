@@ -42,7 +42,8 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/programLoader.hpp"
-#include "programOptions.hpp"
+#include "private/programOptions.hpp"
+#include "private/version.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "checkInsertProcessor.hpp"
@@ -62,10 +63,14 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 4,
-				"h,help", "t,threads:", "l,logfile:", "n,notify:");
+				argc_, argv_, 5,
+				"h,help", "t,threads:", "l,logfile:", "n,notify:", "v,version");
 		if (opt( "help")) printUsageAndExit = true;
-
+		if (opt( "version"))
+		{
+			std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			return 0;
+		}
 		if (opt.nofargs() > 3)
 		{
 			std::cerr << "ERROR too many arguments" << std::endl;
@@ -102,6 +107,7 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "<docpath> = path of document or directory to check" << std::endl;
 		std::cerr << "options:" << std::endl;
 		std::cerr << "-h,--help    : Print this usage info" << std::endl;
+		std::cerr << "-v,--version : Print the version info and exit" << std::endl;
 		std::cerr << "-t,--threads : Number of check insert threads to use"  << std::endl;
 		std::cerr << "-l,--logfile : File to use for output (default stdout)"  << std::endl;
 		std::cerr << "-n,--notify  : Notification interval (number of documents)" << std::endl;
