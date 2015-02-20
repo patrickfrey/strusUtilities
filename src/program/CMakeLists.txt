@@ -13,9 +13,9 @@ link_directories( "${Boost_LIBRARY_DIRS}"  "${strus_LIBRARY_DIRS}" "${strusanaly
 
 
 # -------------------------------------------
-# DATABASE LIBRARY
+# LIBRARIES
 # -------------------------------------------
-add_library(strus_program SHARED ${source_files})
+add_library( strus_program SHARED ${source_files} )
 target_link_libraries( strus_program "${Boost_LIBRARIES}"  "${strus_LIBRARIES}" "${strusanalyzer_LIBRARIES}" )
 set_target_properties(
     strus_program
