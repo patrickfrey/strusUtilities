@@ -44,7 +44,6 @@
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
-#include "strus/statCounterValue.hpp"
 #include "strus/programLoader.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
@@ -68,8 +67,8 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 8,
-				"h,help", "t,stats", "s,silent", "u,user:", "n,nofranks:", "g,globalstats:", "m,measure", "v,version");
+				argc_, argv_, 7,
+				"h,help", "s,silent", "u,user:", "n,nofranks:", "g,globalstats:", "m,measure", "v,version");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -118,7 +117,6 @@ int main( int argc_, const char* argv_[])
 		std::cerr << "-u|--user       :User name for the query" << std::endl;
 		std::cerr << "-n|--nofranks   :Number of result ranks to return" << std::endl;
 		std::cerr << "-s|--silent     :No output of results" << std::endl;
-		std::cerr << "-t|--stats      :Print some statistics available" << std::endl;
 		std::cerr << "-g|--globalstats:Load global statistics of peers from this file" << std::endl;
 		std::cerr << "-m|--measure    :Measure duration of query evaluation" << std::endl;
 		return rt;
@@ -126,7 +124,6 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		bool silent = opt( "silent");
-		bool statistics = opt( "stats");
 		bool measureDuration = opt( "measure");
 		std::string username;
 		std::size_t nofRanks = 20;
@@ -279,17 +276,6 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "evaluated " << nofQueries << " queries in "
 					<< std::fixed << std::setw(6) << std::setprecision(3)
 					<< duration << " seconds" << std::endl;
-		}
-		if (statistics)
-		{
-			std::vector<strus::StatCounterValue> stats = storage->getStatistics();
-			std::vector<strus::StatCounterValue>::const_iterator
-				si = stats.begin(), se = stats.end();
-			std::cerr << "Statistics:" << std::endl;
-			for (; si != se; ++si)
-			{
-				std::cerr << "\t" << si->name() << " = " << si->value() << std::endl;
-			}
 		}
 	}
 	catch (const std::runtime_error& e)

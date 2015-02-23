@@ -37,6 +37,7 @@
 
 // Key/value store database used by the storage to store its persistent data:
 #include "strus/lib/database_leveldb.hpp"
+#include "strus/databaseOptions.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseCursorInterface.hpp"
 #include "strus/databaseBackupCursorInterface.hpp"
