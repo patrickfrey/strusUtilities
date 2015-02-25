@@ -122,22 +122,37 @@ void InsertProcessor::run()
 					// Call the analyzer and create the document:
 					strus::analyzer::Document doc
 						= m_analyzer->analyze( documentContent);
-			
-					boost::scoped_ptr<strus::StorageDocumentInterface>
-						storagedoc( transaction->createDocument(
+
+					std::vector<strus::analyzer::Attribute>::const_iterator
+						oi = doc.attributes().begin(),
+						oe = doc.attributes().end();
+					for (;oi != oe
+						&& oi->name() != strus::Constants::attribute_docid();
+						++oi){}
+					boost::scoped_ptr<strus::StorageDocumentInterface> storagedoc;
+					if (oi != oe)
+					{
+						storagedoc.reset(
+							transaction->createDocument(
+								oi->value(), docno?(docno + fidx):0));
+						//... use the docid from the analyzer if defined there
+					}
+					else
+					{
+						storagedoc.reset(
+							transaction->createDocument(
 								*fitr, docno?(docno + fidx):0));
-			
-					strus::Index lastPos = (doc.searchIndexTerms().empty())
-							?0:doc.searchIndexTerms()[ 
-								doc.searchIndexTerms().size()-1].pos();
-	
-					// Define hardcoded document attributes:
-					storagedoc->setAttribute(
-						strus::Constants::attribute_docid(), *fitr);
-			
+						storagedoc->setAttribute(
+							strus::Constants::attribute_docid(), *fitr);
+						//... define file path as hardcoded docid attribute
+					}
+
 					// Define hardcoded document metadata, if known:
 					if (hasDoclenAttribute)
 					{
+						strus::Index lastPos = (doc.searchIndexTerms().empty())
+								?0:doc.searchIndexTerms()[ 
+									doc.searchIndexTerms().size()-1].pos();
 						storagedoc->setMetaData(
 							strus::Constants::metadata_doclen(),
 							strus::ArithmeticVariant( lastPos));

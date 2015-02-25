@@ -33,7 +33,6 @@
 #include "strus/constants.hpp"
 #include "strus/arithmeticVariant.hpp"
 #include "strus/reference.hpp"
-#include "strus/statCounterValue.hpp"
 
 // Key/value store database used by the storage to store its persistent data:
 #include "strus/lib/database_leveldb.hpp"
