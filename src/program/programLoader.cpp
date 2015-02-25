@@ -723,6 +723,28 @@ static std::string parseQueryPhraseType( char const*& src)
 	}
 }
 
+
+static bool isVariableRef( const char* src)
+{
+	return (isOpenSquareBracket(*src));
+}
+
+static std::string parseVariableRef( char const*& src)
+{
+	std::string rt;
+	if (isOpenSquareBracket(*src))
+	{
+		(void)parse_OPERATOR(src);
+		rt = parse_IDENTIFIER( src);
+		if (!isCloseSquareBracket(*src))
+		{
+			throw std::runtime_error( "expected close angle bracket ']' at end of variable reference");
+		}
+		(void)parse_OPERATOR(src);
+	}
+	return rt;
+}
+
 static void pushQueryPhrase(
 		QueryInterface& query,
 		const QueryAnalyzerInterface& analyzer,
@@ -807,12 +829,20 @@ static void parseQueryExpression(
 				throw std::runtime_error( "comma ',' as query argument separator or colon ':' as range specifier or close oval bracket ')' as end of a query expression expected");
 			}
 			query.pushExpression( functionName, argc, range);
+			if (isVariableRef( src))
+			{
+				query.attachVariable( parseVariableRef( src));
+			}
 		}
 		else
 		{
 			std::string queryPhrase = functionName;
 			std::string phraseType = parseQueryPhraseType( src);
 			pushQueryPhrase( query, analyzer, phraseType, queryPhrase);
+			if (isVariableRef( src))
+			{
+				query.attachVariable( parseVariableRef( src));
+			}
 		}
 	}
 	else if (isTextChar( *src) || isStringQuote( *src))
@@ -820,6 +850,10 @@ static void parseQueryExpression(
 		std::string queryPhrase = parseQueryTerm( src);
 		std::string phraseType = parseQueryPhraseType( src);
 		pushQueryPhrase( query, analyzer, phraseType, queryPhrase);
+		if (isVariableRef( src))
+		{
+			query.attachVariable( parseVariableRef( src));
+		}
 	}
 	else
 	{
