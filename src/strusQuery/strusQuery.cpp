@@ -45,6 +45,8 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/programLoader.hpp"
+#include "strus/versionAnalyzer.hpp"
+#include "strus/versionStorage.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
 #include <iostream>
@@ -72,7 +74,9 @@ int main( int argc_, const char* argv_[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			return 0;
 		}
 
@@ -103,11 +107,11 @@ int main( int argc_, const char* argv_[])
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdCreateDatabaseClient));
+						strus::CmdCreateClient));
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getStorageConfigDescription(
-						strus::CmdCreateStorageClient));
+						strus::CmdCreateClient));
 		std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
 		std::cerr << "<qeprg>   = path of query eval program" << std::endl;
 		std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
@@ -143,12 +147,12 @@ int main( int argc_, const char* argv_[])
 
 		strus::removeKeysFromConfigString(
 				databasecfg,
-				strus::getStorageConfigParameters( strus::CmdCreateStorageClient));
+				strus::getStorageConfigParameters( strus::CmdCreateClient));
 		//... In database_cfg is now the pure database configuration without the storage settings
 
 		strus::removeKeysFromConfigString(
 				storagecfg,
-				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateDatabaseClient));
+				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
 		// Create objects for query evaluation:

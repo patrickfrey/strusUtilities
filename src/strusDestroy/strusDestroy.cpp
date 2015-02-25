@@ -29,6 +29,7 @@
 #include "strus/lib/database_leveldb.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include <iostream>
@@ -39,7 +40,8 @@ int main( int argc, const char* argv[])
 {
 	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
 	{
-		std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 		return 0;
 	}
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
@@ -50,7 +52,7 @@ int main( int argc, const char* argv[])
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdDestroyDatabase));
+						strus::CmdDestroy));
 		std::cerr << "options:" << std::endl;
 		std::cerr << "-h,--help     : Print this usage info and exit" << std::endl;
 		std::cerr << "-v,--version  : Print the version info and exit" << std::endl;

@@ -36,6 +36,7 @@
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/programLoader.hpp"
+#include "strus/versionAnalyzer.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "fileCrawler.hpp"
@@ -61,7 +62,8 @@ int main( int argc_, const char* argv_[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			return 0;
 		}
 		if (opt.nofargs() > 2)

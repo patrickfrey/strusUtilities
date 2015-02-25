@@ -96,7 +96,7 @@
 // Tokenizer (functions for the text processor to split a text segment into tokens):
 #include "strus/lib/tokenizer_word.hpp"
 #include "strus/lib/tokenizer_punctuation.hpp"
-#include "strus/tokenizer/token.hpp"
+#include "strus/analyzer/token.hpp"
 #include "strus/tokenizerConfig.hpp"
 #include "strus/tokenizerInterface.hpp"
 

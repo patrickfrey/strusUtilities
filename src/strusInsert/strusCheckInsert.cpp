@@ -42,6 +42,8 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/programLoader.hpp"
+#include "strus/versionAnalyzer.hpp"
+#include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "fileCrawler.hpp"
@@ -68,7 +70,9 @@ int main( int argc_, const char* argv_[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			return 0;
 		}
 		if (opt.nofargs() > 3)
@@ -98,11 +102,11 @@ int main( int argc_, const char* argv_[])
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdCreateDatabaseClient));
+						strus::CmdCreateClient));
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getStorageConfigDescription(
-						strus::CmdCreateStorageClient));
+						strus::CmdCreateClient));
 		std::cerr << "<program> = path of analyzer program" << std::endl;
 		std::cerr << "<docpath> = path of document or directory to check" << std::endl;
 		std::cerr << "options:" << std::endl;
@@ -129,13 +133,13 @@ int main( int argc_, const char* argv_[])
 		std::string database_cfg( opt[0]);
 		strus::removeKeysFromConfigString(
 				database_cfg,
-				strus::getStorageConfigParameters( strus::CmdCreateStorageClient));
+				strus::getStorageConfigParameters( strus::CmdCreateClient));
 		//... In database_cfg is now the pure database configuration without the storage settings
 
 		std::string storage_cfg( opt[0]);
 		strus::removeKeysFromConfigString(
 				storage_cfg,
-				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateDatabaseClient));
+				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
 		boost::scoped_ptr<strus::DatabaseInterface>

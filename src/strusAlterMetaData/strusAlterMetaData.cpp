@@ -31,6 +31,7 @@
 #include "strus/databaseInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
+#include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -182,7 +183,8 @@ int main( int argc, const char* argv[])
 {
 	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
 	{
-		std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 		return 0;
 	}
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
@@ -193,7 +195,11 @@ int main( int argc, const char* argv[])
 		strus::printIndentMultilineString(
 					std::cerr,
 					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdCreateDatabaseClient));
+						strus::CmdCreateClient));
+		strus::printIndentMultilineString(
+					std::cerr,
+					12, strus::getStorageConfigDescription(
+						strus::CmdCreateClient));
 		std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
 		std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
 		std::cerr << "              <name>    :name of the element to change" << std::endl;

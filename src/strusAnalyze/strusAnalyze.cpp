@@ -33,6 +33,7 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
+#include "strus/versionAnalyzer.hpp"
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -59,7 +60,8 @@ int main( int argc, const char* argv[])
 	}
 	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
 	{
-		std::cout << "Strus utilities " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+		std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 		return 0;
 	}
 	if (rt || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
