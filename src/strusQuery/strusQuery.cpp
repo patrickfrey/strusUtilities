@@ -161,7 +161,7 @@ int main( int argc_, const char* argv_[])
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
 		// Create objects for query evaluation:
-		boost::scoped_ptr<strus::DatabaseClientInterface>
+		std::auto_ptr<strus::DatabaseClientInterface>
 			database( dbi->createClient( databasecfg));
 
 		boost::scoped_ptr<strus::StorageClientInterface>

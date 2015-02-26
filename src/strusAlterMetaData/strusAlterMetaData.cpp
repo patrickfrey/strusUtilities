@@ -241,10 +241,10 @@ int main( int argc, const char* argv[])
 		std::string config = argv[1];
 		std::vector<AlterMetaDataCommand> cmds = parseCommands( argv[2]);
 
-		boost::scoped_ptr<strus::DatabaseClientInterface>
+		std::auto_ptr<strus::DatabaseClientInterface>
 			database( dbi->createClient( config));
 
-		boost::scoped_ptr<strus::StorageAlterMetaDataTableInterface>
+		std::auto_ptr<strus::StorageAlterMetaDataTableInterface>
 			md( sti->createAlterMetaDataTable( database.get()));
 		(void)database.release();
 

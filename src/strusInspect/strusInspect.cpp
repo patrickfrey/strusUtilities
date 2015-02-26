@@ -281,10 +281,10 @@ int main( int argc, const char* argv[])
 				dbi->getConfigParameters( strus::DatabaseInterface::CmdCreateClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
-		boost::scoped_ptr<strus::DatabaseClientInterface>
+		std::auto_ptr<strus::DatabaseClientInterface>
 			database( dbi->createClient( database_cfg));
 
-		boost::scoped_ptr<strus::StorageClientInterface>
+		std::auto_ptr<strus::StorageClientInterface>
 			storage( sti->createClient( storage_cfg, database.get()));
 		(void)database.release();
 
