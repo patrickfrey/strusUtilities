@@ -35,7 +35,7 @@
 namespace strus {
 
 /// \brief Forward declaration
-class StorageInterface;
+class StorageClientInterface;
 /// \brief Forward declaration
 class DocumentAnalyzerInterface;
 /// \brief Forward declaration
@@ -45,7 +45,7 @@ class CheckInsertProcessor
 {
 public:
 	CheckInsertProcessor(
-			StorageInterface* storage_,
+			StorageClientInterface* storage_,
 			DocumentAnalyzerInterface* analyzer_,
 			FileCrawlerInterface* crawler_,
 			const std::string& logfile_);
@@ -56,7 +56,7 @@ public:
 	void run();
 
 private:
-	StorageInterface* m_storage;
+	StorageClientInterface* m_storage;
 	DocumentAnalyzerInterface* m_analyzer;
 	FileCrawlerInterface* m_crawler;
 	boost::atomic<bool> m_terminated;

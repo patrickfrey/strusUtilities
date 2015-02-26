@@ -44,7 +44,7 @@ class DocumentAnalyzerInterface;
 /// \brief Forward declaration
 class QueryAnalyzerInterface;
 /// \brief Forward declaration
-class StorageInterface;
+class StorageClientInterface;
 
 /// \brief Load a document analyzer program from source
 /// \param[in] analyzer analyzer program to instatiate
@@ -96,7 +96,7 @@ bool scanNextProgram(
 /// \param[in,out] storage the storage to instrument
 /// \param[in,out] stream the stream to read from
 void loadGlobalStatistics(
-		StorageInterface& storage,
+		StorageClientInterface& storage,
 		std::istream& stream);
 
 }//namespace

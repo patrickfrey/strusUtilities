@@ -34,7 +34,7 @@
 namespace strus {
 
 /// \brief Forward declaration
-class StorageInterface;
+class StorageClientInterface;
 /// \brief Forward declaration
 class DocumentAnalyzerInterface;
 /// \brief Forward declaration
@@ -46,7 +46,7 @@ class InsertProcessor
 {
 public:
 	InsertProcessor(
-			StorageInterface* storage_,
+			StorageClientInterface* storage_,
 			DocumentAnalyzerInterface* analyzer_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_);
@@ -57,7 +57,7 @@ public:
 	void run();
 
 private:
-	StorageInterface* m_storage;
+	StorageClientInterface* m_storage;
 	DocumentAnalyzerInterface* m_analyzer;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;

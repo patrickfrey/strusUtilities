@@ -29,7 +29,9 @@
 #include "strus/lib/database_leveldb.hpp"
 #include "strus/lib/storage.hpp"
 #include "strus/databaseInterface.hpp"
+#include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
@@ -48,6 +50,9 @@ int main( int argc, const char* argv[])
 		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 		return 0;
 	}
+	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
+	const strus::StorageInterface* sti = strus::getStorage();
+
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
 		std::cerr << "usage: strusCreate <config>" << std::endl;
@@ -55,12 +60,12 @@ int main( int argc, const char* argv[])
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdCreate));
+					12, dbi->getConfigDescription(
+						strus::DatabaseInterface::CmdCreate));
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getStorageConfigDescription(
-						strus::CmdCreate));
+					12, sti->getConfigDescription(
+						strus::StorageInterface::CmdCreate));
 		std::cerr << "options:" << std::endl;
 		std::cerr << "-h,--help     : Print this usage info and exit" << std::endl;
 		std::cerr << "-v,--version  : Print the version info and exit" << std::endl;
@@ -76,20 +81,22 @@ int main( int argc, const char* argv[])
 
 		strus::removeKeysFromConfigString(
 				databasecfg,
-				strus::getStorageConfigParameters( strus::CmdCreateClient));
+				sti->getConfigParameters(
+					strus::StorageInterface::CmdCreateClient));
 		//... In database_cfg is now the pure database configuration without the storage settings
 
 		strus::removeKeysFromConfigString(
 				storagecfg,
-				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateClient));
+				dbi->getConfigParameters(
+					strus::DatabaseInterface::CmdCreateClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
-		strus::createDatabase_leveldb( databasecfg);
+		dbi->createDatabase( databasecfg);
 
-		boost::scoped_ptr<strus::DatabaseInterface>
-			database( strus::createDatabaseClient_leveldb( databasecfg));
+		boost::scoped_ptr<strus::DatabaseClientInterface>
+			database( dbi->createClient( databasecfg));
 
-		strus::createStorage( storagecfg, database.get());
+		sti->createStorage( storagecfg, database.get());
 	}
 	catch (const std::runtime_error& e)
 	{

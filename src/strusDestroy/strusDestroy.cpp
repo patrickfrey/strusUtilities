@@ -28,6 +28,7 @@
 */
 #include "strus/lib/database_leveldb.hpp"
 #include "strus/databaseInterface.hpp"
+#include "strus/databaseClientInterface.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
@@ -44,15 +45,17 @@ int main( int argc, const char* argv[])
 		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 		return 0;
 	}
+	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
+
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
 		std::cerr << "usage: strusDestroy [options] <config>" << std::endl;
-		std::cerr << "<config>  : configuration string of the storage" << std::endl;
+		std::cerr << "<config>  : configuration string of the database" << std::endl;
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdDestroy));
+					12, dbi->getConfigDescription(
+						strus::DatabaseInterface::CmdDestroy));
 		std::cerr << "options:" << std::endl;
 		std::cerr << "-h,--help     : Print this usage info and exit" << std::endl;
 		std::cerr << "-v,--version  : Print the version info and exit" << std::endl;
@@ -63,7 +66,7 @@ int main( int argc, const char* argv[])
 		if (argc < 2) throw std::runtime_error( "too few arguments (expected storage configuration string)");
 		if (argc > 2) throw std::runtime_error( "too many arguments for strusDestroy");
 
-		strus::destroyDatabase_leveldb( argv[1]);
+		dbi->destroyDatabase( argv[1]);
 	}
 	catch (const std::runtime_error& e)
 	{

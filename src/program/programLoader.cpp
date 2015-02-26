@@ -40,7 +40,7 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/queryInterface.hpp"
-#include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/peerStorageTransactionInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include <string>
@@ -1200,7 +1200,7 @@ static int readInteger( std::string::const_iterator& si, const std::string::cons
 
 
 DLL_PUBLIC void strus::loadGlobalStatistics(
-		StorageInterface& storage,
+		StorageClientInterface& storage,
 		std::istream& stream)
 {
 	boost::scoped_ptr<PeerStorageTransactionInterface>

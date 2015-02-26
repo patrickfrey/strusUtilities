@@ -29,7 +29,9 @@
 #include "strus/lib/database_leveldb.hpp"
 #include "strus/lib/storage.hpp"
 #include "strus/databaseInterface.hpp"
+#include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
@@ -187,6 +189,8 @@ int main( int argc, const char* argv[])
 		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 		return 0;
 	}
+	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
+	const strus::StorageInterface* sti = strus::getStorage();
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
 		std::cerr << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
@@ -194,12 +198,12 @@ int main( int argc, const char* argv[])
 		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdCreateClient));
+					12, dbi->getConfigDescription(
+						strus::DatabaseInterface::CmdCreateClient));
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getStorageConfigDescription(
-						strus::CmdCreateClient));
+					12, sti->getConfigDescription(
+						strus::StorageInterface::CmdCreateClient));
 		std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
 		std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
 		std::cerr << "              <name>    :name of the element to change" << std::endl;
@@ -237,11 +241,12 @@ int main( int argc, const char* argv[])
 		std::string config = argv[1];
 		std::vector<AlterMetaDataCommand> cmds = parseCommands( argv[2]);
 
-		boost::scoped_ptr<strus::DatabaseInterface>
-			database( strus::createDatabaseClient_leveldb( config));
+		boost::scoped_ptr<strus::DatabaseClientInterface>
+			database( dbi->createClient( config));
 
 		boost::scoped_ptr<strus::StorageAlterMetaDataTableInterface>
-			md( strus::createAlterMetaDataTable( database.get()));
+			md( sti->createAlterMetaDataTable( database.get()));
+		(void)database.release();
 
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();
 		for (; ci != ce; ++ci)

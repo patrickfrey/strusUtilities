@@ -28,7 +28,7 @@
 */
 #ifndef _STRUS_INSERTER_COMMIT_QUEUE_HPP_INCLUDED
 #define _STRUS_INSERTER_COMMIT_QUEUE_HPP_INCLUDED
-#include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/index.hpp"
 #include "docnoAllocator.hpp"
@@ -44,7 +44,7 @@ class CommitQueue
 {
 public:
 	explicit CommitQueue(
-			StorageInterface* storage_)
+			StorageClientInterface* storage_)
 		:m_storage(storage_)
 	{
 		m_minDocno = m_storage->maxDocumentNumber() + 1;
@@ -96,7 +96,7 @@ private:
 	StorageTransactionInterface* getNextTransaction( Index& nofDocs);
 
 private:
-	StorageInterface* m_storage;
+	StorageClientInterface* m_storage;
 	Index m_minDocno;
 	Index m_nofDocuments;
 	std::set<OpenTransaction> m_openTransactions;

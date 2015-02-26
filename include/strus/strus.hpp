@@ -38,6 +38,7 @@
 #include "strus/lib/database_leveldb.hpp"
 #include "strus/databaseOptions.hpp"
 #include "strus/databaseInterface.hpp"
+#include "strus/databaseClientInterface.hpp"
 #include "strus/databaseCursorInterface.hpp"
 #include "strus/databaseBackupCursorInterface.hpp"
 #include "strus/databaseTransactionInterface.hpp"
@@ -45,6 +46,7 @@
 // Storage (storage structure that defines all data tables needed for query evaluation):
 #include "strus/lib/storage.hpp"
 #include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
 #include "strus/invAclIteratorInterface.hpp"

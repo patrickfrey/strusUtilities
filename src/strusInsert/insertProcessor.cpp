@@ -33,7 +33,7 @@
 #include "strus/segmenterInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/analyzer/document.hpp"
@@ -48,7 +48,7 @@
 using namespace strus;
 
 InsertProcessor::InsertProcessor(
-		StorageInterface* storage_,
+		StorageClientInterface* storage_,
 		DocumentAnalyzerInterface* analyzer_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_)

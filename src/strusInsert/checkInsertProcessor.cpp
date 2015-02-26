@@ -33,7 +33,7 @@
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/analyzer/document.hpp"
@@ -47,7 +47,7 @@
 using namespace strus;
 
 CheckInsertProcessor::CheckInsertProcessor(
-		StorageInterface* storage_,
+		StorageClientInterface* storage_,
 		DocumentAnalyzerInterface* analyzer_,
 		FileCrawlerInterface* crawler_,
 		const std::string& logfile_)

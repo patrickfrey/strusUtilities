@@ -29,7 +29,7 @@
 #ifndef _STRUS_DOCNO_ALLOCATOR_INTERFACE_HPP_INCLUDED
 #define _STRUS_DOCNO_ALLOCATOR_INTERFACE_HPP_INCLUDED
 #include "strus/index.hpp"
-#include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 
 namespace strus {
 

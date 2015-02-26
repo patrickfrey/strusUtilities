@@ -29,7 +29,9 @@
 #include "strus/lib/database_leveldb.hpp"
 #include "strus/lib/storage.hpp"
 #include "strus/databaseInterface.hpp"
+#include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/postingIteratorInterface.hpp"
 #include "strus/forwardIteratorInterface.hpp"
 #include "strus/attributeReaderInterface.hpp"
@@ -51,7 +53,7 @@
 namespace strus
 {
 	typedef boost::scoped_ptr<PostingIteratorInterface> PostingIteratorReference;
-	typedef boost::scoped_ptr<StorageInterface> StorageReference;
+	typedef boost::scoped_ptr<StorageClientInterface> StorageReference;
 	typedef boost::scoped_ptr<ForwardIteratorInterface> ForwardIteratorReference;
 	typedef boost::scoped_ptr<MetaDataReaderInterface> MetaDataReaderReference;
 }
@@ -67,7 +69,7 @@ static bool isIndex( char const* cc)
 	return (*cc == '\0');
 }
 
-static void inspectPositions( strus::StorageInterface& storage, const char** key, int size)
+static void inspectPositions( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 3) throw std::runtime_error( "too many arguments");
 	if (size < 3) throw std::runtime_error( "too few arguments");
@@ -91,7 +93,7 @@ static void inspectPositions( strus::StorageInterface& storage, const char** key
 	}
 }
 
-static void inspectDocumentFrequency( strus::StorageInterface& storage, const char** key, int size)
+static void inspectDocumentFrequency( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
@@ -102,7 +104,7 @@ static void inspectDocumentFrequency( strus::StorageInterface& storage, const ch
 	std::cout << itr->documentFrequency() << std::endl;
 }
 
-static void inspectFeatureFrequency( strus::StorageInterface& storage, const char** key, int size)
+static void inspectFeatureFrequency( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 3) throw std::runtime_error( "too many arguments");
 	if (size < 3) throw std::runtime_error( "too few arguments");
@@ -124,7 +126,7 @@ static void inspectFeatureFrequency( strus::StorageInterface& storage, const cha
 	}
 }
 
-static void inspectDocAttribute( const strus::StorageInterface& storage, const char** key, int size)
+static void inspectDocAttribute( const strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
@@ -144,7 +146,7 @@ static void inspectDocAttribute( const strus::StorageInterface& storage, const c
 	std::cout << value << std::endl;
 }
 
-static void inspectDocMetaData( const strus::StorageInterface& storage, const char** key, int size)
+static void inspectDocMetaData( const strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
@@ -163,7 +165,7 @@ static void inspectDocMetaData( const strus::StorageInterface& storage, const ch
 	std::cout << value << std::endl;
 }
 
-static void inspectDocMetaTable( const strus::StorageInterface& storage, const char**, int size)
+static void inspectDocMetaTable( const strus::StorageClientInterface& storage, const char**, int size)
 {
 	if (size > 0) throw std::runtime_error( "too many arguments");
 
@@ -177,7 +179,7 @@ static void inspectDocMetaTable( const strus::StorageInterface& storage, const c
 	std::cout << std::endl;
 }
 
-static void inspectContent( strus::StorageInterface& storage, const char** key, int size)
+static void inspectContent( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
@@ -197,7 +199,7 @@ static void inspectContent( strus::StorageInterface& storage, const char** key, 
 	std::cout << std::endl;
 }
 
-static void inspectToken( strus::StorageInterface& storage, const char** key, int size)
+static void inspectToken( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
@@ -215,7 +217,7 @@ static void inspectToken( strus::StorageInterface& storage, const char** key, in
 	}
 }
 
-static void inspectDocid( strus::StorageInterface& storage, const char** key, int size)
+static void inspectDocid( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 1) throw std::runtime_error( "too many arguments");
 	if (size < 1) throw std::runtime_error( "too few arguments");
@@ -232,6 +234,9 @@ int main( int argc, const char* argv[])
 		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 		return 0;
 	}
+	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
+	const strus::StorageInterface* sti = strus::getStorage();
+
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
 		std::cerr << "usage: strusInspect [options] <config> <what...>" << std::endl;
@@ -239,12 +244,12 @@ int main( int argc, const char* argv[])
 		std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdCreateClient));
+					12, dbi->getConfigDescription(
+						strus::DatabaseInterface::CmdCreateClient));
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getStorageConfigDescription(
-						strus::CmdCreateClient));
+					12, sti->getConfigDescription(
+						strus::StorageInterface::CmdCreateClient));
 		std::cerr << "<what>    : what to inspect:" << std::endl;
 		std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
 		std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
@@ -267,20 +272,21 @@ int main( int argc, const char* argv[])
 		std::string database_cfg( argv[1]);
 		strus::removeKeysFromConfigString(
 				database_cfg,
-				strus::getStorageConfigParameters( strus::CmdCreateClient));
+				sti->getConfigParameters( strus::StorageInterface::CmdCreateClient));
 		//... In database_cfg is now the pure database configuration without the storage settings
 
 		std::string storage_cfg( argv[1]);
 		strus::removeKeysFromConfigString(
 				storage_cfg,
-				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateClient));
+				dbi->getConfigParameters( strus::DatabaseInterface::CmdCreateClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
-		boost::scoped_ptr<strus::DatabaseInterface>
-			database( strus::createDatabaseClient_leveldb( database_cfg));
+		boost::scoped_ptr<strus::DatabaseClientInterface>
+			database( dbi->createClient( database_cfg));
 
-		boost::scoped_ptr<strus::StorageInterface>
-			storage( strus::createStorageClient( storage_cfg, database.get()));
+		boost::scoped_ptr<strus::StorageClientInterface>
+			storage( sti->createClient( storage_cfg, database.get()));
+		(void)database.release();
 
 		if (0==std::strcmp( argv[2], "pos"))
 		{

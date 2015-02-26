@@ -29,7 +29,9 @@
 #include "strus/lib/database_leveldb.hpp"
 #include "strus/lib/storage.hpp"
 #include "strus/databaseInterface.hpp"
+#include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "strus/storagePeerInterface.hpp"
 #include "strus/storagePeerTransactionInterface.hpp"
 #include "strus/versionStorage.hpp"
@@ -46,7 +48,7 @@
 
 namespace strus
 {
-	typedef boost::scoped_ptr<StorageInterface> StorageReference;
+	typedef boost::scoped_ptr<StorageClientInterface> StorageReference;
 	typedef boost::scoped_ptr<StoragePeerInterface> StoragePeerReference;
 	typedef boost::scoped_ptr<StoragePeerTransactionInterface> StoragePeerTransactionReference;
 }
@@ -110,6 +112,9 @@ int main( int argc, const char* argv[])
 		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 		return 0;
 	}
+	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
+	const strus::StorageInterface* sti = strus::getStorage();
+
 	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
 	{
 		std::cerr << "usage: strusDumpStatistics [options] <config>" << std::endl;
@@ -117,12 +122,12 @@ int main( int argc, const char* argv[])
 		std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getDatabaseConfigDescription_leveldb(
-						strus::CmdCreateClient));
+					12, dbi->getConfigDescription(
+						strus::DatabaseInterface::CmdCreateClient));
 		strus::printIndentMultilineString(
 					std::cerr,
-					12, strus::getStorageConfigDescription(
-						strus::CmdCreateClient));
+					12, sti->getConfigDescription(
+						strus::StorageInterface::CmdCreateClient));
 		std::cerr << "options:" << std::endl;
 		std::cerr << "-h,--help     : Print this usage info and exit" << std::endl;
 		std::cerr << "-v,--version  : Print the version info and exit" << std::endl;
@@ -135,20 +140,21 @@ int main( int argc, const char* argv[])
 		std::string database_cfg( argv[1]);
 		strus::removeKeysFromConfigString(
 				database_cfg,
-				strus::getStorageConfigParameters( strus::CmdCreateClient));
+				sti->getConfigParameters( strus::StorageInterface::CmdCreateClient));
 		//... In database_cfg is now the pure database configuration without the storage settings
 
 		std::string storage_cfg( argv[1]);
 		strus::removeKeysFromConfigString(
 				storage_cfg,
-				strus::getDatabaseConfigParameters_leveldb( strus::CmdCreateClient));
+				dbi->getConfigParameters( strus::DatabaseInterface::CmdCreateClient));
 		//... In storage_cfg is now the pure storage configuration without the database settings
 
-		boost::scoped_ptr<strus::DatabaseInterface>
-			database( strus::createDatabaseClient_leveldb( database_cfg));
+		boost::scoped_ptr<strus::DatabaseClientInterface>
+			database( dbi->createClient( database_cfg));
 
-		boost::scoped_ptr<strus::StorageInterface>
-			storage( strus::createStorageClient( storage_cfg, database.get()));
+		boost::scoped_ptr<strus::StorageClientInterface>
+			storage( sti->createClient( storage_cfg, database.get()));
+		(void)database.release();
 
 		StorageStatsDumper statsDumper;
 		storage->defineStoragePeerInterface( &statsDumper, true/*do populate init state*/);

@@ -29,7 +29,7 @@
 #ifndef _STRUS_DOCNO_ALLOCATOR_HPP_INCLUDED
 #define _STRUS_DOCNO_ALLOCATOR_HPP_INCLUDED
 #include "strus/index.hpp"
-#include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
 #include "docnoAllocatorInterface.hpp"
 
 namespace strus {
@@ -38,7 +38,7 @@ class DocnoAllocator
 	:public DocnoAllocatorInterface
 {
 public:
-	DocnoAllocator( StorageInterface* storage_)
+	DocnoAllocator( StorageClientInterface* storage_)
 		:m_storage(storage_){}
 
 	virtual Index allocDocnoRange( const Index& size)
@@ -47,7 +47,7 @@ public:
 	}
 
 private:
-	StorageInterface* m_storage;
+	StorageClientInterface* m_storage;
 };
 
 }//namespace
