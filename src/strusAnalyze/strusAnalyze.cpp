@@ -111,8 +111,11 @@ int main( int argc, const char* argv[])
 		}
 		std::string analyzerprg = opt[0];
 		std::string docpath = opt[1];
-		std::string segmenter( opt[ "segmenter"]);
-
+		std::string segmenter;
+		if (opt( "segmenter"))
+		{
+			segmenter = opt[ "segmenter"];
+		}
 		// Create objects for analyzer:
 		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
 			analyzer( builder.createDocumentAnalyzer( segmenter));

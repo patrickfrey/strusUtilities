@@ -30,7 +30,6 @@
 #include "strus/constants.hpp"
 #include "strus/index.hpp"
 #include "strus/arithmeticVariant.hpp"
-#include "strus/segmenterInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/storageClientInterface.hpp"

@@ -154,7 +154,11 @@ int main( int argc_, const char* argv_[])
 		std::string storagecfg( opt[0]);
 		std::string analyzerprg = opt[1];
 		std::string datapath = opt[2];
-		std::string segmenter( opt[ "segmenter"]);
+		std::string segmenter;
+		if (opt( "segmenter"))
+		{
+			segmenter = opt[ "segmenter"];
+		}
 
 		// Create objects for insert checker:
 		boost::scoped_ptr<strus::StorageClientInterface>

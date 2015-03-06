@@ -31,7 +31,6 @@
 #include "strus/objectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
-#include "strus/segmenterInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -58,6 +57,7 @@
 #include <boost/lexical_cast.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
+
 
 int main( int argc_, const char* argv_[])
 {

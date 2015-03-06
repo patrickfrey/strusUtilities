@@ -133,7 +133,7 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "-m|--module <MOD>" << std::endl;
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			std::cerr << "-s|--segmenter <NAME>" << std::endl;
-			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf)" << std::endl;
 			std::cerr << "-t|--threads <N>" << std::endl;
 			std::cerr << "    Set <N> as number of inserter threads to use"  << std::endl;
 			std::cerr << "-c|--commit <N>" << std::endl;
@@ -156,7 +156,11 @@ int main( int argc_, const char* argv_[])
 		std::string storagecfg( opt[0]);
 		std::string analyzerprg = opt[1];
 		std::string datapath = opt[2];
-		std::string segmenter( opt[ "segmenter"]);
+		std::string segmenter;
+		if (opt( "segmenter"))
+		{
+			segmenter = opt[ "segmenter"];
+		}
 
 		// Create objects for inserter:
 		boost::scoped_ptr<strus::StorageClientInterface>

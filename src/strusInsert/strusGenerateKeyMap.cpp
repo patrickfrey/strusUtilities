@@ -129,8 +129,11 @@ int main( int argc_, const char* argv_[])
 			unitSize = opt.as<unsigned int>( "unit");
 		}
 		unsigned int nofResults = opt.as<unsigned int>( "results");
-		std::string segmenter( opt[ "segmenter"]);
-
+		std::string segmenter;
+		if (opt( "segmenter"))
+		{
+			segmenter = opt[ "segmenter"];
+		}
 
 		// Create objects for keymap generation:
 		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
