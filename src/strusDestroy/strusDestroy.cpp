@@ -26,7 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/lib/database_leveldb.hpp"
+#include "strus/lib/module.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+#include "strus/objectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -39,34 +41,69 @@
 
 int main( int argc, const char* argv[])
 {
-	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
-	{
-		std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
-		return 0;
-	}
-	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
-
-	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
-	{
-		std::cerr << "usage: strusDestroy [options] <config>" << std::endl;
-		std::cerr << "<config>  : configuration string of the database" << std::endl;
-		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, dbi->getConfigDescription(
-						strus::DatabaseInterface::CmdDestroy));
-		std::cerr << "options:" << std::endl;
-		std::cerr << "-h,--help     : Print this usage info and exit" << std::endl;
-		std::cerr << "-v,--version  : Print the version info and exit" << std::endl;
-		return 0;
-	}
+	int rt = 0;
+	strus::ProgramOptions opt;
+	bool printUsageAndExit = false;
 	try
 	{
-		if (argc < 2) throw std::runtime_error( "too few arguments (expected storage configuration string)");
-		if (argc > 2) throw std::runtime_error( "too many arguments for strusDestroy");
+		opt = strus::ProgramOptions(
+				argc, argv, 3,
+				"h,help", "v,version", "m,module:");
+		if (opt( "help")) printUsageAndExit = true;
+		if (opt( "version"))
+		{
+			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		else
+		{
+			if (opt.nofargs() > 1)
+			{
+				std::cerr << "ERROR too many arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 1)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("module"))
+		{
+			std::vector<std::string> modlist( opt.list("module"));
+			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->loadModule( *mi);
+			}
+		}
+		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
 
-		dbi->destroyDatabase( argv[1]);
+		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
+
+		if (printUsageAndExit)
+		{
+			std::cerr << "usage: strusDestroy [options] <config>" << std::endl;
+			std::cerr << "<config>  = database configuration string" << std::endl;
+			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, dbi->getConfigDescription(
+							strus::DatabaseInterface::CmdCreateClient));
+			std::cerr << "options:" << std::endl;
+			std::cerr << "-h|--help" << std::endl;
+			std::cerr << "   Print this usage and do nothing else" << std::endl;
+			std::cerr << "-v|--version" << std::endl;
+			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-m|--module <MOD>" << std::endl;
+			std::cerr << "    Load components from module <MOD>" << std::endl;
+			return rt;
+		}
+		dbi->destroyDatabase( opt[0]);
 	}
 	catch (const std::runtime_error& e)
 	{

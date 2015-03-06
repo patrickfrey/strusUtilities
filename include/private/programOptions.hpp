@@ -44,12 +44,12 @@ namespace strus {
 class ProgramOptions
 {
 private:
-	struct OptMap
+	struct OptMapDef
 	{
 		std::map<std::string,bool> longnamemap;
 		std::map<char,std::string> aliasmap;
 
-		OptMap(){}
+		OptMapDef(){}
 
 		void add( const char* arg)
 		{
@@ -149,14 +149,14 @@ public:
 		:m_argc(argc_-1),m_argv(argv_+1)
 	{
 		//[1] Initialize options map:
-		OptMap optmap;
+		OptMapDef optmapdef;
 		va_list ap;
 		va_start( ap, nofopt);
 
 		for (int ai=0; ai<nofopt; ai++)
 		{
 			const char* av = va_arg( ap, const char*);
-			optmap.add( av);
+			optmapdef.add( av);
 		}
 		va_end(ap);
 
@@ -164,13 +164,13 @@ public:
 		std::vector<std::string> optlist;
 		std::string optarg;
 
-		for (; m_argc && optmap.getOpt( *m_argv, optlist, optarg); ++m_argv,--m_argc)
+		for (; m_argc && optmapdef.getOpt( *m_argv, optlist, optarg); ++m_argv,--m_argc)
 		{
 			std::vector<std::string>::const_iterator oi = optlist.begin(), oe = optlist.end();
 			for (; oi != oe; ++oi)
 			{
-				std::map<std::string,bool>::iterator li = optmap.longnamemap.find( *oi);
-				if (li == optmap.longnamemap.end()) throw std::runtime_error( std::string( "unknown option '--") + *oi +"'");
+				std::map<std::string,bool>::iterator li = optmapdef.longnamemap.find( *oi);
+				if (li == optmapdef.longnamemap.end()) throw std::runtime_error( std::string( "unknown option '--") + *oi +"'");
 				if (li->second && oi+1 == oe)
 				{
 					if (optarg.empty() && m_argc > 1 && m_argv[1][0] != '-')
@@ -181,28 +181,28 @@ public:
 							{
 								--m_argc;
 								++m_argv;
-								m_opt[ *oi] = std::string( m_argv[1]);
+								m_opt.insert( OptMapElem( *oi, std::string( m_argv[1])));
 							}
 							else
 							{
-								m_opt[ *oi] = std::string( m_argv[1]+1);
+								m_opt.insert( OptMapElem( *oi, std::string( m_argv[1]+1)));
 							}
 						}
 						else
 						{
-							m_opt[ *oi] = std::string( m_argv[1]);
+							m_opt.insert( OptMapElem( *oi, std::string( m_argv[1])));
 						}
 						--m_argc;
 						++m_argv;
 					}
 					else
 					{
-						m_opt[ *oi] = optarg;
+						m_opt.insert( OptMapElem( *oi, optarg));
 					}
 				}
 				else
 				{
-					m_opt[ *oi] = std::string();
+					m_opt.insert( OptMapElem( *oi, std::string()));
 				}
 			}
 		}
@@ -221,6 +221,10 @@ public:
 
 	const char* operator[]( const std::string& optname) const
 	{
+		if (m_opt.count( optname) > 1)
+		{
+			throw std::runtime_error( std::string( "option '") + optname + "' specified more than once");
+		}
 		std::map<std::string,std::string>::const_iterator
 			oi = m_opt.find( optname);
 		if (oi == m_opt.end()) return 0;
@@ -228,8 +232,12 @@ public:
 	}
 
 	template <typename ValueType>
-	int as( const std::string& optname)
+	int as( const std::string& optname) const
 	{
+		if (m_opt.count( optname) > 1)
+		{
+			throw std::runtime_error( std::string( "option '") + optname + "' specified more than once");
+		}
 		std::map<std::string,std::string>::const_iterator
 			oi = m_opt.find( optname);
 		if (oi == m_opt.end()) return 0;
@@ -243,9 +251,27 @@ public:
 		}
 	}
 
+	std::vector<std::string> list( const std::string& optname) const
+	{
+		std::vector<std::string> rt;
+		std::pair<OptMap::const_iterator,OptMap::const_iterator>
+			range = m_opt.equal_range( optname);
+		OptMap::const_iterator ei = range.first, ee = range.second;
+		for (; ei != ee; ++ei)
+		{
+			rt.push_back( ei->second);
+		}
+		return rt;
+	}
+
 	int nofargs() const
 	{
 		return m_argc;
+	}
+
+	const char** argv() const
+	{
+		return m_argv;
 	}
 
 	void print( std::ostream& out)
@@ -265,7 +291,9 @@ public:
 private:
 	std::size_t m_argc;
 	char const** m_argv;
-	std::map<std::string,std::string> m_opt;
+	typedef std::multimap<std::string,std::string> OptMap;
+	typedef std::pair<std::string,std::string> OptMapElem;
+	OptMap m_opt;
 };
 
 }//namespace

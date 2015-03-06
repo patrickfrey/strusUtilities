@@ -26,13 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/lib/database_leveldb.hpp"
-#include "strus/lib/storage.hpp"
-#include "strus/lib/analyzer.hpp"
-#include "strus/lib/textprocessor.hpp"
-#include "strus/lib/queryproc.hpp"
-#include "strus/lib/queryeval.hpp"
-#include "strus/lib/segmenter_textwolf.hpp"
+#include "strus/lib/module.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+#include "strus/objectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/segmenterInterface.hpp"
@@ -71,69 +67,84 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 7,
-				"h,help", "s,silent", "u,user:", "n,nofranks:", "g,globalstats:", "m,measure", "v,version");
+				argc_, argv_, 8,
+				"h,help", "s,silent", "u,user:", "n,nofranks:",
+				"g,globalstats:", "t,time", "v,version", "m,module:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
 			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
 			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			return 0;
+			if (!printUsageAndExit) return 0;
 		}
-
-		if (opt.nofargs() > 4)
+		else
 		{
-			std::cerr << "ERROR too many arguments" << std::endl;
-			printUsageAndExit = true;
-			rt = 1;
+			if (opt.nofargs() > 4)
+			{
+				std::cerr << "ERROR too many arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 4)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
 		}
-		if (opt.nofargs() < 4)
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("module"))
 		{
-			std::cerr << "ERROR too few arguments" << std::endl;
-			printUsageAndExit = true;
-			rt = 2;
+			std::vector<std::string> modlist( opt.list("module"));
+			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->loadModule( *mi);
+			}
 		}
-	}
-	catch (const std::runtime_error& err)
-	{
-		std::cerr << "ERROR in arguments: " << err.what() << std::endl;
-		printUsageAndExit = true;
-		rt = 3;
-	}
-	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
-	const strus::StorageInterface* sti = strus::getStorage();
+		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
+	
+		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
+		const strus::StorageInterface* sti = builder.getStorage();
 
-	if (printUsageAndExit)
-	{
-		std::cerr << "usage: strusQuery [options] <config> <anprg> <qeprg> <query>" << std::endl;
-		std::cerr << "<config>  = storage configuration string" << std::endl;
-		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, dbi->getConfigDescription(
-						strus::DatabaseInterface::CmdCreateClient));
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, sti->getConfigDescription(
-						strus::StorageInterface::CmdCreateClient));
-		std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
-		std::cerr << "<qeprg>   = path of query eval program" << std::endl;
-		std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
-		std::cerr << "options:" << std::endl;
-		std::cerr << "-h|--help       :Print this usage and do nothing else" << std::endl;
-		std::cerr << "-v|--version    :Print the program version and do nothing else" << std::endl;
-		std::cerr << "-u|--user       :User name for the query" << std::endl;
-		std::cerr << "-n|--nofranks   :Number of result ranks to return" << std::endl;
-		std::cerr << "-s|--silent     :No output of results" << std::endl;
-		std::cerr << "-g|--globalstats:Load global statistics of peers from this file" << std::endl;
-		std::cerr << "-m|--measure    :Measure duration of query evaluation" << std::endl;
-		return rt;
-	}
-	try
-	{
+		if (printUsageAndExit)
+		{
+			std::cerr << "usage: strusQuery [options] <config> <anprg> <qeprg> <query>" << std::endl;
+			std::cerr << "<config>  = storage configuration string" << std::endl;
+			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, dbi->getConfigDescription(
+							strus::DatabaseInterface::CmdCreateClient));
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, sti->getConfigDescription(
+							strus::StorageInterface::CmdCreateClient));
+			std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
+			std::cerr << "<qeprg>   = path of query eval program" << std::endl;
+			std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
+			std::cerr << "options:" << std::endl;
+			std::cerr << "-h|--help" << std::endl;
+			std::cerr << "    Print this usage and do nothing else" << std::endl;
+			std::cerr << "-v|--version" << std::endl;
+			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-u|--user <NAME>" << std::endl;
+			std::cerr << "    Use user name <NAME> for the query" << std::endl;
+			std::cerr << "-n|--nofranks <N>" << std::endl;
+			std::cerr << "    Return maximum <N> ranks as query result" << std::endl;
+			std::cerr << "-s|--silent" << std::endl;
+			std::cerr << "    No output of results" << std::endl;
+			std::cerr << "-g|--globalstats <FILE>" << std::endl;
+			std::cerr << "    Load global statistics of peers from file <FILE>" << std::endl;
+			std::cerr << "-t|--time" << std::endl;
+			std::cerr << "    Do print duration of pure query evaluation" << std::endl;
+			std::cerr << "-m|--module <MOD>" << std::endl;
+			std::cerr << "    Load components from module <MOD>" << std::endl;
+			return rt;
+		}
 		bool silent = opt( "silent");
-		bool measureDuration = opt( "measure");
+		bool measureDuration = opt( "time");
 		std::string username;
 		std::size_t nofRanks = 20;
 		if (opt("user"))
@@ -144,41 +155,22 @@ int main( int argc_, const char* argv_[])
 		{
 			nofRanks = opt.as<std::size_t>( "nofranks");
 		}
-		std::string databasecfg( opt[0]);
 		std::string storagecfg( opt[0]);
 		std::string analyzerprg = opt[1];
 		std::string queryprg = opt[2];
 		std::string querypath = opt[3];
 
-		strus::removeKeysFromConfigString(
-				databasecfg,
-				sti->getConfigParameters( strus::StorageInterface::CmdCreateClient));
-		//... In database_cfg is now the pure database configuration without the storage settings
-
-		strus::removeKeysFromConfigString(
-				storagecfg,
-				dbi->getConfigParameters( strus::DatabaseInterface::CmdCreateClient));
-		//... In storage_cfg is now the pure storage configuration without the database settings
-
 		// Create objects for query evaluation:
-		std::auto_ptr<strus::DatabaseClientInterface>
-			database( dbi->createClient( databasecfg));
-
 		boost::scoped_ptr<strus::StorageClientInterface>
-			storage( sti->createClient( storagecfg, database.get()));
-		(void)database.release();
+			storage( builder.createStorageClient( storagecfg));
 
-		boost::scoped_ptr<strus::TextProcessorInterface> textproc(
-			strus::createTextProcessor());
+		boost::scoped_ptr<strus::QueryAnalyzerInterface>
+			analyzer( builder.createQueryAnalyzer());
 
-		boost::scoped_ptr<strus::QueryAnalyzerInterface> analyzer(
-			strus::createQueryAnalyzer( textproc.get()));
+		boost::scoped_ptr<strus::QueryEvalInterface>
+			qeval( builder.createQueryEval());
 
-		boost::scoped_ptr<strus::QueryProcessorInterface> qproc(
-			strus::createQueryProcessor( storage.get()));
-
-		boost::scoped_ptr<strus::QueryEvalInterface> qeval(
-			strus::createQueryEval( qproc.get()));
+		const strus::QueryProcessorInterface* qproc = builder.getQueryProcessor();
 
 		// Load query analyzer program:
 		unsigned int ec;
@@ -287,6 +279,7 @@ int main( int argc_, const char* argv_[])
 					<< std::fixed << std::setw(6) << std::setprecision(3)
 					<< duration << " seconds" << std::endl;
 		}
+		return 0;
 	}
 	catch (const std::runtime_error& e)
 	{

@@ -26,8 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/lib/database_leveldb.hpp"
-#include "strus/lib/storage.hpp"
+#include "strus/lib/module.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+#include "strus/objectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -42,6 +43,7 @@
 #include "strus/arithmeticVariant.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/configParser.hpp"
+#include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include <iostream>
 #include <cstring>
@@ -49,6 +51,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace strus
 {
@@ -228,106 +231,132 @@ static void inspectDocid( strus::StorageClientInterface& storage, const char** k
 
 int main( int argc, const char* argv[])
 {
-	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
-	{
-		std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
-		return 0;
-	}
-	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
-	const strus::StorageInterface* sti = strus::getStorage();
-
-	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
-	{
-		std::cerr << "usage: strusInspect [options] <config> <what...>" << std::endl;
-		std::cerr << "<config>  : configuration string of the storage" << std::endl;
-		std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, dbi->getConfigDescription(
-						strus::DatabaseInterface::CmdCreateClient));
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, sti->getConfigDescription(
-						strus::StorageInterface::CmdCreateClient));
-		std::cerr << "<what>    : what to inspect:" << std::endl;
-		std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
-		std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
-		std::cerr << "            \"df\" <type> <value>" << std::endl;
-		std::cerr << "            \"metadata\" <name> <doc-id/no>" << std::endl;
-		std::cerr << "            \"metatable\"" << std::endl;
-		std::cerr << "            \"attribute\" <name> <doc-id/no>" << std::endl;
-		std::cerr << "            \"content\" <type> <doc-id/no>" << std::endl;
-		std::cerr << "            \"token\" <type> <doc-id/no>" << std::endl;
-		std::cerr << "            \"docno\" <docid>" << std::endl;
-		std::cerr << "options:" << std::endl;
-		std::cerr << "-h|--help     :Print this usage and do nothing else" << std::endl;
-		std::cerr << "-v|--version  :Print the program version and do nothing else" << std::endl;
-		return 0;
-	}
+	int rt = 0;
+	strus::ProgramOptions opt;
+	bool printUsageAndExit = false;
 	try
 	{
-		if (argc < 3) throw std::runtime_error( "too few arguments (expected storage configuration string)");
-
-		std::string database_cfg( argv[1]);
-		strus::removeKeysFromConfigString(
-				database_cfg,
-				sti->getConfigParameters( strus::StorageInterface::CmdCreateClient));
-		//... In database_cfg is now the pure database configuration without the storage settings
-
-		std::string storage_cfg( argv[1]);
-		strus::removeKeysFromConfigString(
-				storage_cfg,
-				dbi->getConfigParameters( strus::DatabaseInterface::CmdCreateClient));
-		//... In storage_cfg is now the pure storage configuration without the database settings
-
-		std::auto_ptr<strus::DatabaseClientInterface>
-			database( dbi->createClient( database_cfg));
-
-		std::auto_ptr<strus::StorageClientInterface>
-			storage( sti->createClient( storage_cfg, database.get()));
-		(void)database.release();
-
-		if (0==std::strcmp( argv[2], "pos"))
+		opt = strus::ProgramOptions(
+				argc, argv, 3,
+				"h,help", "v,version", "m,module:");
+		if (opt( "help"))
 		{
-			inspectPositions( *storage, argv+3, argc-3);
+			printUsageAndExit = true;
 		}
-		else if (0==std::strcmp( argv[2], "ff"))
+		if (opt( "version"))
 		{
-			inspectFeatureFrequency( *storage, argv+3, argc-3);
-		}
-		else if (0==std::strcmp( argv[2], "df"))
-		{
-			inspectDocumentFrequency( *storage, argv+3, argc-3);
-		}
-		else if (0==std::strcmp( argv[2], "metadata"))
-		{
-			inspectDocMetaData( *storage, argv+3, argc-3);
-		}
-		else if (0==std::strcmp( argv[2], "metatable"))
-		{
-			inspectDocMetaTable( *storage, argv+3, argc-3);
-		}
-		else if (0==std::strcmp( argv[2], "attribute"))
-		{
-			inspectDocAttribute( *storage, argv+3, argc-3);
-		}
-		else if (0==std::strcmp( argv[2], "content"))
-		{
-			inspectContent( *storage, argv+3, argc-3);
-		}
-		else if (0==std::strcmp( argv[2], "docno"))
-		{
-			inspectDocid( *storage, argv+3, argc-3);
-		}
-		else if (0==std::strcmp( argv[2], "token"))
-		{
-			inspectToken( *storage, argv+3, argc-3);
+			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			if (!printUsageAndExit) return 0;
 		}
 		else
 		{
-			throw std::runtime_error( std::string( "unknown item name '") + argv[2] + "'");
+			if (opt.nofargs() < 2)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
 		}
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("module"))
+		{
+			std::vector<std::string> modlist( opt.list("module"));
+			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->loadModule( *mi);
+			}
+		}
+		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
+
+		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
+		const strus::StorageInterface* sti = builder.getStorage();
+
+		if (printUsageAndExit)
+		{
+			std::cerr << "usage: strusInspect [options] <config> <what...>" << std::endl;
+			std::cerr << "<config>  : configuration string of the storage" << std::endl;
+			std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, dbi->getConfigDescription(
+							strus::DatabaseInterface::CmdCreateClient));
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, sti->getConfigDescription(
+							strus::StorageInterface::CmdCreateClient));
+			std::cerr << "<what>    : what to inspect:" << std::endl;
+			std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
+			std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
+			std::cerr << "            \"df\" <type> <value>" << std::endl;
+			std::cerr << "            \"metadata\" <name> <doc-id/no>" << std::endl;
+			std::cerr << "            \"metatable\"" << std::endl;
+			std::cerr << "            \"attribute\" <name> <doc-id/no>" << std::endl;
+			std::cerr << "            \"content\" <type> <doc-id/no>" << std::endl;
+			std::cerr << "            \"token\" <type> <doc-id/no>" << std::endl;
+			std::cerr << "            \"docno\" <docid>" << std::endl;
+			std::cerr << "options:" << std::endl;
+			std::cerr << "-h|--help" << std::endl;
+			std::cerr << "    Print this usage and do nothing else" << std::endl;
+			std::cerr << "-v|--version" << std::endl;
+			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-m|--module <MOD>" << std::endl;
+			std::cerr << "    Load components from module <MOD>" << std::endl;
+			return rt;
+		}
+
+		std::string storagecfg( opt[0]);
+		std::string what = opt[1];
+		const char** inpectarg = opt.argv() + 2;
+		std::size_t inpectargsize = opt.nofargs() - 2;
+
+		// Create objects for inspecting storage:
+		boost::scoped_ptr<strus::StorageClientInterface>
+			storage( builder.createStorageClient( storagecfg));
+
+		// Do inspect what is requested:
+		if (boost::algorithm::iequals( what, "pos"))
+		{
+			inspectPositions( *storage, inpectarg, inpectargsize);
+		}
+		else if (boost::algorithm::iequals( what, "ff"))
+		{
+			inspectFeatureFrequency( *storage, inpectarg, inpectargsize);
+		}
+		else if (boost::algorithm::iequals( what, "df"))
+		{
+			inspectDocumentFrequency( *storage, inpectarg, inpectargsize);
+		}
+		else if (boost::algorithm::iequals( what, "metadata"))
+		{
+			inspectDocMetaData( *storage, inpectarg, inpectargsize);
+		}
+		else if (boost::algorithm::iequals( what, "metatable"))
+		{
+			inspectDocMetaTable( *storage, inpectarg, inpectargsize);
+		}
+		else if (boost::algorithm::iequals( what, "attribute"))
+		{
+			inspectDocAttribute( *storage, inpectarg, inpectargsize);
+		}
+		else if (boost::algorithm::iequals( what, "content"))
+		{
+			inspectContent( *storage, inpectarg, inpectargsize);
+		}
+		else if (boost::algorithm::iequals( what, "docno"))
+		{
+			inspectDocid( *storage, inpectarg, inpectargsize);
+		}
+		else if (boost::algorithm::iequals( what, "token"))
+		{
+			inspectToken( *storage, inpectarg, inpectargsize);
+		}
+		else
+		{
+			throw std::runtime_error( std::string( "unknown item to inspect '") + what + "'");
+		}
+		return 0;
 	}
 	catch (const std::runtime_error& e)
 	{

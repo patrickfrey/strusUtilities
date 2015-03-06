@@ -26,6 +26,11 @@ strusInsert
 Insert a document or all files in a directory or in any descendant directory of it.
 
 
+strusCheckStorage
+=================
+This program checks a strus storage for corrupt data.
+
+
 strusCheckInsert
 ================
 Processes the documents the same way as strusInsert. But instead of inserting the documents, it checks if the document representation in the storage is complete compared with the checked documents.
@@ -51,16 +56,9 @@ strusDumpStatistics
 Dumps the statisics that would be populated to other peer storages in case of a distributed index to stout. 
 
 
-strusCheckStorage (*)
-=====================
-This program checks a strus storage for corrupt data.
-(*) strusCheckStorage is not part of the strusUtilities project, but of the strus core. 
-
-
-strusDumpStorage (*)
-====================
+strusDumpStorage
+================
 This program dumps the contents of a strus storage or parts of it to stout
-(*) strusDumpStorage is not part of the strusUtilities project, but of the strus core. 
 
 
 

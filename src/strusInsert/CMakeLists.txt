@@ -11,8 +11,18 @@ set(source_files
 	keyMapGenProcessor.cpp
 )
 
-include_directories( "${Boost_INCLUDE_DIRS}"  "${PROJECT_SOURCE_DIR}/include"  "${strus_INCLUDE_DIRS}"  "${strusanalyzer_INCLUDE_DIRS}" )
-link_directories( "${Boost_LIBRARY_DIRS}" "${PROJECT_SOURCE_DIR}/program"  "${strus_LIBRARY_DIRS}"  "${strusanalyzer_LIBRARY_DIRS}" )
+include_directories(
+            "${Boost_INCLUDE_DIRS}"
+	    "${PROJECT_SOURCE_DIR}/include"
+	    "${strus_INCLUDE_DIRS}"
+	    "${strusanalyzer_INCLUDE_DIRS}"
+	    "${strusmodule_INCLUDE_DIRS}" )
+link_directories( 
+           "${Boost_LIBRARY_DIRS}"
+	   "${PROJECT_SOURCE_DIR}/program" 
+	   "${strus_LIBRARY_DIRS}"
+	   "${strusanalyzer_LIBRARY_DIRS}"
+	   "${strusmodule_LIBRARY_DIRS}" )
 
 
 # ------------------------------
@@ -21,13 +31,13 @@ link_directories( "${Boost_LIBRARY_DIRS}" "${PROJECT_SOURCE_DIR}/program"  "${st
 add_library( local_objs_static STATIC ${source_files})
 
 add_executable( strusInsert  strusInsert.cpp )
-target_link_libraries( strusInsert local_objs_static strus_program ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries( strusInsert local_objs_static strus_program ${strusmodule_LIBRARIES} ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable( strusCheckInsert  strusCheckInsert.cpp )
-target_link_libraries( strusCheckInsert local_objs_static strus_program ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries( strusCheckInsert local_objs_static strus_program  ${strusmodule_LIBRARIES} ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable( strusGenerateKeyMap strusGenerateKeyMap.cpp )
-target_link_libraries( strusGenerateKeyMap local_objs_static ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries( strusGenerateKeyMap local_objs_static  strus_program  ${strusmodule_LIBRARIES}  ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} ${Boost_LIBRARIES})
 
 
 # ------------------------------

@@ -411,7 +411,8 @@ enum FeatureClass
 	FeatSearchIndexTerm,
 	FeatForwardIndexTerm,
 	FeatMetaData,
-	FeatAttribute
+	FeatAttribute,
+	FeatSubDocument
 };
 
 static FeatureClass featureClassFromName( const std::string& name)
@@ -431,6 +432,10 @@ static FeatureClass featureClassFromName( const std::string& name)
 	if (isEqual( name, "Attribute"))
 	{
 		return FeatAttribute;
+	}
+	if (isEqual( name, "Document"))
+	{
+		return FeatSubDocument;
 	}
 	throw std::runtime_error( std::string( "illegal feature class name '") + name + " (expected one of {SearchIndex, ForwardIndex, MetaData, Attribute})");
 }
@@ -529,9 +534,11 @@ static void parseFeatureDef(
 	std::string tokenizerName;
 	std::vector<std::string> tokenizerArg;
 
-	parseFunctionDef( "normalizer", normalizerName, normalizerArg, src);
-	parseFunctionDef( "tokenizer", tokenizerName, tokenizerArg, src);
-
+	if (featureClass != FeatSubDocument)
+	{
+		parseFunctionDef( "normalizer", normalizerName, normalizerArg, src);
+		parseFunctionDef( "tokenizer", tokenizerName, tokenizerArg, src);
+	}
 	if (isStringQuote(*src))
 	{
 		xpathexpr = parse_STRING( src);
@@ -571,6 +578,9 @@ static void parseFeatureDef(
 				featurename, xpathexpr,
 				TokenizerConfig( tokenizerName, tokenizerArg),
 				NormalizerConfig( normalizerName, normalizerArg));
+			break;
+		case FeatSubDocument:
+			analyzer.defineSubDocument( featurename, xpathexpr);
 			break;
 	}
 }

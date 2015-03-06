@@ -26,8 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/lib/database_leveldb.hpp"
-#include "strus/lib/storage.hpp"
+#include "strus/lib/module.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+#include "strus/objectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -40,6 +41,7 @@
 #include "strus/private/configParser.hpp"
 #include "strus/private/protocol.hpp"
 #include "private/version.hpp"
+#include "private/programOptions.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -106,55 +108,78 @@ public:
 
 int main( int argc, const char* argv[])
 {
-	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
-	{
-		std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
-		return 0;
-	}
-	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
-	const strus::StorageInterface* sti = strus::getStorage();
-
-	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
-	{
-		std::cerr << "usage: strusDumpStatistics [options] <config>" << std::endl;
-		std::cerr << "<config>  : configuration string of the storage" << std::endl;
-		std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, dbi->getConfigDescription(
-						strus::DatabaseInterface::CmdCreateClient));
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, sti->getConfigDescription(
-						strus::StorageInterface::CmdCreateClient));
-		std::cerr << "options:" << std::endl;
-		std::cerr << "-h,--help     : Print this usage info and exit" << std::endl;
-		std::cerr << "-v,--version  : Print the version info and exit" << std::endl;
-		return 0;
-	}
+	int rt = 0;
+	strus::ProgramOptions opt;
+	bool printUsageAndExit = false;
 	try
 	{
-		if (argc < 2) throw std::runtime_error( "too few arguments (expected storage configuration string)");
+		opt = strus::ProgramOptions(
+				argc, argv, 3,
+				"h,help", "v,version", "m,module:");
+		if (opt( "help")) printUsageAndExit = true;
+		if (opt( "version"))
+		{
+			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		else
+		{
+			if (opt.nofargs() > 2)
+			{
+				std::cerr << "ERROR too many arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 2)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("module"))
+		{
+			std::vector<std::string> modlist( opt.list("module"));
+			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->loadModule( *mi);
+			}
+		}
+		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
 
-		std::string database_cfg( argv[1]);
-		strus::removeKeysFromConfigString(
-				database_cfg,
-				sti->getConfigParameters( strus::StorageInterface::CmdCreateClient));
-		//... In database_cfg is now the pure database configuration without the storage settings
+		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
+		const strus::StorageInterface* sti = builder.getStorage();
 
-		std::string storage_cfg( argv[1]);
-		strus::removeKeysFromConfigString(
-				storage_cfg,
-				dbi->getConfigParameters( strus::DatabaseInterface::CmdCreateClient));
-		//... In storage_cfg is now the pure storage configuration without the database settings
+		if (printUsageAndExit)
+		{
+			std::cerr << "usage: strusDumpStatistics [options] <config>" << std::endl;
+			std::cerr << "<config>  = storage configuration string" << std::endl;
+			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, dbi->getConfigDescription(
+							strus::DatabaseInterface::CmdCreateClient));
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, sti->getConfigDescription(
+							strus::StorageInterface::CmdCreateClient));
+			std::cerr << "options:" << std::endl;
+			std::cerr << "-h|--help" << std::endl;
+			std::cerr << "   Print this usage and do nothing else" << std::endl;
+			std::cerr << "-v|--version" << std::endl;
+			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-m|--module <MOD>" << std::endl;
+			std::cerr << "    Load components from module <MOD>" << std::endl;
+			return rt;
+		}
+		std::string storagecfg( opt[0]);
 
-		std::auto_ptr<strus::DatabaseClientInterface>
-			database( dbi->createClient( database_cfg));
-
-		std::auto_ptr<strus::StorageClientInterface>
-			storage( sti->createClient( storage_cfg, database.get()));
-		(void)database.release();
+		// Create objects for dump:
+		boost::scoped_ptr<strus::StorageClientInterface>
+			storage( builder.createStorageClient( storagecfg));
 
 		StorageStatsDumper statsDumper;
 		storage->defineStoragePeerInterface( &statsDumper, true/*do populate init state*/);

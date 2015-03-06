@@ -26,19 +26,22 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/lib/analyzer.hpp"
-#include "strus/lib/textprocessor.hpp"
-#include "strus/lib/segmenter_textwolf.hpp"
+#include "strus/lib/module.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+#include "strus/objectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
@@ -48,110 +51,159 @@
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	if (argc > 3)
-	{
-		std::cerr << "ERROR too many arguments" << std::endl;
-		rt = 1;
-	}
-	if (argc < 3)
-	{
-		std::cerr << "ERROR too few arguments" << std::endl;
-		rt = 2;
-	}
-	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
-	{
-		std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-		std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
-		return 0;
-	}
-	if (rt || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
-	{
-		std::cerr << "usage: strusAnalyze [options] <program> <document>" << std::endl;
-		std::cerr << "<program>     = path of analyzer program" << std::endl;
-		std::cerr << "<document>    = path of document to analyze" << std::endl;
-		std::cerr << "options:" << std::endl;
-		std::cerr << "-h|--help     :Print this usage and do nothing else" << std::endl;
-		std::cerr << "-v|--version  :Print the program version and do nothing else" << std::endl;
-		return rt;
-	}
+	strus::ProgramOptions opt;
+	bool printUsageAndExit = false;
 	try
 	{
+		opt = strus::ProgramOptions(
+				argc, argv, 4,
+				"h,help", "v,version", "m,module:", "s,segmenter:");
+		if (opt( "help")) printUsageAndExit = true;
+		if (opt( "version"))
+		{
+			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		else
+		{
+			if (opt.nofargs() > 2)
+			{
+				std::cerr << "ERROR too many arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 2)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("module"))
+		{
+			std::vector<std::string> modlist( opt.list("module"));
+			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->loadModule( *mi);
+			}
+		}
+		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
+
+		if (printUsageAndExit)
+		{
+			std::cerr << "usage: strusAnalyze [options] <program> <document>" << std::endl;
+			std::cerr << "<program>   = path of analyzer program" << std::endl;
+			std::cerr << "<document>  = path of document to analyze" << std::endl;
+			std::cerr << "options:" << std::endl;
+			std::cerr << "-h|--help" << std::endl;
+			std::cerr << "   Print this usage and do nothing else" << std::endl;
+			std::cerr << "-v|--version" << std::endl;
+			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-m|--module <MOD>" << std::endl;
+			std::cerr << "    Load components from module <MOD>" << std::endl;
+			std::cerr << "-s|--segmenter <NAME>" << std::endl;
+			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			return rt;
+		}
+		std::string analyzerprg = opt[0];
+		std::string docpath = opt[1];
+		std::string segmenter( opt[ "segmenter"]);
+
+		// Create objects for analyzer:
+		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
+			analyzer( builder.createDocumentAnalyzer( segmenter));
+
+		// Load analyzer program:
 		unsigned int ec;
 		std::string analyzerProgramSource;
-		ec = strus::readFile( argv[1], analyzerProgramSource);
+		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec)
 		{
 			std::ostringstream msg;
-			msg << "failed to load analyzer program " << argv[1] << " (file system error '" << ec << ")";
-			throw std::runtime_error( msg.str());
+			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
+			return 4;
 		}
-		std::string documentContent;
-		ec = strus::readFile( argv[2], documentContent);
-		if (ec)
-		{
-			std::ostringstream msg;
-			msg << "failed to load document to analyze " << argv[2] << " (file system error '" << ec << ")";
-			throw std::runtime_error( msg.str());
-		}
-		boost::scoped_ptr<strus::TextProcessorInterface>
-			textproc( strus::createTextProcessor());
-
-		std::auto_ptr<strus::SegmenterInterface>
-			segmenter( strus::createSegmenter_textwolf());
-
-		boost::scoped_ptr<strus::DocumentAnalyzerInterface> 
-			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
-		(void)segmenter.release();
-
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
-		strus::analyzer::Document doc
-			= analyzer->analyze( documentContent);
-
-		std::vector<strus::analyzer::Term>::const_iterator
-			ti = doc.searchIndexTerms().begin(), te = doc.searchIndexTerms().end();
-
-		std::cout << "search index terms:" << std::endl;
-		for (; ti != te; ++ti)
+		std::auto_ptr<strus::DocumentAnalyzerInstanceInterface> analyzerInstance;
+		if (docpath == "-")
 		{
-			std::cout << ti->pos()
-				  << " " << ti->type()
-				  << " '" << ti->value() << "'"
-				  << std::endl;
+			analyzerInstance.reset( analyzer->createDocumentAnalyzerInstance( std::cin));
 		}
-
-		std::vector<strus::analyzer::Term>::const_iterator
-			fi = doc.forwardIndexTerms().begin(), fe = doc.forwardIndexTerms().end();
-
-		std::cout << "forward index terms:" << std::endl;
-		for (; fi != fe; ++fi)
+		else
 		{
-			std::cout << fi->pos()
-				  << " " << fi->type()
-				  << " '" << fi->value() << "'"
-				  << std::endl;
+			std::ifstream documentFile;
+			try 
+			{
+				documentFile.open( docpath.c_str(), std::fstream::in);
+			}
+			catch (const std::ifstream::failure& err)
+			{
+				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
+			}
+			catch (const std::runtime_error& err)
+			{
+				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
+			}
+			analyzerInstance.reset( analyzer->createDocumentAnalyzerInstance( documentFile));
 		}
-
-		std::vector<strus::analyzer::MetaData>::const_iterator
-			mi = doc.metadata().begin(), me = doc.metadata().end();
-
-		std::cout << std::endl << "metadata:" << std::endl;
-		for (; mi != me; ++mi)
+		while (analyzerInstance->hasMore())
 		{
-			std::cout << mi->name()
-				  << " '" << mi->value() << "'"
-				  << std::endl;
-		}
+			strus::analyzer::Document doc
+				= analyzerInstance->analyzeNext();
 
-		std::vector<strus::analyzer::Attribute>::const_iterator
-			ai = doc.attributes().begin(), ae = doc.attributes().end();
+			if (!doc.subDocumentTypeName().empty())
+			{
+				std::cout << "-- document " << doc.subDocumentTypeName() << std::endl;
+			}
+			std::vector<strus::analyzer::Term>::const_iterator
+				ti = doc.searchIndexTerms().begin(), te = doc.searchIndexTerms().end();
 
-		std::cout << std::endl << "attributes:" << std::endl;
-		for (; ai != ae; ++ai)
-		{
-			std::cout << ai->name()
-				  << " '" << ai->value() << "'"
-				  << std::endl;
+			std::cout << std::endl << "search index terms:" << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << ti->pos()
+					  << " " << ti->type()
+					  << " '" << ti->value() << "'"
+					  << std::endl;
+			}
+
+			std::vector<strus::analyzer::Term>::const_iterator
+				fi = doc.forwardIndexTerms().begin(), fe = doc.forwardIndexTerms().end();
+
+			std::cout << std::endl << "forward index terms:" << std::endl;
+			for (; fi != fe; ++fi)
+			{
+				std::cout << fi->pos()
+					  << " " << fi->type()
+					  << " '" << fi->value() << "'"
+					  << std::endl;
+			}
+
+			std::vector<strus::analyzer::MetaData>::const_iterator
+				mi = doc.metadata().begin(), me = doc.metadata().end();
+
+			std::cout << std::endl << "metadata:" << std::endl;
+			for (; mi != me; ++mi)
+			{
+				std::cout << mi->name()
+					  << " '" << mi->value() << "'"
+					  << std::endl;
+			}
+
+			std::vector<strus::analyzer::Attribute>::const_iterator
+				ai = doc.attributes().begin(), ae = doc.attributes().end();
+	
+			std::cout << std::endl << "attributes:" << std::endl;
+			for (; ai != ae; ++ai)
+			{
+				std::cout << ai->name()
+					  << " '" << ai->value() << "'"
+					  << std::endl;
+			}
 		}
 		return 0;
 	}

@@ -26,9 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/lib/analyzer.hpp"
-#include "strus/lib/textprocessor.hpp"
-#include "strus/lib/segmenter_textwolf.hpp"
+#include "strus/lib/module.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+#include "strus/objectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
@@ -57,55 +57,83 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 5,
-				"h,help", "t,threads:", "u,unit:", "n,results:", "v,version");
+				argc_, argv_, 7,
+				"h,help", "t,threads:", "u,unit:",
+				"n,results:", "v,version", "m,module:",
+				"s,segmenter:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
 			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			return 0;
+			if (!printUsageAndExit) return 0;
 		}
-		if (opt.nofargs() > 2)
+		else
 		{
-			std::cerr << "ERROR too many arguments" << std::endl;
-			printUsageAndExit = true;
-			rt = 1;
+			if (opt.nofargs() > 2)
+			{
+				std::cerr << "ERROR too many arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 2)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
 		}
-		if (opt.nofargs() < 2)
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("module"))
 		{
-			std::cerr << "ERROR too few arguments" << std::endl;
-			printUsageAndExit = true;
-			rt = 2;
+			std::vector<std::string> modlist( opt.list("module"));
+			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->loadModule( *mi);
+			}
 		}
-	}
-	catch (const std::runtime_error& err)
-	{
-		std::cerr << "ERROR in arguments: " << err.what() << std::endl;
-		printUsageAndExit = true;
-		rt = 3;
-	}
-	if (printUsageAndExit)
-	{
-		std::cerr << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
-		std::cerr << "<program> = path of analyzer program" << std::endl;
-		std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
-		std::cerr << "options:" << std::endl;
-		std::cerr << "-h,--help     : Print this usage info and exit" << std::endl;
-		std::cerr << "-v,--version  : Print the version info and exit" << std::endl;
-		std::cerr << "-t,--threads  : Number of inserter threads to use"  << std::endl;
-		std::cerr << "-u,--unit     : Number of files processed as one chunk (default 1000)" << std::endl;
-		std::cerr << "-n,--results  : Number of elements in the key map generated" << std::endl;
-		return rt;
-	}
-	try
-	{
+		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
+
+		if (printUsageAndExit)
+		{
+			std::cerr << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
+			std::cerr << "<program> = path of analyzer program" << std::endl;
+			std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
+			std::cerr << "options:" << std::endl;
+			std::cerr << "-h|--help" << std::endl;
+			std::cerr << "   Print this usage and do nothing else" << std::endl;
+			std::cerr << "-v|--version" << std::endl;
+			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-m|--module <MOD>" << std::endl;
+			std::cerr << "    Load components from module <MOD>" << std::endl;
+			std::cerr << "-s|--segmenter <NAME>" << std::endl;
+			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cerr << "-t|--threads <N>" << std::endl;
+			std::cerr << "    Set <N> as number of threads to use"  << std::endl;
+			std::cerr << "-u|--unit <N>" << std::endl;
+			std::cerr << "    Set <N> as number of files processed per iteration (default 1000)" << std::endl;
+			std::cerr << "-n|--results <N>" << std::endl;
+			std::cerr << "    Set <N> as number of elements in the key map generated" << std::endl;
+			return rt;
+		}
+
 		// [1] Build objects:
 		unsigned int nofThreads = opt.as<unsigned int>( "threads");
-		unsigned int unitSize = opt.as<unsigned int>( "unit");
+		unsigned int unitSize = 1000;
+		if (opt( "unit"))
+		{
+			unitSize = opt.as<unsigned int>( "unit");
+		}
 		unsigned int nofResults = opt.as<unsigned int>( "results");
-		if (!unitSize) unitSize = 1000;
+		std::string segmenter( opt[ "segmenter"]);
 
+
+		// Create objects for keymap generation:
+		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
+			analyzer( builder.createDocumentAnalyzer( segmenter));
+
+		// [2] Load analyzer program:
 		unsigned int ec;
 		std::string analyzerProgramSource;
 		ec = strus::readFile( opt[0], analyzerProgramSource);
@@ -115,22 +143,14 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
-		boost::scoped_ptr<strus::TextProcessorInterface>
-			textproc( strus::createTextProcessor());
-
-		boost::scoped_ptr<strus::SegmenterInterface>
-			segmenter( strus::createSegmenter_textwolf());
-
-		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
-			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
+		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
 		strus::KeyMapGenResultList resultList;
-
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
 				opt[1], 0, unitSize, nofThreads*5+5);
 
-		// [2] Start threads:
+		// [3] Start threads:
 		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(
 				new strus::Thread< strus::FileCrawler >( fileCrawler,

@@ -26,11 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/lib/database_leveldb.hpp"
-#include "strus/lib/storage.hpp"
-#include "strus/lib/analyzer.hpp"
-#include "strus/lib/textprocessor.hpp"
-#include "strus/lib/segmenter_textwolf.hpp"
+#include "strus/lib/module.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+#include "strus/objectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
@@ -69,97 +67,104 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 5,
-				"h,help", "t,threads:", "c,commit:", "n,new", "v,version");
+				argc_, argv_, 7,
+				"h,help", "t,threads:", "c,commit:",
+				"n,new", "v,version", "m,module:",
+				"s,segmenter:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
 			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
 			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			return 0;
+			if (!printUsageAndExit) return 0;
 		}
-		if (opt.nofargs() > 3)
+		else
 		{
-			std::cerr << "ERROR too many arguments" << std::endl;
-			printUsageAndExit = true;
-			rt = 1;
+			if (opt.nofargs() > 3)
+			{
+				std::cerr << "ERROR too many arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 3)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
 		}
-		if (opt.nofargs() < 3)
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("module"))
 		{
-			std::cerr << "ERROR too few arguments" << std::endl;
-			printUsageAndExit = true;
-			rt = 2;
+			std::vector<std::string> modlist( opt.list("module"));
+			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->loadModule( *mi);
+			}
 		}
-	}
-	catch (const std::runtime_error& err)
-	{
-		std::cerr << "ERROR in arguments: " << err.what() << std::endl;
-		printUsageAndExit = true;
-		rt = 3;
-	}
-	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
-	const strus::StorageInterface* sti = strus::getStorage();
+		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
+	
+		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
+		const strus::StorageInterface* sti = builder.getStorage();
 
-	if (printUsageAndExit)
-	{
-		std::cerr << "usage: strusInsert [options] <config> <program> <docpath>" << std::endl;
-		std::cerr << "<config>  = storage configuration string" << std::endl;
-		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, dbi->getConfigDescription(
-						strus::DatabaseInterface::CmdCreateClient));
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, sti->getConfigDescription(
-						strus::StorageInterface::CmdCreateClient));
-		std::cerr << "<program> = path of analyzer program" << std::endl;
-		std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
-		std::cerr << "options:" << std::endl;
-		std::cerr << "-h,--help    : Print this usage info and exit" << std::endl;
-		std::cerr << "-v,--version : Print this version info and exit" << std::endl;
-		std::cerr << "-t,--threads : Number of inserter threads to use"  << std::endl;
-		std::cerr << "-c,--commit  : Number of files inserted per transaction (default 1000)" << std::endl;
-		std::cerr << "-n,--new     : All inserts are new; use preallocated document numbers" << std::endl;
-		return rt;
-	}
-	try
-	{
+		if (printUsageAndExit)
+		{
+			std::cerr << "usage: strusInsert [options] <config> <program> <docpath>" << std::endl;
+			std::cerr << "<config>  = storage configuration string" << std::endl;
+			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, dbi->getConfigDescription(
+							strus::DatabaseInterface::CmdCreateClient));
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, sti->getConfigDescription(
+							strus::StorageInterface::CmdCreateClient));
+			std::cerr << "<program> = path of analyzer program" << std::endl;
+			std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
+			std::cerr << "options:" << std::endl;
+			std::cerr << "-h|--help" << std::endl;
+			std::cerr << "   Print this usage and do nothing else" << std::endl;
+			std::cerr << "-v|--version" << std::endl;
+			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-m|--module <MOD>" << std::endl;
+			std::cerr << "    Load components from module <MOD>" << std::endl;
+			std::cerr << "-s|--segmenter <NAME>" << std::endl;
+			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cerr << "-t|--threads <N>" << std::endl;
+			std::cerr << "    Set <N> as number of inserter threads to use"  << std::endl;
+			std::cerr << "-c|--commit <N>" << std::endl;
+			std::cerr << "    Set <N> as number of files inserted per transaction (default 1000)" << std::endl;
+			std::cerr << "-n|--new" << std::endl;
+			std::cerr << "    All inserts are new; use preallocated document numbers" << std::endl;
+			return rt;
+		}
 		bool allInsertsNew = opt( "new");
-		unsigned int nofThreads = opt.as<unsigned int>( "threads");
-		unsigned int transactionSize = opt.as<unsigned int>( "commit");
-		if (!transactionSize) transactionSize = 1000;
+		unsigned int nofThreads = 0;
+		if (opt("threads"))
+		{
+			nofThreads = opt.as<unsigned int>( "threads");
+		}
+		unsigned int transactionSize = 1000;
+		if (opt("commit"))
+		{
+			transactionSize = opt.as<unsigned int>( "commit");
+		}
+		std::string storagecfg( opt[0]);
+		std::string analyzerprg = opt[1];
+		std::string datapath = opt[2];
+		std::string segmenter( opt[ "segmenter"]);
 
-		std::string database_cfg( opt[0]);
-		strus::removeKeysFromConfigString(
-				database_cfg,
-				sti->getConfigParameters( strus::StorageInterface::CmdCreateClient));
-		//... In database_cfg is now the pure database configuration without the storage settings
-
-		std::string storage_cfg( opt[0]);
-		strus::removeKeysFromConfigString(
-				storage_cfg,
-				dbi->getConfigParameters( strus::DatabaseInterface::CmdCreateClient));
-		//... In storage_cfg is now the pure storage configuration without the database settings
-
-		std::auto_ptr<strus::DatabaseClientInterface>
-			database( dbi->createClient( database_cfg));
-
-		std::auto_ptr<strus::StorageClientInterface>
-			storage( sti->createClient( storage_cfg, database.get()));
-		(void)database.release();
-
-		boost::scoped_ptr<strus::TextProcessorInterface>
-			textproc( strus::createTextProcessor());
-
-		std::auto_ptr<strus::SegmenterInterface>
-			segmenter( strus::createSegmenter_textwolf());
+		// Create objects for inserter:
+		boost::scoped_ptr<strus::StorageClientInterface>
+			storage( builder.createStorageClient( storagecfg));
 
 		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
-			analyzer( strus::createDocumentAnalyzer( textproc.get(), segmenter.get()));
-		(void)segmenter.release();
+			analyzer( builder.createDocumentAnalyzer( segmenter));
 
+		// Load analyzer program:
 		unsigned int ec;
 		std::string analyzerProgramSource;
 		ec = strus::readFile( opt[1], analyzerProgramSource);
@@ -171,6 +176,7 @@ int main( int argc_, const char* argv_[])
 		}
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
+		// Start inserter process:
 		boost::scoped_ptr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get()));
 
@@ -182,7 +188,7 @@ int main( int argc_, const char* argv_[])
 		}
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
-					opt[2], docnoAllocator.get(),
+					datapath, docnoAllocator.get(),
 					transactionSize, nofThreads*5+5);
 
 		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >

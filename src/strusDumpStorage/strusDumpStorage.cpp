@@ -33,14 +33,19 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
+#include "strus/storagePeerInterface.hpp"
+#include "strus/storagePeerTransactionInterface.hpp"
 #include "strus/versionStorage.hpp"
-#include "private/programOptions.hpp"
-#include "private/version.hpp"
-#include "strus/private/configParser.hpp"
+#include "strus/constants.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/private/configParser.hpp"
+#include "strus/private/protocol.hpp"
+#include "private/version.hpp"
+#include "private/programOptions.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+#include <memory>
 #include <boost/scoped_ptr.hpp>
 
 int main( int argc, const char* argv[])
@@ -62,13 +67,13 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			if (opt.nofargs() > 1)
+			if (opt.nofargs() > 2)
 			{
 				std::cerr << "ERROR too many arguments" << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			if (opt.nofargs() < 1)
+			if (opt.nofargs() < 2)
 			{
 				std::cerr << "ERROR too few arguments" << std::endl;
 				printUsageAndExit = true;
@@ -92,7 +97,7 @@ int main( int argc, const char* argv[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusCreate [options] <config>" << std::endl;
+			std::cerr << "usage: strusDumpStorage [options] <config>" << std::endl;
 			std::cerr << "<config>  = storage configuration string" << std::endl;
 			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
 			strus::printIndentMultilineString(
@@ -112,27 +117,13 @@ int main( int argc, const char* argv[])
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			return rt;
 		}
-		std::string databasecfg( opt[0]);
 		std::string storagecfg( opt[0]);
 
-		strus::removeKeysFromConfigString(
-				databasecfg,
-				sti->getConfigParameters(
-					strus::StorageInterface::CmdCreateClient));
-		//... In database_cfg is now the pure database configuration without the storage settings
+		// Create objects to check storage:
+		boost::scoped_ptr<strus::StorageClientInterface>
+			storage( builder.createStorageClient( storagecfg));
 
-		strus::removeKeysFromConfigString(
-				storagecfg,
-				dbi->getConfigParameters(
-					strus::DatabaseInterface::CmdCreateClient));
-		//... In storage_cfg is now the pure storage configuration without the database settings
-
-		dbi->createDatabase( databasecfg);
-
-		boost::scoped_ptr<strus::DatabaseClientInterface>
-			database( dbi->createClient( databasecfg));
-
-		sti->createStorage( storagecfg, database.get());
+		storage->dumpStorage( std::cout);
 	}
 	catch (const std::runtime_error& e)
 	{

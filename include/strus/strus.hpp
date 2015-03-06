@@ -87,7 +87,7 @@
 #include "strus/analyzer/term.hpp"
 
 // Text processor (functions for the document analysis to produce index terms, attributes and meta data out of segments of text):
-#include "strus/lib/textprocessor.hpp"
+#include "strus/lib/textproc.hpp"
 #include "strus/textProcessorInterface.hpp"
 
 // Document segmenter (segmenting a document into typed text segments that can be processed by the analyzer):

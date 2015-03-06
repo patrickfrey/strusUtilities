@@ -26,8 +26,9 @@
 
 --------------------------------------------------------------------
 */
-#include "strus/lib/database_leveldb.hpp"
-#include "strus/lib/storage.hpp"
+#include "strus/lib/module.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+#include "strus/objectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -183,71 +184,108 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 
 int main( int argc, const char* argv[])
 {
-	if (argc > 1 && (std::strcmp( argv[1], "-v") == 0 || std::strcmp( argv[1], "--version") == 0))
-	{
-		std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-		std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
-		return 0;
-	}
-	const strus::DatabaseInterface* dbi = strus::getDatabase_leveldb();
-	const strus::StorageInterface* sti = strus::getStorage();
-	if (argc <= 1 || std::strcmp( argv[1], "-h") == 0 || std::strcmp( argv[1], "--help") == 0)
-	{
-		std::cerr << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
-		std::cerr << "<config>  : configuration string of the storage:" << std::endl;
-		std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, dbi->getConfigDescription(
-						strus::DatabaseInterface::CmdCreateClient));
-		strus::printIndentMultilineString(
-					std::cerr,
-					12, sti->getConfigDescription(
-						strus::StorageInterface::CmdCreateClient));
-		std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
-		std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
-		std::cerr << "              <name>    :name of the element to change" << std::endl;
-		std::cerr << "              <newname> :new name of the element" << std::endl;
-		std::cerr << "              <newtype> :new type (*) of the element" << std::endl;
-		std::cerr << "            add <name> <type>" << std::endl;
-		std::cerr << "              <name>    :name of the element to add" << std::endl;
-		std::cerr << "              <type>    :type (*) of the element to add" << std::endl;
-		std::cerr << "            delete <name>" << std::endl;
-		std::cerr << "              <name>    :name of the element to remove" << std::endl;
-		std::cerr << "            rename <name> <newname>" << std::endl;
-		std::cerr << "              <name>    :name of the element to rename" << std::endl;
-		std::cerr << "              <newname> :new name of the element" << std::endl;
-		std::cerr << "            clear <name>" << std::endl;
-		std::cerr << "              <name>    :name of the element to clear all values" << std::endl;
-		std::cerr << "(*)       :type of an element is one of the following:" << std::endl;
-		std::cerr << "              INT8      :one byte signed integer value" << std::endl;
-		std::cerr << "              UINT8     :one byte unsigned integer value" << std::endl;
-		std::cerr << "              INT16     :two bytes signed integer value" << std::endl;
-		std::cerr << "              UINT16    :two bytes unsigned integer value" << std::endl;
-		std::cerr << "              INT32     :four bytes signed integer value" << std::endl;
-		std::cerr << "              UINT32    :four bytes unsigned integer value" << std::endl;
-		std::cerr << "              FLOAT16   :two bytes floating point value (IEEE 754 small)" << std::endl;
-		std::cerr << "              FLOAT32   :four bytes floating point value (IEEE 754 single)" << std::endl;
-		std::cerr << "options:" << std::endl;
-		std::cerr << "-h|--help     :Print this usage and do nothing else" << std::endl;
-		std::cerr << "-v|--version  :Print the program version and do nothing else" << std::endl;
-		return 0;
-	}
+	int rt = 0;
+	strus::ProgramOptions opt;
+	bool printUsageAndExit = false;
 	try
 	{
-		if (argc < 3) throw std::runtime_error( "too few arguments (expected storage configuration string)");
-		if (argc > 3) throw std::runtime_error( "too many arguments for strusAlterMetaData");
+		opt = strus::ProgramOptions(
+				argc, argv, 3,
+				"h,help", "v,version", "m,module:");
+		if (opt( "help"))
+		{
+			printUsageAndExit = true;
+		}
+		if (opt( "version"))
+		{
+			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		else
+		{
+			if (opt.nofargs() < 3)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() > 3)
+			{
+				std::cerr << "ERROR too many arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("module"))
+		{
+			std::vector<std::string> modlist( opt.list("module"));
+			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->loadModule( *mi);
+			}
+		}
+		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
 
-		std::string config = argv[1];
-		std::vector<AlterMetaDataCommand> cmds = parseCommands( argv[2]);
+		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
+		const strus::StorageInterface* sti = builder.getStorage();
 
-		std::auto_ptr<strus::DatabaseClientInterface>
-			database( dbi->createClient( config));
+		if (printUsageAndExit)
+		{
+			std::cerr << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
+			std::cerr << "<config>  : configuration string of the storage" << std::endl;
+			std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, dbi->getConfigDescription(
+							strus::DatabaseInterface::CmdCreateClient));
+			strus::printIndentMultilineString(
+						std::cerr,
+						12, sti->getConfigDescription(
+							strus::StorageInterface::CmdCreateClient));
+			std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
+			std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
+			std::cerr << "              <name>    :name of the element to change" << std::endl;
+			std::cerr << "              <newname> :new name of the element" << std::endl;
+			std::cerr << "              <newtype> :new type (*) of the element" << std::endl;
+			std::cerr << "            add <name> <type>" << std::endl;
+			std::cerr << "              <name>    :name of the element to add" << std::endl;
+			std::cerr << "              <type>    :type (*) of the element to add" << std::endl;
+			std::cerr << "            delete <name>" << std::endl;
+			std::cerr << "              <name>    :name of the element to remove" << std::endl;
+			std::cerr << "            rename <name> <newname>" << std::endl;
+			std::cerr << "              <name>    :name of the element to rename" << std::endl;
+			std::cerr << "              <newname> :new name of the element" << std::endl;
+			std::cerr << "            clear <name>" << std::endl;
+			std::cerr << "              <name>    :name of the element to clear all values" << std::endl;
+			std::cerr << "(*)       :type of an element is one of the following:" << std::endl;
+			std::cerr << "              INT8      :one byte signed integer value" << std::endl;
+			std::cerr << "              UINT8     :one byte unsigned integer value" << std::endl;
+			std::cerr << "              INT16     :two bytes signed integer value" << std::endl;
+			std::cerr << "              UINT16    :two bytes unsigned integer value" << std::endl;
+			std::cerr << "              INT32     :four bytes signed integer value" << std::endl;
+			std::cerr << "              UINT32    :four bytes unsigned integer value" << std::endl;
+			std::cerr << "              FLOAT16   :two bytes floating point value (IEEE 754 small)" << std::endl;
+			std::cerr << "              FLOAT32   :four bytes floating point value (IEEE 754 single)" << std::endl;
+			std::cerr << "options:" << std::endl;
+			std::cerr << "-h|--help" << std::endl;
+			std::cerr << "    Print this usage and do nothing else" << std::endl;
+			std::cerr << "-v|--version" << std::endl;
+			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-m|--module <MOD>" << std::endl;
+			std::cerr << "    Load components from module <MOD>" << std::endl;
+			return rt;
+		}
+		std::string storagecfg = opt[0];
+		std::vector<AlterMetaDataCommand> cmds = parseCommands( opt[1]);
 
-		std::auto_ptr<strus::StorageAlterMetaDataTableInterface>
-			md( sti->createAlterMetaDataTable( database.get()));
-		(void)database.release();
+		// Create objects for altering the meta data table:
+		boost::scoped_ptr<strus::StorageAlterMetaDataTableInterface>
+			md( builder.createAlterMetaDataTable( storagecfg));
 
+		// Execute alter meta data table commands:
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();
 		for (; ci != ce; ++ci)
 		{
