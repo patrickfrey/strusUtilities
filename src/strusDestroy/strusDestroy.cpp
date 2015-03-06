@@ -94,6 +94,7 @@ int main( int argc, const char* argv[])
 						std::cerr,
 						12, dbi->getConfigDescription(
 							strus::DatabaseInterface::CmdCreateClient));
+			std::cerr << "description: Removes an existing storage database." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "   Print this usage and do nothing else" << std::endl;

@@ -97,6 +97,7 @@ int main( int argc, const char* argv[])
 			std::cerr << "usage: strusAnalyze [options] <program> <document>" << std::endl;
 			std::cerr << "<program>   = path of analyzer program" << std::endl;
 			std::cerr << "<document>  = path of document to analyze" << std::endl;
+			std::cerr << "description: Analyzes a document and dumps the result to stdout." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "   Print this usage and do nothing else" << std::endl;

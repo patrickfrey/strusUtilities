@@ -269,6 +269,7 @@ int main( int argc, const char* argv[])
 			std::cerr << "              UINT32    :four bytes unsigned integer value" << std::endl;
 			std::cerr << "              FLOAT16   :two bytes floating point value (IEEE 754 small)" << std::endl;
 			std::cerr << "              FLOAT32   :four bytes floating point value (IEEE 754 single)" << std::endl;
+			std::cerr << "description: Executes a list of alter the meta data table commands." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "    Print this usage and do nothing else" << std::endl;

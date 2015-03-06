@@ -100,6 +100,9 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
 			std::cerr << "<program> = path of analyzer program" << std::endl;
 			std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
+			std::cerr << "description: Dumps a list of terms as result of document" << std::endl;
+			std::cerr << "    anaylsis of a file or directory. The dump can be loaded by" << std::endl;
+			std::cerr << "    the storage on startup to create a map of frequently used terms." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "   Print this usage and do nothing else" << std::endl;

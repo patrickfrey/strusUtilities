@@ -124,6 +124,7 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
 			std::cerr << "<qeprg>   = path of query eval program" << std::endl;
 			std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
+			std::cerr << "description: Executes a query or a list of queries from a file." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "    Print this usage and do nothing else" << std::endl;

@@ -122,6 +122,7 @@ int main( int argc_, const char* argv_[])
 							strus::StorageInterface::CmdCreateClient));
 			std::cerr << "<program> = path of analyzer program" << std::endl;
 			std::cerr << "<docpath> = path of document or directory to check" << std::endl;
+			std::cerr << "description: Checks if a storage contains all data of a document set." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "   Print this usage and do nothing else" << std::endl;

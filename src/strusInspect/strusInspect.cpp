@@ -296,6 +296,7 @@ int main( int argc, const char* argv[])
 			std::cerr << "            \"content\" <type> <doc-id/no>" << std::endl;
 			std::cerr << "            \"token\" <type> <doc-id/no>" << std::endl;
 			std::cerr << "            \"docno\" <docid>" << std::endl;
+			std::cerr << "description: Inspect some data in the storage." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "    Print this usage and do nothing else" << std::endl;

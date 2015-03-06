@@ -124,6 +124,7 @@ int main( int argc_, const char* argv_[])
 							strus::StorageInterface::CmdCreateClient));
 			std::cerr << "<program> = path of analyzer program" << std::endl;
 			std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
+			std::cerr << "description: Insert a document or a set of documents into a storage." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "   Print this usage and do nothing else" << std::endl;

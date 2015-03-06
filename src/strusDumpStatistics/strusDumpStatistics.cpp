@@ -166,6 +166,8 @@ int main( int argc, const char* argv[])
 						std::cerr,
 						12, sti->getConfigDescription(
 							strus::StorageInterface::CmdCreateClient));
+			std::cerr << "description: Dumps the statisics that would be populated to" << std::endl;
+			std::cerr << "    other peer storages in case of a distributed index to stout." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "   Print this usage and do nothing else" << std::endl;
