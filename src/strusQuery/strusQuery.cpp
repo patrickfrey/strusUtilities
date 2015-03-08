@@ -46,6 +46,7 @@
 #include "strus/versionStorage.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
+#include "private/utils.hpp"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -53,8 +54,6 @@
 #include <algorithm>
 #include <iomanip>
 #include <stdexcept>
-#include <boost/scoped_ptr.hpp>
-#include <boost/lexical_cast.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -154,7 +153,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt("nofranks"))
 		{
-			nofRanks = opt.as<std::size_t>( "nofranks");
+			nofRanks = opt.asUint( "nofranks");
 		}
 		std::string storagecfg( opt[0]);
 		std::string analyzerprg = opt[1];
@@ -162,13 +161,13 @@ int main( int argc_, const char* argv_[])
 		std::string querypath = opt[3];
 
 		// Create objects for query evaluation:
-		boost::scoped_ptr<strus::StorageClientInterface>
+		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
 
-		boost::scoped_ptr<strus::QueryAnalyzerInterface>
+		strus::utils::ScopedPtr<strus::QueryAnalyzerInterface>
 			analyzer( builder.createQueryAnalyzer());
 
-		boost::scoped_ptr<strus::QueryEvalInterface>
+		strus::utils::ScopedPtr<strus::QueryEvalInterface>
 			qeval( builder.createQueryEval());
 
 		const strus::QueryProcessorInterface* qproc = builder.getQueryProcessor();
@@ -247,7 +246,7 @@ int main( int argc_, const char* argv_[])
 		while (strus::scanNextProgram( qs, si, se))
 		{
 			++nofQueries;
-			boost::scoped_ptr<strus::QueryInterface> query(
+			std::auto_ptr<strus::QueryInterface> query(
 				qeval->createQuery( storage.get()));
 
 			strus::loadQuery( *query, *analyzer, qs);

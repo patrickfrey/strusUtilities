@@ -39,6 +39,7 @@
 #include "strus/versionAnalyzer.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
+#include "private/utils.hpp"
 #include "fileCrawler.hpp"
 #include "keyMapGenProcessor.hpp"
 #include "thread.hpp"
@@ -46,7 +47,7 @@
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
-#include <boost/scoped_ptr.hpp>
+#include <memory>
 
 
 int main( int argc_, const char* argv_[])
@@ -122,13 +123,13 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// [1] Build objects:
-		unsigned int nofThreads = opt.as<unsigned int>( "threads");
+		unsigned int nofThreads = opt.asUint( "threads");
 		unsigned int unitSize = 1000;
 		if (opt( "unit"))
 		{
-			unitSize = opt.as<unsigned int>( "unit");
+			unitSize = opt.asUint( "unit");
 		}
-		unsigned int nofResults = opt.as<unsigned int>( "results");
+		unsigned int nofResults = opt.asUint( "results");
 		std::string segmenter;
 		if (opt( "segmenter"))
 		{
@@ -136,7 +137,7 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// Create objects for keymap generation:
-		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
+		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( builder.createDocumentAnalyzer( segmenter));
 
 		// [2] Load analyzer program:
@@ -157,7 +158,7 @@ int main( int argc_, const char* argv_[])
 				opt[1], 0, unitSize, nofThreads*5+5);
 
 		// [3] Start threads:
-		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >
+		std::auto_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(
 				new strus::Thread< strus::FileCrawler >( fileCrawler,
 					"filecrawler"));
@@ -172,7 +173,7 @@ int main( int argc_, const char* argv_[])
 		}
 		else
 		{
-			boost::scoped_ptr< strus::ThreadGroup< strus::KeyMapGenProcessor > >
+			std::auto_ptr< strus::ThreadGroup< strus::KeyMapGenProcessor > >
 				processors( new strus::ThreadGroup<strus::KeyMapGenProcessor>( "keymapgen"));
 
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)

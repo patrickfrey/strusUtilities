@@ -28,8 +28,7 @@
 */
 #ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
-#include <stdint.h>
-#include <boost/atomic.hpp>
+#include "private/utils.hpp"
 
 namespace strus {
 
@@ -61,7 +60,7 @@ private:
 	DocumentAnalyzerInterface* m_analyzer;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
-	boost::atomic<bool> m_terminated;
+	utils::AtomicBool m_terminated;
 };
 
 }//namespace

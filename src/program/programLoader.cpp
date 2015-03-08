@@ -43,15 +43,13 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/peerStorageTransactionInterface.hpp"
 #include "strus/analyzer/term.hpp"
+#include "private/utils.hpp"
 #include <string>
 #include <vector>
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/scoped_ptr.hpp>
 
 using namespace strus;
 using namespace strus::parser;
@@ -100,7 +98,7 @@ static void parseTermConfig(
 {
 	if (isAlpha(*src))
 	{
-		std::string termset = boost::algorithm::to_lower_copy( parse_IDENTIFIER( src));
+		std::string termset = utils::tolower( parse_IDENTIFIER( src));
 		if (!isStringQuote( *src) && !isTextChar( *src))
 		{
 			throw std::runtime_error( "term value (string,identifier,number) after the feature group identifier");
@@ -115,7 +113,7 @@ static void parseTermConfig(
 		{
 			throw std::runtime_error( "term type identifier expected after colon and term value");
 		}
-		std::string termtype = boost::algorithm::to_lower_copy( parse_IDENTIFIER( src));
+		std::string termtype = utils::tolower( parse_IDENTIFIER( src));
 		qeval.addTerm( termset, termtype, termvalue);
 	}
 	else
@@ -130,7 +128,7 @@ static bool isMember( const char** set, const std::string& name)
 	std::size_t sidx = 0;
 	for (; set[sidx]; ++sidx)
 	{
-		if (boost::algorithm::iequals( name, set[sidx]))
+		if (utils::caseInsensitiveEquals( name, set[sidx]))
 		{
 			return true;
 		}
@@ -248,7 +246,7 @@ static void parseSummarizerConfig(
 	{
 		throw std::runtime_error( "name of summarizer function expected after assignment in summarizer definition");
 	}
-	functionName = boost::algorithm::to_lower_copy( parse_IDENTIFIER( src));
+	functionName = utils::tolower( parse_IDENTIFIER( src));
 	SummarizerConfig summarizer;
 	const SummarizerFunctionInterface* function = qproc.getSummarizerFunction( functionName);
 
@@ -1213,7 +1211,7 @@ DLL_PUBLIC void strus::loadGlobalStatistics(
 		StorageClientInterface& storage,
 		std::istream& stream)
 {
-	boost::scoped_ptr<PeerStorageTransactionInterface>
+	std::auto_ptr<PeerStorageTransactionInterface>
 		transaction( storage.createPeerStorageTransaction());
 	std::size_t linecnt = 1;
 	try
@@ -1259,13 +1257,13 @@ DLL_PUBLIC void strus::loadGlobalStatistics(
 			return;
 		}
 		throw std::runtime_error( std::string( "file read error on line ")
-			+ boost::lexical_cast<std::string>( linecnt)
+			+ utils::tostring( linecnt)
 			+ ": " + err.what());
 	}
 	catch (const std::runtime_error& err)
 	{
 		throw std::runtime_error( std::string( "error on line ")
-			+ boost::lexical_cast<std::string>( linecnt)
+			+ utils::tostring( linecnt)
 			+ ": " + err.what());
 	}
 }

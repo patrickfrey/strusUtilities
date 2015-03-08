@@ -13,7 +13,7 @@ include_directories(
 	    "${strus_INCLUDE_DIRS}"
 	    "${strusmodule_INCLUDE_DIRS}" )
 link_directories( 
-           "${Boost_LIBRARY_DIRS}"
+	   "${PROJECT_SOURCE_DIR}/utils" 
 	   "${PROJECT_SOURCE_DIR}/program" 
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusmodule_LIBRARY_DIRS}" )
@@ -22,7 +22,7 @@ link_directories(
 # PROGRAMS
 # ------------------------------
 add_executable( strusCheckStorage ${source_files} )
-target_link_libraries( strusCheckStorage ${strusmodule_LIBRARIES} ${strus_LIBRARIES} boost_system)
+target_link_libraries( strusCheckStorage  strus_private_utils ${strusmodule_LIBRARIES} ${strus_LIBRARIES} )
 
 
 # ------------------------------

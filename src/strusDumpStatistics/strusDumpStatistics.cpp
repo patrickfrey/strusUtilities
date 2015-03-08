@@ -41,19 +41,12 @@
 #include "strus/private/configParser.hpp"
 #include "strus/private/protocol.hpp"
 #include "private/version.hpp"
+#include "private/utils.hpp"
 #include "private/programOptions.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
 #include <memory>
-#include <boost/scoped_ptr.hpp>
-
-namespace strus
-{
-	typedef boost::scoped_ptr<StorageClientInterface> StorageReference;
-	typedef boost::scoped_ptr<StoragePeerInterface> StoragePeerReference;
-	typedef boost::scoped_ptr<StoragePeerTransactionInterface> StoragePeerTransactionReference;
-}
 
 
 class StorageStatsDumperInstance
@@ -180,7 +173,7 @@ int main( int argc, const char* argv[])
 		std::string storagecfg( opt[0]);
 
 		// Create objects for dump:
-		boost::scoped_ptr<strus::StorageClientInterface>
+		std::auto_ptr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
 
 		StorageStatsDumper statsDumper;

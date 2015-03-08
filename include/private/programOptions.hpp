@@ -28,6 +28,7 @@
 */
 #ifndef _STRUS_UTILITIES_PROGRAM_OPTIONS_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_OPTIONS_HPP_INCLUDED
+#include "private/utils.hpp"
 #include <cstring>
 #include <stdexcept>
 #include <map>
@@ -37,7 +38,6 @@
 #include <stdexcept>
 #include <cstdarg>
 #include <iostream>
-#include <boost/lexical_cast.hpp>
 
 namespace strus {
 
@@ -231,8 +231,7 @@ public:
 		return oi->second.c_str();
 	}
 
-	template <typename ValueType>
-	int as( const std::string& optname) const
+	int asInt( const std::string& optname) const
 	{
 		if (m_opt.count( optname) > 1)
 		{
@@ -243,12 +242,19 @@ public:
 		if (oi == m_opt.end()) return 0;
 		try
 		{
-			return boost::lexical_cast<ValueType>( oi->second);
+			return utils::toint( oi->second);
 		}
-		catch (const boost::bad_lexical_cast&)
+		catch (const std::runtime_error&)
 		{
 			throw std::runtime_error( std::string("option '") + optname + "' has not the requested value type");
 		}
+	}
+
+	unsigned int asUint( const std::string& optname) const
+	{
+		int rt = asInt( optname);
+		if (rt < 0) throw std::runtime_error( std::string( "non negative value expected for option '") + optname + "'");
+		return (unsigned int)rt;
 	}
 
 	std::vector<std::string> list( const std::string& optname) const

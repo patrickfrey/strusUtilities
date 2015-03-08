@@ -38,7 +38,7 @@ void CommitQueue::push(
 {
 	bool myCommit = false;
 	{
-		boost::mutex::scoped_lock lock( m_mutex);
+		utils::ScopedLock lock( m_mutex);
 		if (m_minDocno == minDocno || minDocno == 0)
 		{
 			myCommit = true;
@@ -60,7 +60,7 @@ void CommitQueue::push(
 			std::cerr << "inserted " << nofDocsInserted << " documents (total " << totalNofDocuments << ")" << std::endl;
 			delete transaction;
 			{
-				boost::mutex::scoped_lock lock( m_mutex);
+				utils::ScopedLock lock( m_mutex);
 				m_minDocno += nofDocs;
 			}
 			transaction = getNextTransaction( nofDocs);
@@ -72,7 +72,7 @@ void CommitQueue::push(
 StorageTransactionInterface* CommitQueue::getNextTransaction( Index& nofDocs)
 {
 	StorageTransactionInterface* rt = 0;
-	boost::mutex::scoped_lock lock( m_mutex);
+	utils::ScopedLock lock( m_mutex);
 
 	std::set<OpenTransaction>::iterator
 		ti = m_openTransactions.begin();

@@ -38,6 +38,7 @@
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/private/fileio.hpp"
+#include "private/utils.hpp"
 #include "docnoAllocatorInterface.hpp"
 #include "fileCrawlerInterface.hpp"
 #include <boost/thread.hpp>

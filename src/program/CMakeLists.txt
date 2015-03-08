@@ -17,6 +17,7 @@ include_directories(
 link_directories( 
            "${Boost_LIBRARY_DIRS}"
 	   "${PROJECT_SOURCE_DIR}/program" 
+	   "${PROJECT_SOURCE_DIR}/utils" 
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"
 	   "${strusmodule_LIBRARY_DIRS}" )
@@ -26,7 +27,7 @@ link_directories(
 # LIBRARIES
 # -------------------------------------------
 add_library( strus_program SHARED ${source_files} )
-target_link_libraries( strus_program "${Boost_LIBRARIES}"  "${strus_LIBRARIES}" "${strusanalyzer_LIBRARIES}"  "${strusmodule_LIBRARIES}" )
+target_link_libraries( strus_program strus_private_utils "${Boost_LIBRARIES}"  "${strus_LIBRARIES}" "${strusanalyzer_LIBRARIES}"  "${strusmodule_LIBRARIES}" )
 set_target_properties(
     strus_program
     PROPERTIES

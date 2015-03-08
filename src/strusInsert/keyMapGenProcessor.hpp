@@ -31,8 +31,7 @@
 #include "strus/index.hpp"
 #include <vector>
 #include <string>
-#include <boost/thread/mutex.hpp>
-#include <boost/atomic.hpp>
+#include "private/utils.hpp"
 
 namespace strus {
 
@@ -70,7 +69,7 @@ public:
 	void printKeyOccurrenceList( std::ostream& out, std::size_t maxNofResults) const;
 
 private:
-	boost::mutex m_mutex;
+	utils::Mutex m_mutex;
 	std::vector<KeyOccurrenceList> m_keyOccurrenceListBuf;
 };
 
@@ -92,7 +91,7 @@ private:
 	DocumentAnalyzerInterface* m_analyzer;
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
-	boost::atomic<bool> m_terminated;
+	utils::AtomicBool m_terminated;
 };
 
 }//namespace

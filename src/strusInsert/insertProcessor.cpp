@@ -41,8 +41,6 @@
 #include "docnoAllocatorInterface.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "commitQueue.hpp"
-#include <boost/scoped_ptr.hpp>
-#include <boost/interprocess/smart_ptr/unique_ptr.hpp>
 
 using namespace strus;
 
@@ -68,30 +66,13 @@ void InsertProcessor::sigStop()
 	m_terminated = true;
 }
 
-template<typename T>
-struct ShouldBeDefaultDeleter {
-	void operator()(T *p)
-	{
-		delete p;
-	}
-};
-
-template<typename T>
-class unique_ptr
-	:public boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >
-{
-public:
-	unique_ptr( T* p)
-		:boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >(p){}
-};
-
 void InsertProcessor::run()
 {
 	Index docno;
 	std::vector<std::string> files;
 	std::vector<std::string>::const_iterator fitr;
 
-	boost::scoped_ptr<strus::MetaDataReaderInterface> metadata( 
+	std::auto_ptr<strus::MetaDataReaderInterface> metadata( 
 		m_storage->createMetaDataReader());
 
 	bool hasDoclenAttribute
@@ -101,7 +82,7 @@ void InsertProcessor::run()
 	{
 		try
 		{
-			unique_ptr<strus::StorageTransactionInterface>
+			std::auto_ptr<strus::StorageTransactionInterface>
 				transaction( m_storage->createTransaction());
 	
 			fitr = files.begin();
@@ -128,7 +109,7 @@ void InsertProcessor::run()
 					for (;oi != oe
 						&& oi->name() != strus::Constants::attribute_docid();
 						++oi){}
-					boost::scoped_ptr<strus::StorageDocumentInterface> storagedoc;
+					std::auto_ptr<strus::StorageDocumentInterface> storagedoc;
 					if (oi != oe)
 					{
 						storagedoc.reset(

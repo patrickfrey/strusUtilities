@@ -45,26 +45,22 @@
 #include "strus/private/configParser.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
+#include "private/utils.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
-#include <boost/lexical_cast.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/algorithm/string.hpp>
 
 namespace strus
 {
-	typedef boost::scoped_ptr<PostingIteratorInterface> PostingIteratorReference;
-	typedef boost::scoped_ptr<StorageClientInterface> StorageReference;
-	typedef boost::scoped_ptr<ForwardIteratorInterface> ForwardIteratorReference;
-	typedef boost::scoped_ptr<MetaDataReaderInterface> MetaDataReaderReference;
+	typedef strus::utils::ScopedPtr<PostingIteratorInterface> PostingIteratorReference;
+	typedef strus::utils::ScopedPtr<ForwardIteratorInterface> ForwardIteratorReference;
+	typedef strus::utils::ScopedPtr<MetaDataReaderInterface> MetaDataReaderReference;
 }
 
 static strus::Index stringToIndex( const char* value)
 {
 	std::ostringstream val;
-	return boost::lexical_cast<strus::Index>( std::string( value));
+	return strus::utils::toint( std::string( value));
 }
 static bool isIndex( char const* cc)
 {
@@ -129,12 +125,18 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 	}
 }
 
+static void inspectNofDocuments( const strus::StorageClientInterface& storage, const char**, int size)
+{
+	if (size > 0) throw std::runtime_error( "too many arguments");
+	std::cout << storage.localNofDocumentsInserted() << std::endl;
+}
+
 static void inspectDocAttribute( const strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
 	if (size < 2) throw std::runtime_error( "too few arguments");
 
-	boost::scoped_ptr<strus::AttributeReaderInterface>
+	std::auto_ptr<strus::AttributeReaderInterface>
 		attreader( storage.createAttributeReader());
 
 	strus::Index docno = isIndex(key[1])
@@ -290,6 +292,7 @@ int main( int argc, const char* argv[])
 			std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
 			std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
 			std::cerr << "            \"df\" <type> <value>" << std::endl;
+			std::cerr << "            \"nofdocs\"" << std::endl;
 			std::cerr << "            \"metadata\" <name> <doc-id/no>" << std::endl;
 			std::cerr << "            \"metatable\"" << std::endl;
 			std::cerr << "            \"attribute\" <name> <doc-id/no>" << std::endl;
@@ -313,43 +316,47 @@ int main( int argc, const char* argv[])
 		std::size_t inpectargsize = opt.nofargs() - 2;
 
 		// Create objects for inspecting storage:
-		boost::scoped_ptr<strus::StorageClientInterface>
+		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
 
 		// Do inspect what is requested:
-		if (boost::algorithm::iequals( what, "pos"))
+		if (strus::utils::caseInsensitiveEquals( what, "pos"))
 		{
 			inspectPositions( *storage, inpectarg, inpectargsize);
 		}
-		else if (boost::algorithm::iequals( what, "ff"))
+		else if (strus::utils::caseInsensitiveEquals( what, "ff"))
 		{
 			inspectFeatureFrequency( *storage, inpectarg, inpectargsize);
 		}
-		else if (boost::algorithm::iequals( what, "df"))
+		else if (strus::utils::caseInsensitiveEquals( what, "df"))
 		{
 			inspectDocumentFrequency( *storage, inpectarg, inpectargsize);
 		}
-		else if (boost::algorithm::iequals( what, "metadata"))
+		else if (strus::utils::caseInsensitiveEquals( what, "nofdocs"))
+		{
+			inspectNofDocuments( *storage, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "metadata"))
 		{
 			inspectDocMetaData( *storage, inpectarg, inpectargsize);
 		}
-		else if (boost::algorithm::iequals( what, "metatable"))
+		else if (strus::utils::caseInsensitiveEquals( what, "metatable"))
 		{
 			inspectDocMetaTable( *storage, inpectarg, inpectargsize);
 		}
-		else if (boost::algorithm::iequals( what, "attribute"))
+		else if (strus::utils::caseInsensitiveEquals( what, "attribute"))
 		{
 			inspectDocAttribute( *storage, inpectarg, inpectargsize);
 		}
-		else if (boost::algorithm::iequals( what, "content"))
+		else if (strus::utils::caseInsensitiveEquals( what, "content"))
 		{
 			inspectContent( *storage, inpectarg, inpectargsize);
 		}
-		else if (boost::algorithm::iequals( what, "docno"))
+		else if (strus::utils::caseInsensitiveEquals( what, "docno"))
 		{
 			inspectDocid( *storage, inpectarg, inpectargsize);
 		}
-		else if (boost::algorithm::iequals( what, "token"))
+		else if (strus::utils::caseInsensitiveEquals( what, "token"))
 		{
 			inspectToken( *storage, inpectarg, inpectargsize);
 		}

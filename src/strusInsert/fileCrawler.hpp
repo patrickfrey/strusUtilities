@@ -32,12 +32,11 @@
 #include "strus/index.hpp"
 #include "docnoAllocatorInterface.hpp"
 #include "fileCrawlerInterface.hpp"
+#include "private/utils.hpp"
 #include <vector>
 #include <string>
 #include <list>
 #include <deque>
-#include <boost/thread.hpp>
-#include <boost/atomic.hpp>
 
 namespace strus {
 
@@ -81,12 +80,12 @@ private:
 	std::vector<std::string> m_openchunk;
 	std::deque<std::vector<std::string> > m_chunkque;
 	std::size_t m_chunkquesize;
-	boost::mutex m_chunkque_mutex;
-	boost::condition_variable m_chunkque_cond;
+	utils::Mutex m_chunkque_mutex;
+	utils::ConditionVariable m_chunkque_cond;
 
-	boost::condition_variable m_worker_cond;
-	boost::mutex m_worker_mutex;
-	boost::atomic<bool> m_terminated;
+	utils::ConditionVariable m_worker_cond;
+	utils::Mutex m_worker_mutex;
+	utils::AtomicBool m_terminated;
 	DocnoAllocatorInterface* m_docnoAllocator;
 };
 

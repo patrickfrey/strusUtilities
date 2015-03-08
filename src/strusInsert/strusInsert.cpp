@@ -46,6 +46,7 @@
 #include "strus/versionStorage.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
+#include "private/utils.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "docnoAllocator.hpp"
@@ -56,7 +57,6 @@
 #include <memory>
 #include <cstring>
 #include <stdexcept>
-#include <boost/scoped_ptr.hpp>
 
 
 int main( int argc_, const char* argv_[])
@@ -146,12 +146,12 @@ int main( int argc_, const char* argv_[])
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
 		{
-			nofThreads = opt.as<unsigned int>( "threads");
+			nofThreads = opt.asUint( "threads");
 		}
 		unsigned int transactionSize = 1000;
 		if (opt("commit"))
 		{
-			transactionSize = opt.as<unsigned int>( "commit");
+			transactionSize = opt.asUint( "commit");
 		}
 		std::string storagecfg( opt[0]);
 		std::string analyzerprg = opt[1];
@@ -163,10 +163,10 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// Create objects for inserter:
-		boost::scoped_ptr<strus::StorageClientInterface>
+		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
 
-		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
+		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( builder.createDocumentAnalyzer( segmenter));
 
 		// Load analyzer program:
@@ -182,10 +182,10 @@ int main( int argc_, const char* argv_[])
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
 		// Start inserter process:
-		boost::scoped_ptr<strus::CommitQueue>
+		strus::utils::ScopedPtr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get()));
 
-		boost::scoped_ptr<strus::DocnoAllocator> docnoAllocator;
+		strus::utils::ScopedPtr<strus::DocnoAllocator> docnoAllocator;
 		if (allInsertsNew)
 		{
 			docnoAllocator.reset( 
@@ -196,7 +196,7 @@ int main( int argc_, const char* argv_[])
 					datapath, docnoAllocator.get(),
 					transactionSize, nofThreads*5+5);
 
-		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >
+		strus::utils::ScopedPtr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(
 				new strus::Thread< strus::FileCrawler >( fileCrawler,
 					"filecrawler"));
@@ -212,7 +212,7 @@ int main( int argc_, const char* argv_[])
 		}
 		else
 		{
-			boost::scoped_ptr< strus::ThreadGroup< strus::InsertProcessor > >
+			std::auto_ptr< strus::ThreadGroup< strus::InsertProcessor > >
 				inserterThreads(
 					new strus::ThreadGroup<strus::InsertProcessor>(
 					"inserter"));

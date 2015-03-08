@@ -46,7 +46,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
-#include <boost/scoped_ptr.hpp>
 
 int main( int argc, const char* argv[])
 {
@@ -117,7 +116,7 @@ int main( int argc, const char* argv[])
 			segmenter = opt[ "segmenter"];
 		}
 		// Create objects for analyzer:
-		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
+		std::auto_ptr<strus::DocumentAnalyzerInterface>
 			analyzer( builder.createDocumentAnalyzer( segmenter));
 
 		// Load analyzer program:

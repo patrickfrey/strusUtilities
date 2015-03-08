@@ -31,7 +31,7 @@
 #include "strus/constants.hpp"
 #include "strus/private/fileio.hpp"
 #include "fileCrawlerInterface.hpp"
-#include <boost/scoped_ptr.hpp>
+#include "private/utils.hpp"
 
 using namespace strus;
 
@@ -44,7 +44,7 @@ static bool compareKeyMapOccurrenceFrequency( const KeyOccurrence& aa, const Key
 
 void KeyMapGenResultList::push( KeyOccurrenceList& lst)
 {
-	boost::mutex::scoped_lock lock( m_mutex);
+	utils::ScopedLock lock( m_mutex);
 	m_keyOccurrenceListBuf.push_back( KeyOccurrenceList());
 	m_keyOccurrenceListBuf.back().swap( lst);
 }

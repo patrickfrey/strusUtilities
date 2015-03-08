@@ -46,6 +46,7 @@
 #include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
+#include "private/utils.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "checkInsertProcessor.hpp"
@@ -54,7 +55,6 @@
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
-#include <boost/scoped_ptr.hpp>
 
 
 int main( int argc_, const char* argv_[])
@@ -140,7 +140,7 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "    Set <N> as notification interval (number of documents)" << std::endl;
 			return rt;
 		}
-		unsigned int nofThreads = opt.as<unsigned int>( "threads");
+		unsigned int nofThreads = opt.asUint( "threads");
 		std::string logfile = "-";
 		if (opt("logfile"))
 		{
@@ -149,7 +149,7 @@ int main( int argc_, const char* argv_[])
 		unsigned int notificationInterval = 1000;
 		if (opt("notify"))
 		{
-			notificationInterval = opt.as<unsigned int>( "notify");
+			notificationInterval = opt.asUint( "notify");
 		}
 		std::string storagecfg( opt[0]);
 		std::string analyzerprg = opt[1];
@@ -161,10 +161,10 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// Create objects for insert checker:
-		boost::scoped_ptr<strus::StorageClientInterface>
+		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
 
-		boost::scoped_ptr<strus::DocumentAnalyzerInterface>
+		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( builder.createDocumentAnalyzer( segmenter));
 
 		// Load analyzer program:
@@ -183,7 +183,7 @@ int main( int argc_, const char* argv_[])
 			= new strus::FileCrawler(
 				datapath, 0, notificationInterval, nofThreads*5+5);
 
-		boost::scoped_ptr< strus::Thread< strus::FileCrawler> >
+		std::auto_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(
 				new strus::Thread< strus::FileCrawler >( fileCrawler, "filecrawler"));
 		std::cout.flush();
@@ -197,7 +197,7 @@ int main( int argc_, const char* argv_[])
 		}
 		else
 		{
-			boost::scoped_ptr< strus::ThreadGroup< strus::CheckInsertProcessor > >
+			std::auto_ptr< strus::ThreadGroup< strus::CheckInsertProcessor > >
 				checkInsertThreads(
 					new strus::ThreadGroup<strus::CheckInsertProcessor>(
 					"checker"));

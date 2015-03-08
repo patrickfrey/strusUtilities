@@ -36,12 +36,13 @@
 #include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
+#include "private/utils.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
-#include <boost/scoped_ptr.hpp>
+
 
 int main( int argc, const char* argv[])
 {
@@ -114,7 +115,9 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		std::string databasecfg( opt[0]);
-		std::string storagecfg( opt[0]);
+		std::string dbname;
+		(void)strus::extractStringFromConfigString( dbname, databasecfg, "database");
+		std::string storagecfg( databasecfg);
 
 		strus::removeKeysFromConfigString(
 				databasecfg,
@@ -130,7 +133,7 @@ int main( int argc, const char* argv[])
 
 		dbi->createDatabase( databasecfg);
 
-		boost::scoped_ptr<strus::DatabaseClientInterface>
+		strus::utils::ScopedPtr<strus::DatabaseClientInterface>
 			database( dbi->createClient( databasecfg));
 
 		sti->createStorage( storagecfg, database.get());

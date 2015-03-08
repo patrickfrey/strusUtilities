@@ -31,12 +31,11 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/index.hpp"
+#include "private/utils.hpp"
 #include "docnoAllocator.hpp"
 #include <vector>
 #include <string>
 #include <set>
-#include <boost/thread/mutex.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace strus {
 
@@ -100,7 +99,7 @@ private:
 	Index m_minDocno;
 	Index m_nofDocuments;
 	std::set<OpenTransaction> m_openTransactions;
-	boost::mutex m_mutex;
+	utils::Mutex m_mutex;
 };
 
 }//namespace

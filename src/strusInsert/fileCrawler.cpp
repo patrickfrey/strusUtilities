@@ -27,6 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "fileCrawler.hpp"
+#include "private/utils.hpp"
 
 using namespace strus;
 
@@ -65,7 +66,7 @@ void FileCrawler::run()
 
 	while (!m_terminated)
 	{
-		boost::unique_lock<boost::mutex> lock( m_worker_mutex);
+		utils::UniqueLock lock( m_worker_mutex);
 		m_worker_cond.wait( lock);
 		if (m_terminated) break;
 
@@ -133,7 +134,7 @@ void FileCrawler::findFilesToProcess()
 
 bool FileCrawler::fetch( Index& docno, std::vector<std::string>& files)
 {
-	boost::unique_lock<boost::mutex> lock(m_chunkque_mutex);
+	utils::UniqueLock lock(m_chunkque_mutex);
 	if (!needMore())
 	{
 		m_worker_cond.notify_one();
@@ -163,7 +164,7 @@ void FileCrawler::sigStop()
 
 void FileCrawler::pushChunk( const std::vector<std::string>& chunk)
 {
-	boost::unique_lock<boost::mutex> lock( m_chunkque_mutex);
+	utils::UniqueLock lock( m_chunkque_mutex);
 	m_chunkquesize += 1;
 	m_chunkque.push_back( chunk);
 	m_chunkque_cond.notify_one();

@@ -46,7 +46,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
-#include <boost/scoped_ptr.hpp>
 
 
 int main( int argc, const char* argv[])
@@ -68,13 +67,13 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			if (opt.nofargs() > 2)
+			if (opt.nofargs() > 1)
 			{
 				std::cerr << "ERROR too many arguments" << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			if (opt.nofargs() < 2)
+			if (opt.nofargs() < 1)
 			{
 				std::cerr << "ERROR too few arguments" << std::endl;
 				printUsageAndExit = true;
@@ -122,7 +121,7 @@ int main( int argc, const char* argv[])
 		std::string storagecfg( opt[0]);
 
 		// Create objects to check storage:
-		boost::scoped_ptr<strus::StorageClientInterface>
+		std::auto_ptr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
 
 		storage->checkStorage();

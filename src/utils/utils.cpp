@@ -26,41 +26,55 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
 #include "private/utils.hpp"
-#include <string>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 
-namespace strus {
+using namespace strus;
+using namespace strus::utils;
 
-/// \brief Forward declaration
-class StorageClientInterface;
-/// \brief Forward declaration
-class DocumentAnalyzerInterface;
-/// \brief Forward declaration
-class FileCrawlerInterface;
-
-class CheckInsertProcessor
+std::string utils::tolower( const std::string& val)
 {
-public:
-	CheckInsertProcessor(
-			StorageClientInterface* storage_,
-			DocumentAnalyzerInterface* analyzer_,
-			FileCrawlerInterface* crawler_,
-			const std::string& logfile_);
+	return boost::algorithm::to_lower_copy( val);
+}
 
-	~CheckInsertProcessor();
+std::string utils::trim( const std::string& val)
+{
+	return boost::algorithm::trim_copy( val);
+}
 
-	void sigStop();
-	void run();
+bool utils::caseInsensitiveEquals( const std::string& val1, const std::string& val2)
+{
+	return boost::algorithm::iequals( val1, val2);
+}
 
-private:
-	StorageClientInterface* m_storage;
-	DocumentAnalyzerInterface* m_analyzer;
-	FileCrawlerInterface* m_crawler;
-	utils::AtomicBool m_terminated;
-	std::string m_logfile;
-};
+bool utils::caseInsensitiveStartsWith( const std::string& val, const std::string& prefix)
+{
+	return boost::algorithm::istarts_with( val, prefix);
+}
 
-}//namespace
-#endif
+int utils::toint( const std::string& val)
+{
+	try
+	{
+		return boost::lexical_cast<int>( val);
+	}
+	catch (const boost::bad_lexical_cast& err)
+	{
+		throw std::runtime_error( std::string( "failed to convert string '") + val + "' to integer: " + err.what());
+	}
+}
+
+std::string utils::tostring( int val)
+{
+	try
+	{
+		return boost::lexical_cast<std::string>( val);
+	}
+	catch (...)
+	{
+		throw std::runtime_error( "failed to convert number to string (out of memory)");
+	}
+}
+
+

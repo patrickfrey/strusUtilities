@@ -36,6 +36,7 @@
 #include "strus/storageAlterMetaDataTableInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "private/programOptions.hpp"
+#include "private/utils.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
@@ -43,8 +44,6 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
-#include <boost/algorithm/string.hpp>
-#include <boost/scoped_ptr.hpp>
 
 class AlterMetaDataCommand
 {
@@ -130,7 +129,7 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 	for (si = skipSpaces( si, se); si != se; si = skipSpaces( si, se))
 	{
 		std::string cmd( parseIdentifier( si, se, "command name"));
-		if (boost::algorithm::iequals( cmd, "Alter"))
+		if (strus::utils::caseInsensitiveEquals( cmd, "Alter"))
 		{
 			std::string name( parseIdentifier( si, se, "old element name"));
 			std::string newname( parseIdentifier( si, se, "new element name"));
@@ -138,27 +137,27 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 
 			rt.push_back( AlterMetaDataCommand::AlterElement( name, newname, type));
 		}
-		else if (boost::algorithm::iequals( cmd, "Add"))
+		else if (strus::utils::caseInsensitiveEquals( cmd, "Add"))
 		{
 			std::string name( parseIdentifier( si, se, "element name"));
 			std::string type( parseIdentifier( si, se, "element type name"));
 
 			rt.push_back( AlterMetaDataCommand::AddElement( name, type));
 		}
-		else if (boost::algorithm::iequals( cmd, "Rename"))
+		else if (strus::utils::caseInsensitiveEquals( cmd, "Rename"))
 		{
 			std::string name( parseIdentifier( si, se, "old element name"));
 			std::string newname( parseIdentifier( si, se, "new element name"));
 
 			rt.push_back( AlterMetaDataCommand::RenameElement( name, newname));
 		}
-		else if (boost::algorithm::iequals( cmd, "Delete"))
+		else if (strus::utils::caseInsensitiveEquals( cmd, "Delete"))
 		{
 			std::string name( parseIdentifier( si, se, "element name"));
 
 			rt.push_back( AlterMetaDataCommand::DeleteElement( name));
 		}
-		else if (boost::algorithm::iequals( cmd, "Clear"))
+		else if (strus::utils::caseInsensitiveEquals( cmd, "Clear"))
 		{
 			std::string name( parseIdentifier( si, se, "element name"));
 			
@@ -283,7 +282,7 @@ int main( int argc, const char* argv[])
 		std::vector<AlterMetaDataCommand> cmds = parseCommands( opt[1]);
 
 		// Create objects for altering the meta data table:
-		boost::scoped_ptr<strus::StorageAlterMetaDataTableInterface>
+		std::auto_ptr<strus::StorageAlterMetaDataTableInterface>
 			md( builder.createAlterMetaDataTable( storagecfg));
 
 		// Execute alter meta data table commands:

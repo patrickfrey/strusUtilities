@@ -14,7 +14,7 @@ include_directories(
 	    "${strusanalyzer_INCLUDE_DIRS}"
 	    "${strusmodule_INCLUDE_DIRS}" )
 link_directories( 
-           "${Boost_LIBRARY_DIRS}"
+	   "${PROJECT_SOURCE_DIR}/utils" 
 	   "${PROJECT_SOURCE_DIR}/program" 
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"
@@ -24,7 +24,7 @@ link_directories(
 # PROGRAMS
 # ------------------------------
 add_executable( strusAnalyze ${source_files} )
-target_link_libraries( strusAnalyze  ${strusmodule_LIBRARIES}  ${strusanalyzer_LIBRARIES} ${strus_LIBRARIES} strus_program boost_system)
+target_link_libraries( strusAnalyze  strus_private_utils  ${strusmodule_LIBRARIES}  ${strusanalyzer_LIBRARIES} ${strus_LIBRARIES} strus_program )
 
 
 # ------------------------------
