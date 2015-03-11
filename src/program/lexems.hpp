@@ -93,6 +93,14 @@ static inline bool isCloseOvalBracket( char ch)
 {
 	return ch == ')';
 }
+static inline bool isOpenCurlyBracket( char ch)
+{
+	return ch == '{';
+}
+static inline bool isCloseCurlyBracket( char ch)
+{
+	return ch == '}';
+}
 static inline bool isOpenAngleBracket( char ch)
 {
 	return ch == '<';
@@ -112,10 +120,6 @@ static inline bool isStringQuote( char ch)
 static inline bool isSpace( char ch)
 {
 	return ch == ' ' || ch == '\t' || ch == '\n';
-}
-static inline bool isArrow( const char* src)
-{
-	return (src[0] == '-' && src[1] == '>');
 }
 static inline void skipToEoln( char const*& src)
 {
@@ -146,7 +150,6 @@ unsigned int parse_UNSIGNED( char const*& src);
 unsigned int parse_UNSIGNED1( char const*& src);
 float parse_FLOAT( char const*& src);
 char parse_OPERATOR( char const*& src);
-void parse_ARROW( char const*& src);
 int parse_INTEGER( char const*& src);
 int parse_KEYWORD( char const*& src, unsigned int nof, ...);
 int parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsigned int nof, ...);

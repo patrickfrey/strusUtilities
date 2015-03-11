@@ -47,6 +47,20 @@
 #include <stdexcept>
 #include <memory>
 
+struct TermOrder
+{
+	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
+	{
+		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
+		int cmp;
+		cmp = aa.type().compare( bb.type());
+		if (cmp != 0) return (cmp < 0);
+		cmp = aa.value().compare( bb.value());
+		if (cmp != 0) return (cmp < 0);
+		return false;
+	}
+};
+
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -55,8 +69,8 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 4,
-				"h,help", "v,version", "m,module:", "s,segmenter:");
+				argc, argv, 5,
+				"h,help", "v,version", "m,module:", "s,segmenter:", "M,moduledir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -80,6 +94,16 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("moduledir"))
+		{
+			std::vector<std::string> modirlist( opt.list("moduledir"));
+			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->addModulePath( *mi);
+			}
+			moduleLoader->addSystemModulePath();
+		}
 		if (opt("module"))
 		{
 			std::vector<std::string> modlist( opt.list("module"));
@@ -104,6 +128,8 @@ int main( int argc, const char* argv[])
 			std::cerr << "    Print the program version and do nothing else" << std::endl;
 			std::cerr << "-m|--module <MOD>" << std::endl;
 			std::cerr << "    Load components from module <MOD>" << std::endl;
+			std::cerr << "-M|--moduledir <DIR>" << std::endl;
+			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
 			std::cerr << "-s|--segmenter <NAME>" << std::endl;
 			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
 			return rt;
@@ -126,11 +152,12 @@ int main( int argc, const char* argv[])
 		if (ec)
 		{
 			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
+			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
+		std::ifstream documentFile;
 		std::auto_ptr<strus::DocumentAnalyzerInstanceInterface> analyzerInstance;
 		if (docpath == "-")
 		{
@@ -138,10 +165,9 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			std::ifstream documentFile;
 			try 
 			{
-				documentFile.open( docpath.c_str(), std::fstream::in);
+				documentFile.open( docpath.c_str(), std::fstream::in | std::ios::binary);
 			}
 			catch (const std::ifstream::failure& err)
 			{
@@ -150,6 +176,10 @@ int main( int argc, const char* argv[])
 			catch (const std::runtime_error& err)
 			{
 				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
+			}
+			if(!documentFile)
+			{
+				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "'");
 			}
 			analyzerInstance.reset( analyzer->createDocumentAnalyzerInstance( documentFile));
 		}
@@ -162,8 +192,11 @@ int main( int argc, const char* argv[])
 			{
 				std::cout << "-- document " << doc.subDocumentTypeName() << std::endl;
 			}
+			std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
+			std::sort( itermar.begin(), itermar.end(), TermOrder());
+
 			std::vector<strus::analyzer::Term>::const_iterator
-				ti = doc.searchIndexTerms().begin(), te = doc.searchIndexTerms().end();
+				ti = itermar.begin(), te = itermar.end();
 
 			std::cout << std::endl << "search index terms:" << std::endl;
 			for (; ti != te; ++ti)
@@ -174,8 +207,11 @@ int main( int argc, const char* argv[])
 					  << std::endl;
 			}
 
+			std::vector<strus::analyzer::Term> ftermar = doc.forwardIndexTerms();
+			std::sort( ftermar.begin(), ftermar.end(), TermOrder());
+
 			std::vector<strus::analyzer::Term>::const_iterator
-				fi = doc.forwardIndexTerms().begin(), fe = doc.forwardIndexTerms().end();
+				fi = ftermar.begin(), fe = ftermar.end();
 
 			std::cout << std::endl << "forward index terms:" << std::endl;
 			for (; fi != fe; ++fi)

@@ -67,10 +67,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 7,
+				argc_, argv_, 8,
 				"h,help", "t,threads:", "c,commit:",
 				"n,new", "v,version", "m,module:",
-				"s,segmenter:");
+				"s,segmenter:", "M,moduledir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -95,6 +95,16 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("moduledir"))
+		{
+			std::vector<std::string> modirlist( opt.list("moduledir"));
+			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->addModulePath( *mi);
+			}
+			moduleLoader->addSystemModulePath();
+		}
 		if (opt("module"))
 		{
 			std::vector<std::string> modlist( opt.list("module"));
@@ -132,6 +142,8 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "    Print the program version and do nothing else" << std::endl;
 			std::cerr << "-m|--module <MOD>" << std::endl;
 			std::cerr << "    Load components from module <MOD>" << std::endl;
+			std::cerr << "-M|--moduledir <DIR>" << std::endl;
+			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
 			std::cerr << "-s|--segmenter <NAME>" << std::endl;
 			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf)" << std::endl;
 			std::cerr << "-t|--threads <N>" << std::endl;

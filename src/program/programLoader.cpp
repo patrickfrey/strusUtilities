@@ -520,6 +520,67 @@ static void parseFunctionDef( const char* functype, std::string& name, std::vect
 	}
 }
 
+static DocumentAnalyzerInterface::FeatureOptions
+	parseFeatureOptions( char const*& src)
+{
+	DocumentAnalyzerInterface::FeatureOptions rt;
+	if (isOpenCurlyBracket(*src))
+	{
+		do
+		{
+			(void)parse_OPERATOR(src);
+			if (isAlpha(*src))
+			{
+				std::string optname = parse_IDENTIFIER( src);
+				std::string optval;
+				if (!isAssign(*src))
+				{
+					throw std::runtime_error( "assign '=' expected after open curly brackets '{' and option identifier");
+				}
+				(void)parse_OPERATOR(src);
+				if (isStringQuote(*src))
+				{
+					optval = parse_STRING( src);
+				}
+				else if (isAlnum(*src))
+				{
+					optval = parse_IDENTIFIER( src);
+				}
+				else
+				{
+					throw std::runtime_error( "identifier or string expected as option value");
+				}
+				if (utils::caseInsensitiveEquals( optname, "position"))
+				{
+					if (utils::caseInsensitiveEquals( optname, "succ"))
+					{
+						rt.definePositionBind( DocumentAnalyzerInterface::FeatureOptions::BindSuccessor);
+					}
+					else if (utils::caseInsensitiveEquals( optname, "pred"))
+					{
+						rt.definePositionBind( DocumentAnalyzerInterface::FeatureOptions::BindPredecessor);
+					}
+					else
+					{
+						throw std::runtime_error( "'pred' or 'succ' expected as 'position' option value");
+					}
+				}
+				else
+				{
+					throw std::runtime_error( std::string( "unknown option '") + optname + "'");
+				}
+			}
+		}
+		while (isComma(*src));
+
+		if (!isCloseCurlyBracket(*src))
+		{
+			throw std::runtime_error( "close curly bracket '}' expected at end of option list");
+		}
+	}
+	return rt;
+}
+
 static void parseFeatureDef(
 	DocumentAnalyzerInterface& analyzer,
 	const std::string& featurename,
@@ -544,7 +605,7 @@ static void parseFeatureDef(
 	else
 	{
 		char const* start = src;
-		while (*src && !isSpace(*src) && *src != ';') ++src;
+		while (*src && !isSpace(*src) && *src != ';' && *src != '{') ++src;
 		xpathexpr.append( start, src-start);
 	}
 
@@ -554,14 +615,16 @@ static void parseFeatureDef(
 			analyzer.addSearchIndexFeature(
 				featurename, xpathexpr,
 				TokenizerConfig( tokenizerName, tokenizerArg),
-				NormalizerConfig( normalizerName, normalizerArg));
+				NormalizerConfig( normalizerName, normalizerArg),
+				parseFeatureOptions( src));
 			break;
 
 		case FeatForwardIndexTerm:
 			analyzer.addForwardIndexFeature(
 				featurename, xpathexpr,
 				TokenizerConfig( tokenizerName, tokenizerArg),
-				NormalizerConfig( normalizerName, normalizerArg));
+				NormalizerConfig( normalizerName, normalizerArg),
+				parseFeatureOptions( src));
 			break;
 
 		case FeatMetaData:

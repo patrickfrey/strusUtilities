@@ -156,18 +156,6 @@ char parser::parse_OPERATOR( char const*& src)
 	return rt;
 }
 
-void parser::parse_ARROW( char const*& src)
-{
-	if (src[0] == '-' && src[1] == '>')
-	{
-		++src;
-	}
-	else
-	{
-		throw std::runtime_error( "expected arrow '->'");
-	}
-}
-
 int parser::parse_INTEGER( char const*& src)
 {
 	int rt = 0;

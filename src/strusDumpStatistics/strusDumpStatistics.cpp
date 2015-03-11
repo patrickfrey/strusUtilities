@@ -107,8 +107,8 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 3,
-				"h,help", "v,version", "m,module:");
+				argc, argv, 4,
+				"h,help", "v,version", "m,module:", "M,moduledir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -132,6 +132,16 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		if (opt("moduledir"))
+		{
+			std::vector<std::string> modirlist( opt.list("moduledir"));
+			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
+			for (; mi != me; ++mi)
+			{
+				moduleLoader->addModulePath( *mi);
+			}
+			moduleLoader->addSystemModulePath();
+		}
 		if (opt("module"))
 		{
 			std::vector<std::string> modlist( opt.list("module"));
@@ -168,6 +178,8 @@ int main( int argc, const char* argv[])
 			std::cerr << "    Print the program version and do nothing else" << std::endl;
 			std::cerr << "-m|--module <MOD>" << std::endl;
 			std::cerr << "    Load components from module <MOD>" << std::endl;
+			std::cerr << "-M|--moduledir <DIR>" << std::endl;
+			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
 			return rt;
 		}
 		std::string storagecfg( opt[0]);
