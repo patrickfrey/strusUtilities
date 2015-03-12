@@ -46,13 +46,12 @@ class FileCrawler
 public:
 	FileCrawler(
 			const std::string& path_,
-			DocnoAllocatorInterface* docnoAllocator_,
 			std::size_t transactionSize_,
 			std::size_t nofChunksReadAhead_=10);
 
 	virtual ~FileCrawler();
 
-	virtual bool fetch( Index& docno, std::vector<std::string>& files);
+	virtual bool fetch( std::vector<std::string>& files);
 
 	void sigStop();
 	void run();
@@ -86,7 +85,6 @@ private:
 	utils::ConditionVariable m_worker_cond;
 	utils::Mutex m_worker_mutex;
 	utils::AtomicBool m_terminated;
-	DocnoAllocatorInterface* m_docnoAllocator;
 };
 
 }//namespace

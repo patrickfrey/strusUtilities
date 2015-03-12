@@ -88,7 +88,6 @@ public:
 
 void CheckInsertProcessor::run()
 {
-	Index docno;
 	std::vector<std::string> files;
 	std::vector<std::string>::const_iterator fitr;
 
@@ -99,7 +98,7 @@ void CheckInsertProcessor::run()
 		= metadata->hasElement( strus::Constants::metadata_doclen());
 
 	unsigned int filesChecked = 0;
-	while (m_crawler->fetch( docno, files))
+	while (m_crawler->fetch( files))
 	{
 		fitr = files.begin();
 		for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)

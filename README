@@ -1,4 +1,5 @@
-## Some command line programs to access a strus storage
+## Some command line programs to call strus functions.
+The command line programs introduced here can call built-in functions and functions in loadable modules.
 
 ### strusCreate
 Create a strus repository
@@ -11,6 +12,12 @@ Inspect elements of items inserted in a strus storage.
 
 ### strusAnalyze
 Dump the document analyze result without feeding the storage. This program can be used to check the result of the document analysis.
+
+### strusAnalyzePhrase
+Call the query analyzer with a phrase to analyze. This program can also be used to check details of the document analyzer as it tokenizes and normalizes a text segment with the tokenizer and normalizer specified.
+
+### strusSegment
+Call the segmenter with a document and one or more expressions to exract with the segmenter. Dump the resulting segments to stdout.
 
 ### strusInsert
 Insert a document or all files in a directory or in any descendant directory of it.

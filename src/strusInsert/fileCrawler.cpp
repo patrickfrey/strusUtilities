@@ -33,7 +33,6 @@ using namespace strus;
 
 FileCrawler::FileCrawler(
 		const std::string& path_,
-		DocnoAllocatorInterface* docnoAllocator_,
 		std::size_t transactionSize_,
 		std::size_t nofChunksReadAhead_)
 
@@ -41,7 +40,6 @@ FileCrawler::FileCrawler(
 	,m_nofChunksReadAhead(nofChunksReadAhead_)
 	,m_chunkquesize(0)
 	,m_terminated(false)
-	,m_docnoAllocator(docnoAllocator_)
 {
 	if (strus::isDir( path_))
 	{
@@ -132,7 +130,7 @@ void FileCrawler::findFilesToProcess()
 }
 
 
-bool FileCrawler::fetch( Index& docno, std::vector<std::string>& files)
+bool FileCrawler::fetch( std::vector<std::string>& files)
 {
 	utils::UniqueLock lock(m_chunkque_mutex);
 	if (!needMore())
@@ -152,7 +150,6 @@ bool FileCrawler::fetch( Index& docno, std::vector<std::string>& files)
 	m_chunkquesize -= 1;
 	files = m_chunkque.front();
 	m_chunkque.pop_front();
-	docno = m_docnoAllocator?m_docnoAllocator->allocDocnoRange( files.size()):0;
 	return true;
 }
 

@@ -26,8 +26,10 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_PARSER_HPP_INCLUDED
-#define _STRUS_PARSER_HPP_INCLUDED
+#ifndef _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
+#define _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
+#include "strus/tokenizerConfig.hpp"
+#include "strus/normalizerConfig.hpp"
 #include <string>
 #include <istream>
 
@@ -45,6 +47,7 @@ class DocumentAnalyzerInterface;
 class QueryAnalyzerInterface;
 /// \brief Forward declaration
 class StorageClientInterface;
+
 
 /// \brief Load a document analyzer program from source
 /// \param[in] analyzer analyzer program to instatiate
@@ -98,6 +101,16 @@ bool scanNextProgram(
 void loadGlobalStatistics(
 		StorageClientInterface& storage,
 		std::istream& stream);
+
+/// \brief Parse a tokenizer configuration in the syntax as specified in a query or document analyzer source
+/// \param[in] source source string (not a file name!) to parse
+/// \return the tokenizer configuration object
+TokenizerConfig parseTokenizerConfig( const std::string& source);
+
+/// \brief Parse a normalizer configuration in the syntax as specified in a query or document analyzer source
+/// \param[in] source source string (not a file name!) to parse
+/// \return the normalizer configuration object
+NormalizerConfig parseNormalizerConfig( const std::string& source);
 
 }//namespace
 #endif

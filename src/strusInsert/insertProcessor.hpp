@@ -40,6 +40,9 @@ class DocumentAnalyzerInterface;
 class CommitQueue;
 /// \brief Forward declaration
 class FileCrawlerInterface;
+/// \brief Forward declaration
+class DocnoAllocatorInterface;
+
 
 class InsertProcessor
 {
@@ -47,8 +50,10 @@ public:
 	InsertProcessor(
 			StorageClientInterface* storage_,
 			DocumentAnalyzerInterface* analyzer_,
+			DocnoAllocatorInterface* docnoAllocator_,
 			CommitQueue* commitque_,
-			FileCrawlerInterface* crawler_);
+			FileCrawlerInterface* crawler_,
+			unsigned int transactionSize_);
 
 	~InsertProcessor();
 
@@ -58,8 +63,10 @@ public:
 private:
 	StorageClientInterface* m_storage;
 	DocumentAnalyzerInterface* m_analyzer;
+	DocnoAllocatorInterface* m_docnoAllocator;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
+	unsigned int m_transactionSize;
 	utils::AtomicBool m_terminated;
 };
 

@@ -193,7 +193,7 @@ int main( int argc_, const char* argv_[])
 
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
-				datapath, 0, notificationInterval, nofThreads*5+5);
+				datapath, notificationInterval, nofThreads*5+5);
 
 		std::auto_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(

@@ -54,3 +54,6 @@ src/strusAlterMetaData/strusAlterMetaData
 src/strusDumpStatistics/strusDumpStatistics
 src/strusCheckStorage/strusCheckStorage
 src/strusDumpStorage/strusDumpStorage
+src/strusAnalyzePhrase/strusAnalyzePhrase
+src/strusSegment/strusSegment
+

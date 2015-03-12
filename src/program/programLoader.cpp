@@ -552,17 +552,17 @@ static DocumentAnalyzerInterface::FeatureOptions
 				}
 				if (utils::caseInsensitiveEquals( optname, "position"))
 				{
-					if (utils::caseInsensitiveEquals( optname, "succ"))
+					if (utils::caseInsensitiveEquals( optval, "succ"))
 					{
 						rt.definePositionBind( DocumentAnalyzerInterface::FeatureOptions::BindSuccessor);
 					}
-					else if (utils::caseInsensitiveEquals( optname, "pred"))
+					else if (utils::caseInsensitiveEquals( optval, "pred"))
 					{
 						rt.definePositionBind( DocumentAnalyzerInterface::FeatureOptions::BindPredecessor);
 					}
 					else
 					{
-						throw std::runtime_error( "'pred' or 'succ' expected as 'position' option value");
+						throw std::runtime_error( std::string( "'pred' or 'succ' expected as 'position' option value instead of '") + optval + "'");
 					}
 				}
 				else
@@ -571,12 +571,13 @@ static DocumentAnalyzerInterface::FeatureOptions
 				}
 			}
 		}
-		while (isComma(*src));
+		while (isComma( *src));
 
-		if (!isCloseCurlyBracket(*src))
+		if (!isCloseCurlyBracket( *src))
 		{
 			throw std::runtime_error( "close curly bracket '}' expected at end of option list");
 		}
+		(void)parse_OPERATOR( src);
 	}
 	return rt;
 }
@@ -607,6 +608,7 @@ static void parseFeatureDef(
 		char const* start = src;
 		while (*src && !isSpace(*src) && *src != ';' && *src != '{') ++src;
 		xpathexpr.append( start, src-start);
+		skipSpaces( src);
 	}
 
 	switch (featureClass)
@@ -700,6 +702,46 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 			std::string( "error in document analyzer program ")
 			+ errorPosition( source.c_str(), src)
 			+ ": " + e.what());
+	}
+}
+
+
+DLL_PUBLIC TokenizerConfig strus::parseTokenizerConfig( const std::string& source)
+{
+	char const* src = source.c_str();
+	skipSpaces(src);
+	try
+	{
+		std::string name;
+		std::vector<std::string> arg;
+		parseFunctionDef( "tokenizer", name, arg, src);
+		return TokenizerConfig( name, arg);
+	}
+	catch (const std::runtime_error& e)
+	{
+		throw std::runtime_error(
+			std::string( "error in tokenizer configuration: ")
+			+ e.what());
+	}
+}
+
+
+DLL_PUBLIC NormalizerConfig strus::parseNormalizerConfig( const std::string& source)
+{
+	char const* src = source.c_str();
+	skipSpaces(src);
+	try
+	{
+		std::string name;
+		std::vector<std::string> arg;
+		parseFunctionDef( "normalizer", name, arg, src);
+		return NormalizerConfig( name, arg);
+	}
+	catch (const std::runtime_error& e)
+	{
+		throw std::runtime_error(
+			std::string( "error in normalizer configuration: ")
+			+ e.what());
 	}
 }
 

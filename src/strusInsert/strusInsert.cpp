@@ -67,10 +67,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 8,
-				"h,help", "t,threads:", "c,commit:",
-				"n,new", "v,version", "m,module:",
-				"s,segmenter:", "M,moduledir:");
+				argc_, argv_, 9,
+				"h,help", "t,threads:", "c,commit:", "f,fetch:",
+				"n,new", "v,version", "s,segmenter:", "m,module:",
+				"M,moduledir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -149,7 +149,10 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "-t|--threads <N>" << std::endl;
 			std::cerr << "    Set <N> as number of inserter threads to use"  << std::endl;
 			std::cerr << "-c|--commit <N>" << std::endl;
-			std::cerr << "    Set <N> as number of files inserted per transaction (default 1000)" << std::endl;
+			std::cerr << "    Set <N> as number of documents inserted per transaction (default 1000)" << std::endl;
+			std::cerr << "-f|--fetch <N>" << std::endl;
+			std::cerr << "    Set <N> as number of files fetched in each inserter iteration" << std::endl;
+			std::cerr << "    Default is the value of option '--commit' (one document/file)" << std::endl;
 			std::cerr << "-n|--new" << std::endl;
 			std::cerr << "    All inserts are new; use preallocated document numbers" << std::endl;
 			return rt;
@@ -164,6 +167,11 @@ int main( int argc_, const char* argv_[])
 		if (opt("commit"))
 		{
 			transactionSize = opt.asUint( "commit");
+		}
+		unsigned int fetchSize = transactionSize;
+		if (opt("fetch"))
+		{
+			fetchSize = opt.asUint( "fetch");
 		}
 		std::string storagecfg( opt[0]);
 		std::string analyzerprg = opt[1];
@@ -204,37 +212,34 @@ int main( int argc_, const char* argv_[])
 				new strus::DocnoAllocator( storage.get()));
 		}
 		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler(
-					datapath, docnoAllocator.get(),
-					transactionSize, nofThreads*5+5);
+			= new strus::FileCrawler( datapath, fetchSize, nofThreads*5+5);
 
 		strus::utils::ScopedPtr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(
-				new strus::Thread< strus::FileCrawler >( fileCrawler,
-					"filecrawler"));
+				new strus::Thread< strus::FileCrawler >(
+					fileCrawler, "filecrawler"));
 		std::cout.flush();
 		fileCrawlerThread->start();
 
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
-				storage.get(), analyzer.get(),
-				commitQue.get(), fileCrawler);
+				storage.get(), analyzer.get(), docnoAllocator.get(),
+				commitQue.get(), fileCrawler, transactionSize);
 			inserter.run();
 		}
 		else
 		{
 			std::auto_ptr< strus::ThreadGroup< strus::InsertProcessor > >
 				inserterThreads(
-					new strus::ThreadGroup<strus::InsertProcessor>(
-					"inserter"));
+					new strus::ThreadGroup<strus::InsertProcessor>( "inserter"));
 
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)
 			{
 				inserterThreads->start(
 					new strus::InsertProcessor(
-						storage.get(), analyzer.get(), 
-						commitQue.get(), fileCrawler));
+						storage.get(), analyzer.get(), docnoAllocator.get(),
+						commitQue.get(), fileCrawler, transactionSize));
 			}
 			inserterThreads->wait_termination();
 		}

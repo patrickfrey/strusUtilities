@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 # SOURCES AND INCLUDES
 # --------------------------------------
 set(source_files
-	strusAnalyze.cpp
+	strusAnalyzePhrase.cpp
 )
 
 include_directories(
@@ -23,13 +23,13 @@ link_directories(
 # ------------------------------
 # PROGRAMS
 # ------------------------------
-add_executable( strusAnalyze ${source_files} )
-target_link_libraries( strusAnalyze  strus_private_utils  ${strusmodule_LIBRARIES} strus_program ${strusanalyzer_LIBRARIES} ${strus_LIBRARIES}  )
+add_executable( strusAnalyzePhrase ${source_files} )
+target_link_libraries( strusAnalyzePhrase  strus_private_utils  ${strusmodule_LIBRARIES}  ${strusanalyzer_LIBRARIES} ${strus_LIBRARIES} strus_program )
 
 
 # ------------------------------
 # INSTALLATION
 # ------------------------------
-install( TARGETS strusAnalyze
+install( TARGETS strusAnalyzePhrase
 	   RUNTIME DESTINATION bin )
 

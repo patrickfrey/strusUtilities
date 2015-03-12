@@ -28,6 +28,7 @@ link_directories(
 # -------------------------------------------
 add_library( strus_program SHARED ${source_files} )
 target_link_libraries( strus_program strus_private_utils "${Boost_LIBRARIES}"  "${strus_LIBRARIES}" "${strusanalyzer_LIBRARIES}"  "${strusmodule_LIBRARIES}" )
+
 set_target_properties(
     strus_program
     PROPERTIES

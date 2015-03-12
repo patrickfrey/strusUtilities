@@ -119,7 +119,7 @@ int main( int argc, const char* argv[])
 		{
 			std::cerr << "usage: strusAnalyze [options] <program> <document>" << std::endl;
 			std::cerr << "<program>   = path of analyzer program" << std::endl;
-			std::cerr << "<document>  = path of document to analyze" << std::endl;
+			std::cerr << "<document>  = path of document to analyze ('-' for stdin)" << std::endl;
 			std::cerr << "description: Analyzes a document and dumps the result to stdout." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
@@ -157,6 +157,7 @@ int main( int argc, const char* argv[])
 		}
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
+		// Load the document:
 		std::ifstream documentFile;
 		std::auto_ptr<strus::DocumentAnalyzerInstanceInterface> analyzerInstance;
 		if (docpath == "-")
@@ -183,10 +184,11 @@ int main( int argc, const char* argv[])
 			}
 			analyzerInstance.reset( analyzer->createDocumentAnalyzerInstance( documentFile));
 		}
+
+		// Analyze the document and print the result:
 		while (analyzerInstance->hasMore())
 		{
-			strus::analyzer::Document doc
-				= analyzerInstance->analyzeNext();
+			strus::analyzer::Document doc = analyzerInstance->analyzeNext();
 
 			if (!doc.subDocumentTypeName().empty())
 			{

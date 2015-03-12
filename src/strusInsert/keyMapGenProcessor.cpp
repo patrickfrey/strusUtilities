@@ -122,11 +122,10 @@ void KeyMapGenProcessor::sigStop()
 
 void KeyMapGenProcessor::run()
 {
-	Index docno;
 	std::vector<std::string> files;
 	std::vector<std::string>::const_iterator fitr;
 
-	while (m_crawler->fetch( docno, files))
+	while (m_crawler->fetch( files))
 	{
 		try
 		{

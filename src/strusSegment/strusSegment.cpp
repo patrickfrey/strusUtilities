@@ -29,28 +29,38 @@
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/objectBuilderInterface.hpp"
-#include "strus/index.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
-#include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
-#include "strus/private/fileio.hpp"
-#include "strus/private/cmdLineOpt.hpp"
+#include "strus/segmenterInstanceInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
+#include "strus/reference.hpp"
+#include "strus/analyzer/term.hpp"
+#include "strus/private/fileio.hpp"
+#include "strus/private/cmdLineOpt.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
-#include "private/utils.hpp"
-#include "fileCrawler.hpp"
-#include "keyMapGenProcessor.hpp"
-#include "thread.hpp"
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
 #include <memory>
 
+struct TermOrder
+{
+	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
+	{
+		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
+		int cmp;
+		cmp = aa.type().compare( bb.type());
+		if (cmp != 0) return (cmp < 0);
+		cmp = aa.value().compare( bb.value());
+		if (cmp != 0) return (cmp < 0);
+		return false;
+	}
+};
 
-int main( int argc_, const char* argv_[])
+int main( int argc, const char* argv[])
 {
 	int rt = 0;
 	strus::ProgramOptions opt;
@@ -58,10 +68,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 8,
-				"h,help", "t,threads:", "u,unit:",
-				"n,results:", "v,version", "m,module:",
-				"s,segmenter:", "M,moduledir:");
+				argc, argv, 9,
+				"h,help", "v,version", "s,segmenter:", "e,expression:",
+				"m,module:", "M,moduledir:", "i,index", "p,position",
+				"q,quot:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -71,13 +81,13 @@ int main( int argc_, const char* argv_[])
 		}
 		else
 		{
-			if (opt.nofargs() > 2)
+			if (opt.nofargs() > 1)
 			{
 				std::cerr << "ERROR too many arguments" << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			if (opt.nofargs() < 2)
+			if (opt.nofargs() < 1)
 			{
 				std::cerr << "ERROR too few arguments" << std::endl;
 				printUsageAndExit = true;
@@ -108,12 +118,10 @@ int main( int argc_, const char* argv_[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
-			std::cerr << "<program> = path of analyzer program" << std::endl;
-			std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
-			std::cerr << "description: Dumps a list of terms as result of document" << std::endl;
-			std::cerr << "    anaylsis of a file or directory. The dump can be loaded by" << std::endl;
-			std::cerr << "    the storage on startup to create a map of frequently used terms." << std::endl;
+			std::cerr << "usage: strusSegment [options] <document>" << std::endl;
+			std::cerr << "<document>  = path to document to segment ('-' for stdin)" << std::endl;
+			std::cerr << "description: Segments a document with the expressions (-e) specified" << std::endl;
+			std::cerr << "             and dumps the resulting segments to stdout." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "   Print this usage and do nothing else" << std::endl;
@@ -125,96 +133,102 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
 			std::cerr << "-s|--segmenter <NAME>" << std::endl;
 			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
-			std::cerr << "-t|--threads <N>" << std::endl;
-			std::cerr << "    Set <N> as number of threads to use"  << std::endl;
-			std::cerr << "-u|--unit <N>" << std::endl;
-			std::cerr << "    Set <N> as number of files processed per iteration (default 1000)" << std::endl;
-			std::cerr << "-n|--results <N>" << std::endl;
-			std::cerr << "    Set <N> as number of elements in the key map generated" << std::endl;
+			std::cerr << "-e|--expression <EXPR>" << std::endl;
+			std::cerr << "    Use the expression <EXPR> to select documents (default '//()')" << std::endl;
+			std::cerr << "-i|--index" << std::endl;
+			std::cerr << "    Print the indices of the expressions matching as prefix with ':'" << std::endl;
+			std::cerr << "-p|--position" << std::endl;
+			std::cerr << "    Print the positions of the expressions matching as prefix" << std::endl;
+			std::cerr << "-q|--quot <STR>" << std::endl;
+			std::cerr << "    Use the string <STR> as quote for the result (default \"\'\")" << std::endl;
 			return rt;
 		}
-
-		// [1] Build objects:
-		unsigned int nofThreads = opt.asUint( "threads");
-		unsigned int unitSize = 1000;
-		if (opt( "unit"))
+		std::string docpath = opt[0];
+		std::string segmenterName;
+		bool printIndices = opt( "index");
+		bool printPositions = opt( "position");
+		std::string resultQuot = "'";
+		if (opt( "quot"))
 		{
-			unitSize = opt.asUint( "unit");
+			resultQuot = opt[ "quot"];
 		}
-		unsigned int nofResults = opt.asUint( "results");
-		std::string segmenter;
 		if (opt( "segmenter"))
 		{
-			segmenter = opt[ "segmenter"];
+			segmenterName = opt[ "segmenter"];
 		}
+		// Create objects for segmenter:
+		std::auto_ptr<strus::SegmenterInterface>
+			segmenter( builder.createSegmenter( segmenterName));
 
-		// Create objects for keymap generation:
-		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
-			analyzer( builder.createDocumentAnalyzer( segmenter));
-
-		// [2] Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( opt[0], analyzerProgramSource);
-		if (ec)
+		// Load expressions:
+		if (opt("expression"))
 		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
-			return 4;
-		}
-		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
-
-		strus::KeyMapGenResultList resultList;
-		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler(
-				opt[1], unitSize, nofThreads*5+5);
-
-		// [3] Start threads:
-		std::auto_ptr< strus::Thread< strus::FileCrawler> >
-			fileCrawlerThread(
-				new strus::Thread< strus::FileCrawler >( fileCrawler,
-					"filecrawler"));
-		std::cout.flush();
-		fileCrawlerThread->start();
-
-		if (nofThreads == 0)
-		{
-			strus::KeyMapGenProcessor processor(
-				analyzer.get(), &resultList, fileCrawler);
-			processor.run();
+			std::vector<std::string> exprlist( opt.list("expression"));
+			std::vector<std::string>::const_iterator ei = exprlist.begin(), ee = exprlist.end();
+			for (int eidx=1; ei != ee; ++ei,++eidx)
+			{
+				segmenter->defineSelectorExpression( eidx, *ei);
+			}
 		}
 		else
 		{
-			std::auto_ptr< strus::ThreadGroup< strus::KeyMapGenProcessor > >
-				processors( new strus::ThreadGroup<strus::KeyMapGenProcessor>( "keymapgen"));
-
-			for (unsigned int ti = 0; ti<nofThreads; ++ti)
-			{
-				processors->start(
-					new strus::KeyMapGenProcessor(
-						analyzer.get(), &resultList, fileCrawler));
-			}
-			processors->wait_termination();
+			segmenter->defineSelectorExpression( 0, "//()");
 		}
-		fileCrawlerThread->wait_termination();
 
-		// [3] Final merge:
-		std::cerr << std::endl << "merging results:" << std::endl;
-		resultList.printKeyOccurrenceList( std::cout, nofResults);
-		
-		std::cerr << "done" << std::endl;
+		std::ifstream documentFile;
+		std::auto_ptr<strus::SegmenterInstanceInterface> segmenterInstance;
+		if (docpath == "-")
+		{
+			segmenterInstance.reset( segmenter->createInstance( std::cin));
+		}
+		else
+		{
+			try 
+			{
+				documentFile.open( docpath.c_str(), std::fstream::in | std::ios::binary);
+			}
+			catch (const std::ifstream::failure& err)
+			{
+				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
+			}
+			catch (const std::runtime_error& err)
+			{
+				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
+			}
+			if(!documentFile)
+			{
+				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "'");
+			}
+			segmenterInstance.reset( segmenter->createInstance( documentFile));
+		}
+		int segid;
+		strus::SegmenterPosition segpos;
+		const char* segdata;
+		std::size_t segsize;
+		while (segmenterInstance->getNext( segid, segpos, segdata, segsize))
+		{
+			if (printIndices)
+			{
+				std::cout << segid << ": ";
+			}
+			if (printPositions)
+			{
+				std::cout << segpos << " ";
+			}
+			std::cout << resultQuot << std::string(segdata,segsize)
+					<< resultQuot << std::endl;
+		}
+		return 0;
 	}
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << "ERROR " << e.what() << std::endl;
-		return 6;
 	}
 	catch (const std::exception& e)
 	{
 		std::cerr << "EXCEPTION " << e.what() << std::endl;
-		return 7;
 	}
-	return 0;
+	return -1;
 }
 
 
