@@ -41,7 +41,7 @@ class CommitQueue;
 /// \brief Forward declaration
 class FileCrawlerInterface;
 /// \brief Forward declaration
-class DocnoAllocatorInterface;
+class DocnoRangeAllocatorInterface;
 
 
 class InsertProcessor
@@ -50,7 +50,7 @@ public:
 	InsertProcessor(
 			StorageClientInterface* storage_,
 			DocumentAnalyzerInterface* analyzer_,
-			DocnoAllocatorInterface* docnoAllocator_,
+			DocnoRangeAllocatorInterface* docnoAllocator_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
 			unsigned int transactionSize_);
@@ -63,7 +63,7 @@ public:
 private:
 	StorageClientInterface* m_storage;
 	DocumentAnalyzerInterface* m_analyzer;
-	DocnoAllocatorInterface* m_docnoAllocator;
+	DocnoRangeAllocatorInterface* m_docnoAllocator;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
 	unsigned int m_transactionSize;

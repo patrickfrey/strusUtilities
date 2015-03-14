@@ -38,6 +38,7 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
+#include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
@@ -49,7 +50,6 @@
 #include "private/utils.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
-#include "docnoAllocator.hpp"
 #include "insertProcessor.hpp"
 #include "thread.hpp"
 #include <iostream>
@@ -205,11 +205,10 @@ int main( int argc_, const char* argv_[])
 		strus::utils::ScopedPtr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get()));
 
-		strus::utils::ScopedPtr<strus::DocnoAllocator> docnoAllocator;
+		strus::utils::ScopedPtr<strus::DocnoRangeAllocatorInterface> docnoAllocator;
 		if (allInsertsNew)
 		{
-			docnoAllocator.reset( 
-				new strus::DocnoAllocator( storage.get()));
+			docnoAllocator.reset( storage->createDocnoRangeAllocator());
 		}
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler( datapath, fetchSize, nofThreads*5+5);

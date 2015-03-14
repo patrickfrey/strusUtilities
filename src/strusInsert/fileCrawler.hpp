@@ -30,7 +30,6 @@
 #define _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
 #include "strus/private/fileio.hpp"
 #include "strus/index.hpp"
-#include "docnoAllocatorInterface.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "private/utils.hpp"
 #include <vector>

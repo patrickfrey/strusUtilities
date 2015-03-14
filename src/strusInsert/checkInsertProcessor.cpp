@@ -37,9 +37,9 @@
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/analyzer/document.hpp"
+#include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "private/utils.hpp"
-#include "docnoAllocatorInterface.hpp"
 #include "fileCrawlerInterface.hpp"
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>

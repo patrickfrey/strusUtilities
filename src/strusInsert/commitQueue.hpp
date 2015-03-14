@@ -30,9 +30,9 @@
 #define _STRUS_INSERTER_COMMIT_QUEUE_HPP_INCLUDED
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
+#include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/index.hpp"
 #include "private/utils.hpp"
-#include "docnoAllocator.hpp"
 #include <vector>
 #include <string>
 #include <set>

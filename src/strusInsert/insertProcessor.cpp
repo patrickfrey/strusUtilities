@@ -36,10 +36,10 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
+#include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/fileio.hpp"
-#include "docnoAllocatorInterface.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "commitQueue.hpp"
 #include <memory>
@@ -50,7 +50,7 @@ using namespace strus;
 InsertProcessor::InsertProcessor(
 		StorageClientInterface* storage_,
 		DocumentAnalyzerInterface* analyzer_,
-		DocnoAllocatorInterface* docnoAllocator_,
+		DocnoRangeAllocatorInterface* docnoAllocator_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
 		unsigned int transactionSize_)
@@ -119,7 +119,7 @@ void InsertProcessor::run()
 
 	while (m_crawler->fetch( files))
 	{
-		docno = m_docnoAllocator?m_docnoAllocator->allocDocnoRange( files.size()):0;
+		docno = m_docnoAllocator?m_docnoAllocator->allocDocnoRange( m_transactionSize):0;
 
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
@@ -220,7 +220,7 @@ void InsertProcessor::run()
 						storagedoc->done();
 						docCount++;
 					}
-					if (docCount == m_transactionSize)
+					if (docCount == m_transactionSize && docCount)
 					{
 						if (!m_terminated)
 						{
@@ -240,9 +240,14 @@ void InsertProcessor::run()
 				std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
 			}
 		}
-		if (!m_terminated)
+		if (!m_terminated && docCount)
 		{
 			m_commitque->push( transaction.release(), docno, docCount);
+			if (m_docnoAllocator && docCount < m_transactionSize)
+			{
+				m_docnoAllocator->deallocDocnoRange(
+					docno + docCount, m_transactionSize - docCount);
+			}
 		}
 	}
 }
