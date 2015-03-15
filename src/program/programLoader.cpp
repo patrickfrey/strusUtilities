@@ -520,6 +520,31 @@ static void parseFunctionDef( const char* functype, std::string& name, std::vect
 	}
 }
 
+static NormalizerConfig parseNormalizerConfig_( char const*& src)
+{
+	std::string name;
+	std::vector<std::string> arg;
+	parseFunctionDef( "normalizer", name, arg, src);
+	NormalizerConfig rt = NormalizerConfig( name, arg);
+
+	while (isColon(*src))
+	{
+		(void)parse_OPERATOR( src);
+		parseFunctionDef( "normalizer", name, arg, src);
+		rt( name, arg);
+	}
+	return rt;
+}
+
+static TokenizerConfig parseTokenizerConfig_( char const*& src)
+{
+	std::string name;
+	std::vector<std::string> arg;
+	parseFunctionDef( "tokenizer", name, arg, src);
+	return TokenizerConfig( name, arg);
+}
+
+
 static DocumentAnalyzerInterface::FeatureOptions
 	parseFeatureOptions( char const*& src)
 {
@@ -589,15 +614,13 @@ static void parseFeatureDef(
 	FeatureClass featureClass)
 {
 	std::string xpathexpr;
-	std::string normalizerName;
-	std::vector<std::string> normalizerArg;
-	std::string tokenizerName;
-	std::vector<std::string> tokenizerArg;
-
+	TokenizerConfig tokenizer;
+	NormalizerConfig normalizer;
+	
 	if (featureClass != FeatSubDocument)
 	{
-		parseFunctionDef( "normalizer", normalizerName, normalizerArg, src);
-		parseFunctionDef( "tokenizer", tokenizerName, tokenizerArg, src);
+		normalizer = parseNormalizerConfig_( src);
+		tokenizer = parseTokenizerConfig_( src);
 	}
 	if (isStringQuote(*src))
 	{
@@ -616,31 +639,27 @@ static void parseFeatureDef(
 		case FeatSearchIndexTerm:
 			analyzer.addSearchIndexFeature(
 				featurename, xpathexpr,
-				TokenizerConfig( tokenizerName, tokenizerArg),
-				NormalizerConfig( normalizerName, normalizerArg),
+				tokenizer, normalizer,
 				parseFeatureOptions( src));
 			break;
 
 		case FeatForwardIndexTerm:
 			analyzer.addForwardIndexFeature(
 				featurename, xpathexpr,
-				TokenizerConfig( tokenizerName, tokenizerArg),
-				NormalizerConfig( normalizerName, normalizerArg),
+				tokenizer, normalizer,
 				parseFeatureOptions( src));
 			break;
 
 		case FeatMetaData:
 			analyzer.defineMetaData(
 				featurename, xpathexpr,
-				TokenizerConfig( tokenizerName, tokenizerArg),
-				NormalizerConfig( normalizerName, normalizerArg));
+				tokenizer, normalizer);
 			break;
 
 		case FeatAttribute:
 			analyzer.defineAttribute(
 				featurename, xpathexpr,
-				TokenizerConfig( tokenizerName, tokenizerArg),
-				NormalizerConfig( normalizerName, normalizerArg));
+				tokenizer, normalizer);
 			break;
 		case FeatSubDocument:
 			analyzer.defineSubDocument( featurename, xpathexpr);
@@ -712,10 +731,7 @@ DLL_PUBLIC TokenizerConfig strus::parseTokenizerConfig( const std::string& sourc
 	skipSpaces(src);
 	try
 	{
-		std::string name;
-		std::vector<std::string> arg;
-		parseFunctionDef( "tokenizer", name, arg, src);
-		return TokenizerConfig( name, arg);
+		return parseTokenizerConfig_( src);
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -732,10 +748,7 @@ DLL_PUBLIC NormalizerConfig strus::parseNormalizerConfig( const std::string& sou
 	skipSpaces(src);
 	try
 	{
-		std::string name;
-		std::vector<std::string> arg;
-		parseFunctionDef( "normalizer", name, arg, src);
-		return NormalizerConfig( name, arg);
+		return parseNormalizerConfig_( src);
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -786,18 +799,11 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 			}
 			(void)parse_OPERATOR(src);
 	
-			std::string normalizerName;
-			std::vector<std::string> normalizerArg;
-			std::string tokenizerName;
-			std::vector<std::string> tokenizerArg;
+			NormalizerConfig normalizer = parseNormalizerConfig_( src);
+			TokenizerConfig tokenizer = parseTokenizerConfig_( src);
 		
-			parseFunctionDef( "normalizer", normalizerName, normalizerArg, src);
-			parseFunctionDef( "tokenizer", tokenizerName, tokenizerArg, src);
-
 			analyzer.definePhraseType(
-					phraseType, featureType, 
-					TokenizerConfig( tokenizerName, tokenizerArg),
-					NormalizerConfig( normalizerName, normalizerArg));
+				phraseType, featureType, tokenizer, normalizer);
 
 			if (!isSemiColon(*src))
 			{
