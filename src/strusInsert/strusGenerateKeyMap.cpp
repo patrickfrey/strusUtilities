@@ -58,10 +58,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 8,
+				argc_, argv_, 9,
 				"h,help", "t,threads:", "u,unit:",
 				"n,results:", "v,version", "m,module:",
-				"s,segmenter:", "M,moduledir:");
+				"s,segmenter:", "M,moduledir:", "R,resourcedir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -123,6 +123,8 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			std::cerr << "-M|--moduledir <DIR>" << std::endl;
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
+			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
+			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
 			std::cerr << "-s|--segmenter <NAME>" << std::endl;
 			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
 			std::cerr << "-t|--threads <N>" << std::endl;
@@ -147,6 +149,22 @@ int main( int argc_, const char* argv_[])
 		{
 			segmenter = opt[ "segmenter"];
 		}
+		std::string analyzerprg = opt[0];
+		std::string datapath = opt[1];
+
+
+		// Set paths for locating resources:
+		if (opt("resourcedir"))
+		{
+			std::vector<std::string> pathlist( opt.list("resourcedir"));
+			std::vector<std::string>::const_iterator
+				pi = pathlist.begin(), pe = pathlist.end();
+			for (; pi != pe; ++pi)
+			{
+				moduleLoader->addResourcePath( *pi);
+			}
+		}
+		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
 
 		// Create objects for keymap generation:
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
@@ -155,11 +173,11 @@ int main( int argc_, const char* argv_[])
 		// [2] Load analyzer program:
 		unsigned int ec;
 		std::string analyzerProgramSource;
-		ec = strus::readFile( opt[0], analyzerProgramSource);
+		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec)
 		{
 			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
+			std::cerr << "ERROR failed to load analyzer program '" << analyzerprg << "' (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
@@ -167,7 +185,7 @@ int main( int argc_, const char* argv_[])
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
-				opt[1], unitSize, nofThreads*5+5);
+				datapath, unitSize, nofThreads*5+5);
 
 		// [3] Start threads:
 		std::auto_ptr< strus::Thread< strus::FileCrawler> >

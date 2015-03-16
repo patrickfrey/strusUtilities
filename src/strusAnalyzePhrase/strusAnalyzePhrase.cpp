@@ -67,9 +67,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 8,
+				argc, argv, 9,
 				"h,help", "v,version", "t,tokenizer:", "n,normalizer:",
-				"m,module:", "M,moduledir:", "q,quot:", "p,plain");
+				"m,module:", "M,moduledir:", "q,quot:", "p,plain",
+				"R,resourcedir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -129,6 +130,8 @@ int main( int argc, const char* argv[])
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			std::cerr << "-M|--moduledir <DIR>" << std::endl;
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
+			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
+			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
 			std::cerr << "-t|--tokenizer <CALL>" << std::endl;
 			std::cerr << "    Use the tokenizer <CALL> (default 'content')" << std::endl;
 			std::cerr << "-n|--normalizer <CALL>" << std::endl;
@@ -161,12 +164,24 @@ int main( int argc, const char* argv[])
 		{
 			normalizer = opt[ "normalizer"];
 		}
+		// Set paths for locating resources:
+		if (opt("resourcedir"))
+		{
+			std::vector<std::string> pathlist( opt.list("resourcedir"));
+			std::vector<std::string>::const_iterator
+				pi = pathlist.begin(), pe = pathlist.end();
+			for (; pi != pe; ++pi)
+			{
+				moduleLoader->addResourcePath( *pi);
+			}
+		}
+
 		// Create objects for analyzer:
 		std::auto_ptr<strus::QueryAnalyzerInterface>
 			analyzer( builder.createQueryAnalyzer());
 
 		// Create phrase type (tokenizer and normalizer):
-		strus::NormalizerConfig normalizerConfig(
+		std::vector<strus::NormalizerConfig> normalizerConfig(
 			strus::parseNormalizerConfig( normalizer));
 
 		strus::TokenizerConfig tokenizerConfig(

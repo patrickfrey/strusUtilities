@@ -67,10 +67,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 9,
+				argc_, argv_, 10,
 				"h,help", "t,threads:", "c,commit:", "f,fetch:",
 				"n,new", "v,version", "s,segmenter:", "m,module:",
-				"M,moduledir:");
+				"M,moduledir:", "R,resourcedir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -144,6 +144,8 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			std::cerr << "-M|--moduledir <DIR>" << std::endl;
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
+			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
+			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
 			std::cerr << "-s|--segmenter <NAME>" << std::endl;
 			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf)" << std::endl;
 			std::cerr << "-t|--threads <N>" << std::endl;
@@ -182,6 +184,19 @@ int main( int argc_, const char* argv_[])
 			segmenter = opt[ "segmenter"];
 		}
 
+		// Set paths for locating resources:
+		if (opt("resourcedir"))
+		{
+			std::vector<std::string> pathlist( opt.list("resourcedir"));
+			std::vector<std::string>::const_iterator
+				pi = pathlist.begin(), pe = pathlist.end();
+			for (; pi != pe; ++pi)
+			{
+				moduleLoader->addResourcePath( *pi);
+			}
+		}
+		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
+
 		// Create objects for inserter:
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
@@ -192,11 +207,11 @@ int main( int argc_, const char* argv_[])
 		// Load analyzer program:
 		unsigned int ec;
 		std::string analyzerProgramSource;
-		ec = strus::readFile( opt[1], analyzerProgramSource);
+		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec)
 		{
 			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << opt[1] << " (file system error " << ec << ")" << std::endl;
+			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);

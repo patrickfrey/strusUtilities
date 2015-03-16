@@ -107,10 +107,10 @@ void loadGlobalStatistics(
 /// \return the tokenizer configuration object
 TokenizerConfig parseTokenizerConfig( const std::string& source);
 
-/// \brief Parse a normalizer configuration in the syntax as specified in a query or document analyzer source
+/// \brief Parses a list of normalizer configuration in the syntax as specified in a query or document analyzer source
 /// \param[in] source source string (not a file name!) to parse
-/// \return the normalizer configuration object
-NormalizerConfig parseNormalizerConfig( const std::string& source);
+/// \return the normalizer configuration list
+std::vector<NormalizerConfig> parseNormalizerConfig( const std::string& source);
 
 }//namespace
 #endif

@@ -513,6 +513,10 @@ static void parseFunctionDef( const char* functype, std::string& name, std::vect
 				throw std::runtime_error( std::string( "comma ',' as argument separator or close oval brakcet ')' expected at end of ") + functype + " argument list");
 			}
 		}
+		else
+		{
+			arg.clear();
+		}
 	}
 	else
 	{
@@ -520,18 +524,18 @@ static void parseFunctionDef( const char* functype, std::string& name, std::vect
 	}
 }
 
-static NormalizerConfig parseNormalizerConfig_( char const*& src)
+static std::vector<NormalizerConfig> parseNormalizerConfig_( char const*& src)
 {
-	std::string name;
-	std::vector<std::string> arg;
-	parseFunctionDef( "normalizer", name, arg, src);
-	NormalizerConfig rt = NormalizerConfig( name, arg);
-
-	while (isColon(*src))
+	std::vector<NormalizerConfig> rt;
+	for(;;)
 	{
-		(void)parse_OPERATOR( src);
+		std::string name;
+		std::vector<std::string> arg;
 		parseFunctionDef( "normalizer", name, arg, src);
-		rt( name, arg);
+		rt.insert( rt.begin(), NormalizerConfig( name, arg));
+
+		if (!isColon(*src)) break;
+		(void)parse_OPERATOR( src);
 	}
 	return rt;
 }
@@ -615,7 +619,7 @@ static void parseFeatureDef(
 {
 	std::string xpathexpr;
 	TokenizerConfig tokenizer;
-	NormalizerConfig normalizer;
+	std::vector<NormalizerConfig> normalizer;
 	
 	if (featureClass != FeatSubDocument)
 	{
@@ -742,7 +746,7 @@ DLL_PUBLIC TokenizerConfig strus::parseTokenizerConfig( const std::string& sourc
 }
 
 
-DLL_PUBLIC NormalizerConfig strus::parseNormalizerConfig( const std::string& source)
+DLL_PUBLIC std::vector<NormalizerConfig> strus::parseNormalizerConfig( const std::string& source)
 {
 	char const* src = source.c_str();
 	skipSpaces(src);
@@ -799,7 +803,7 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 			}
 			(void)parse_OPERATOR(src);
 	
-			NormalizerConfig normalizer = parseNormalizerConfig_( src);
+			std::vector<NormalizerConfig> normalizer = parseNormalizerConfig_( src);
 			TokenizerConfig tokenizer = parseTokenizerConfig_( src);
 		
 			analyzer.definePhraseType(
