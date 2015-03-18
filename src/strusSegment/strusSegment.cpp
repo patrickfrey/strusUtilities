@@ -39,6 +39,7 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
+#include "private/inputStream.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -175,32 +176,14 @@ int main( int argc, const char* argv[])
 			segmenter->defineSelectorExpression( 0, "//()");
 		}
 
+		// Load the document:
+		strus::InputStream input( docpath);
 		std::ifstream documentFile;
-		std::auto_ptr<strus::SegmenterInstanceInterface> segmenterInstance;
-		if (docpath == "-")
-		{
-			segmenterInstance.reset( segmenter->createInstance( std::cin));
-		}
-		else
-		{
-			try 
-			{
-				documentFile.open( docpath.c_str(), std::fstream::in | std::ios::binary);
-			}
-			catch (const std::ifstream::failure& err)
-			{
-				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
-			}
-			catch (const std::runtime_error& err)
-			{
-				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
-			}
-			if(!documentFile)
-			{
-				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "'");
-			}
-			segmenterInstance.reset( segmenter->createInstance( documentFile));
-		}
+		std::auto_ptr<strus::SegmenterInstanceInterface>
+			segmenterInstance(
+				segmenter->createInstance( input.stream()));
+
+		// Segment the input:
 		int segid;
 		strus::SegmenterPosition segpos;
 		const char* segdata;

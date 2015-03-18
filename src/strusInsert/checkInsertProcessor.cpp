@@ -32,6 +32,7 @@
 #include "strus/arithmeticVariant.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
@@ -40,6 +41,7 @@
 #include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "private/utils.hpp"
+#include "private/inputStream.hpp"
 #include "fileCrawlerInterface.hpp"
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -106,94 +108,93 @@ void CheckInsertProcessor::run()
 			try
 			{
 				// Read the input file to analyze:
-				std::string documentContent;
-				unsigned int ec = strus::readFile( *fitr, documentContent);
-				if (ec)
-				{
-					std::ostringstream msg;
-					std::cerr << "failed to load document to analyze " << *fitr << " (file system error " << ec << ")" << std::endl;
-				}
-		
-				// Call the analyzer and create the document:
-				strus::analyzer::Document doc
-					= m_analyzer->analyze( documentContent);
+				strus::InputStream input( *fitr);
+				std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
+					analyzerInstance( m_analyzer->createInstance( input.stream()));
 
-				std::vector<strus::analyzer::Attribute>::const_iterator
-					oi = doc.attributes().begin(),
-					oe = doc.attributes().end();
-				for (;oi != oe
-					&& oi->name() != strus::Constants::attribute_docid();
-					++oi){}
-				boost::scoped_ptr<strus::StorageDocumentInterface> storagedoc;
-				if (oi != oe)
+				while (analyzerInstance->hasMore())
 				{
-					storagedoc.reset(
-						m_storage->createDocumentChecker(
-							oi->value(), m_logfile));
-					//... use the docid from the analyzer if defined there
-				}
-				else
-				{
-					storagedoc.reset(
-						m_storage->createDocumentChecker(
-							*fitr, m_logfile));
+					// Analyze the next sub document:
+					strus::analyzer::Document
+						doc = analyzerInstance->analyzeNext();
+
+					std::vector<strus::analyzer::Attribute>::const_iterator
+						oi = doc.attributes().begin(),
+						oe = doc.attributes().end();
+					for (;oi != oe
+						&& oi->name() != strus::Constants::attribute_docid();
+						++oi){}
+					boost::scoped_ptr<strus::StorageDocumentInterface> storagedoc;
+					if (oi != oe)
+					{
+						storagedoc.reset(
+							m_storage->createDocumentChecker(
+								oi->value(), m_logfile));
+						//... use the docid from the analyzer if defined there
+					}
+					else
+					{
+						storagedoc.reset(
+							m_storage->createDocumentChecker(
+								*fitr, m_logfile));
+						storagedoc->setAttribute(
+							strus::Constants::attribute_docid(), *fitr);
+						//... define file path as hardcoded docid attribute
+					}
+	
+					// Define hardcoded document attributes:
 					storagedoc->setAttribute(
 						strus::Constants::attribute_docid(), *fitr);
-					//... define file path as hardcoded docid attribute
+			
+					// Define hardcoded document metadata, if known:
+					if (hasDoclenAttribute)
+					{
+						strus::Index lastPos = (doc.searchIndexTerms().empty())
+								?0:doc.searchIndexTerms()[
+									doc.searchIndexTerms().size()-1].pos();
+						storagedoc->setMetaData(
+							strus::Constants::metadata_doclen(),
+							strus::ArithmeticVariant( lastPos));
+					}
+					// Define all search index term occurrencies:
+					std::vector<strus::analyzer::Term>::const_iterator
+						ti = doc.searchIndexTerms().begin(),
+						te = doc.searchIndexTerms().end();
+					for (; ti != te; ++ti)
+					{
+						storagedoc->addSearchIndexTerm(
+							ti->type(), ti->value(), ti->pos());
+					}
+	
+					// Define all forward index term occurrencies:
+					std::vector<strus::analyzer::Term>::const_iterator
+						fi = doc.forwardIndexTerms().begin(),
+						fe = doc.forwardIndexTerms().end();
+					for (; fi != fe; ++fi)
+					{
+						storagedoc->addForwardIndexTerm(
+							fi->type(), fi->value(), fi->pos());
+					}
+	
+					// Define all attributes extracted from the document analysis:
+					std::vector<strus::analyzer::Attribute>::const_iterator
+						ai = doc.attributes().begin(), ae = doc.attributes().end();
+					for (; ai != ae; ++ai)
+					{
+						storagedoc->setAttribute( ai->name(), ai->value());
+					}
+			
+					// Define all metadata elements extracted from the document analysis:
+					std::vector<strus::analyzer::MetaData>::const_iterator
+						mi = doc.metadata().begin(), me = doc.metadata().end();
+					for (; mi != me; ++mi)
+					{
+						strus::ArithmeticVariant value(
+							strus::arithmeticVariantFromString( mi->value()));
+						storagedoc->setMetaData( mi->name(), value);
+					}
+					storagedoc->done();
 				}
-
-				// Define hardcoded document attributes:
-				storagedoc->setAttribute(
-					strus::Constants::attribute_docid(), *fitr);
-		
-				// Define hardcoded document metadata, if known:
-				if (hasDoclenAttribute)
-				{
-					strus::Index lastPos = (doc.searchIndexTerms().empty())
-							?0:doc.searchIndexTerms()[
-								doc.searchIndexTerms().size()-1].pos();
-					storagedoc->setMetaData(
-						strus::Constants::metadata_doclen(),
-						strus::ArithmeticVariant( lastPos));
-				}
-				// Define all search index term occurrencies:
-				std::vector<strus::analyzer::Term>::const_iterator
-					ti = doc.searchIndexTerms().begin(),
-					te = doc.searchIndexTerms().end();
-				for (; ti != te; ++ti)
-				{
-					storagedoc->addSearchIndexTerm(
-						ti->type(), ti->value(), ti->pos());
-				}
-
-				// Define all forward index term occurrencies:
-				std::vector<strus::analyzer::Term>::const_iterator
-					fi = doc.forwardIndexTerms().begin(),
-					fe = doc.forwardIndexTerms().end();
-				for (; fi != fe; ++fi)
-				{
-					storagedoc->addForwardIndexTerm(
-						fi->type(), fi->value(), fi->pos());
-				}
-
-				// Define all attributes extracted from the document analysis:
-				std::vector<strus::analyzer::Attribute>::const_iterator
-					ai = doc.attributes().begin(), ae = doc.attributes().end();
-				for (; ai != ae; ++ai)
-				{
-					storagedoc->setAttribute( ai->name(), ai->value());
-				}
-		
-				// Define all metadata elements extracted from the document analysis:
-				std::vector<strus::analyzer::MetaData>::const_iterator
-					mi = doc.metadata().begin(), me = doc.metadata().end();
-				for (; mi != me; ++mi)
-				{
-					strus::ArithmeticVariant value(
-						strus::arithmeticVariantFromString( mi->value()));
-					storagedoc->setMetaData( mi->name(), value);
-				}
-				storagedoc->done();
 			}
 			catch (const std::bad_alloc& err)
 			{

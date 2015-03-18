@@ -28,10 +28,12 @@
 */
 #include "keyMapGenProcessor.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/fileio.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "private/utils.hpp"
+#include "private/inputStream.hpp"
 
 using namespace strus;
 
@@ -138,33 +140,32 @@ void KeyMapGenProcessor::run()
 				try
 				{
 					// Read the input file to analyze:
-					std::string documentContent;
-					unsigned int ec = strus::readFile( *fitr, documentContent);
-					if (ec)
+					strus::InputStream input( *fitr);
+					std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
+						analyzerInstance( m_analyzer->createInstance( input.stream()));
+
+					while (analyzerInstance->hasMore())
 					{
-						std::ostringstream msg;
-						std::cerr << "failed to load document to analyze " << *fitr << " (file system error " << ec << ")" << std::endl;
-					}
+						// Call the analyzer and create the document:
+						strus::analyzer::Document
+							doc = analyzerInstance->analyzeNext();
 			
-					// Call the analyzer and create the document:
-					strus::analyzer::Document doc
-						= m_analyzer->analyze( documentContent);
-			
-					// Define all search index term occurrencies:
-					std::vector<strus::analyzer::Term>::const_iterator
-						ti = doc.searchIndexTerms().begin(),
-						te = doc.searchIndexTerms().end();
-					for (; ti != te; ++ti)
-					{
-						KeyOccurrenceMap::iterator
-							ki = keyOccurrenceMap.find( ti->value());
-						if (ki == keyOccurrenceMap.end())
+						// Define all search index term occurrencies:
+						std::vector<strus::analyzer::Term>::const_iterator
+							ti = doc.searchIndexTerms().begin(),
+							te = doc.searchIndexTerms().end();
+						for (; ti != te; ++ti)
 						{
-							keyOccurrenceMap[ ti->value()] = 1;
-						}
-						else
-						{
-							++ki->second;
+							KeyOccurrenceMap::iterator
+								ki = keyOccurrenceMap.find( ti->value());
+							if (ki == keyOccurrenceMap.end())
+							{
+								keyOccurrenceMap[ ti->value()] = 1;
+							}
+							else
+							{
+								++ki->second;
+							}
 						}
 					}
 				}

@@ -40,6 +40,7 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
+#include "private/inputStream.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -175,32 +176,11 @@ int main( int argc, const char* argv[])
 		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
 
 		// Load the document:
+		strus::InputStream input( docpath);
 		std::ifstream documentFile;
-		std::auto_ptr<strus::DocumentAnalyzerInstanceInterface> analyzerInstance;
-		if (docpath == "-")
-		{
-			analyzerInstance.reset( analyzer->createDocumentAnalyzerInstance( std::cin));
-		}
-		else
-		{
-			try 
-			{
-				documentFile.open( docpath.c_str(), std::fstream::in | std::ios::binary);
-			}
-			catch (const std::ifstream::failure& err)
-			{
-				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
-			}
-			catch (const std::runtime_error& err)
-			{
-				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "': " + err.what());
-			}
-			if(!documentFile)
-			{
-				throw std::runtime_error( std::string( "failed to read file to analyze '") + docpath + "'");
-			}
-			analyzerInstance.reset( analyzer->createDocumentAnalyzerInstance( documentFile));
-		}
+		std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
+			analyzerInstance(
+				analyzer->createInstance( input.stream()));
 
 		// Analyze the document and print the result:
 		while (analyzerInstance->hasMore())

@@ -54,6 +54,8 @@ class SharedPtr
 public:
 	SharedPtr( X* ptr)
 		:boost::shared_ptr<X>(ptr){}
+	SharedPtr( X* ptr, void (*Deleter)( X* ptr))
+		:boost::shared_ptr<X>(ptr,Deleter){}
 	SharedPtr( const SharedPtr& o)
 		:boost::shared_ptr<X>(o){}
 	SharedPtr()

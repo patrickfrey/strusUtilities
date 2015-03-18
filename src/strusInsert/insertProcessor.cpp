@@ -40,6 +40,7 @@
 #include "strus/analyzer/document.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/fileio.hpp"
+#include "private/inputStream.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "commitQueue.hpp"
 #include <memory>
@@ -73,38 +74,6 @@ void InsertProcessor::sigStop()
 	m_terminated = true;
 }
 
-static strus::DocumentAnalyzerInstanceInterface*
-	createAnalyzerInstance(
-		const DocumentAnalyzerInterface* analyzer,
-		const std::string& docpath)
-{
-	if (docpath == "-")
-	{
-		return analyzer->createDocumentAnalyzerInstance( std::cin);
-	}
-	else
-	{
-		std::ifstream documentFile;
-		try 
-		{
-			documentFile.open( docpath.c_str(), std::fstream::in | std::ios::binary);
-		}
-		catch (const std::ifstream::failure& err)
-		{
-			throw std::runtime_error( std::string( "failed to read file to insert '") + docpath + "': " + err.what());
-		}
-		catch (const std::runtime_error& err)
-		{
-			throw std::runtime_error( std::string( "failed to read file to insert '") + docpath + "': " + err.what());
-		}
-		if(!documentFile)
-		{
-			throw std::runtime_error( std::string( "failed to read file to insert '") + docpath + "'");
-		}
-		return analyzer->createDocumentAnalyzerInstance( documentFile);
-	}
-}
-
 void InsertProcessor::run()
 {
 	Index docno;
@@ -130,9 +99,9 @@ void InsertProcessor::run()
 		{
 			try
 			{
+				strus::InputStream input( *fitr);
 				std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-					analyzerInstance(
-						createAnalyzerInstance( m_analyzer, *fitr));
+					analyzerInstance( m_analyzer->createInstance( input.stream()));
 
 				while (analyzerInstance->hasMore())
 				{
@@ -155,14 +124,14 @@ void InsertProcessor::run()
 						{
 							storagedoc.reset(
 								transaction->createDocument(
-									oi->value(), docno?(docno + fidx):0));
+									oi->value(), docno?(docno + docCount):0));
 							//... use the docid from the analyzer if defined there
 						}
 						else
 						{
 							storagedoc.reset(
 								transaction->createDocument(
-									*fitr, docno?(docno + fidx):0));
+									*fitr, docno?(docno + docCount):0));
 							storagedoc->setAttribute(
 								strus::Constants::attribute_docid(), *fitr);
 							//... define file path as hardcoded docid attribute
@@ -227,6 +196,7 @@ void InsertProcessor::run()
 							m_commitque->push( transaction.release(), docno, docCount);
 							transaction.reset( m_storage->createTransaction());
 							docCount = 0;
+							docno = m_docnoAllocator?m_docnoAllocator->allocDocnoRange( m_transactionSize):0;
 						}
 					}
 				}
@@ -234,10 +204,12 @@ void InsertProcessor::run()
 			catch (const std::bad_alloc& err)
 			{
 				std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
+				docCount = 0;
 			}
 			catch (const std::runtime_error& err)
 			{
 				std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+				docCount = 0;
 			}
 		}
 		if (!m_terminated && docCount)
