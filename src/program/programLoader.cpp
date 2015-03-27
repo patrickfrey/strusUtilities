@@ -165,6 +165,7 @@ static void parseWeightingConfig(
 	}
 	std::string functionName = parse_IDENTIFIER( src);
 	WeightingConfig wcfg;
+	std::vector<std::string> weightedFeatureSets;
 
 	if (!isOpenOvalBracket( *src))
 	{
@@ -197,15 +198,13 @@ static void parseWeightingConfig(
 		throw std::runtime_error( "close oval bracket ')' expected at end of weighting function parameter list");
 	}
 	(void)parse_OPERATOR(src);
-	qeval.setWeighting( functionName, wcfg);
-
 	if (isOpenSquareBracket( *src))
 	{
 		(void)parse_OPERATOR( src);
 	
 		while (*src && isAlnum( *src))
 		{
-			qeval.addWeightingFeature( parse_IDENTIFIER(src));
+			weightedFeatureSets.push_back( parse_IDENTIFIER( src));
 			if (isComma( *src))
 			{
 				(void)parse_OPERATOR( src);
@@ -221,6 +220,7 @@ static void parseWeightingConfig(
 		}
 		(void)parse_OPERATOR( src);
 	}
+	qeval.addWeightingFunction( functionName, wcfg, weightedFeatureSets); 
 }
 
 
