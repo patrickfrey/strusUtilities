@@ -1,0 +1,17 @@
+Source: strusutilities
+Section: libs
+Priority: optional
+Maintainer: Patrick Frey <patrickpfrey@yahoo.com>
+Build-Depends: debhelper (>= 4.1.16), cmake,
+ libboost1.48-dev, libboost-thread1.48-dev, libboost-system1.48-dev,
+ libboost-date-time1.48-dev, strus-0.0, strusanalyzer-0.0, strusmodule-0.0
+Standards-Version: 3.8.3
+Homepage: http://project-strus.net
+
+Package: strusutilities
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Some utility programs to access text search engine from command line
+ Some utility programs to access text search engine from command line. Contains
+ programs to insert documents, to inspect inserted documents and to query the strus
+ text search engine.
