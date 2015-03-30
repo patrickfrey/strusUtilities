@@ -27,7 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "commitQueue.hpp"
-#include <iostream>
+#include <cstdio>
 
 using namespace strus;
 
@@ -57,7 +57,7 @@ void CommitQueue::push(
 			transaction->commit();
 			Index totalNofDocuments = m_storage->localNofDocumentsInserted();
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
-			std::cerr << "inserted " << nofDocsInserted << " documents (total " << totalNofDocuments << ")" << std::endl;
+			printf( "\rinserted %u documents (total %u)", nofDocsInserted, totalNofDocuments);
 			delete transaction;
 			{
 				utils::ScopedLock lock( m_mutex);

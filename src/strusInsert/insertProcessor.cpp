@@ -119,12 +119,14 @@ void InsertProcessor::run()
 						for (;oi != oe
 							&& oi->name() != strus::Constants::attribute_docid();
 							++oi){}
+						const char* docid = 0;
 						std::auto_ptr<strus::StorageDocumentInterface> storagedoc;
 						if (oi != oe)
 						{
 							storagedoc.reset(
 								transaction->createDocument(
 									oi->value(), docno?(docno + docCount):0));
+							docid = oi->value().c_str();
 							//... use the docid from the analyzer if defined there
 						}
 						else
@@ -134,6 +136,7 @@ void InsertProcessor::run()
 									*fitr, docno?(docno + docCount):0));
 							storagedoc->setAttribute(
 								strus::Constants::attribute_docid(), *fitr);
+							docid = fitr->c_str();
 							//... define file path as hardcoded docid attribute
 						}
 	
@@ -147,14 +150,27 @@ void InsertProcessor::run()
 								strus::Constants::metadata_doclen(),
 								strus::ArithmeticVariant( lastPos));
 						}
+						unsigned int maxpos = 0;
 						// Define all search index term occurrencies:
 						std::vector<strus::analyzer::Term>::const_iterator
 							ti = doc.searchIndexTerms().begin(),
 							te = doc.searchIndexTerms().end();
 						for (; ti != te; ++ti)
 						{
-							storagedoc->addSearchIndexTerm(
-								ti->type(), ti->value(), ti->pos());
+							if (ti->pos() > Constants::storage_max_position_info())
+							{
+								// Cut positions away that are out of range.
+								//	Issue a warning later:
+								if (ti->pos() > maxpos)
+								{
+									maxpos = ti->pos();
+								}
+							}
+							else
+							{
+								storagedoc->addSearchIndexTerm(
+									ti->type(), ti->value(), ti->pos());
+							}
 						}
 	
 						// Define all forward index terms:
@@ -163,8 +179,19 @@ void InsertProcessor::run()
 							fe = doc.forwardIndexTerms().end();
 						for (; fi != fe; ++fi)
 						{
-							storagedoc->addForwardIndexTerm(
-								fi->type(), fi->value(), fi->pos());
+							if (fi->pos() > Constants::storage_max_position_info())
+							{
+								// Cut positions away that are out of range. Issue a warning later:
+								if (fi->pos() > maxpos)
+								{
+									maxpos = fi->pos();
+								}
+							}
+							else
+							{
+								storagedoc->addForwardIndexTerm(
+									fi->type(), fi->value(), fi->pos());
+							}
 						}
 	
 						// Define all attributes extracted from the document analysis:
@@ -174,7 +201,7 @@ void InsertProcessor::run()
 						{
 							storagedoc->setAttribute( ai->name(), ai->value());
 						}
-	
+
 						// Define all metadata elements extracted from the document analysis:
 						std::vector<strus::analyzer::MetaData>::const_iterator
 							mi = doc.metadata().begin(), me = doc.metadata().end();
@@ -184,7 +211,13 @@ void InsertProcessor::run()
 								strus::arithmeticVariantFromString( mi->value()));
 							storagedoc->setMetaData( mi->name(), value);
 						}
-	
+
+						// Issue warning for documents cut because they are too big to insert:
+						if (maxpos > Constants::storage_max_position_info())
+						{
+							std::cerr << "token positions of document '" << docid << "' are out or range (document too big, " << maxpos << " token positions assigned)" << std::endl;
+						}
+
 						// Finish document completed:
 						storagedoc->done();
 						docCount++;

@@ -633,7 +633,19 @@ static void parseFeatureDef(
 	else
 	{
 		char const* start = src;
-		while (*src && !isSpace(*src) && *src != ';' && *src != '{') ++src;
+		while (*src && !isSpace(*src) && *src != ';' && *src != '{')
+		{
+			if (*src == '\'' || *src == '\"')
+			{
+				char eb = *src;
+				for (++src; *src && *src != eb; ++src){}
+				if (*src) ++src;
+			}
+			else
+			{
+				++src;
+			}
+		}
 		xpathexpr.append( start, src-start);
 		skipSpaces( src);
 	}
