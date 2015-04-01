@@ -58,6 +58,14 @@
 #include <cstring>
 #include <stdexcept>
 
+static void writeErrorLog( const std::string& filename, const char* msg)
+{
+	unsigned int ec = strus::writeFile( filename, msg);
+	if (ec)
+	{
+		std::cerr << "failed to write last error to file '" << filename << "' (error code " << ec << ")";
+	}
+}
 
 int main( int argc_, const char* argv_[])
 {
@@ -67,10 +75,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 10,
+				argc_, argv_, 11,
 				"h,help", "t,threads:", "c,commit:", "f,fetch:",
 				"n,new", "v,version", "s,segmenter:", "m,module:",
-				"M,moduledir:", "R,resourcedir:");
+				"M,moduledir:", "R,resourcedir:", "L,logerror:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -157,6 +165,8 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "    Default is the value of option '--commit' (one document/file)" << std::endl;
 			std::cerr << "-n|--new" << std::endl;
 			std::cerr << "    All inserts are new; use preallocated document numbers" << std::endl;
+			std::cerr << "-L|--logerror <FILE>" << std::endl;
+			std::cerr << "    Write the last error occurred to <FILE> in case of an exception"  << std::endl;
 			return rt;
 		}
 		bool allInsertsNew = opt( "new");
@@ -263,11 +273,13 @@ int main( int argc_, const char* argv_[])
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << "ERROR " << e.what() << std::endl;
+		if (opt( "logerror")) writeErrorLog( opt[ "logerror"], e.what());
 		return 6;
 	}
 	catch (const std::exception& e)
 	{
 		std::cerr << "EXCEPTION " << e.what() << std::endl;
+		if (opt( "logerror")) writeErrorLog( opt[ "logerror"], e.what());
 		return 7;
 	}
 	return 0;
