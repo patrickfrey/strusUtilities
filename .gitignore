@@ -39,7 +39,9 @@ cmake/uninstall.cmake
 DartConfiguration.tcl
 Testing/
 CPackConfig.cmake
+CPackConfig.cmake.user
 CPackSourceConfig.cmake
+CPackSourceConfig.cmake.user
 
 # Compiled Programs
 src/strusCreate/strusCreate
