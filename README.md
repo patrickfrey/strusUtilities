@@ -2,10 +2,10 @@
 The command line programs introduced here can call built-in functions and functions in loadable modules.
 
 ### strusCreate
-Create a strus repository
+Create a strus storage.
 
 ### strusDestroy
-Remove a strus repository
+Remove a strus storage.
 
 ### strusInspect
 Inspect elements of items inserted in a strus storage.

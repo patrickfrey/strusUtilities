@@ -35,6 +35,7 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storagePeerInterface.hpp"
 #include "strus/storagePeerTransactionInterface.hpp"
+#include "strus/storageDumpInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -132,11 +133,17 @@ int main( int argc, const char* argv[])
 		}
 		std::string storagecfg( opt[0]);
 
-		// Create objects to check storage:
+		// Dump the storage:
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
 
-		storage->dumpStorage( std::cout);
+		std::auto_ptr<strus::StorageDumpInterface> dump( storage->createDump());
+		const char* buf;
+		std::size_t bufsize;
+		while (dump->nextChunk( buf, bufsize))
+		{
+			std::cout << std::string( buf, bufsize);
+		}
 	}
 	catch (const std::runtime_error& e)
 	{
