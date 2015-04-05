@@ -32,6 +32,7 @@
 using namespace strus;
 
 InputStream::InputStream( const std::string& docpath)
+	:m_docpath(docpath)
 {
 	if (docpath == "-")
 	{
@@ -61,9 +62,30 @@ InputStream::~InputStream()
 	}
 }
 
-std::istream& InputStream::stream()
+std::size_t InputStream::read( char* buf, std::size_t bufsize)
 {
-	return *m_stream;
+	try
+	{
+		m_stream->read( buf, bufsize);
+		return m_stream->gcount();
+	}
+	catch (const std::istream::failure& err)
+	{
+		if (m_stream->eof())
+		{
+			return m_stream->gcount();
+		}
+		throw std::runtime_error( std::string("error reading file '") + m_docpath + "': " + err.what());
+	}
+	catch (const std::exception& err)
+	{
+		throw std::runtime_error( std::string("error reading file '") + m_docpath + "': " + err.what());
+	}
+	catch (...)
+	{
+		throw std::runtime_error( std::string("uncaught exception reading file '") + m_docpath + "':");
+	}
 }
+
 
 

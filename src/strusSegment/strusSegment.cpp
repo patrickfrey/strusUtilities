@@ -178,28 +178,41 @@ int main( int argc, const char* argv[])
 
 		// Load the document:
 		strus::InputStream input( docpath);
-		std::ifstream documentFile;
 		std::auto_ptr<strus::SegmenterInstanceInterface>
-			segmenterInstance(
-				segmenter->createInstance( input.stream()));
+			segmenterInstance( segmenter->createInstance());
 
-		// Segment the input:
-		int segid;
-		strus::SegmenterPosition segpos;
-		const char* segdata;
-		std::size_t segsize;
-		while (segmenterInstance->getNext( segid, segpos, segdata, segsize))
+		enum {SegmenterBufSize=8192};
+		char buf[ SegmenterBufSize];
+		bool eof = false;
+
+		while (!eof)
 		{
-			if (printIndices)
+			std::size_t readsize = input.read( buf, sizeof(buf));
+			if (!readsize)
 			{
-				std::cout << segid << ": ";
+				eof = true;
+				continue;
 			}
-			if (printPositions)
+			segmenterInstance->putInput( buf, readsize, readsize != SegmenterBufSize);
+
+			// Segment the input:
+			int segid;
+			strus::SegmenterPosition segpos;
+			const char* segdata;
+			std::size_t segsize;
+			while (segmenterInstance->getNext( segid, segpos, segdata, segsize))
 			{
-				std::cout << segpos << " ";
+				if (printIndices)
+				{
+					std::cout << segid << ": ";
+				}
+				if (printPositions)
+				{
+					std::cout << segpos << " ";
+				}
+				std::cout << resultQuot << std::string(segdata,segsize)
+						<< resultQuot << std::endl;
 			}
-			std::cout << resultQuot << std::string(segdata,segsize)
-					<< resultQuot << std::endl;
 		}
 		return 0;
 	}

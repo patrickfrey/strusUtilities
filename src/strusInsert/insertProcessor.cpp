@@ -101,17 +101,26 @@ void InsertProcessor::run()
 			{
 				strus::InputStream input( *fitr);
 				std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-					analyzerInstance( m_analyzer->createInstance( input.stream()));
+					analyzerInstance( m_analyzer->createInstance());
 
-				while (analyzerInstance->hasMore())
+				enum {AnalyzerBufSize=8192};
+				char buf[ AnalyzerBufSize];
+				bool eof = false;
+
+				while (!eof)
 				{
-					while (analyzerInstance->hasMore()
-						&& docCount < m_transactionSize)
+					std::size_t readsize = input.read( buf, sizeof(buf));
+					if (!readsize)
 					{
-						// Analyze the next sub document:
-						strus::analyzer::Document
-							doc = analyzerInstance->analyzeNext();
-	
+						eof = true;
+						continue;
+					}
+					analyzerInstance->putInput( buf, readsize, readsize != AnalyzerBufSize);
+
+					// Analyze the document and print the result:
+					strus::analyzer::Document doc;
+					while (!m_terminated && analyzerInstance->analyzeNext( doc))
+					{
 						// Create the storage transaction document with the correct docid:
 						std::vector<strus::analyzer::Attribute>::const_iterator
 							oi = doc.attributes().begin(),
@@ -221,10 +230,8 @@ void InsertProcessor::run()
 						// Finish document completed:
 						storagedoc->done();
 						docCount++;
-					}
-					if (docCount == m_transactionSize && docCount)
-					{
-						if (!m_terminated)
+
+						if (docCount == m_transactionSize && docCount && !m_terminated)
 						{
 							m_commitque->push( transaction.release(), docno, docCount);
 							transaction.reset( m_storage->createTransaction());

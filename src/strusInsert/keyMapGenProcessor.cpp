@@ -142,29 +142,42 @@ void KeyMapGenProcessor::run()
 					// Read the input file to analyze:
 					strus::InputStream input( *fitr);
 					std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-						analyzerInstance( m_analyzer->createInstance( input.stream()));
+						analyzerInstance( m_analyzer->createInstance());
 
-					while (analyzerInstance->hasMore())
-					{
-						// Call the analyzer and create the document:
-						strus::analyzer::Document
-							doc = analyzerInstance->analyzeNext();
+					enum {AnalyzerBufSize=8192};
+					char buf[ AnalyzerBufSize];
+					bool eof = false;
 			
-						// Define all search index term occurrencies:
-						std::vector<strus::analyzer::Term>::const_iterator
-							ti = doc.searchIndexTerms().begin(),
-							te = doc.searchIndexTerms().end();
-						for (; ti != te; ++ti)
+					while (!eof)
+					{
+						std::size_t readsize = input.read( buf, sizeof(buf));
+						if (!readsize)
 						{
-							KeyOccurrenceMap::iterator
-								ki = keyOccurrenceMap.find( ti->value());
-							if (ki == keyOccurrenceMap.end())
+							eof = true;
+							continue;
+						}
+						analyzerInstance->putInput( buf, readsize, readsize != AnalyzerBufSize);
+			
+						// Analyze the document and print the result:
+						strus::analyzer::Document doc;
+						while (analyzerInstance->analyzeNext( doc))
+						{
+							// Define all search index term occurrencies:
+							std::vector<strus::analyzer::Term>::const_iterator
+								ti = doc.searchIndexTerms().begin(),
+								te = doc.searchIndexTerms().end();
+							for (; ti != te; ++ti)
 							{
-								keyOccurrenceMap[ ti->value()] = 1;
-							}
-							else
-							{
-								++ki->second;
+								KeyOccurrenceMap::iterator
+									ki = keyOccurrenceMap.find( ti->value());
+								if (ki == keyOccurrenceMap.end())
+								{
+									keyOccurrenceMap[ ti->value()] = 1;
+								}
+								else
+								{
+									++ki->second;
+								}
 							}
 						}
 					}

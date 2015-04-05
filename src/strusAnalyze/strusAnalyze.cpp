@@ -177,70 +177,82 @@ int main( int argc, const char* argv[])
 
 		// Load the document:
 		strus::InputStream input( docpath);
-		std::ifstream documentFile;
 		std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-			analyzerInstance(
-				analyzer->createInstance( input.stream()));
+			analyzerInstance( analyzer->createInstance());
 
-		// Analyze the document and print the result:
-		while (analyzerInstance->hasMore())
+		enum {AnalyzerBufSize=8192};
+		char buf[ AnalyzerBufSize];
+		bool eof = false;
+
+		while (!eof)
 		{
-			strus::analyzer::Document doc = analyzerInstance->analyzeNext();
-
-			if (!doc.subDocumentTypeName().empty())
+			std::size_t readsize = input.read( buf, sizeof(buf));
+			if (!readsize)
 			{
-				std::cout << "-- document " << doc.subDocumentTypeName() << std::endl;
+				eof = true;
+				continue;
 			}
-			std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
-			std::sort( itermar.begin(), itermar.end(), TermOrder());
+			analyzerInstance->putInput( buf, readsize, readsize != AnalyzerBufSize);
 
-			std::vector<strus::analyzer::Term>::const_iterator
-				ti = itermar.begin(), te = itermar.end();
-
-			std::cout << std::endl << "search index terms:" << std::endl;
-			for (; ti != te; ++ti)
+			// Analyze the document and print the result:
+			strus::analyzer::Document doc;
+			while (analyzerInstance->analyzeNext( doc))
 			{
-				std::cout << ti->pos()
-					  << " " << ti->type()
-					  << " '" << ti->value() << "'"
-					  << std::endl;
-			}
-
-			std::vector<strus::analyzer::Term> ftermar = doc.forwardIndexTerms();
-			std::sort( ftermar.begin(), ftermar.end(), TermOrder());
-
-			std::vector<strus::analyzer::Term>::const_iterator
-				fi = ftermar.begin(), fe = ftermar.end();
-
-			std::cout << std::endl << "forward index terms:" << std::endl;
-			for (; fi != fe; ++fi)
-			{
-				std::cout << fi->pos()
-					  << " " << fi->type()
-					  << " '" << fi->value() << "'"
-					  << std::endl;
-			}
-
-			std::vector<strus::analyzer::MetaData>::const_iterator
-				mi = doc.metadata().begin(), me = doc.metadata().end();
-
-			std::cout << std::endl << "metadata:" << std::endl;
-			for (; mi != me; ++mi)
-			{
-				std::cout << mi->name()
-					  << " '" << mi->value() << "'"
-					  << std::endl;
-			}
-
-			std::vector<strus::analyzer::Attribute>::const_iterator
-				ai = doc.attributes().begin(), ae = doc.attributes().end();
+				if (!doc.subDocumentTypeName().empty())
+				{
+					std::cout << "-- document " << doc.subDocumentTypeName() << std::endl;
+				}
+				std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
+				std::sort( itermar.begin(), itermar.end(), TermOrder());
 	
-			std::cout << std::endl << "attributes:" << std::endl;
-			for (; ai != ae; ++ai)
-			{
-				std::cout << ai->name()
-					  << " '" << ai->value() << "'"
-					  << std::endl;
+				std::vector<strus::analyzer::Term>::const_iterator
+					ti = itermar.begin(), te = itermar.end();
+	
+				std::cout << std::endl << "search index terms:" << std::endl;
+				for (; ti != te; ++ti)
+				{
+					std::cout << ti->pos()
+						  << " " << ti->type()
+						  << " '" << ti->value() << "'"
+						  << std::endl;
+				}
+	
+				std::vector<strus::analyzer::Term> ftermar = doc.forwardIndexTerms();
+				std::sort( ftermar.begin(), ftermar.end(), TermOrder());
+	
+				std::vector<strus::analyzer::Term>::const_iterator
+					fi = ftermar.begin(), fe = ftermar.end();
+	
+				std::cout << std::endl << "forward index terms:" << std::endl;
+				for (; fi != fe; ++fi)
+				{
+					std::cout << fi->pos()
+						  << " " << fi->type()
+						  << " '" << fi->value() << "'"
+						  << std::endl;
+				}
+	
+				std::vector<strus::analyzer::MetaData>::const_iterator
+					mi = doc.metadata().begin(), me = doc.metadata().end();
+	
+				std::cout << std::endl << "metadata:" << std::endl;
+				for (; mi != me; ++mi)
+				{
+					std::cout << mi->name()
+						  << " '" << mi->value() << "'"
+						  << std::endl;
+				}
+	
+				std::vector<strus::analyzer::Attribute>::const_iterator
+					ai = doc.attributes().begin(), ae = doc.attributes().end();
+		
+				std::cout << std::endl << "attributes:" << std::endl;
+				for (; ai != ae; ++ai)
+				{
+					std::cout << ai->name()
+						  << " '" << ai->value() << "'"
+						  << std::endl;
+				}
 			}
 		}
 		return 0;

@@ -40,10 +40,12 @@ class InputStream
 public:
 	InputStream( const std::string& docpath);
 	~InputStream();
-	std::istream& stream();
+
+	std::size_t read( char* buf, std::size_t bufsize);
 
 private:
 	std::istream* m_stream;
+	std::string m_docpath;
 };
 
 }

@@ -110,124 +110,137 @@ void CheckInsertProcessor::run()
 				// Read the input file to analyze:
 				strus::InputStream input( *fitr);
 				std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-					analyzerInstance( m_analyzer->createInstance( input.stream()));
+					analyzerInstance( m_analyzer->createInstance());
 
-				while (analyzerInstance->hasMore())
+				enum {AnalyzerBufSize=8192};
+				char buf[ AnalyzerBufSize];
+				bool eof = false;
+		
+				while (!eof)
 				{
-					// Analyze the next sub document:
-					strus::analyzer::Document
-						doc = analyzerInstance->analyzeNext();
-
-					std::vector<strus::analyzer::Attribute>::const_iterator
-						oi = doc.attributes().begin(),
-						oe = doc.attributes().end();
-					for (;oi != oe
-						&& oi->name() != strus::Constants::attribute_docid();
-						++oi){}
-					const char* docid = 0;
-					boost::scoped_ptr<strus::StorageDocumentInterface> storagedoc;
-					if (oi != oe)
+					std::size_t readsize = input.read( buf, sizeof(buf));
+					if (!readsize)
 					{
-						storagedoc.reset(
-							m_storage->createDocumentChecker(
-								oi->value(), m_logfile));
-						docid = oi->value().c_str();
-						//... use the docid from the analyzer if defined there
+						eof = true;
+						continue;
 					}
-					else
+					analyzerInstance->putInput( buf, readsize, readsize != AnalyzerBufSize);
+
+					// Analyze the document and print the result:
+					strus::analyzer::Document doc;
+					while (analyzerInstance->analyzeNext( doc))
 					{
-						storagedoc.reset(
-							m_storage->createDocumentChecker(
-								*fitr, m_logfile));
+						std::vector<strus::analyzer::Attribute>::const_iterator
+							oi = doc.attributes().begin(),
+							oe = doc.attributes().end();
+						for (;oi != oe
+							&& oi->name() != strus::Constants::attribute_docid();
+							++oi){}
+						const char* docid = 0;
+						boost::scoped_ptr<strus::StorageDocumentInterface> storagedoc;
+						if (oi != oe)
+						{
+							storagedoc.reset(
+								m_storage->createDocumentChecker(
+									oi->value(), m_logfile));
+							docid = oi->value().c_str();
+							//... use the docid from the analyzer if defined there
+						}
+						else
+						{
+							storagedoc.reset(
+								m_storage->createDocumentChecker(
+									*fitr, m_logfile));
+							storagedoc->setAttribute(
+								strus::Constants::attribute_docid(), *fitr);
+							docid = fitr->c_str();
+							//... define file path as hardcoded docid attribute
+						}
+		
+						// Define hardcoded document attributes:
 						storagedoc->setAttribute(
 							strus::Constants::attribute_docid(), *fitr);
-						docid = fitr->c_str();
-						//... define file path as hardcoded docid attribute
-					}
-	
-					// Define hardcoded document attributes:
-					storagedoc->setAttribute(
-						strus::Constants::attribute_docid(), *fitr);
-			
-					// Define hardcoded document metadata, if known:
-					if (hasDoclenAttribute)
-					{
-						strus::Index lastPos = (doc.searchIndexTerms().empty())
-								?0:doc.searchIndexTerms()[
-									doc.searchIndexTerms().size()-1].pos();
-						storagedoc->setMetaData(
-							strus::Constants::metadata_doclen(),
-							strus::ArithmeticVariant( lastPos));
-					}
-					unsigned int maxpos = 0;
-
-					// Define all search index term occurrencies:
-					std::vector<strus::analyzer::Term>::const_iterator
-						ti = doc.searchIndexTerms().begin(),
-						te = doc.searchIndexTerms().end();
-					for (; ti != te; ++ti)
-					{
-						if (ti->pos() > Constants::storage_max_position_info())
+				
+						// Define hardcoded document metadata, if known:
+						if (hasDoclenAttribute)
 						{
-							// Cut positions away that are out of range.
-							//	Issue a warning later:
-							if (ti->pos() > maxpos)
+							strus::Index lastPos = (doc.searchIndexTerms().empty())
+									?0:doc.searchIndexTerms()[
+										doc.searchIndexTerms().size()-1].pos();
+							storagedoc->setMetaData(
+								strus::Constants::metadata_doclen(),
+								strus::ArithmeticVariant( lastPos));
+						}
+						unsigned int maxpos = 0;
+	
+						// Define all search index term occurrencies:
+						std::vector<strus::analyzer::Term>::const_iterator
+							ti = doc.searchIndexTerms().begin(),
+							te = doc.searchIndexTerms().end();
+						for (; ti != te; ++ti)
+						{
+							if (ti->pos() > Constants::storage_max_position_info())
 							{
-								maxpos = ti->pos();
+								// Cut positions away that are out of range.
+								//	Issue a warning later:
+								if (ti->pos() > maxpos)
+								{
+									maxpos = ti->pos();
+								}
+							}
+							else
+							{
+								storagedoc->addSearchIndexTerm(
+									ti->type(), ti->value(), ti->pos());
 							}
 						}
-						else
+		
+						// Define all forward index term occurrencies:
+						std::vector<strus::analyzer::Term>::const_iterator
+							fi = doc.forwardIndexTerms().begin(),
+							fe = doc.forwardIndexTerms().end();
+						for (; fi != fe; ++fi)
 						{
-							storagedoc->addSearchIndexTerm(
-								ti->type(), ti->value(), ti->pos());
-						}
-					}
-	
-					// Define all forward index term occurrencies:
-					std::vector<strus::analyzer::Term>::const_iterator
-						fi = doc.forwardIndexTerms().begin(),
-						fe = doc.forwardIndexTerms().end();
-					for (; fi != fe; ++fi)
-					{
-						if (fi->pos() > Constants::storage_max_position_info())
-						{
-							// Cut positions away that are out of range. Issue a warning later:
-							if (fi->pos() > maxpos)
+							if (fi->pos() > Constants::storage_max_position_info())
 							{
-								maxpos = fi->pos();
+								// Cut positions away that are out of range. Issue a warning later:
+								if (fi->pos() > maxpos)
+								{
+									maxpos = fi->pos();
+								}
+							}
+							else
+							{
+								storagedoc->addForwardIndexTerm(
+									fi->type(), fi->value(), fi->pos());
 							}
 						}
-						else
+	
+						// Define all attributes extracted from the document analysis:
+						std::vector<strus::analyzer::Attribute>::const_iterator
+							ai = doc.attributes().begin(), ae = doc.attributes().end();
+						for (; ai != ae; ++ai)
 						{
-							storagedoc->addForwardIndexTerm(
-								fi->type(), fi->value(), fi->pos());
+							storagedoc->setAttribute( ai->name(), ai->value());
 						}
+	
+						// Define all metadata elements extracted from the document analysis:
+						std::vector<strus::analyzer::MetaData>::const_iterator
+							mi = doc.metadata().begin(), me = doc.metadata().end();
+						for (; mi != me; ++mi)
+						{
+							strus::ArithmeticVariant value(
+								strus::arithmeticVariantFromString( mi->value()));
+							storagedoc->setMetaData( mi->name(), value);
+						}
+	
+						// Issue warning for documents cut because they are too big to insert:
+						if (maxpos > Constants::storage_max_position_info())
+						{
+							std::cerr << "token positions of document '" << docid << "' are out or range (document too big, " << maxpos << " token positions assigned)" << std::endl;
+						}
+						storagedoc->done();
 					}
-
-					// Define all attributes extracted from the document analysis:
-					std::vector<strus::analyzer::Attribute>::const_iterator
-						ai = doc.attributes().begin(), ae = doc.attributes().end();
-					for (; ai != ae; ++ai)
-					{
-						storagedoc->setAttribute( ai->name(), ai->value());
-					}
-
-					// Define all metadata elements extracted from the document analysis:
-					std::vector<strus::analyzer::MetaData>::const_iterator
-						mi = doc.metadata().begin(), me = doc.metadata().end();
-					for (; mi != me; ++mi)
-					{
-						strus::ArithmeticVariant value(
-							strus::arithmeticVariantFromString( mi->value()));
-						storagedoc->setMetaData( mi->name(), value);
-					}
-
-					// Issue warning for documents cut because they are too big to insert:
-					if (maxpos > Constants::storage_max_position_info())
-					{
-						std::cerr << "token positions of document '" << docid << "' are out or range (document too big, " << maxpos << " token positions assigned)" << std::endl;
-					}
-					storagedoc->done();
 				}
 			}
 			catch (const std::bad_alloc& err)
