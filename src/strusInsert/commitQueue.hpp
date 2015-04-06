@@ -32,6 +32,7 @@
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/index.hpp"
+#include "strus/reference.hpp"
 #include "private/utils.hpp"
 #include <vector>
 #include <string>
@@ -46,15 +47,17 @@ public:
 			StorageClientInterface* storage_)
 		:m_storage(storage_)
 	{
-		m_minDocno = m_storage->maxDocumentNumber() + 1;
 		m_nofDocuments = m_storage->localNofDocumentsInserted();
 	}
 
-	void push(
+	void pushTransaction(
 		StorageTransactionInterface* transaction,
 		const Index& minDocno,
 		const Index& nofDocuments,
 		const Index& nofDocumentsAllocated);
+
+	void pushTransactionPromise( const Index& mindocno);
+	void breachTransactionPromise( const Index& mindocno);
 
 private:
 	class OpenTransaction
@@ -68,7 +71,7 @@ private:
 			,m_nofDocuments(o.m_nofDocuments)
 			,m_nofDocumentsAllocated(o.m_nofDocumentsAllocated){}
 
-		StorageTransactionInterface* transaction() const
+		Reference<StorageTransactionInterface> transaction() const
 		{
 			return m_transaction;
 		}
@@ -94,20 +97,23 @@ private:
 		}
 
 	private:
-		StorageTransactionInterface* m_transaction;
+		Reference<StorageTransactionInterface> m_transaction;
 		Index m_minDocno;
 		Index m_nofDocuments;
 		Index m_nofDocumentsAllocated;
 	};
 
-	StorageTransactionInterface* getNextTransaction( Index& nofDocs, Index& nofDocsAllocated);
+	void handleWaitingTransactions();
+	Reference<StorageTransactionInterface> getNextTransaction( Index& nofDocs, Index& nofDocsAllocated);
+	bool testAndGetFirstPromise( const Index& mindocno);
 
 private:
 	StorageClientInterface* m_storage;
-	Index m_minDocno;
 	Index m_nofDocuments;
 	std::set<OpenTransaction> m_openTransactions;
-	utils::Mutex m_mutex;
+	utils::Mutex m_mutex_openTransactions;
+	std::set<Index> m_promisedTransactions;
+	utils::Mutex m_mutex_promisedTransactions;
 };
 
 }//namespace

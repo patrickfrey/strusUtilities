@@ -31,58 +31,79 @@
 
 using namespace strus;
 
-void CommitQueue::push(
+void CommitQueue::pushTransactionPromise( const Index& mindocno)
+{
+	utils::ScopedLock lock( m_mutex_promisedTransactions);
+	m_promisedTransactions.insert( mindocno);
+}
+
+void CommitQueue::breachTransactionPromise( const Index& mindocno)
+{
+	utils::ScopedLock lock( m_mutex_promisedTransactions);
+	m_promisedTransactions.erase( mindocno);
+
+	handleWaitingTransactions();
+}
+
+bool CommitQueue::testAndGetFirstPromise( const Index& mindocno)
+{
+	utils::ScopedLock lock( m_mutex_promisedTransactions);
+	if (mindocno == 0 || m_promisedTransactions.size() == 0)
+	{
+		return true;
+	}
+	else if (*m_promisedTransactions.begin() == mindocno)
+	{
+		m_promisedTransactions.erase( m_promisedTransactions.begin());
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void CommitQueue::handleWaitingTransactions()
+{
+	for (;;)
+	{
+		Index nofDocs;
+		Index nofDocsAllocated;
+		Reference<StorageTransactionInterface>
+			transaction = getNextTransaction( nofDocs, nofDocsAllocated);
+		if (!transaction.get()) break;
+
+		transaction->commit();
+		Index totalNofDocuments = m_storage->localNofDocumentsInserted();
+		Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
+		::printf( "inserted %u documents (total %u)\n", nofDocsInserted, totalNofDocuments);
+		::fflush(stdout);
+	}
+}
+
+void CommitQueue::pushTransaction(
 	StorageTransactionInterface* transaction,
 	const Index& minDocno,
 	const Index& nofDocuments,
 	const Index& nofDocumentsAllocated)
 {
-	bool myCommit = false;
-	{
-		utils::ScopedLock lock( m_mutex);
-		if (m_minDocno == minDocno || minDocno == 0)
-		{
-			myCommit = true;
-		}
-		else
-		{
-			m_openTransactions.insert(
-				OpenTransaction( transaction, minDocno, nofDocuments, nofDocumentsAllocated));
-		}
-	}
-	if (myCommit)
-	{
-		Index nofDocs = nofDocuments;
-		Index nofDocsAllocated = nofDocumentsAllocated;
-		do
-		{
-			transaction->commit();
-			Index totalNofDocuments = m_storage->localNofDocumentsInserted();
-			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
-			::printf( "\rinserted %u documents (total %u)", nofDocsInserted, totalNofDocuments);
-			::fflush(stdout);
-			delete transaction;
-			{
-				utils::ScopedLock lock( m_mutex);
-				m_minDocno += nofDocsAllocated;
-			}
-			transaction = getNextTransaction( nofDocs, nofDocsAllocated);
-		}
-		while (transaction);
-	}
+	utils::ScopedLock lock( m_mutex_openTransactions);
+	m_openTransactions.insert(
+		OpenTransaction( transaction, minDocno, nofDocuments, nofDocumentsAllocated));
+
+	handleWaitingTransactions();
 }
 
-StorageTransactionInterface* CommitQueue::getNextTransaction( Index& nofDocs, Index& nofDocsAllocated)
+Reference<StorageTransactionInterface>
+	CommitQueue::getNextTransaction( Index& nofDocs, Index& nofDocsAllocated)
 {
-	StorageTransactionInterface* rt = 0;
-	utils::ScopedLock lock( m_mutex);
+	Reference<StorageTransactionInterface> rt;
+	utils::ScopedLock lock( m_mutex_openTransactions);
 
-	std::set<OpenTransaction>::iterator
-		ti = m_openTransactions.begin();
-
+	std::set<OpenTransaction>::iterator ti = m_openTransactions.begin();
 	if (ti != m_openTransactions.end())
 	{
-		if (ti->minDocno() == m_minDocno)
+		if (testAndGetFirstPromise( ti->minDocno()))
 		{
 			rt = ti->transaction();
 			nofDocs = ti->nofDocuments();

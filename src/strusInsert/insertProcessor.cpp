@@ -101,19 +101,15 @@ void InsertProcessor::run()
 				std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
 					analyzerInstance( m_analyzer->createInstance());
 
-				enum {AnalyzerBufSize=1024};
+				enum {AnalyzerBufSize=8192};
 				char buf[ AnalyzerBufSize];
 				bool eof = false;
 
 				while (!eof)
 				{
 					std::size_t readsize = input.read( buf, sizeof(buf));
-					if (!readsize)
-					{
-						eof = true;
-						continue;
-					}
-					analyzerInstance->putInput( buf, readsize, readsize != AnalyzerBufSize);
+					eof = (readsize != sizeof(buf));
+					analyzerInstance->putInput( buf, readsize, eof);
 
 					// Analyze the document and print the result:
 					strus::analyzer::Document doc;
@@ -131,6 +127,7 @@ void InsertProcessor::run()
 						if (m_docnoAllocator && !docnoRangeStart)
 						{
 							docnoRangeStart = m_docnoAllocator->allocDocnoRange( m_transactionSize);
+							m_commitque->pushTransactionPromise( docnoRangeStart);
 						}
 						Index docno = (docnoRangeStart)?(docnoRangeStart + docCount):0;
 						if (oi != oe)
@@ -236,7 +233,7 @@ void InsertProcessor::run()
 
 						if (docCount == m_transactionSize && docCount && !m_terminated)
 						{
-							m_commitque->push( transaction.release(), docnoRangeStart, docCount, docCount);
+							m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCount);
 							transaction.reset( m_storage->createTransaction());
 							docCount = 0;
 							docnoRangeStart = 0;
@@ -247,11 +244,15 @@ void InsertProcessor::run()
 			catch (const std::bad_alloc& err)
 			{
 				std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
+				if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
+				docnoRangeStart = 0;
 				docCount = 0;
 			}
 			catch (const std::runtime_error& err)
 			{
 				std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+				if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
+				docnoRangeStart = 0;
 				docCount = 0;
 			}
 		}
@@ -266,7 +267,7 @@ void InsertProcessor::run()
 					docCountAllocated -= (m_transactionSize - docCount);
 				}
 			}
-			m_commitque->push( transaction.release(), docnoRangeStart, docCount, docCountAllocated);
+			m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCountAllocated);
 		}
 	}
 }
