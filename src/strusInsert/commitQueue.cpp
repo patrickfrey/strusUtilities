@@ -87,10 +87,11 @@ void CommitQueue::pushTransaction(
 	const Index& nofDocuments,
 	const Index& nofDocumentsAllocated)
 {
-	utils::ScopedLock lock( m_mutex_openTransactions);
-	m_openTransactions.insert(
-		OpenTransaction( transaction, minDocno, nofDocuments, nofDocumentsAllocated));
-
+	{
+		utils::ScopedLock lock( m_mutex_openTransactions);
+		m_openTransactions.insert(
+			OpenTransaction( transaction, minDocno, nofDocuments, nofDocumentsAllocated));
+	}
 	handleWaitingTransactions();
 }
 
