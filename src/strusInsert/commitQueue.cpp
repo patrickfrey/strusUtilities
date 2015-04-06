@@ -34,7 +34,8 @@ using namespace strus;
 void CommitQueue::push(
 	StorageTransactionInterface* transaction,
 	const Index& minDocno,
-	const Index& nofDocuments)
+	const Index& nofDocuments,
+	const Index& nofDocumentsAllocated)
 {
 	bool myCommit = false;
 	{
@@ -46,30 +47,32 @@ void CommitQueue::push(
 		else
 		{
 			m_openTransactions.insert(
-				OpenTransaction( transaction, minDocno, nofDocuments));
+				OpenTransaction( transaction, minDocno, nofDocuments, nofDocumentsAllocated));
 		}
 	}
 	if (myCommit)
 	{
 		Index nofDocs = nofDocuments;
+		Index nofDocsAllocated = nofDocumentsAllocated;
 		do
 		{
 			transaction->commit();
 			Index totalNofDocuments = m_storage->localNofDocumentsInserted();
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
-			printf( "\rinserted %u documents (total %u)", nofDocsInserted, totalNofDocuments);
+			::printf( "\rinserted %u documents (total %u)", nofDocsInserted, totalNofDocuments);
+			::fflush(stdout);
 			delete transaction;
 			{
 				utils::ScopedLock lock( m_mutex);
-				m_minDocno += nofDocs;
+				m_minDocno += nofDocsAllocated;
 			}
-			transaction = getNextTransaction( nofDocs);
+			transaction = getNextTransaction( nofDocs, nofDocsAllocated);
 		}
 		while (transaction);
 	}
 }
 
-StorageTransactionInterface* CommitQueue::getNextTransaction( Index& nofDocs)
+StorageTransactionInterface* CommitQueue::getNextTransaction( Index& nofDocs, Index& nofDocsAllocated)
 {
 	StorageTransactionInterface* rt = 0;
 	utils::ScopedLock lock( m_mutex);
@@ -83,6 +86,7 @@ StorageTransactionInterface* CommitQueue::getNextTransaction( Index& nofDocs)
 		{
 			rt = ti->transaction();
 			nofDocs = ti->nofDocuments();
+			nofDocsAllocated = ti->nofDocumentsAllocated();
 			m_openTransactions.erase( ti++);
 		}
 	}

@@ -53,18 +53,20 @@ public:
 	void push(
 		StorageTransactionInterface* transaction,
 		const Index& minDocno,
-		const Index& nofDocuments);
+		const Index& nofDocuments,
+		const Index& nofDocumentsAllocated);
 
 private:
 	class OpenTransaction
 	{
 	public:
-		OpenTransaction( StorageTransactionInterface* t, Index d, Index n)
-			:m_transaction(t),m_minDocno(d),m_nofDocuments(n){}
+		OpenTransaction( StorageTransactionInterface* t, Index d, Index n, Index a)
+			:m_transaction(t),m_minDocno(d),m_nofDocuments(n),m_nofDocumentsAllocated(a){}
 		OpenTransaction( const OpenTransaction& o)
 			:m_transaction(o.m_transaction)
 			,m_minDocno(o.m_minDocno)
-			,m_nofDocuments(o.m_nofDocuments){}
+			,m_nofDocuments(o.m_nofDocuments)
+			,m_nofDocumentsAllocated(o.m_nofDocumentsAllocated){}
 
 		StorageTransactionInterface* transaction() const
 		{
@@ -81,6 +83,11 @@ private:
 			return m_nofDocuments;
 		}
 
+		Index nofDocumentsAllocated() const
+		{
+			return m_nofDocumentsAllocated;
+		}
+
 		bool operator<( const OpenTransaction& o) const
 		{
 			return m_minDocno < o.m_minDocno;
@@ -90,9 +97,10 @@ private:
 		StorageTransactionInterface* m_transaction;
 		Index m_minDocno;
 		Index m_nofDocuments;
+		Index m_nofDocumentsAllocated;
 	};
 
-	StorageTransactionInterface* getNextTransaction( Index& nofDocs);
+	StorageTransactionInterface* getNextTransaction( Index& nofDocs, Index& nofDocsAllocated);
 
 private:
 	StorageClientInterface* m_storage;

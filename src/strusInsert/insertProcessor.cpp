@@ -76,7 +76,7 @@ void InsertProcessor::sigStop()
 
 void InsertProcessor::run()
 {
-	Index docno;
+	Index docnoRangeStart = 0;
 	std::vector<std::string> files;
 	std::vector<std::string>::const_iterator fitr;
 
@@ -88,8 +88,6 @@ void InsertProcessor::run()
 
 	while (m_crawler->fetch( files))
 	{
-		docno = m_docnoAllocator?m_docnoAllocator->allocDocnoRange( m_transactionSize):0;
-
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
 		unsigned int docCount = 0;
@@ -103,7 +101,7 @@ void InsertProcessor::run()
 				std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
 					analyzerInstance( m_analyzer->createInstance());
 
-				enum {AnalyzerBufSize=8192};
+				enum {AnalyzerBufSize=1024};
 				char buf[ AnalyzerBufSize];
 				bool eof = false;
 
@@ -130,11 +128,16 @@ void InsertProcessor::run()
 							++oi){}
 						const char* docid = 0;
 						std::auto_ptr<strus::StorageDocumentInterface> storagedoc;
+						if (m_docnoAllocator && !docnoRangeStart)
+						{
+							docnoRangeStart = m_docnoAllocator->allocDocnoRange( m_transactionSize);
+						}
+						Index docno = (docnoRangeStart)?(docnoRangeStart + docCount):0;
 						if (oi != oe)
 						{
 							storagedoc.reset(
 								transaction->createDocument(
-									oi->value(), docno?(docno + docCount):0));
+									oi->value(), docno));
 							docid = oi->value().c_str();
 							//... use the docid from the analyzer if defined there
 						}
@@ -142,7 +145,7 @@ void InsertProcessor::run()
 						{
 							storagedoc.reset(
 								transaction->createDocument(
-									*fitr, docno?(docno + docCount):0));
+									*fitr, docno));
 							storagedoc->setAttribute(
 								strus::Constants::attribute_docid(), *fitr);
 							docid = fitr->c_str();
@@ -233,10 +236,10 @@ void InsertProcessor::run()
 
 						if (docCount == m_transactionSize && docCount && !m_terminated)
 						{
-							m_commitque->push( transaction.release(), docno, docCount);
+							m_commitque->push( transaction.release(), docnoRangeStart, docCount, docCount);
 							transaction.reset( m_storage->createTransaction());
 							docCount = 0;
-							docno = m_docnoAllocator?m_docnoAllocator->allocDocnoRange( m_transactionSize):0;
+							docnoRangeStart = 0;
 						}
 					}
 				}
@@ -254,12 +257,16 @@ void InsertProcessor::run()
 		}
 		if (!m_terminated && docCount)
 		{
-			m_commitque->push( transaction.release(), docno, docCount);
-			if (m_docnoAllocator && docCount < m_transactionSize)
+			Index docCountAllocated = m_transactionSize;
+			if (docnoRangeStart && docCount < m_transactionSize && m_docnoAllocator)
 			{
-				m_docnoAllocator->deallocDocnoRange(
-					docno + docCount, m_transactionSize - docCount);
+				if (m_docnoAllocator->deallocDocnoRange(
+					docnoRangeStart + docCount, m_transactionSize - docCount))
+				{
+					docCountAllocated -= (m_transactionSize - docCount);
+				}
 			}
+			m_commitque->push( transaction.release(), docnoRangeStart, docCount, docCountAllocated);
 		}
 	}
 }
