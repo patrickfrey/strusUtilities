@@ -45,7 +45,7 @@ class CommitQueue
 public:
 	explicit CommitQueue(
 			StorageClientInterface* storage_)
-		:m_storage(storage_)
+		:m_storage(storage_),m_nofDocuments(0),m_nofOpenTransactions(0)
 	{
 		m_nofDocuments = m_storage->localNofDocumentsInserted();
 	}
@@ -104,12 +104,15 @@ private:
 	};
 
 	void handleWaitingTransactions();
-	Reference<StorageTransactionInterface> getNextTransaction( Index& nofDocs, Index& nofDocsAllocated);
+	Reference<StorageTransactionInterface>
+		getNextTransaction(
+			Index& nofDocs, Index& nofDocsAllocated, unsigned int& nofOpenTransactions_);
 	bool testAndGetFirstPromise( const Index& mindocno);
 
 private:
 	StorageClientInterface* m_storage;
 	Index m_nofDocuments;
+	unsigned int m_nofOpenTransactions;
 	std::set<OpenTransaction> m_openTransactions;
 	utils::Mutex m_mutex_openTransactions;
 	std::set<Index> m_promisedTransactions;

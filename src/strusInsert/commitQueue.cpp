@@ -69,14 +69,17 @@ void CommitQueue::handleWaitingTransactions()
 	{
 		Index nofDocs;
 		Index nofDocsAllocated;
+		unsigned int nofOpenTransactions;
 		Reference<StorageTransactionInterface>
-			transaction = getNextTransaction( nofDocs, nofDocsAllocated);
+			transaction = getNextTransaction(
+				nofDocs, nofDocsAllocated, nofOpenTransactions);
 		if (!transaction.get()) break;
 
 		transaction->commit();
 		Index totalNofDocuments = m_storage->localNofDocumentsInserted();
 		Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
-		::printf( "inserted %u documents (total %u)\n", nofDocsInserted, totalNofDocuments);
+		::printf( "\rinserted %u documents (total %u), %u transactions open    ",
+				nofDocsInserted, totalNofDocuments, nofOpenTransactions);
 		::fflush(stdout);
 	}
 }
@@ -91,12 +94,14 @@ void CommitQueue::pushTransaction(
 		utils::ScopedLock lock( m_mutex_openTransactions);
 		m_openTransactions.insert(
 			OpenTransaction( transaction, minDocno, nofDocuments, nofDocumentsAllocated));
+		++m_nofOpenTransactions;
 	}
 	handleWaitingTransactions();
 }
 
 Reference<StorageTransactionInterface>
-	CommitQueue::getNextTransaction( Index& nofDocs, Index& nofDocsAllocated)
+	CommitQueue::getNextTransaction(
+		Index& nofDocs, Index& nofDocsAllocated, unsigned int& nofOpenTransactions_)
 {
 	Reference<StorageTransactionInterface> rt;
 	utils::ScopedLock lock( m_mutex_openTransactions);
@@ -110,6 +115,7 @@ Reference<StorageTransactionInterface>
 			nofDocs = ti->nofDocuments();
 			nofDocsAllocated = ti->nofDocumentsAllocated();
 			m_openTransactions.erase( ti++);
+			nofOpenTransactions_ = --m_nofOpenTransactions;
 		}
 	}
 	return rt;
