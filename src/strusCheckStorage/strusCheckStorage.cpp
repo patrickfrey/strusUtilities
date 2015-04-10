@@ -136,7 +136,7 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( builder.createStorageClient( storagecfg));
 
-		storage->checkStorage();
+		storage->checkStorage( std::cerr);
 		return 0;
 	}
 	catch (const std::runtime_error& e)
