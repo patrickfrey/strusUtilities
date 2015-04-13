@@ -66,7 +66,7 @@ private:
 	}
 	bool needMore()
 	{
-		return (m_chunkquesize > m_nofChunksReadAhead);
+		return (m_chunkquesize < m_nofChunksReadAhead);
 	}
 
 private:
