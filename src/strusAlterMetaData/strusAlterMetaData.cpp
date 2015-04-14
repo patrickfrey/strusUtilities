@@ -28,7 +28,7 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -44,6 +44,22 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+{
+	std::auto_ptr<strus::StorageObjectBuilderInterface>
+		storageBuilder( moduleLoader->createStorageObjectBuilder());
+
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::StorageInterface* sti = storageBuilder->getStorage();
+
+	strus::printIndentMultilineString(
+				out, 12, dbi->getConfigDescription(
+					strus::DatabaseInterface::CmdCreateClient));
+	strus::printIndentMultilineString(
+				out, 12, sti->getConfigDescription(
+					strus::StorageInterface::CmdCreateClient));
+}
 
 class AlterMetaDataCommand
 {
@@ -236,24 +252,12 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
-
-		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
-		const strus::StorageInterface* sti = builder.getStorage();
-
 		if (printUsageAndExit)
 		{
 			std::cerr << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
 			std::cerr << "<config>  : configuration string of the storage" << std::endl;
 			std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, dbi->getConfigDescription(
-							strus::DatabaseInterface::CmdCreateClient));
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, sti->getConfigDescription(
-							strus::StorageInterface::CmdCreateClient));
+			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
 			std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
 			std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
 			std::cerr << "              <name>    :name of the element to change" << std::endl;
@@ -294,8 +298,10 @@ int main( int argc, const char* argv[])
 		std::vector<AlterMetaDataCommand> cmds = parseCommands( opt[1]);
 
 		// Create objects for altering the meta data table:
+		std::auto_ptr<strus::StorageObjectBuilderInterface>
+			builder( moduleLoader->createStorageObjectBuilder());
 		std::auto_ptr<strus::StorageAlterMetaDataTableInterface>
-			md( builder.createAlterMetaDataTable( storagecfg));
+			md( builder->createAlterMetaDataTable( storagecfg));
 
 		// Execute alter meta data table commands:
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();

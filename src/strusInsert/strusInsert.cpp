@@ -28,7 +28,8 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/storageObjectBuilderInterface.hpp"
+#include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
@@ -57,6 +58,22 @@
 #include <memory>
 #include <cstring>
 #include <stdexcept>
+
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+{
+	std::auto_ptr<strus::StorageObjectBuilderInterface>
+		storageBuilder( moduleLoader->createStorageObjectBuilder());
+
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::StorageInterface* sti = storageBuilder->getStorage();
+
+	strus::printIndentMultilineString(
+				out, 12, dbi->getConfigDescription(
+					strus::DatabaseInterface::CmdCreateClient));
+	strus::printIndentMultilineString(
+				out, 12, sti->getConfigDescription(
+					strus::StorageInterface::CmdCreateClient));
+}
 
 static void writeErrorLog( const std::string& filename, const char* msg)
 {
@@ -122,24 +139,13 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
-	
-		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
-		const strus::StorageInterface* sti = builder.getStorage();
 
 		if (printUsageAndExit)
 		{
 			std::cerr << "usage: strusInsert [options] <config> <program> <docpath>" << std::endl;
 			std::cerr << "<config>  = storage configuration string" << std::endl;
 			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, dbi->getConfigDescription(
-							strus::DatabaseInterface::CmdCreateClient));
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, sti->getConfigDescription(
-							strus::StorageInterface::CmdCreateClient));
+			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
 			std::cerr << "<program> = path of analyzer program" << std::endl;
 			std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
 			std::cerr << "description: Insert a document or a set of documents into a storage." << std::endl;
@@ -208,11 +214,16 @@ int main( int argc_, const char* argv_[])
 		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
 
 		// Create objects for inserter:
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
+		std::auto_ptr<strus::StorageObjectBuilderInterface>
+			storageBuilder( moduleLoader->createStorageObjectBuilder());
+
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
-			storage( builder.createStorageClient( storagecfg));
+			storage( storageBuilder->createStorageClient( storagecfg));
 
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
-			analyzer( builder.createDocumentAnalyzer( segmenter));
+			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
 
 		// Load analyzer program:
 		unsigned int ec;

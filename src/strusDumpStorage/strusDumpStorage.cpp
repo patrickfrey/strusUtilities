@@ -28,7 +28,7 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -47,6 +47,23 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
+
+
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+{
+	std::auto_ptr<strus::StorageObjectBuilderInterface>
+		storageBuilder( moduleLoader->createStorageObjectBuilder());
+
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::StorageInterface* sti = storageBuilder->getStorage();
+
+	strus::printIndentMultilineString(
+				out, 12, dbi->getConfigDescription(
+					strus::DatabaseInterface::CmdCreateClient));
+	strus::printIndentMultilineString(
+				out, 12, sti->getConfigDescription(
+					strus::StorageInterface::CmdCreateClient));
+}
 
 
 int main( int argc, const char* argv[])
@@ -101,24 +118,13 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
-
-		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
-		const strus::StorageInterface* sti = builder.getStorage();
 
 		if (printUsageAndExit)
 		{
 			std::cerr << "usage: strusDumpStorage [options] <config>" << std::endl;
 			std::cerr << "<config>  = storage configuration string" << std::endl;
 			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, dbi->getConfigDescription(
-							strus::DatabaseInterface::CmdCreateClient));
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, sti->getConfigDescription(
-							strus::StorageInterface::CmdCreateClient));
+			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
 			std::cerr << "description: Dumps a strus storage to stout" << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
@@ -134,8 +140,11 @@ int main( int argc, const char* argv[])
 		std::string storagecfg( opt[0]);
 
 		// Dump the storage:
+		std::auto_ptr<strus::StorageObjectBuilderInterface>
+			builder( moduleLoader->createStorageObjectBuilder());
+
 		std::auto_ptr<strus::StorageClientInterface>
-			storage( builder.createStorageClient( storagecfg));
+			storage( builder->createStorageClient( storagecfg));
 
 		std::auto_ptr<strus::StorageDumpInterface> dump( storage->createDump());
 		const char* buf;

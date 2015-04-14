@@ -28,7 +28,7 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -38,6 +38,20 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+
+
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+{
+	std::auto_ptr<strus::StorageObjectBuilderInterface>
+		storageBuilder( moduleLoader->createStorageObjectBuilder());
+
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+
+	strus::printIndentMultilineString(
+				out, 12, dbi->getConfigDescription(
+					strus::DatabaseInterface::CmdCreateClient));
+}
+
 
 int main( int argc, const char* argv[])
 {
@@ -91,19 +105,12 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
-
-		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
-
 		if (printUsageAndExit)
 		{
 			std::cerr << "usage: strusDestroy [options] <config>" << std::endl;
 			std::cerr << "<config>  = database configuration string" << std::endl;
 			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, dbi->getConfigDescription(
-							strus::DatabaseInterface::CmdCreateClient));
+			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
 			std::cerr << "description: Removes an existing storage database." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
@@ -116,6 +123,9 @@ int main( int argc, const char* argv[])
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
 			return rt;
 		}
+		std::auto_ptr<strus::StorageObjectBuilderInterface>
+			builder( moduleLoader->createStorageObjectBuilder());
+		const strus::DatabaseInterface* dbi = builder->getDatabase( (opt.nofargs()>=1?opt[0]:""));
 		dbi->destroyDatabase( opt[0]);
 	}
 	catch (const std::runtime_error& e)

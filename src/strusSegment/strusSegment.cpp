@@ -28,7 +28,7 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/segmenterInstanceInterface.hpp"
 #include "strus/programLoader.hpp"
@@ -115,7 +115,8 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+			builder( moduleLoader->createAnalyzerObjectBuilder());
 
 		if (printUsageAndExit)
 		{
@@ -159,7 +160,7 @@ int main( int argc, const char* argv[])
 		}
 		// Create objects for segmenter:
 		std::auto_ptr<strus::SegmenterInterface>
-			segmenter( builder.createSegmenter( segmenterName));
+			segmenter( builder->createSegmenter( segmenterName));
 
 		// Load expressions:
 		if (opt("expression"))

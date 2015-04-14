@@ -28,7 +28,8 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/storageObjectBuilderInterface.hpp"
+#include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/databaseInterface.hpp"
@@ -56,6 +57,22 @@
 #include <stdexcept>
 
 #undef STRUS_LOWLEVEL_DEBUG
+
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+{
+	std::auto_ptr<strus::StorageObjectBuilderInterface>
+		storageBuilder( moduleLoader->createStorageObjectBuilder());
+
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::StorageInterface* sti = storageBuilder->getStorage();
+
+	strus::printIndentMultilineString(
+				out, 12, dbi->getConfigDescription(
+					strus::DatabaseInterface::CmdCreateClient));
+	strus::printIndentMultilineString(
+				out, 12, sti->getConfigDescription(
+					strus::StorageInterface::CmdCreateClient));
+}
 
 
 int main( int argc_, const char* argv_[])
@@ -114,23 +131,12 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
-		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
-		const strus::StorageInterface* sti = builder.getStorage();
-
 		if (printUsageAndExit)
 		{
 			std::cerr << "usage: strusQuery [options] <config> <anprg> <qeprg> <query>" << std::endl;
 			std::cerr << "<config>  = storage configuration string" << std::endl;
 			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, dbi->getConfigDescription(
-							strus::DatabaseInterface::CmdCreateClient));
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, sti->getConfigDescription(
-							strus::StorageInterface::CmdCreateClient));
+			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
 			std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
 			std::cerr << "<qeprg>   = path of query eval program" << std::endl;
 			std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
@@ -189,16 +195,21 @@ int main( int argc_, const char* argv_[])
 		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
 
 		// Create objects for query evaluation:
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
+		std::auto_ptr<strus::StorageObjectBuilderInterface>
+			storageBuilder( moduleLoader->createStorageObjectBuilder());
+
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
-			storage( builder.createStorageClient( storagecfg));
+			storage( storageBuilder->createStorageClient( storagecfg));
 
 		strus::utils::ScopedPtr<strus::QueryAnalyzerInterface>
-			analyzer( builder.createQueryAnalyzer());
+			analyzer( analyzerBuilder->createQueryAnalyzer());
 
 		strus::utils::ScopedPtr<strus::QueryEvalInterface>
-			qeval( builder.createQueryEval());
+			qeval( storageBuilder->createQueryEval());
 
-		const strus::QueryProcessorInterface* qproc = builder.getQueryProcessor();
+		const strus::QueryProcessorInterface* qproc = storageBuilder->getQueryProcessor();
 
 		// Load query analyzer program:
 		unsigned int ec;

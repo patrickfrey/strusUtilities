@@ -28,7 +28,7 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerInstanceInterface.hpp"
@@ -115,7 +115,8 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+			builder( moduleLoader->createAnalyzerObjectBuilder());
 
 		if (printUsageAndExit)
 		{
@@ -161,7 +162,7 @@ int main( int argc, const char* argv[])
 
 		// Create objects for analyzer:
 		std::auto_ptr<strus::DocumentAnalyzerInterface>
-			analyzer( builder.createDocumentAnalyzer( segmenter));
+			analyzer( builder->createDocumentAnalyzer( segmenter));
 
 		// Load analyzer program:
 		unsigned int ec;

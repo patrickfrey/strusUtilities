@@ -28,7 +28,7 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
@@ -104,7 +104,6 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
 
 		if (printUsageAndExit)
 		{
@@ -167,8 +166,10 @@ int main( int argc_, const char* argv_[])
 		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
 
 		// Create objects for keymap generation:
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+			builder( moduleLoader->createAnalyzerObjectBuilder());
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
-			analyzer( builder.createDocumentAnalyzer( segmenter));
+			analyzer( builder->createDocumentAnalyzer( segmenter));
 
 		// [2] Load analyzer program:
 		unsigned int ec;

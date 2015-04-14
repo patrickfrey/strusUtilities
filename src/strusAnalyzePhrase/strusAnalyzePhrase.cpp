@@ -28,7 +28,7 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/versionAnalyzer.hpp"
@@ -113,8 +113,6 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
-
 		if (printUsageAndExit)
 		{
 			std::cerr << "usage: strusAnalyze [options] <phrasepath>" << std::endl;
@@ -177,8 +175,10 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create objects for analyzer:
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+			builder( moduleLoader->createAnalyzerObjectBuilder());
 		std::auto_ptr<strus::QueryAnalyzerInterface>
-			analyzer( builder.createQueryAnalyzer());
+			analyzer( builder->createQueryAnalyzer());
 
 		// Create phrase type (tokenizer and normalizer):
 		std::vector<strus::NormalizerConfig> normalizerConfig(

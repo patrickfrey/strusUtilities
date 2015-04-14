@@ -28,7 +28,7 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
-#include "strus/objectBuilderInterface.hpp"
+#include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -49,6 +49,22 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+{
+	std::auto_ptr<strus::StorageObjectBuilderInterface>
+		storageBuilder( moduleLoader->createStorageObjectBuilder());
+
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::StorageInterface* sti = storageBuilder->getStorage();
+
+	strus::printIndentMultilineString(
+				out, 12, dbi->getConfigDescription(
+					strus::DatabaseInterface::CmdCreateClient));
+	strus::printIndentMultilineString(
+				out, 12, sti->getConfigDescription(
+					strus::StorageInterface::CmdCreateClient));
+}
 
 namespace strus
 {
@@ -280,24 +296,13 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		const strus::ObjectBuilderInterface& builder = moduleLoader->builder();
-
-		const strus::DatabaseInterface* dbi = builder.getDatabase( (opt.nofargs()>=1?opt[0]:""));
-		const strus::StorageInterface* sti = builder.getStorage();
 
 		if (printUsageAndExit)
 		{
 			std::cerr << "usage: strusInspect [options] <config> <what...>" << std::endl;
 			std::cerr << "<config>  : configuration string of the storage" << std::endl;
 			std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, dbi->getConfigDescription(
-							strus::DatabaseInterface::CmdCreateClient));
-			strus::printIndentMultilineString(
-						std::cerr,
-						12, sti->getConfigDescription(
-							strus::StorageInterface::CmdCreateClient));
+			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
 			std::cerr << "<what>    : what to inspect:" << std::endl;
 			std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
 			std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
@@ -328,8 +333,10 @@ int main( int argc, const char* argv[])
 		std::size_t inpectargsize = opt.nofargs() - 2;
 
 		// Create objects for inspecting storage:
+		std::auto_ptr<strus::StorageObjectBuilderInterface>
+			builder( moduleLoader->createStorageObjectBuilder());
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
-			storage( builder.createStorageClient( storagecfg));
+			storage( builder->createStorageClient( storagecfg));
 
 		// Do inspect what is requested:
 		if (strus::utils::caseInsensitiveEquals( what, "pos"))
