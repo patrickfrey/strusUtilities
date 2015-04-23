@@ -298,10 +298,11 @@ int main( int argc, const char* argv[])
 		std::vector<AlterMetaDataCommand> cmds = parseCommands( opt[1]);
 
 		// Create objects for altering the meta data table:
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
-			builder( moduleLoader->createStorageObjectBuilder());
-		std::auto_ptr<strus::StorageAlterMetaDataTableInterface>
-			md( builder->createAlterMetaDataTable( storagecfg));
+		std::auto_ptr<strus::StorageObjectBuilderInterface> builder;
+		std::auto_ptr<strus::StorageAlterMetaDataTableInterface> md;
+
+		builder.reset( moduleLoader->createStorageObjectBuilder());
+		md.reset( builder->createAlterMetaDataTable( storagecfg));
 
 		// Execute alter meta data table commands:
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();

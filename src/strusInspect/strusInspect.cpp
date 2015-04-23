@@ -28,6 +28,10 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
+#include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
+#include "strus/rpcClientInterface.hpp"
+#include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
@@ -255,8 +259,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 4,
-				"h,help", "v,version", "m,module:", "M,moduledir:");
+				argc, argv, 6,
+				"h,help", "v,version", "m,module:", "M,moduledir:",
+				"r,rpc:", "s,storage:");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
@@ -269,7 +274,7 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			if (opt.nofargs() < 2)
+			if (opt.nofargs() < 1)
 			{
 				std::cerr << "ERROR too few arguments" << std::endl;
 				printUsageAndExit = true;
@@ -279,6 +284,7 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
 		if (opt("moduledir"))
 		{
+			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -289,6 +295,7 @@ int main( int argc, const char* argv[])
 		}
 		if (opt("module"))
 		{
+			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --module and --rpc");
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
@@ -299,10 +306,7 @@ int main( int argc, const char* argv[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusInspect [options] <config> <what...>" << std::endl;
-			std::cerr << "<config>  : configuration string of the storage" << std::endl;
-			std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
-			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
+			std::cerr << "usage: strusInspect [options] <what...>" << std::endl;
 			std::cerr << "<what>    : what to inspect:" << std::endl;
 			std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
 			std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
@@ -320,23 +324,48 @@ int main( int argc, const char* argv[])
 			std::cerr << "    Print this usage and do nothing else" << std::endl;
 			std::cerr << "-v|--version" << std::endl;
 			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-s|--storage <CONFIG>" << std::endl;
+			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
 			std::cerr << "-m|--module <MOD>" << std::endl;
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			std::cerr << "-M|--moduledir <DIR>" << std::endl;
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
+			std::cerr << "-r|--rpc <ADDR>" << std::endl;
+			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			if (!opt("rpc"))
+			{
+				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+			}
 			return rt;
 		}
 
-		std::string storagecfg( opt[0]);
-		std::string what = opt[1];
-		const char** inpectarg = opt.argv() + 2;
-		std::size_t inpectargsize = opt.nofargs() - 2;
+		std::string storagecfg;
+		if (opt("storage"))
+		{
+			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			storagecfg = opt["storage"];
+		}
+		std::string what = opt[0];
+		const char** inpectarg = opt.argv() + 1;
+		std::size_t inpectargsize = opt.nofargs() - 1;
 
 		// Create objects for inspecting storage:
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
-			builder( moduleLoader->createStorageObjectBuilder());
+		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
+		std::auto_ptr<strus::RpcClientInterface> rpcClient;
+		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		if (opt("rpc"))
+		{
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
+			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+		}
+		else
+		{
+			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
-			storage( builder->createStorageClient( storagecfg));
+			storage( storageBuilder->createStorageClient( storagecfg));
 
 		// Do inspect what is requested:
 		if (strus::utils::caseInsensitiveEquals( what, "pos"))

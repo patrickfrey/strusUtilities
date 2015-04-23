@@ -12,19 +12,23 @@ include_directories(
 	    "${PROJECT_SOURCE_DIR}/include"
 	    "${strus_INCLUDE_DIRS}"
 	    "${strusanalyzer_INCLUDE_DIRS}"
-	    "${strusmodule_INCLUDE_DIRS}" )
+	    "${strusmodule_INCLUDE_DIRS}"
+	    "${strusrpc_INCLUDE_DIRS}"	    
+)
 link_directories( 
 	   "${PROJECT_SOURCE_DIR}/utils" 
 	   "${PROJECT_SOURCE_DIR}/program" 
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"
-	   "${strusmodule_LIBRARY_DIRS}" )
+	   "${strusmodule_LIBRARY_DIRS}"
+	   "${strusrpc_LIBRARY_DIRS}"
+)
 
 # ------------------------------
 # PROGRAMS
 # ------------------------------
 add_executable( strusDumpStatistics ${source_files} )
-target_link_libraries( strusDumpStatistics  strus_private_utils ${strusmodule_LIBRARIES} ${strus_LIBRARIES} )
+target_link_libraries( strusDumpStatistics  strus_private_utils ${strusmodule_LIBRARIES} ${strus_LIBRARIES} ${strusrpc_LIBRARIES} )
 
 
 # ------------------------------

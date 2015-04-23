@@ -71,8 +71,8 @@ int main( int argc, const char* argv[])
 		opt = strus::ProgramOptions(
 				argc, argv, 9,
 				"h,help", "v,version", "s,segmenter:", "e,expression:",
-				"m,module:", "M,moduledir:", "i,index", "p,position",
-				"q,quot:");
+				"m,module:", "M,moduledir:",
+				"i,index", "p,position", "q,quot:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -115,9 +115,6 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			builder( moduleLoader->createAnalyzerObjectBuilder());
-
 		if (printUsageAndExit)
 		{
 			std::cerr << "usage: strusSegment [options] <document>" << std::endl;
@@ -159,6 +156,8 @@ int main( int argc, const char* argv[])
 			segmenterName = opt[ "segmenter"];
 		}
 		// Create objects for segmenter:
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+			builder( moduleLoader->createAnalyzerObjectBuilder());
 		std::auto_ptr<strus::SegmenterInterface>
 			segmenter( builder->createSegmenter( segmenterName));
 

@@ -16,13 +16,17 @@ include_directories(
 	    "${PROJECT_SOURCE_DIR}/include"
 	    "${strus_INCLUDE_DIRS}"
 	    "${strusanalyzer_INCLUDE_DIRS}"
-	    "${strusmodule_INCLUDE_DIRS}" )
+	    "${strusmodule_INCLUDE_DIRS}"
+	    "${strusrpc_INCLUDE_DIRS}"	    
+)
 link_directories( 
 	   "${PROJECT_SOURCE_DIR}/utils" 
 	   "${PROJECT_SOURCE_DIR}/program" 
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"
-	   "${strusmodule_LIBRARY_DIRS}" )
+	   "${strusmodule_LIBRARY_DIRS}"
+	   "${strusrpc_LIBRARY_DIRS}"
+)
 
 
 # ------------------------------
@@ -31,13 +35,13 @@ link_directories(
 add_library( local_objs_static STATIC ${source_files})
 
 add_executable( strusInsert  strusInsert.cpp )
-target_link_libraries( strusInsert  strus_private_utils  local_objs_static strus_program ${strusmodule_LIBRARIES} ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} )
+target_link_libraries( strusInsert  strus_private_utils  local_objs_static strus_program ${strusmodule_LIBRARIES} ${strusrpc_LIBRARIES} )
 
 add_executable( strusCheckInsert  strusCheckInsert.cpp )
-target_link_libraries( strusCheckInsert  strus_private_utils local_objs_static strus_program  ${strusmodule_LIBRARIES} ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} )
+target_link_libraries( strusCheckInsert  strus_private_utils local_objs_static strus_program  ${strusmodule_LIBRARIES} ${strus_LIBRARIES} ${strusrpc_LIBRARIES} )
 
 add_executable( strusGenerateKeyMap strusGenerateKeyMap.cpp )
-target_link_libraries( strusGenerateKeyMap  strus_private_utils local_objs_static  strus_program  ${strusmodule_LIBRARIES}  ${strus_LIBRARIES} ${strusanalyzer_LIBRARIES} )
+target_link_libraries( strusGenerateKeyMap  strus_private_utils local_objs_static  strus_program  ${strusmodule_LIBRARIES}  ${strusrpc_LIBRARIES}  )
 
 
 # ------------------------------

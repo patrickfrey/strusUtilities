@@ -28,6 +28,10 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
+#include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
+#include "strus/rpcClientInterface.hpp"
+#include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
@@ -82,10 +86,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 9,
+				argc_, argv_, 11,
 				"h,help", "t,threads:", "l,logfile:",
-				"n,notify:", "v,version", "m,module:",
-				"s,segmenter:", "M,moduledir:", "R,resourcedir:");
+				"n,notify:", "v,version", "R,resourcedir:",
+				"M,moduledir:", "m,module:",
+				"r,rpc:", "g,segmenter:", "s,storage:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -96,13 +101,13 @@ int main( int argc_, const char* argv_[])
 		}
 		else
 		{
-			if (opt.nofargs() > 3)
+			if (opt.nofargs() > 2)
 			{
 				std::cerr << "ERROR too many arguments" << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			if (opt.nofargs() < 3)
+			if (opt.nofargs() < 2)
 			{
 				std::cerr << "ERROR too few arguments" << std::endl;
 				printUsageAndExit = true;
@@ -112,6 +117,7 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
 		if (opt("moduledir"))
 		{
+			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -122,6 +128,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt("module"))
 		{
+			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --module and --rpc");
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
@@ -131,10 +138,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusCheckInsert [options] <config> <program> <docpath>" << std::endl;
-			std::cerr << "<config>  = storage configuration string" << std::endl;
-			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
+			std::cerr << "usage: strusCheckInsert [options] <program> <docpath>" << std::endl;
 			std::cerr << "<program> = path of analyzer program" << std::endl;
 			std::cerr << "<docpath> = path of document or directory to check" << std::endl;
 			std::cerr << "description: Checks if a storage contains all data of a document set." << std::endl;
@@ -143,13 +147,22 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "   Print this usage and do nothing else" << std::endl;
 			std::cerr << "-v|--version" << std::endl;
 			std::cerr << "    Print the program version and do nothing else" << std::endl;
+			std::cerr << "-s|--storage <CONFIG>" << std::endl;
+			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			if (!opt("rpc"))
+			{
+				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+			}
 			std::cerr << "-m|--module <MOD>" << std::endl;
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			std::cerr << "-M|--moduledir <DIR>" << std::endl;
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
 			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
 			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
-			std::cerr << "-s|--segmenter <NAME>" << std::endl;
+			std::cerr << "-r|--rpc <ADDR>" << std::endl;
+			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cerr << "-g|--segmenter <NAME>" << std::endl;
 			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
 			std::cerr << "-t|--threads <N>" << std::endl;
 			std::cerr << "    Set <N> as number of inserter threads to use"  << std::endl;
@@ -161,6 +174,7 @@ int main( int argc_, const char* argv_[])
 		}
 		unsigned int nofThreads = opt.asUint( "threads");
 		std::string logfile = "-";
+		std::string storagecfg;
 		if (opt("logfile"))
 		{
 			logfile = opt[ "logfile"];
@@ -170,9 +184,13 @@ int main( int argc_, const char* argv_[])
 		{
 			notificationInterval = opt.asUint( "notify");
 		}
-		std::string storagecfg( opt[0]);
-		std::string analyzerprg = opt[1];
-		std::string datapath = opt[2];
+		if (opt("storage"))
+		{
+			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			storagecfg = opt["storage"];
+		}
+		std::string analyzerprg = opt[0];
+		std::string datapath = opt[1];
 		std::string segmenter;
 		if (opt( "segmenter"))
 		{
@@ -191,12 +209,24 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
-			storageBuilder( moduleLoader->createStorageObjectBuilder());
 
 		// Create objects for insert checker:
+		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
+		std::auto_ptr<strus::RpcClientInterface> rpcClient;
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		if (opt("rpc"))
+		{
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
+			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+		}
+		else
+		{
+			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
 

@@ -13,14 +13,18 @@ include_directories(
 	    "${PROJECT_SOURCE_DIR}/include"
 	    "${strus_INCLUDE_DIRS}"
 	    "${strusanalyzer_INCLUDE_DIRS}"
-	    "${strusmodule_INCLUDE_DIRS}" )
+	    "${strusmodule_INCLUDE_DIRS}"
+	    "${strusrpc_INCLUDE_DIRS}"	    
+)
 link_directories( 
            "${Boost_LIBRARY_DIRS}"
 	   "${PROJECT_SOURCE_DIR}/program" 
 	   "${PROJECT_SOURCE_DIR}/utils" 
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"
-	   "${strusmodule_LIBRARY_DIRS}" )
+	   "${strusmodule_LIBRARY_DIRS}"
+	   "${strusrpc_LIBRARY_DIRS}"
+)
 
 
 # -------------------------------------------
