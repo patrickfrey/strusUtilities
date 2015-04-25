@@ -113,6 +113,10 @@ static inline bool isAsterisk( char ch)
 {
 	return ch == '*';
 }
+static inline bool isPercent( char ch)
+{
+	return ch == '%';
+}
 static inline bool isStringQuote( char ch)
 {
 	return ch == '\'' || ch == '"';

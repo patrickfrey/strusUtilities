@@ -122,20 +122,6 @@ static void parseTermConfig(
 	}
 }
 
-static bool isMember( const char** set, const std::string& name)
-{
-	if (!set) return false;
-	std::size_t sidx = 0;
-	for (; set[sidx]; ++sidx)
-	{
-		if (utils::caseInsensitiveEquals( name, set[sidx]))
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 static ArithmeticVariant parseNumericValue( char const*& src)
 {
 	if (is_INTEGER(src))
@@ -248,7 +234,6 @@ static void parseSummarizerConfig(
 	}
 	functionName = utils::tolower( parse_IDENTIFIER( src));
 	SummarizerConfig summarizer;
-	const SummarizerFunctionInterface* function = qproc.getSummarizerFunction( functionName);
 
 	if (!isOpenOvalBracket( *src))
 	{
@@ -268,53 +253,42 @@ static void parseSummarizerConfig(
 			throw std::runtime_error( "assignment operator '=' expected after summarizer function parameter name");
 		}
 		(void)parse_OPERATOR(src);
-		if (isStringQuote(*src) || isAlpha(*src))
+		if (isPercent(*src))
 		{
-			std::string parameterValue;
-			if (isStringQuote(*src))
+			(void)parse_OPERATOR(src);
+			std::string parameterValue = parse_IDENTIFIER( src);
+			summarizer.addFeatureParameter( parameterName, parameterValue);
+		}
+		else if (isDigit(*src) || isMinus(*src))
+		{
+			if (is_INTEGER(src))
 			{
-				parameterValue = parse_STRING( src);
+				if (isMinus(*src))
+				{
+					int parameterValue = parse_INTEGER( src);
+					summarizer.defineNumericParameter( parameterName, parameterValue);
+				}
+				else
+				{
+					unsigned int parameterValue = parse_UNSIGNED(src);
+					summarizer.defineNumericParameter( parameterName, parameterValue);
+				}
 			}
 			else
 			{
-				parameterValue = parse_IDENTIFIER( src);
+				float parameterValue = parse_FLOAT(src);
+				summarizer.defineNumericParameter( parameterName, parameterValue);
 			}
-			if (isMember( function->textualParameterNames(), parameterName))
-			{
-				summarizer.defineTextualParameter( parameterName, parameterValue);
-			}
-			else if (isMember( function->featureParameterClassNames(), parameterName))
-			{
-				summarizer.defineFeatureParameter( parameterName, parameterValue);
-			}
-			else if (isMember( function->numericParameterNames(), parameterName))
-			{
-				char const* cc = parameterValue.c_str();
-				summarizer.defineNumericParameter( parameterName, parseNumericValue( cc));
-			}
-			else
-			{
-				throw std::runtime_error( std::string( "unknown summarizer function parameter name '") + parameterName + "'");
-			}
+		}
+		else if (isStringQuote(*src))
+		{
+			std::string parameterValue = parse_STRING( src);
+			summarizer.defineStringParameter( parameterName, parameterValue);
 		}
 		else
 		{
-			if (isMember( function->textualParameterNames(), parameterName))
-			{
-				throw std::runtime_error( std::string( "string or identifier expected as value of summarizer function textual parameter '") + parameterName + "'");
-			}
-			else if (isMember( function->featureParameterClassNames(), parameterName))
-			{
-				throw std::runtime_error( std::string( "string or identifier expected as value of summarizer function feature parameter '") + parameterName + "'");
-			}
-			else if (isMember( function->numericParameterNames(), parameterName))
-			{
-				summarizer.defineNumericParameter( parameterName, parseNumericValue( src));
-			}
-			else
-			{
-				throw std::runtime_error( std::string( "unknown summarizer function parameter name '") + parameterName + "'");
-			}
+			std::string parameterValue = parse_IDENTIFIER( src);
+			summarizer.defineStringParameter( parameterName, parameterValue);
 		}
 		if (!isComma( *src))
 		{
@@ -345,7 +319,7 @@ DLL_PUBLIC void strus::loadQueryEvalProgram(
 	{
 		while (*src)
 		{
-			switch ((StatementKeyword)parse_KEYWORD( src, 5, "EVAL", "SELECTION", "RESTRICTION", "TERM", "SUMMARIZE"))
+			switch ((StatementKeyword)parse_KEYWORD( src, 5, "EVAL", "SELECT", "RESTRICT", "TERM", "SUMMARIZE"))
 			{
 				case e_TERM:
 					parseTermConfig( qeval, src);
