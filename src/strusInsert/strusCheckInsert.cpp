@@ -219,6 +219,7 @@ int main( int argc_, const char* argv_[])
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
 			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
 		}

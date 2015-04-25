@@ -159,6 +159,7 @@ int main( int argc, const char* argv[])
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
 			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 		}
 		else
