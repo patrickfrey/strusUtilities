@@ -32,17 +32,24 @@
 #include "strus/constants.hpp"
 #include "strus/private/protocol.hpp"
 #include "strus/arithmeticVariant.hpp"
-#include "strus/weightingConfig.hpp"
-#include "strus/summarizerConfig.hpp"
+#include "strus/weightingFunctionInterface.hpp"
+#include "strus/weightingFunctionInstanceInterface.hpp"
 #include "strus/summarizerFunctionInterface.hpp"
-#include "strus/queryEvalInterface.hpp"
+#include "strus/summarizerFunctionInstanceInterface.hpp"
+#include "strus/normalizerFunctionInterface.hpp"
+#include "strus/normalizerFunctionInstanceInterface.hpp"
+#include "strus/tokenizerFunctionInterface.hpp"
+#include "strus/tokenizerFunctionInstanceInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
+#include "strus/textProcessorInterface.hpp"
+#include "strus/queryEvalInterface.hpp"
+#include "strus/queryInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
-#include "strus/queryInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/peerStorageTransactionInterface.hpp"
 #include "strus/analyzer/term.hpp"
+#include "strus/reference.hpp"
 #include "private/utils.hpp"
 #include <string>
 #include <vector>
@@ -143,6 +150,7 @@ static ArithmeticVariant parseNumericValue( char const*& src)
 
 static void parseWeightingConfig(
 		QueryEvalInterface& qeval,
+		const QueryProcessorInterface* queryproc,
 		char const*& src)
 {
 	if (!isAlpha( *src))
@@ -150,7 +158,8 @@ static void parseWeightingConfig(
 		throw std::runtime_error( "weighting function identifier expected");
 	}
 	std::string functionName = parse_IDENTIFIER( src);
-	WeightingConfig wcfg;
+	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
+	std::auto_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance());
 	std::vector<std::string> weightedFeatureSets;
 
 	if (!isOpenOvalBracket( *src))
@@ -171,7 +180,7 @@ static void parseWeightingConfig(
 			throw std::runtime_error( "assingment operator '=' expected after weighting function parameter name");
 		}
 		(void)parse_OPERATOR(src);
-		wcfg.defineNumericParameter( parameterName, parseNumericValue( src));
+		function->addNumericParameter( parameterName, parseNumericValue( src));
 
 		if (!isComma( *src))
 		{
@@ -206,17 +215,20 @@ static void parseWeightingConfig(
 		}
 		(void)parse_OPERATOR( src);
 	}
-	qeval.addWeightingFunction( functionName, wcfg, weightedFeatureSets); 
+	qeval.addWeightingFunction( functionName, function.get(), weightedFeatureSets); 
+	(void)function.release();
 }
 
 
 static void parseSummarizerConfig(
 		QueryEvalInterface& qeval,
-		const QueryProcessorInterface& qproc,
+		const QueryProcessorInterface* queryproc,
 		char const*& src)
 {
 	std::string functionName;
 	std::string resultAttribute;
+	typedef QueryEvalInterface::SummarizerFeatureParameter SummarizerFeatureParameter;
+	std::vector<SummarizerFeatureParameter> featureParameters;
 
 	if (!isAlpha( *src))
 	{
@@ -233,7 +245,8 @@ static void parseSummarizerConfig(
 		throw std::runtime_error( "name of summarizer function expected after assignment in summarizer definition");
 	}
 	functionName = utils::tolower( parse_IDENTIFIER( src));
-	SummarizerConfig summarizer;
+	const SummarizerFunctionInterface* sf = queryproc->getSummarizerFunction( functionName);
+	std::auto_ptr<SummarizerFunctionInstanceInterface> function( sf->createInstance( queryproc));
 
 	if (!isOpenOvalBracket( *src))
 	{
@@ -257,7 +270,7 @@ static void parseSummarizerConfig(
 		{
 			(void)parse_OPERATOR(src);
 			std::string parameterValue = parse_IDENTIFIER( src);
-			summarizer.addFeatureParameter( parameterName, parameterValue);
+			featureParameters.push_back( SummarizerFeatureParameter( parameterName, parameterValue));
 		}
 		else if (isDigit(*src) || isMinus(*src))
 		{
@@ -266,29 +279,29 @@ static void parseSummarizerConfig(
 				if (isMinus(*src))
 				{
 					int parameterValue = parse_INTEGER( src);
-					summarizer.defineNumericParameter( parameterName, parameterValue);
+					function->addNumericParameter( parameterName, parameterValue);
 				}
 				else
 				{
 					unsigned int parameterValue = parse_UNSIGNED(src);
-					summarizer.defineNumericParameter( parameterName, parameterValue);
+					function->addNumericParameter( parameterName, parameterValue);
 				}
 			}
 			else
 			{
 				float parameterValue = parse_FLOAT(src);
-				summarizer.defineNumericParameter( parameterName, parameterValue);
+				function->addNumericParameter( parameterName, parameterValue);
 			}
 		}
 		else if (isStringQuote(*src))
 		{
 			std::string parameterValue = parse_STRING( src);
-			summarizer.defineStringParameter( parameterName, parameterValue);
+			function->addStringParameter( parameterName, parameterValue);
 		}
 		else
 		{
 			std::string parameterValue = parse_IDENTIFIER( src);
-			summarizer.defineStringParameter( parameterName, parameterValue);
+			function->addStringParameter( parameterName, parameterValue);
 		}
 		if (!isComma( *src))
 		{
@@ -301,13 +314,14 @@ static void parseSummarizerConfig(
 		throw std::runtime_error( "close oval bracket ')' expected at end of summarizer function parameter list");
 	}
 	(void)parse_OPERATOR(src);
-	qeval.addSummarizer( resultAttribute, functionName, summarizer);
+	qeval.addSummarizerFunction( functionName, function.get(), featureParameters, resultAttribute);
+	(void)function.release();
 }
 
 
 DLL_PUBLIC void strus::loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
-		const QueryProcessorInterface& qproc,
+		const QueryProcessorInterface* queryproc,
 		const std::string& source)
 {
 	char const* src = source.c_str();
@@ -353,10 +367,10 @@ DLL_PUBLIC void strus::loadQueryEvalProgram(
 					}
 					break;
 				case e_EVAL:
-					parseWeightingConfig( qeval, src);
+					parseWeightingConfig( qeval, queryproc, src);
 					break;
 				case e_SUMMARIZE:
-					parseSummarizerConfig( qeval, qproc, src);
+					parseSummarizerConfig( qeval, queryproc, src);
 					break;
 			}
 			if (*src)
@@ -498,15 +512,15 @@ static void parseFunctionDef( const char* functype, std::string& name, std::vect
 	}
 }
 
-static std::vector<NormalizerConfig> parseNormalizerConfig_( char const*& src)
+static std::vector<FunctionConfig> parseNormalizerConfig( char const*& src)
 {
-	std::vector<NormalizerConfig> rt;
+	std::vector<FunctionConfig> rt;
 	for(;;)
 	{
 		std::string name;
 		std::vector<std::string> arg;
 		parseFunctionDef( "normalizer", name, arg, src);
-		rt.insert( rt.begin(), NormalizerConfig( name, arg));
+		rt.insert( rt.begin(), FunctionConfig( name, arg));
 
 		if (!isColon(*src)) break;
 		(void)parse_OPERATOR( src);
@@ -514,12 +528,12 @@ static std::vector<NormalizerConfig> parseNormalizerConfig_( char const*& src)
 	return rt;
 }
 
-static TokenizerConfig parseTokenizerConfig_( char const*& src)
+static FunctionConfig parseTokenizerConfig( char const*& src)
 {
 	std::string name;
 	std::vector<std::string> arg;
 	parseFunctionDef( "tokenizer", name, arg, src);
-	return TokenizerConfig( name, arg);
+	return FunctionConfig( name, arg);
 }
 
 
@@ -587,18 +601,29 @@ static DocumentAnalyzerInterface::FeatureOptions
 
 static void parseFeatureDef(
 	DocumentAnalyzerInterface& analyzer,
+	const TextProcessorInterface* textproc,
 	const std::string& featurename,
 	char const*& src,
 	FeatureClass featureClass)
 {
 	std::string xpathexpr;
-	TokenizerConfig tokenizer;
-	std::vector<NormalizerConfig> normalizer;
+	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
+	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
 	
 	if (featureClass != FeatSubDocument)
 	{
-		normalizer = parseNormalizerConfig_( src);
-		tokenizer = parseTokenizerConfig_( src);
+		std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
+		std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
+		for (; ni != ne; ++ni)
+		{
+			const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
+			normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
+			normalizer.push_back( normalizer_ref.back().get());
+		}
+		FunctionConfig tokenizercfg = parseTokenizerConfig( src);
+		const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+		tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
 	}
 	if (isStringQuote(*src))
 	{
@@ -629,37 +654,45 @@ static void parseFeatureDef(
 		case FeatSearchIndexTerm:
 			analyzer.addSearchIndexFeature(
 				featurename, xpathexpr,
-				tokenizer, normalizer,
+				tokenizer.get(), normalizer,
 				parseFeatureOptions( src));
 			break;
 
 		case FeatForwardIndexTerm:
 			analyzer.addForwardIndexFeature(
 				featurename, xpathexpr,
-				tokenizer, normalizer,
+				tokenizer.get(), normalizer,
 				parseFeatureOptions( src));
 			break;
 
 		case FeatMetaData:
 			analyzer.defineMetaData(
 				featurename, xpathexpr,
-				tokenizer, normalizer);
+				tokenizer.get(), normalizer);
 			break;
 
 		case FeatAttribute:
 			analyzer.defineAttribute(
 				featurename, xpathexpr,
-				tokenizer, normalizer);
+				tokenizer.get(), normalizer);
 			break;
 		case FeatSubDocument:
 			analyzer.defineSubDocument( featurename, xpathexpr);
 			break;
 	}
+	std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
+		ri = normalizer_ref.begin(), re = normalizer_ref.end();
+	for (; ri != re; ++ri)
+	{
+		(void)ri->release();
+	}
+	(void)tokenizer.release();
 }
 
 
 DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 		DocumentAnalyzerInterface& analyzer,
+		const TextProcessorInterface* textproc,
 		const std::string& source)
 {
 	char const* src = source.c_str();
@@ -692,7 +725,7 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 			if (isAssign( *src))
 			{
 				(void)parse_OPERATOR(src);
-				parseFeatureDef( analyzer, featuretype, src, featclass);
+				parseFeatureDef( analyzer, textproc, featuretype, src, featclass);
 			}
 			else
 			{
@@ -714,43 +747,9 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 	}
 }
 
-
-DLL_PUBLIC TokenizerConfig strus::parseTokenizerConfig( const std::string& source)
-{
-	char const* src = source.c_str();
-	skipSpaces(src);
-	try
-	{
-		return parseTokenizerConfig_( src);
-	}
-	catch (const std::runtime_error& e)
-	{
-		throw std::runtime_error(
-			std::string( "error in tokenizer configuration: ")
-			+ e.what());
-	}
-}
-
-
-DLL_PUBLIC std::vector<NormalizerConfig> strus::parseNormalizerConfig( const std::string& source)
-{
-	char const* src = source.c_str();
-	skipSpaces(src);
-	try
-	{
-		return parseNormalizerConfig_( src);
-	}
-	catch (const std::runtime_error& e)
-	{
-		throw std::runtime_error(
-			std::string( "error in normalizer configuration: ")
-			+ e.what());
-	}
-}
-
-
 DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 		QueryAnalyzerInterface& analyzer,
+		const TextProcessorInterface* textproc,
 		const std::string& source)
 {
 	char const* src = source.c_str();
@@ -789,11 +788,32 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 			}
 			(void)parse_OPERATOR(src);
 	
-			std::vector<NormalizerConfig> normalizer = parseNormalizerConfig_( src);
-			TokenizerConfig tokenizer = parseTokenizerConfig_( src);
-		
+			std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+			std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
+			std::vector<NormalizerFunctionInstanceInterface*> normalizer;
+
+			std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
+			std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
+			for (; ni != ne; ++ni)
+			{
+				const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
+				normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
+				normalizer.push_back( normalizer_ref.back().get());
+			}
+			FunctionConfig tokenizercfg = parseTokenizerConfig( src);
+			const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+			tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+
 			analyzer.definePhraseType(
-				phraseType, featureType, tokenizer, normalizer);
+				phraseType, featureType, tokenizer.get(), normalizer);
+
+			std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
+				ri = normalizer_ref.begin(), re = normalizer_ref.end();
+			for (; ri != re; ++ri)
+			{
+				(void)ri->release();
+			}
+			tokenizer.release();
 
 			if (!isSemiColon(*src))
 			{
@@ -809,6 +829,52 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 			+ errorPosition( source.c_str(), src)
 			+ ": " + e.what());
 	}
+}
+
+DLL_PUBLIC void strus::loadQueryAnalyzerPhraseType(
+		QueryAnalyzerInterface& analyzer,
+		const TextProcessorInterface* textproc,
+		const std::string& phraseType,
+		const std::string& featureType,
+		const std::string& normalizersrc,
+		const std::string& tokenizersrc)
+{
+	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
+	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
+
+	char const* nsrc = normalizersrc.c_str();
+	std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( nsrc);
+	if ((std::size_t)(nsrc - normalizersrc.c_str()) < normalizersrc.size())
+	{
+		throw std::runtime_error( std::string( "unexpected token after end of normalizer definition: '") + nsrc + "'");
+	}
+	std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
+	for (; ni != ne; ++ni)
+	{
+		const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
+		normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
+		normalizer.push_back( normalizer_ref.back().get());
+	}
+	char const* tsrc = tokenizersrc.c_str();
+	FunctionConfig tokenizercfg = parseTokenizerConfig( tsrc);
+	if ((std::size_t)(tsrc - tokenizersrc.c_str()) < tokenizersrc.size())
+	{
+		throw std::runtime_error( std::string( "unexpected token after end of tokenizer definition: '") + nsrc + "'");
+	}
+	const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+	tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+
+	analyzer.definePhraseType(
+		phraseType, featureType, tokenizer.get(), normalizer);
+
+	std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
+		ri = normalizer_ref.begin(), re = normalizer_ref.end();
+	for (; ri != re; ++ri)
+	{
+		(void)ri->release();
+	}
+	tokenizer.release();
 }
 
 
@@ -856,12 +922,13 @@ static std::string parseVariableRef( char const*& src)
 
 static void pushQueryPhrase(
 		QueryInterface& query,
-		const QueryAnalyzerInterface& analyzer,
+		const QueryAnalyzerInterface* analyzer,
+		const QueryProcessorInterface* queryproc,
 		const std::string& phraseType,
 		const std::string& content)
 {
 	std::vector<analyzer::Term>
-		queryTerms = analyzer.analyzePhrase( phraseType, content);
+		queryTerms = analyzer->analyzePhrase( phraseType, content);
 	std::vector<analyzer::Term>::const_iterator
 		ti = queryTerms.begin(), te = queryTerms.end();
 	if (ti == te)
@@ -884,24 +951,28 @@ static void pushQueryPhrase(
 			}
 			if (join_argc > 1)
 			{
-				query.pushExpression(
-					Constants::operator_query_phrase_same_position(),
-					join_argc, 0);
+				const PostingJoinOperatorInterface* join 
+					= queryproc->getPostingJoinOperator(
+						Constants::operator_query_phrase_same_position());
+				
+				query.pushExpression( join, join_argc, 0);
 			}
 		}
 	}
 	if (seq_argc > 1)
 	{
-		query.pushExpression(
-			Constants::operator_query_phrase_sequence(),
-			seq_argc, pos);
+		const PostingJoinOperatorInterface* seq
+			= queryproc->getPostingJoinOperator(
+				Constants::operator_query_phrase_sequence());
+		query.pushExpression( seq, seq_argc, pos);
 	}
 }
 
 
 static void parseQueryExpression(
 		QueryInterface& query,
-		const QueryAnalyzerInterface& analyzer,
+		const QueryAnalyzerInterface* analyzer,
+		const QueryProcessorInterface* queryproc,
 		char const*& src)
 {
 	std::string functionName;
@@ -916,7 +987,7 @@ static void parseQueryExpression(
 			if (!isCloseOvalBracket( *src)) while (*src)
 			{
 				argc++;
-				parseQueryExpression( query, analyzer, src);
+				parseQueryExpression( query, analyzer, queryproc, src);
 				if (isComma( *src))
 				{
 					(void)parse_OPERATOR( src);
@@ -937,7 +1008,9 @@ static void parseQueryExpression(
 			{
 				throw std::runtime_error( "comma ',' as query argument separator or colon ':' as range specifier or close oval bracket ')' as end of a query expression expected");
 			}
-			query.pushExpression( functionName, argc, range);
+			const PostingJoinOperatorInterface*
+				function = queryproc->getPostingJoinOperator( functionName);
+			query.pushExpression( function, argc, range);
 			if (isVariableRef( src))
 			{
 				query.attachVariable( parseVariableRef( src));
@@ -947,7 +1020,7 @@ static void parseQueryExpression(
 		{
 			std::string queryPhrase = functionName;
 			std::string phraseType = parseQueryPhraseType( src);
-			pushQueryPhrase( query, analyzer, phraseType, queryPhrase);
+			pushQueryPhrase( query, analyzer, queryproc, phraseType, queryPhrase);
 			if (isVariableRef( src))
 			{
 				query.attachVariable( parseVariableRef( src));
@@ -958,7 +1031,7 @@ static void parseQueryExpression(
 	{
 		std::string queryPhrase = parseQueryTerm( src);
 		std::string phraseType = parseQueryPhraseType( src);
-		pushQueryPhrase( query, analyzer, phraseType, queryPhrase);
+		pushQueryPhrase( query, analyzer, queryproc, phraseType, queryPhrase);
 		if (isVariableRef( src))
 		{
 			query.attachVariable( parseVariableRef( src));
@@ -1097,7 +1170,7 @@ static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char con
 
 static void parseMetaDataRestriction(
 		QueryInterface& query,
-		const QueryAnalyzerInterface& analyzer,
+		const QueryAnalyzerInterface* analyzer,
 		char const*& src)
 {
 	if (isAlpha( *src))
@@ -1146,7 +1219,8 @@ static void parseMetaDataRestriction(
 
 DLL_PUBLIC void strus::loadQuery(
 		QueryInterface& query,
-		const QueryAnalyzerInterface& analyzer,
+		const QueryAnalyzerInterface* analyzer,
+		const QueryProcessorInterface* queryproc,
 		const std::string& source)
 {
 	char const* src = source.c_str();
@@ -1217,7 +1291,7 @@ DLL_PUBLIC void strus::loadQuery(
 			switch (section)
 			{
 				case SectionFeature:
-					parseQueryExpression( query, analyzer, src);
+					parseQueryExpression( query, analyzer, queryproc, src);
 					query.defineFeature( featureSet, featureWeight);
 					break;
 				case SectionCondition:

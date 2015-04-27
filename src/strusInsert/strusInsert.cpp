@@ -254,6 +254,7 @@ int main( int argc_, const char* argv_[])
 
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 
 		// Load analyzer program:
 		unsigned int ec;
@@ -265,7 +266,7 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
-		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
+		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 
 		// Start inserter process:
 		strus::utils::ScopedPtr<strus::CommitQueue>

@@ -239,6 +239,7 @@ int main( int argc_, const char* argv_[])
 			qeval( storageBuilder->createQueryEval());
 
 		const strus::QueryProcessorInterface* qproc = storageBuilder->getQueryProcessor();
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 
 		// Load query analyzer program:
 		unsigned int ec;
@@ -250,7 +251,7 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
 			return 2;
 		}
-		strus::loadQueryAnalyzerProgram( *analyzer, analyzerProgramSource);
+		strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 
 		// Load query evaluation program:
 		std::string qevalProgramSource;
@@ -261,7 +262,7 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load query eval program " << queryprg << " (file system error " << ec << ")" << std::endl;
 			return 3;
 		}
-		strus::loadQueryEvalProgram( *qeval, *qproc, qevalProgramSource);
+		strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource);
 
 		// Load global statistics from file if specified:
 		if (opt("globalstats"))
@@ -317,7 +318,7 @@ int main( int argc_, const char* argv_[])
 			std::auto_ptr<strus::QueryInterface> query(
 				qeval->createQuery( storage.get()));
 
-			strus::loadQuery( *query, *analyzer, qs);
+			strus::loadQuery( *query, analyzer.get(), qproc, qs);
 
 			query->setMaxNofRanks( nofRanks);
 			query->setMinRank( 0);

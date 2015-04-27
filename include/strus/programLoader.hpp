@@ -28,13 +28,14 @@
 */
 #ifndef _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
-#include "strus/tokenizerConfig.hpp"
-#include "strus/normalizerConfig.hpp"
 #include <string>
+#include <vector>
 #include <istream>
 
 namespace strus {
 
+/// \brief Forward declaration
+class TextProcessorInterface;
 /// \brief Forward declaration
 class QueryProcessorInterface;
 /// \brief Forward declaration
@@ -51,17 +52,37 @@ class StorageClientInterface;
 
 /// \brief Load a document analyzer program from source
 /// \param[in] analyzer analyzer program to instatiate
+/// \param[in] textproc provider for text processing functions
 /// \param[in] source source string (not a file name!) to parse
 void loadDocumentAnalyzerProgram(
 		DocumentAnalyzerInterface& analyzer,
+		const TextProcessorInterface* textproc,
 		const std::string& source);
 
 /// \brief Load a query analyzer program from source
 /// \param[in] analyzer analyzer program to instatiate
+/// \param[in] textproc provider for text processing functions
 /// \param[in] source source string (not a file name!) to parse
 void loadQueryAnalyzerProgram(
 		QueryAnalyzerInterface& analyzer,
+		const TextProcessorInterface* textproc,
 		const std::string& source);
+
+/// \brief Load a phrase type definition from its source components
+/// \param[in] query query interface to instrument
+/// \param[in] analyzer program for analyzing text segments in the query
+/// \param[in] textproc provider for text processing functions
+/// \param[in] phrasetype name of phrase type to define
+/// \param[in] featuretype name of the feature type produced by the defined phrase type
+/// \param[in] normalizersrc source with normalizer definitions
+/// \param[in] tokenizersrc source with tokenizer definitions
+void loadQueryAnalyzerPhraseType(
+		QueryAnalyzerInterface& analyzer,
+		const TextProcessorInterface* textproc,
+		const std::string& phrasetype,
+		const std::string& featuretype,
+		const std::string& normalizersrc,
+		const std::string& tokenizersrc);
 
 /// \brief Load a query evaluation program from source
 /// \param[in] qeval query evaluation interface to instrument
@@ -69,17 +90,20 @@ void loadQueryAnalyzerProgram(
 /// \param[in] source source string (not a file name!) to parse
 void loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
-		const QueryProcessorInterface& qproc,
+		const QueryProcessorInterface* qproc,
 		const std::string& source);
 
 /// \brief Load a query from source (query language)
 /// \param[in] query query interface to instrument
 /// \param[in] analyzer program for analyzing text segments in the query
+/// \param[in] qproc query processor interface for info about objects loaded
 /// \param[in] source source string (not a file name!) to parse
 void loadQuery(
 		QueryInterface& query,
-		const QueryAnalyzerInterface& analyzer,
+		const QueryAnalyzerInterface* analyzer,
+		const QueryProcessorInterface* qproc,
 		const std::string& source);
+
 
 /// \brief Scan a source for the next program segment in a source that contains multiple programs.
 ///		The programs are separated by "\r\n.\r\n" or "\n.\n".
@@ -102,15 +126,25 @@ void loadGlobalStatistics(
 		StorageClientInterface& storage,
 		std::istream& stream);
 
-/// \brief Parse a tokenizer configuration in the syntax as specified in a query or document analyzer source
-/// \param[in] source source string (not a file name!) to parse
-/// \return the tokenizer configuration object
-TokenizerConfig parseTokenizerConfig( const std::string& source);
 
-/// \brief Parses a list of normalizer configuration in the syntax as specified in a query or document analyzer source
-/// \param[in] source source string (not a file name!) to parse
-/// \return the normalizer configuration list
-std::vector<NormalizerConfig> parseNormalizerConfig( const std::string& source);
+/// \brief Description of a tokenizer
+class FunctionConfig
+{
+public:
+	FunctionConfig( const std::string& name_, const std::vector<std::string>& args_)
+		:m_name(name_),m_args(args_){}
+	FunctionConfig( const FunctionConfig& o)
+		:m_name(o.m_name),m_args(o.m_args){}
+
+	/// \brief Get the name of the tokenizer
+	const std::string& name() const			{return m_name;}
+	/// \brief Get the arguments of the tokenizer
+	const std::vector<std::string>& args() const	{return m_args;}
+
+private:
+	std::string m_name;
+	std::vector<std::string> m_args;
+};
 
 }//namespace
 #endif

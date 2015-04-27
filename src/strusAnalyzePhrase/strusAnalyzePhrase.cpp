@@ -179,16 +179,12 @@ int main( int argc, const char* argv[])
 			builder( moduleLoader->createAnalyzerObjectBuilder());
 		std::auto_ptr<strus::QueryAnalyzerInterface>
 			analyzer( builder->createQueryAnalyzer());
+		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
 
 		// Create phrase type (tokenizer and normalizer):
-		std::vector<strus::NormalizerConfig> normalizerConfig(
-			strus::parseNormalizerConfig( normalizer));
-
-		strus::TokenizerConfig tokenizerConfig(
-			strus::parseTokenizerConfig( tokenizer));
-
 		std::string phraseType;
-		analyzer->definePhraseType( phraseType, "",  tokenizerConfig, normalizerConfig);
+		strus::loadQueryAnalyzerPhraseType(
+				*analyzer, textproc, phraseType, "", normalizer, tokenizer);
 
 		// Load the phrase:
 		std::string phrase;

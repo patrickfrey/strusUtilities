@@ -244,7 +244,8 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "ERROR failed to load analyzer program '" << analyzerprg << "' (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
-		strus::loadDocumentAnalyzerProgram( *analyzer, analyzerProgramSource);
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
+		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
