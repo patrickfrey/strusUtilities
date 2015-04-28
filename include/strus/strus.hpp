@@ -63,12 +63,12 @@
 // Query processor (functions for the query evaluation used for ranking and summarization):
 #include "strus/lib/queryproc.hpp"
 #include "strus/queryProcessorInterface.hpp"
+#include "strus/summarizerExecutionContextInterface.hpp"
 #include "strus/summarizerFunctionInterface.hpp"
-#include "strus/summarizerClosureInterface.hpp"
-#include "strus/summarizerConfig.hpp"
-#include "strus/weightingClosureInterface.hpp"
+#include "strus/summarizerFunctionInstanceInterface.hpp"
+#include "strus/weightingExecutionContextInterface.hpp"
 #include "strus/weightingFunctionInterface.hpp"
-#include "strus/weightingConfig.hpp"
+#include "strus/weightingFunctionInstanceInterface.hpp"
 
 // Query evaluation (processing a query to get a ranked list of documents with attributes):
 #include "strus/lib/queryeval.hpp"
@@ -99,13 +99,15 @@
 #include "strus/lib/tokenizer_word.hpp"
 #include "strus/lib/tokenizer_punctuation.hpp"
 #include "strus/analyzer/token.hpp"
-#include "strus/tokenizerConfig.hpp"
-#include "strus/tokenizerInterface.hpp"
+#include "strus/tokenizerExecutionContextInterface.hpp"
+#include "strus/tokenizerFunctionInterface.hpp"
+#include "strus/tokenizerFunctionInstanceInterface.hpp"
 
 // Token normalizer (functions for the text processor to map tokens to normalized terms for the storage):
 #include "strus/lib/normalizer_snowball.hpp"
-#include "strus/normalizerConfig.hpp"
-#include "strus/normalizerInterface.hpp"
+#include "strus/normalizerExecutionContextInterface.hpp"
+#include "strus/normalizerFunctionInterface.hpp"
+#include "strus/normalizerFunctionInstanceInterface.hpp"
 
 // Loading and building strus objects from source (some parsers for languages to configure strus objects from source):
 #include "strus/programLoader.hpp"
