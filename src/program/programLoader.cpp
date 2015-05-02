@@ -813,7 +813,7 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 			{
 				(void)ri->release();
 			}
-			tokenizer.release();
+			(void)tokenizer.release();
 
 			if (!isSemiColon(*src))
 			{
