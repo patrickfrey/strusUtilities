@@ -115,8 +115,6 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			builder( moduleLoader->createAnalyzerObjectBuilder());
 
 		if (printUsageAndExit)
 		{
@@ -161,6 +159,8 @@ int main( int argc, const char* argv[])
 		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
 
 		// Create objects for analyzer:
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+			builder( moduleLoader->createAnalyzerObjectBuilder());
 		std::auto_ptr<strus::DocumentAnalyzerInterface>
 			analyzer( builder->createDocumentAnalyzer( segmenter));
 
