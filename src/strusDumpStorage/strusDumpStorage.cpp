@@ -80,7 +80,7 @@ int main( int argc, const char* argv[])
 		opt = strus::ProgramOptions(
 				argc, argv, 6,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage");
+				"r,rpc:", "s,storage:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
