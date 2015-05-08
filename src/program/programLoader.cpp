@@ -141,7 +141,15 @@ static ArithmeticVariant parseNumericValue( char const*& src)
 		}
 		else
 		{
-			return ArithmeticVariant( parse_UNSIGNED( src));
+			while (*src == '0') ++src;
+			if (*src >= '1' && *src <= '9')
+			{
+				return ArithmeticVariant( parse_UNSIGNED( src));
+			}
+			else
+			{
+				return ArithmeticVariant( 0);
+			}
 		}
 	}
 	else
@@ -1414,7 +1422,7 @@ DLL_PUBLIC void strus::loadGlobalStatistics(
 	try
 	{
 		std::string line;
-		while (std::getline( stream, line))
+		for (; std::getline( stream, line); ++linecnt)
 		{
 			std::string::const_iterator li = line.begin(), le = line.end();
 			if (li != le)
@@ -1575,7 +1583,7 @@ static unsigned int loadStorageValues(
 	try
 	{
 		std::string line;
-		while (std::getline( stream, line))
+		for (; std::getline( stream, line); ++linecnt)
 		{
 			char const* itr = line.c_str();
 			Index docno = parseDocno( storage, itr);
@@ -1625,13 +1633,16 @@ static unsigned int loadStorageValues(
 			}
 			if (++commitcnt == commitsize)
 			{
-				commitcnt = 0;
 				transaction->commit();
+				commitcnt = 0;
+				transaction.reset( storage.createTransaction());
 			}
 		}
 		if (commitcnt)
 		{
 			transaction->commit();
+			commitcnt = 0;
+			transaction.reset( storage.createTransaction());
 		}
 		return rt;
 	}
@@ -1639,7 +1650,10 @@ static unsigned int loadStorageValues(
 	{
 		if (stream.eof())
 		{
-			transaction->commit();
+			if (commitcnt)
+			{
+				transaction->commit();
+			}
 			return rt;
 		}
 		throw std::runtime_error( std::string( "file read error on line ")

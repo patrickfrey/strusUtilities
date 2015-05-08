@@ -91,24 +91,46 @@ static bool isIndex( char const* cc)
 static void inspectPositions( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 3) throw std::runtime_error( "too many arguments");
-	if (size < 3) throw std::runtime_error( "too few arguments");
+	if (size < 2) throw std::runtime_error( "too few arguments");
+
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1])));
 
-	strus::Index docno = isIndex(key[2])
-			?stringToIndex( key[2])
-			:storage.documentNumber( key[2]);
-	if (docno == itr->skipDoc( docno))
+	if (size == 2)
 	{
-		strus::Index pos=0;
-		int cnt = 0;
-		while (0!=(pos=itr->skipPos(pos+1)))
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 1;
+		for (; docno <= maxDocno; ++docno)
 		{
-			if (cnt++ != 0) std::cout << " ";
-			std::cout << pos;
+			if (docno == itr->skipDoc( docno))
+			{
+				std::cout << docno << ':';
+				strus::Index pos=0;
+				while (0!=(pos=itr->skipPos(pos+1)))
+				{
+					std::cout << pos;
+				}
+				std::cout << std::endl;
+			}
 		}
-		std::cout << std::endl;
+	}
+	else
+	{
+		strus::Index docno = isIndex(key[2])
+				?stringToIndex( key[2])
+				:storage.documentNumber( key[2]);
+		if (docno == itr->skipDoc( docno))
+		{
+			strus::Index pos=0;
+			int cnt = 0;
+			while (0!=(pos=itr->skipPos(pos+1)))
+			{
+				if (cnt++ != 0) std::cout << " ";
+				std::cout << pos;
+			}
+			std::cout << std::endl;
+		}
 	}
 }
 
@@ -131,7 +153,7 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 	if (size == 1)
 	{
 		strus::Index maxDocno = storage.maxDocumentNumber();
-		strus::Index docno = 0;
+		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
 			std::cout << docno << ' ' << storage.documentStatistics( docno, stat, key[0]) << std::endl;
@@ -149,22 +171,37 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 static void inspectFeatureFrequency( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 3) throw std::runtime_error( "too many arguments");
-	if (size < 3) throw std::runtime_error( "too few arguments");
+	if (size < 2) throw std::runtime_error( "too few arguments");
 
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1])));
 
-	strus::Index docno = isIndex( key[2])
-			?stringToIndex( key[2])
-			:storage.documentNumber( key[2]);
-	if (docno == itr->skipDoc( docno))
+	if (size == 2)
 	{
-		std::cout << (*itr).frequency() << std::endl;
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 1;
+		for (; docno <= maxDocno; ++docno)
+		{
+			if (docno == itr->skipDoc( docno))
+			{
+				std::cout << docno << ' ' << (*itr).frequency() << std::endl;
+			}
+		}
 	}
 	else
 	{
-		std::cout << '0' << std::endl;
+		strus::Index docno = isIndex( key[2])
+				?stringToIndex( key[2])
+				:storage.documentNumber( key[2]);
+		if (docno == itr->skipDoc( docno))
+		{
+			std::cout << (*itr).frequency() << std::endl;
+		}
+		else
+		{
+			std::cout << '0' << std::endl;
+		}
 	}
 }
 
@@ -177,40 +214,76 @@ static void inspectNofDocuments( const strus::StorageClientInterface& storage, c
 static void inspectDocAttribute( const strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
-	if (size < 2) throw std::runtime_error( "too few arguments");
+	if (size < 1) throw std::runtime_error( "too few arguments");
 
 	std::auto_ptr<strus::AttributeReaderInterface>
 		attreader( storage.createAttributeReader());
-
-	strus::Index docno = isIndex(key[1])
-			?stringToIndex( key[1])
-			:storage.documentNumber( key[1]);
-
 	strus::Index hnd = attreader->elementHandle( key[0]);
 
-	attreader->skipDoc( docno);
-	std::string value = attreader->getValue( hnd);
+	if (size == 1)
+	{
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 1;
+		for (; docno <= maxDocno; ++docno)
+		{
+			attreader->skipDoc( docno);
+			std::string value = attreader->getValue( hnd);
+			if (value.size())
+			{
+				std::cout << docno << ' ' << value << std::endl;
+			}
+		}
+	}
+	else
+	{
+		strus::Index docno = isIndex(key[1])
+				?stringToIndex( key[1])
+				:storage.documentNumber( key[1]);
 
-	std::cout << value << std::endl;
+		attreader->skipDoc( docno);
+		std::string value = attreader->getValue( hnd);
+		std::cout << value << std::endl;
+	}
 }
 
 static void inspectDocMetaData( const strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
-	if (size < 2) throw std::runtime_error( "too few arguments");
+	if (size < 1) throw std::runtime_error( "too few arguments");
 
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
-
-	strus::Index docno = isIndex(key[1])
-			?stringToIndex( key[1])
-			:storage.documentNumber( key[1]);
-
 	strus::Index hnd = metadata->elementHandle( key[0]);
+	if (size == 1)
+	{
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 1;
+		for (; docno <= maxDocno; ++docno)
+		{
+			metadata->skipDoc( docno);
+			strus::ArithmeticVariant value = metadata->getValue( hnd);
+			if (value.defined())
+			{
+				std::cout << docno << ' ' << value << std::endl;
+			}
+		}
+	}
+	else
+	{
+		strus::Index docno = isIndex(key[1])
+				?stringToIndex( key[1])
+				:storage.documentNumber( key[1]);
 
-	metadata->skipDoc( docno);
-	strus::ArithmeticVariant value = metadata->getValue( hnd);
-
-	std::cout << value << std::endl;
+		metadata->skipDoc( docno);
+		strus::ArithmeticVariant value = metadata->getValue( hnd);
+		if (value.defined())
+		{
+			std::cout << value << std::endl;
+		}
+		else
+		{
+			std::cout << "NULL" << std::endl;
+		}
+	}
 }
 
 static void inspectDocMetaTable( const strus::StorageClientInterface& storage, const char**, int size)
@@ -230,21 +303,88 @@ static void inspectDocMetaTable( const strus::StorageClientInterface& storage, c
 static void inspectContent( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
-	if (size < 2) throw std::runtime_error( "too few arguments");
-
-	strus::Index docno = isIndex(key[1])
-			?stringToIndex( key[1])
-			:storage.documentNumber( key[1]);
+	if (size < 1) throw std::runtime_error( "too few arguments");
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
+	if (size == 1)
+	{
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 1;
+		for (; docno <= maxDocno; ++docno)
+		{
+			viewer->skipDoc( docno);
+			if (0 != viewer->skipPos(0))
+			{
+				std::cout << docno << ":";
+				strus::Index pos=0;
+				while (0!=(pos=viewer->skipPos(pos+1)))
+				{
+					std::cout << ' ' << viewer->fetch();
+				}
+				std::cout << std::endl;
+			}
+		}
+	}
+	else
+	{
+		strus::Index docno = isIndex(key[1])
+				?stringToIndex( key[1])
+				:storage.documentNumber( key[1]);
+		viewer->skipDoc( docno);
+		strus::Index pos=0;
+		for (int idx=0; 0!=(pos=viewer->skipPos(pos+1)); ++idx)
+		{
+			if (idx) std::cout << ' ';
+			std::cout << viewer->fetch();
+		}
+		std::cout << std::endl;
+	}
+}
+
+static void fillForwardIndexStats(
+		strus::StorageClientInterface& storage,
+		strus::ForwardIteratorReference& viewer,
+		std::map<std::string,unsigned int> statmap,
+		const strus::Index& docno)
+{
 	viewer->skipDoc( docno);
 	strus::Index pos=0;
-	for (int idx=0; 0!=(pos=viewer->skipPos(pos+1)); ++idx)
+	while (0!=(pos=viewer->skipPos(pos+1)))
 	{
-		if (idx) std::cout << ' ';
-		std::cout << viewer->fetch();
+		std::string value = viewer->fetch();
+		statmap[ value] += 1;
 	}
-	std::cout << std::endl;
+}
+
+static void inspectForwardIndexStats( strus::StorageClientInterface& storage, const char** key, int size)
+{
+	if (size > 2) throw std::runtime_error( "too many arguments");
+	if (size < 1) throw std::runtime_error( "too few arguments");
+
+	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
+	std::map<std::string,unsigned int> statmap;
+	if (size == 1)
+	{
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 1;
+		for (; docno <= maxDocno; ++docno)
+		{
+			fillForwardIndexStats( storage, viewer, statmap, docno);
+		}
+	}
+	else
+	{
+		strus::Index docno = isIndex(key[1])
+				?stringToIndex( key[1])
+				:storage.documentNumber( key[1]);
+	
+		fillForwardIndexStats( storage, viewer, statmap, docno);
+	}
+	std::map<std::string,unsigned int>::const_iterator si = statmap.begin(), se = statmap.end();
+	for (; si != se; ++si)
+	{
+		std::cout << "'" << si->first << "' " << si->second << std::endl;
+	}
 }
 
 static void inspectToken( strus::StorageClientInterface& storage, const char** key, int size)
@@ -265,7 +405,7 @@ static void inspectToken( strus::StorageClientInterface& storage, const char** k
 	}
 }
 
-static void inspectDocid( strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectDocno( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 1) throw std::runtime_error( "too many arguments");
 	if (size < 1) throw std::runtime_error( "too few arguments");
@@ -331,28 +471,36 @@ int main( int argc, const char* argv[])
 		{
 			std::cerr << "usage: strusInspect [options] <what...>" << std::endl;
 			std::cerr << "<what>    : what to inspect:" << std::endl;
-			std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
-			std::cerr << "               = Get the list of positions for a search index feature" << std::endl;
-			std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
+			std::cerr << "            \"pos\" <type> <value> [<doc-id/no>]" << std::endl;
+			std::cerr << "               = Get the list of positions for a search index feature." << std::endl;
+			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cerr << "            \"ff\" <type> <value> [<doc-id/no>]" << std::endl;
 			std::cerr << "               = Get the feature frequency for a search index feature" << std::endl;
+			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
 			std::cerr << "            \"df\" <type> <value>" << std::endl;
 			std::cerr << "               = Get the document frequency for a search index feature" << std::endl;
-			std::cerr << "            \"ttf\" <type> {<doc-id/no>}" << std::endl;
+			std::cerr << "            \"ttf\" <type> [<doc-id/no>]" << std::endl;
 			std::cerr << "               = Get the term type frequency in a document" << std::endl;
-			std::cerr << "                 If the document is not specified, then for all docs" << std::endl;
-			std::cerr << "            \"ttc\" <type> {<doc-id/no>} (term type count in doc)" << std::endl;
+			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cerr << "            \"ttc\" <type> [<doc-id/no>]" << std::endl;
 			std::cerr << "               = Get the term type count (distinct) in a document" << std::endl;
-			std::cerr << "                 If the document is not specified, then for all docs" << std::endl;
+			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
 			std::cerr << "            \"nofdocs\"" << std::endl;
 			std::cerr << "               = Get the local number of documents in the storage" << std::endl;
-			std::cerr << "            \"metadata\" <name> <doc-id/no>" << std::endl;
+			std::cerr << "            \"metadata\" <name> [<doc-id/no>]" << std::endl;
 			std::cerr << "               = Get the value of a meta data element" << std::endl;
+			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
 			std::cerr << "            \"metatable\"" << std::endl;
 			std::cerr << "               = Get the schema of the meta data table" << std::endl;
-			std::cerr << "            \"attribute\" <name> <doc-id/no>" << std::endl;
+			std::cerr << "            \"attribute\" <name> [<doc-id/no>]" << std::endl;
 			std::cerr << "               = Get the value of a document attribute" << std::endl;
-			std::cerr << "            \"content\" <type> <doc-id/no>" << std::endl;
+			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cerr << "            \"content\" <type> [<doc-id/no>]" << std::endl;
 			std::cerr << "               = Get the content of the forward index for a type" << std::endl;
+			std::cerr << "                 If doc is not specified then dump content for all docs." << std::endl;
+			std::cerr << "            \"fwstats\" <type> [<doc-id/no>]" << std::endl;
+			std::cerr << "               = Get the statistis of the forward index for a type" << std::endl;
+			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
 			std::cerr << "            \"token\" <type> <doc-id/no>" << std::endl;
 			std::cerr << "               = Get the list of terms in the forward index for a type" << std::endl;
 			std::cerr << "            \"docno\" <docid>" << std::endl;
@@ -448,9 +596,13 @@ int main( int argc, const char* argv[])
 		{
 			inspectContent( *storage, inpectarg, inpectargsize);
 		}
+		else if (strus::utils::caseInsensitiveEquals( what, "fwstats"))
+		{
+			inspectForwardIndexStats( *storage, inpectarg, inpectargsize);
+		}
 		else if (strus::utils::caseInsensitiveEquals( what, "docno"))
 		{
-			inspectDocid( *storage, inpectarg, inpectargsize);
+			inspectDocno( *storage, inpectarg, inpectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "token"))
 		{
