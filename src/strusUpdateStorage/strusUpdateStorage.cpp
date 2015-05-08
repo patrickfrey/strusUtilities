@@ -91,13 +91,13 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			if (opt.nofargs() < 2)
+			if (opt.nofargs() < 1)
 			{
 				std::cerr << "ERROR too few arguments" << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			if (opt.nofargs() > 2)
+			if (opt.nofargs() > 1)
 			{
 				std::cerr << "ERROR too many arguments" << std::endl;
 				printUsageAndExit = true;
