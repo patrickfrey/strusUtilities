@@ -344,7 +344,7 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 static void fillForwardIndexStats(
 		strus::StorageClientInterface& storage,
 		strus::ForwardIteratorReference& viewer,
-		std::map<std::string,unsigned int> statmap,
+		std::map<std::string,unsigned int>& statmap,
 		const strus::Index& docno)
 {
 	viewer->skipDoc( docno);

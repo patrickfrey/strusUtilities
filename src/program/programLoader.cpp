@@ -167,6 +167,16 @@ static void parseWeightingConfig(
 	{
 		throw std::runtime_error( "weighting function identifier expected");
 	}
+	float weight = 1.0;
+	if (is_FLOAT( src))
+	{
+		weight = parse_FLOAT( src);
+		if (!isAsterisk(*src))
+		{
+			throw std::runtime_error( "multiplication operator '*' expected after EVAL followed by a floating point number (weight)");
+		}
+		(void)parse_OPERATOR(src);
+	}
 	std::string functionName = parse_IDENTIFIER( src);
 	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
 	std::auto_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance());
@@ -225,7 +235,7 @@ static void parseWeightingConfig(
 		}
 		(void)parse_OPERATOR( src);
 	}
-	qeval.addWeightingFunction( functionName, function.get(), weightedFeatureSets); 
+	qeval.addWeightingFunction( functionName, function.get(), weightedFeatureSets, weight); 
 	(void)function.release();
 }
 
@@ -1286,7 +1296,7 @@ DLL_PUBLIC void strus::loadQuery(
 						throw std::runtime_error("feature set identifier expected after keyword 'Feature' in query section definition");
 					}
 					featureSet = parse_IDENTIFIER( src);
-					
+
 					if (isDigit(*src))
 					{
 						featureWeight = parse_FLOAT( src);

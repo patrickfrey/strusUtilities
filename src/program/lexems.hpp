@@ -146,6 +146,7 @@ static inline void skipSpaces( char const*& src)
 	}
 }
 bool is_INTEGER( const char* src);
+bool is_FLOAT( const char* src);
 bool isEqual( const std::string& id, const char* idstr);
 std::string parse_IDENTIFIER( char const*& src);
 std::string parse_TEXTWORD( char const*& src);

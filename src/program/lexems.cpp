@@ -50,6 +50,19 @@ bool parser::is_INTEGER( const char* src)
 	return true;
 }
 
+bool parser::is_FLOAT( const char* src)
+{
+	char const* cc = src;
+	if (isMinus(*cc))
+	{
+		++cc;
+	}
+	if (!isDigit( *cc)) return false;
+	for (++cc; isDigit( *cc); ++cc){}
+	if (isAlnum(*cc)) return false;
+	return true;
+}
+
 bool parser::isEqual( const std::string& id, const char* idstr)
 {
 	char const* si = id.c_str();
