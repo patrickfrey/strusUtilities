@@ -123,6 +123,29 @@ static void inspectDocumentFrequency( strus::StorageClientInterface& storage, co
 	std::cout << itr->documentFrequency() << std::endl;
 }
 
+static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage, strus::StorageClientInterface::DocumentStatisticsType stat, const char** key, int size)
+{
+	if (size > 2) throw std::runtime_error( "too many arguments");
+	if (size < 1) throw std::runtime_error( "too few arguments");
+
+	if (size == 1)
+	{
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 0;
+		for (; docno <= maxDocno; ++docno)
+		{
+			std::cout << docno << ' ' << storage.documentStatistics( docno, stat, key[0]) << std::endl;
+		}
+	}
+	else
+	{
+		strus::Index docno = isIndex( key[1])
+				?stringToIndex( key[1])
+				:storage.documentNumber( key[1]);
+		std::cout << storage.documentStatistics( docno, stat, key[0]) << std::endl;
+	}
+}
+
 static void inspectFeatureFrequency( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 3) throw std::runtime_error( "too many arguments");
@@ -132,7 +155,7 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1])));
 
-	strus::Index docno = isIndex(key[2])
+	strus::Index docno = isIndex( key[2])
 			?stringToIndex( key[2])
 			:storage.documentNumber( key[2]);
 	if (docno == itr->skipDoc( docno))
@@ -309,15 +332,31 @@ int main( int argc, const char* argv[])
 			std::cerr << "usage: strusInspect [options] <what...>" << std::endl;
 			std::cerr << "<what>    : what to inspect:" << std::endl;
 			std::cerr << "            \"pos\" <type> <value> <doc-id/no>" << std::endl;
+			std::cerr << "               = Get the list of positions for a search index feature" << std::endl;
 			std::cerr << "            \"ff\" <type> <value> <doc-id/no>" << std::endl;
+			std::cerr << "               = Get the feature frequency for a search index feature" << std::endl;
 			std::cerr << "            \"df\" <type> <value>" << std::endl;
+			std::cerr << "               = Get the document frequency for a search index feature" << std::endl;
+			std::cerr << "            \"ttf\" <type> {<doc-id/no>}" << std::endl;
+			std::cerr << "               = Get the term type frequency in a document" << std::endl;
+			std::cerr << "                 If the document is not specified, then for all docs" << std::endl;
+			std::cerr << "            \"ttc\" <type> {<doc-id/no>} (term type count in doc)" << std::endl;
+			std::cerr << "               = Get the term type count (distinct) in a document" << std::endl;
+			std::cerr << "                 If the document is not specified, then for all docs" << std::endl;
 			std::cerr << "            \"nofdocs\"" << std::endl;
+			std::cerr << "               = Get the local number of documents in the storage" << std::endl;
 			std::cerr << "            \"metadata\" <name> <doc-id/no>" << std::endl;
+			std::cerr << "               = Get the value of a meta data element" << std::endl;
 			std::cerr << "            \"metatable\"" << std::endl;
+			std::cerr << "               = Get the schema of the meta data table" << std::endl;
 			std::cerr << "            \"attribute\" <name> <doc-id/no>" << std::endl;
+			std::cerr << "               = Get the value of a document attribute" << std::endl;
 			std::cerr << "            \"content\" <type> <doc-id/no>" << std::endl;
+			std::cerr << "               = Get the content of the forward index for a type" << std::endl;
 			std::cerr << "            \"token\" <type> <doc-id/no>" << std::endl;
+			std::cerr << "               = Get the list of terms in the forward index for a type" << std::endl;
 			std::cerr << "            \"docno\" <docid>" << std::endl;
+			std::cerr << "               = Get the internal local document number for a document id" << std::endl;
 			std::cerr << "description: Inspect some data in the storage." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
@@ -380,6 +419,14 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "df"))
 		{
 			inspectDocumentFrequency( *storage, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "ttf"))
+		{
+			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTermOccurrencies, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "ttc"))
+		{
+			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTerms, inpectarg, inpectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nofdocs"))
 		{

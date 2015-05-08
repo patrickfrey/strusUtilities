@@ -126,25 +126,39 @@ void loadGlobalStatistics(
 		StorageClientInterface& storage,
 		std::istream& stream);
 
+/// \brief Load some meta data assignments for a storage from a stream
+/// \param[in,out] storage the storage to instrument
+/// \param[in] metadataName name of the meta data field to assign
+/// \param[in,out] stream the stream to read from
+/// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
+/// \return the number of documents (non distinct) updated
+unsigned int loadDocumentMetaDataAssignments(
+		StorageClientInterface& storage,
+		const std::string& metadataName,
+		std::istream& stream,
+		unsigned int commitsize=0);
 
-/// \brief Description of a tokenizer
-class FunctionConfig
-{
-public:
-	FunctionConfig( const std::string& name_, const std::vector<std::string>& args_)
-		:m_name(name_),m_args(args_){}
-	FunctionConfig( const FunctionConfig& o)
-		:m_name(o.m_name),m_args(o.m_args){}
+/// \brief Load some attribute assignments for a storage from a stream
+/// \param[in,out] storage the storage to instrument
+/// \param[in] attributeName name of the attribute to assign
+/// \param[in,out] stream the stream to read from
+/// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
+/// \return the number of documents (non distinct) updated
+unsigned int loadDocumentAttributeAssignments(
+		StorageClientInterface& storage,
+		const std::string& attributeName,
+		std::istream& stream,
+		unsigned int commitsize=0);
 
-	/// \brief Get the name of the tokenizer
-	const std::string& name() const			{return m_name;}
-	/// \brief Get the arguments of the tokenizer
-	const std::vector<std::string>& args() const	{return m_args;}
-
-private:
-	std::string m_name;
-	std::vector<std::string> m_args;
-};
+/// \brief Load some user rights assignments for a storage from a stream
+/// \param[in,out] storage the storage to instrument
+/// \param[in,out] stream the stream to read from
+/// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
+/// \return the number of documents (non distinct) updated
+unsigned int loadDocumentUserRightsAssignments(
+		StorageClientInterface& storage,
+		std::istream& stream,
+		unsigned int commitsize=0);
 
 }//namespace
 #endif

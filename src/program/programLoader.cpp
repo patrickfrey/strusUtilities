@@ -47,6 +47,8 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/storageClientInterface.hpp"
+#include "strus/storageDocumentUpdateInterface.hpp"
+#include "strus/storageTransactionInterface.hpp"
 #include "strus/peerStorageTransactionInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/reference.hpp"
@@ -511,6 +513,26 @@ static void parseFunctionDef( const char* functype, std::string& name, std::vect
 		throw std::runtime_error( std::string(functype) + " definition (identifier) expected");
 	}
 }
+
+
+/// \brief Description of a function (tokenizer/normalizer)
+class FunctionConfig
+{
+public:
+	FunctionConfig( const std::string& name_, const std::vector<std::string>& args_)
+		:m_name(name_),m_args(args_){}
+	FunctionConfig( const FunctionConfig& o)
+		:m_name(o.m_name),m_args(o.m_args){}
+
+	/// \brief Get the name of the tokenizer
+	const std::string& name() const			{return m_name;}
+	/// \brief Get the arguments of the tokenizer
+	const std::vector<std::string>& args() const	{return m_args;}
+
+private:
+	std::string m_name;
+	std::vector<std::string> m_args;
+};
 
 static std::vector<FunctionConfig> parseNormalizerConfig( char const*& src)
 {
@@ -1441,6 +1463,224 @@ DLL_PUBLIC void strus::loadGlobalStatistics(
 			+ utils::tostring( linecnt)
 			+ ": " + err.what());
 	}
+}
+
+static Index parseDocno( StorageClientInterface& storage, char const*& itr)
+{
+	if (isDigit(*itr) && is_INTEGER(itr))
+	{
+		return parse_UNSIGNED1( itr);
+	}
+	else if (isStringQuote(*itr))
+	{
+		std::string docid = parse_STRING(itr);
+		return storage.documentNumber( docid);
+	}
+	else
+	{
+		std::string docid;
+		for (; isSpace(*itr); ++itr)
+		{
+			docid.push_back( *itr);
+		}
+		return storage.documentNumber( docid);
+	}
+}
+
+static void storeMetaDataValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const ArithmeticVariant& val)
+{
+	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	update->setMetaData( name, val);
+	update->done();
+}
+
+static void storeAttributeValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const std::string& val)
+{
+	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	if (val.empty())
+	{
+		update->clearAttribute( name);
+	}
+	else
+	{
+		update->setAttribute( name, val);
+	}
+	update->done();
+}
+
+static void storeUserRights( StorageTransactionInterface& transaction, const Index& docno, const std::string& val)
+{
+	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	char const* itr = val.c_str();
+	if (itr[0] == '+' && (itr[1] == ',' || !itr[1]))
+	{
+		itr += (itr[1])?2:1;
+	}
+	else
+	{
+		update->clearUserAccessRights();
+	}
+	while (*itr)
+	{
+		bool positive = true;
+		if (*itr == '+')
+		{
+			(void)parse_OPERATOR( itr);
+		}
+		else if (*itr == '-')
+		{
+			positive = false;
+			(void)parse_OPERATOR( itr);
+		}
+		std::string username = parse_IDENTIFIER(itr);
+		if (positive)
+		{
+			update->setUserAccessRight( username);
+		}
+		else
+		{
+			update->clearUserAccessRight( username);
+		}
+		if (*itr == ',')
+		{
+			(void)parse_OPERATOR( itr);
+		}
+		else if (*itr)
+		{
+			throw std::runtime_error("unexpected token in user rigths specification");
+		}
+	}
+}
+
+
+enum StorageValueType
+{
+	StorageValueMetaData,
+	StorageValueAttribute,
+	StorageUserRights
+};
+
+static unsigned int loadStorageValues(
+		StorageClientInterface& storage,
+		const std::string& elementName,
+		std::istream& stream,
+		StorageValueType valueType,
+		unsigned int commitsize)
+{
+	unsigned int rt = 0;
+	std::auto_ptr<StorageTransactionInterface>
+		transaction( storage.createTransaction());
+	std::size_t linecnt = 1;
+	unsigned int commitcnt = 0;
+	try
+	{
+		std::string line;
+		while (std::getline( stream, line))
+		{
+			char const* itr = line.c_str();
+			Index docno = parseDocno( storage, itr);
+
+			if (!docno) continue;
+			switch (valueType)
+			{
+				case StorageValueMetaData:
+				{
+					ArithmeticVariant val( parseNumericValue( itr));
+					storeMetaDataValue( *transaction, docno, elementName, val);
+					rt += 1;
+					break;
+				}
+				case StorageValueAttribute:
+				{
+					std::string val;
+					if (isTextChar( *itr))
+					{
+						val = parse_TEXTWORD( itr);
+					}
+					else if (isStringQuote( *itr))
+					{
+						val = parse_STRING( itr);
+					}
+					else
+					{
+						val = std::string( itr);
+						itr = std::strchr( itr, '\0');
+					}
+					storeAttributeValue( *transaction, docno, elementName, val);
+					rt += 1;
+					break;
+				}
+				case StorageUserRights:
+				{
+					std::string val( itr);
+					itr = std::strchr( itr, '\0');
+					storeUserRights( *transaction, docno, val);
+					rt += 1;
+					break;
+				}
+			}
+			if (*itr)
+			{
+				throw std::runtime_error("extra characters after value assignment");
+			}
+			if (++commitcnt == commitsize)
+			{
+				commitcnt = 0;
+				transaction->commit();
+			}
+		}
+		if (commitcnt)
+		{
+			transaction->commit();
+		}
+		return rt;
+	}
+	catch (const std::istream::failure& err)
+	{
+		if (stream.eof())
+		{
+			transaction->commit();
+			return rt;
+		}
+		throw std::runtime_error( std::string( "file read error on line ")
+			+ utils::tostring( linecnt)
+			+ ": " + err.what());
+	}
+	catch (const std::runtime_error& err)
+	{
+		throw std::runtime_error( std::string( "error on line ")
+			+ utils::tostring( linecnt)
+			+ ": " + err.what());
+	}
+}
+
+
+DLL_PUBLIC unsigned int loadDocumentMetaDataAssignments(
+		StorageClientInterface& storage,
+		const std::string& metadataName,
+		std::istream& stream,
+		unsigned int commitsize)
+{
+	return loadStorageValues( storage, metadataName, stream, StorageValueMetaData, commitsize);
+}
+
+
+DLL_PUBLIC unsigned int loadDocumentAttributeAssignments(
+		StorageClientInterface& storage,
+		const std::string& attributeName,
+		std::istream& stream,
+		unsigned int commitsize)
+{
+	return loadStorageValues( storage, attributeName, stream, StorageValueAttribute, commitsize);
+}
+
+
+DLL_PUBLIC unsigned int loadDocumentUserRightsAssignments(
+		StorageClientInterface& storage,
+		std::istream& stream,
+		unsigned int commitsize)
+{
+	return loadStorageValues( storage, std::string(), stream, StorageUserRights, commitsize);
 }
 
 
