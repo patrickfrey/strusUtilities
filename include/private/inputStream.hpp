@@ -35,13 +35,30 @@
 
 namespace strus {
 
+/// \class InputStream
+/// \brief Abstraction of input stream
 class InputStream
 {
 public:
+	/// \brief Constructor
+	/// \param[in] docpath path to file to read or "-" for stdin
 	InputStream( const std::string& docpath);
+
+	/// \brief Destructor
 	~InputStream();
 
+	/// \brief Read some data
+	/// \param[in,out] buf where to write to
+	/// \param[in] bufsize allocation size of 'buf' (capacity) 
+	/// \return the number of bytes read
 	std::size_t read( char* buf, std::size_t bufsize);
+
+	/// \brief Get the stream object as STL stream
+	/// \return the STL stream object
+	std::istream& stream()
+	{
+		return *m_stream;
+	}
 
 private:
 	std::istream* m_stream;

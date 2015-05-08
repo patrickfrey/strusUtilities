@@ -28,13 +28,17 @@
 */
 #include "strus/lib/module.hpp"
 #include "strus/moduleLoaderInterface.hpp"
+#include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
+#include "strus/rpcClientInterface.hpp"
+#include "strus/rpcClientMessagingInterface.hpp"
+#include "strus/programLoader.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/versionStorage.hpp"
-#include "strus/arithmeticVariant.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -62,22 +66,6 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient));
 }
 
-static std::string::const_iterator skipSpaces( std::string::const_iterator si, const std::string::const_iterator& se)
-{
-	for (; si != se && (unsigned char)*si <= 32; ++si){}
-	return si;
-}
-
-static std::pair<strus::Index,strus::ArithmeticVariant> readCmdLine( strus::InputStream& input)
-{
-	char buf[ 256];
-	std::size_t bufsize = read( buf, sizeof(buf));
-	
-	std::pair<strus::Index,strus::ArithmeticVariant> rt;
-	
-}
-
-
 
 int main( int argc, const char* argv[])
 {
@@ -87,8 +75,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 4,
-				"h,help", "v,version", "m,module:", "M,moduledir:");
+				argc, argv, 10,
+				"h,help", "v,version", "m,module:", "M,moduledir:",
+				"r,rpc:", "s,storage:", "c,commit:",
+				"a,attribute:","m,metadata:","u,useraccess");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
@@ -136,35 +126,9 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
-			std::cerr << "<config>  : configuration string of the storage" << std::endl;
-			std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
-			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
-			std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
-			std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
-			std::cerr << "              <name>    :name of the element to change" << std::endl;
-			std::cerr << "              <newname> :new name of the element" << std::endl;
-			std::cerr << "              <newtype> :new type (*) of the element" << std::endl;
-			std::cerr << "            add <name> <type>" << std::endl;
-			std::cerr << "              <name>    :name of the element to add" << std::endl;
-			std::cerr << "              <type>    :type (*) of the element to add" << std::endl;
-			std::cerr << "            delete <name>" << std::endl;
-			std::cerr << "              <name>    :name of the element to remove" << std::endl;
-			std::cerr << "            rename <name> <newname>" << std::endl;
-			std::cerr << "              <name>    :name of the element to rename" << std::endl;
-			std::cerr << "              <newname> :new name of the element" << std::endl;
-			std::cerr << "            clear <name>" << std::endl;
-			std::cerr << "              <name>    :name of the element to clear all values" << std::endl;
-			std::cerr << "(*)       :type of an element is one of the following:" << std::endl;
-			std::cerr << "              INT8      :one byte signed integer value" << std::endl;
-			std::cerr << "              UINT8     :one byte unsigned integer value" << std::endl;
-			std::cerr << "              INT16     :two bytes signed integer value" << std::endl;
-			std::cerr << "              UINT16    :two bytes unsigned integer value" << std::endl;
-			std::cerr << "              INT32     :four bytes signed integer value" << std::endl;
-			std::cerr << "              UINT32    :four bytes unsigned integer value" << std::endl;
-			std::cerr << "              FLOAT16   :two bytes floating point value (IEEE 754 small)" << std::endl;
-			std::cerr << "              FLOAT32   :four bytes floating point value (IEEE 754 single)" << std::endl;
-			std::cerr << "description: Executes a list of alter the meta data table commands." << std::endl;
+			std::cerr << "usage: strusUpdateStorage [options] <updatefile>" << std::endl;
+			std::cerr << "<updatefile>  = file with the batch of updates ('-' for stdin)" << std::endl;
+			std::cerr << "description: Executes a batch of storage updates." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "    Print this usage and do nothing else" << std::endl;
@@ -174,44 +138,107 @@ int main( int argc, const char* argv[])
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			std::cerr << "-M|--moduledir <DIR>" << std::endl;
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
+			std::cerr << "-r|--rpc <ADDR>" << std::endl;
+			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cerr << "-s|--storage <CONFIG>" << std::endl;
+			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			if (!opt("rpc"))
+			{
+				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+			}
+			std::cerr << "-a|--attribute <NAME>" << std::endl;
+			std::cerr << "    The update batch is a list of attributes assignments" << std::endl;
+			std::cerr << "    The name of the updated attribute is <NAME>." << std::endl;
+			std::cerr << "-m|--metadata <NAME>" << std::endl;
+			std::cerr << "    The update batch is a list of meta data assignments." << std::endl;
+			std::cerr << "    The name of the updated meta data element is <NAME>." << std::endl;
+			std::cerr << "-u|--useraccess" << std::endl;
+			std::cerr << "    The update batch is a list of user right assignments." << std::endl;
+			std::cerr << "-c|--commit <N>" << std::endl;
+			std::cerr << "    Set <N> as number of updates per transaction (default 10000)" << std::endl;
+			std::cerr << "    If <N> is set to 0 then only one commit is done at the end" << std::endl;
 			return rt;
 		}
-		std::string storagecfg = opt[0];
-		std::vector<AlterMetaDataCommand> cmds = parseCommands( opt[1]);
-
-		// Create objects for altering the meta data table:
-		std::auto_ptr<strus::StorageObjectBuilderInterface> builder;
-		std::auto_ptr<strus::StorageAlterMetaDataTableInterface> md;
-
-		builder.reset( moduleLoader->createStorageObjectBuilder());
-		md.reset( builder->createAlterMetaDataTable( storagecfg));
-
-		// Execute alter meta data table commands:
-		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();
-		for (; ci != ce; ++ci)
+		std::string storagecfg;
+		if (opt("storage"))
 		{
-			switch (ci->id())
-			{
-				case AlterMetaDataCommand::Alter:
-					md->alterElement( ci->name(), ci->newname(), ci->type());
-					break;
-				case AlterMetaDataCommand::Add:
-					md->addElement( ci->name(), ci->type());
-					break;
-				case AlterMetaDataCommand::Delete:
-					md->deleteElement( ci->name());
-					break;
-				case AlterMetaDataCommand::Rename:
-					md->renameElement( ci->name(), ci->newname());
-					break;
-				case AlterMetaDataCommand::Clear:
-					md->clearElement( ci->name());
-					break;
-			}
+			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --storage and --rpc");
+			storagecfg = opt["storage"];
 		}
-		std::cerr << "updating meta data table changes..." << std::endl;
-		md->commit();
-		std::cerr << "done" << std::endl;
+		
+		// Create objects for storage document update:
+		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
+		std::auto_ptr<strus::RpcClientInterface> rpcClient;
+		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		if (opt("rpc"))
+		{
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
+			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			(void)messaging.release();
+			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+		}
+		else
+		{
+			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+		}
+		strus::utils::ScopedPtr<strus::StorageClientInterface>
+			storage( storageBuilder->createStorageClient( storagecfg));
+
+		enum UpdateOperation
+		{
+			UpdateOpAttribute,
+			UpdateOpMetadata,
+			UpdateOpUserAccess
+		};
+		UpdateOperation updateOperation;
+		std::string elemname;
+		std::string updateBatchPath( opt[0]);
+
+		if (opt("metadata"))
+		{
+			if (opt("attribute")) throw std::runtime_error("specified mutual exclusive options --attribute and --metadata");
+			if (opt("useraccess")) throw std::runtime_error("specified mutual exclusive options --useraccess and --metadata");
+			elemname = opt["metadata"];
+			updateOperation = UpdateOpMetadata;
+		}
+		else if (opt("attribute"))
+		{
+			if (opt("useraccess")) throw std::runtime_error("specified mutual exclusive options --useraccess and --attribute");
+			elemname = opt["attribute"];
+			updateOperation = UpdateOpAttribute;
+		}
+		else if (opt("useraccess"))
+		{
+			updateOperation = UpdateOpUserAccess;
+		}
+		else
+		{
+			throw std::runtime_error("no update operation type specified as option (one of --attribute,--metadata,--useraccess is mandatory)");
+		}
+		strus::InputStream input( updateBatchPath);
+		unsigned int nofUpdates = 0;
+		unsigned int transactionSize = 10000;
+		if (opt("commit"))
+		{
+			transactionSize = opt.asUint( "commit");
+		}
+		switch (updateOperation)
+		{
+			case UpdateOpMetadata:
+				nofUpdates = strus::loadDocumentMetaDataAssignments(
+						*storage, elemname, input.stream(), transactionSize);
+				break;
+			case UpdateOpAttribute:
+				nofUpdates = strus::loadDocumentAttributeAssignments(
+						*storage, elemname, input.stream(), transactionSize);
+				break;
+			case UpdateOpUserAccess:
+				nofUpdates = strus::loadDocumentUserRightsAssignments(
+						*storage, input.stream(), transactionSize);
+				break;
+		}
+		std::cerr << "done " << nofUpdates << " update operations" << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{

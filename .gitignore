@@ -45,17 +45,18 @@ CPackSourceConfig.cmake.user
 
 # Compiled Programs
 src/strusCreate/strusCreate
-src/strusInspect/strusInspect
+src/strusDestroy/strusDestroy
 src/strusAnalyze/strusAnalyze
+src/strusAnalyzePhrase/strusAnalyzePhrase
 src/strusInsert/strusInsert
 src/strusInsert/strusCheckInsert
 src/strusInsert/strusGenerateKeyMap
-src/strusDestroy/strusDestroy
 src/strusQuery/strusQuery
 src/strusAlterMetaData/strusAlterMetaData
 src/strusDumpStatistics/strusDumpStatistics
 src/strusCheckStorage/strusCheckStorage
 src/strusDumpStorage/strusDumpStorage
-src/strusAnalyzePhrase/strusAnalyzePhrase
+src/strusInspect/strusInspect
+src/strusUpdateStorage/strusUpdateStorage
 src/strusSegment/strusSegment
 

@@ -1655,7 +1655,7 @@ static unsigned int loadStorageValues(
 }
 
 
-DLL_PUBLIC unsigned int loadDocumentMetaDataAssignments(
+DLL_PUBLIC unsigned int strus::loadDocumentMetaDataAssignments(
 		StorageClientInterface& storage,
 		const std::string& metadataName,
 		std::istream& stream,
@@ -1665,7 +1665,7 @@ DLL_PUBLIC unsigned int loadDocumentMetaDataAssignments(
 }
 
 
-DLL_PUBLIC unsigned int loadDocumentAttributeAssignments(
+DLL_PUBLIC unsigned int strus::loadDocumentAttributeAssignments(
 		StorageClientInterface& storage,
 		const std::string& attributeName,
 		std::istream& stream,
@@ -1675,7 +1675,7 @@ DLL_PUBLIC unsigned int loadDocumentAttributeAssignments(
 }
 
 
-DLL_PUBLIC unsigned int loadDocumentUserRightsAssignments(
+DLL_PUBLIC unsigned int strus::loadDocumentUserRightsAssignments(
 		StorageClientInterface& storage,
 		std::istream& stream,
 		unsigned int commitsize)

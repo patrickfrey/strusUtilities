@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR )
 # SOURCES AND INCLUDES
 # --------------------------------------
 set(source_files
-	strusUpdateMetaData.cpp
+	strusUpdateStorage.cpp
 )
 
 include_directories(
@@ -28,13 +28,13 @@ link_directories(
 # ------------------------------
 # PROGRAMS
 # ------------------------------
-add_executable( strusUpdateMetaData ${source_files} )
-target_link_libraries( strusUpdateMetaData strus_private_utils ${strus_LIBRARIES} ${strusmodule_LIBRARIES} ${strusrpc_LIBRARIES} )
+add_executable( strusUpdateStorage ${source_files} )
+target_link_libraries( strusUpdateStorage strus_private_utils ${strus_LIBRARIES} ${strusmodule_LIBRARIES} ${strusrpc_LIBRARIES} strus_program )
 
 
 # ------------------------------
 # INSTALLATION
 # ------------------------------
-install( TARGETS strusUpdateMetaData
+install( TARGETS strusUpdateStorage
 	   RUNTIME DESTINATION bin )
 

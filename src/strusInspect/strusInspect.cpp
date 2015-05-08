@@ -363,14 +363,14 @@ int main( int argc, const char* argv[])
 			std::cerr << "    Print this usage and do nothing else" << std::endl;
 			std::cerr << "-v|--version" << std::endl;
 			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-s|--storage <CONFIG>" << std::endl;
-			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
 			std::cerr << "-m|--module <MOD>" << std::endl;
 			std::cerr << "    Load components from module <MOD>" << std::endl;
 			std::cerr << "-M|--moduledir <DIR>" << std::endl;
 			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
 			std::cerr << "-r|--rpc <ADDR>" << std::endl;
 			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cerr << "-s|--storage <CONFIG>" << std::endl;
+			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
 			if (!opt("rpc"))
 			{
 				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
@@ -382,7 +382,7 @@ int main( int argc, const char* argv[])
 		std::string storagecfg;
 		if (opt("storage"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --storage and --rpc");
 			storagecfg = opt["storage"];
 		}
 		std::string what = opt[0];
