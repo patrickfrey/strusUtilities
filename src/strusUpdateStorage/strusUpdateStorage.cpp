@@ -128,7 +128,8 @@ int main( int argc, const char* argv[])
 		{
 			std::cerr << "usage: strusUpdateStorage [options] <updatefile>" << std::endl;
 			std::cerr << "<updatefile>  = file with the batch of updates ('-' for stdin)" << std::endl;
-			std::cerr << "description: Executes a batch of storage updates." << std::endl;
+			std::cerr << "description: Executes a batch of updates of attributes, meta data" << std::endl;
+			std::cerr << "             or user rights in a storage." << std::endl;
 			std::cerr << "options:" << std::endl;
 			std::cerr << "-h|--help" << std::endl;
 			std::cerr << "    Print this usage and do nothing else" << std::endl;

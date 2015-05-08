@@ -22,6 +22,9 @@ Call the segmenter with a document and one or more expressions to exract with th
 ### strusInsert
 Insert a document or all files in a directory or in any descendant directory of it.
 
+### strusUpdateStorage
+This program allows to update attributes, meta data and user access rights in a storage from a batch file.
+
 ### strusCheckStorage
 This program checks a strus storage for corrupt data.
 
