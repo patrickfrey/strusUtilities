@@ -41,6 +41,14 @@ static inline bool isDigit( char ch)
 {
 	return (ch <= '9' && ch >= '0');
 }
+static inline bool isSlash( char ch)
+{
+	return (ch == '/');
+}
+static inline bool isOr( char ch)
+{
+	return (ch == '|');
+}
 static inline bool isMinus( char ch)
 {
 	return (ch == '-');

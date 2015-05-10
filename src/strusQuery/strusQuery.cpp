@@ -78,6 +78,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient));
 }
 
+static double getTimeStamp()
+{
+	struct timeval now;
+	gettimeofday( &now, NULL);
+	return (double)now.tv_usec / 1000000.0 + now.tv_sec;
+}
 
 int main( int argc_, const char* argv_[])
 {
@@ -306,10 +312,12 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 
-		std::clock_t start;
 		unsigned int nofQueries = 0;
-		start = std::clock();
-
+		double startTime;
+		if (measureDuration)
+		{
+			startTime = getTimeStamp();
+		}
 		std::string::const_iterator si = querystring.begin(), se = querystring.end();
 		std::string qs;
 		while (strus::scanNextProgram( qs, si, se))
@@ -343,7 +351,8 @@ int main( int argc_, const char* argv_[])
 		}
 		if (measureDuration)
 		{
-			float duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
+			double endTime = getTimeStamp();
+			double duration = endTime - startTime;
 			std::cerr << "evaluated " << nofQueries << " queries in "
 					<< std::fixed << std::setw(6) << std::setprecision(3)
 					<< duration << " seconds" << std::endl;

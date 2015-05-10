@@ -163,10 +163,6 @@ static void parseWeightingConfig(
 		const QueryProcessorInterface* queryproc,
 		char const*& src)
 {
-	if (!isAlpha( *src))
-	{
-		throw std::runtime_error( "weighting function identifier expected");
-	}
 	float weight = 1.0;
 	if (is_FLOAT( src))
 	{
@@ -176,6 +172,10 @@ static void parseWeightingConfig(
 			throw std::runtime_error( "multiplication operator '*' expected after EVAL followed by a floating point number (weight)");
 		}
 		(void)parse_OPERATOR(src);
+	}
+	if (!isAlpha( *src))
+	{
+		throw std::runtime_error( "weighting function identifier expected");
 	}
 	std::string functionName = parse_IDENTIFIER( src);
 	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
@@ -200,8 +200,21 @@ static void parseWeightingConfig(
 			throw std::runtime_error( "assingment operator '=' expected after weighting function parameter name");
 		}
 		(void)parse_OPERATOR(src);
-		function->addNumericParameter( parameterName, parseNumericValue( src));
-
+		if (isDigit(*src) || isMinus(*src))
+		{
+			ArithmeticVariant parameterValue = parseNumericValue( src);
+			function->addNumericParameter( parameterName, parameterValue);
+		}
+		else if (isStringQuote(*src))
+		{
+			std::string parameterValue = parse_STRING( src);
+			function->addStringParameter( parameterName, parameterValue);
+		}
+		else
+		{
+			std::string parameterValue = parse_IDENTIFIER( src);
+			function->addStringParameter( parameterName, parameterValue);
+		}
 		if (!isComma( *src))
 		{
 			break;
@@ -294,24 +307,8 @@ static void parseSummarizerConfig(
 		}
 		else if (isDigit(*src) || isMinus(*src))
 		{
-			if (is_INTEGER(src))
-			{
-				if (isMinus(*src))
-				{
-					int parameterValue = parse_INTEGER( src);
-					function->addNumericParameter( parameterName, parameterValue);
-				}
-				else
-				{
-					unsigned int parameterValue = parse_UNSIGNED(src);
-					function->addNumericParameter( parameterName, parameterValue);
-				}
-			}
-			else
-			{
-				float parameterValue = parse_FLOAT(src);
-				function->addNumericParameter( parameterName, parameterValue);
-			}
+			ArithmeticVariant parameterValue = parseNumericValue( src);
+			function->addNumericParameter( parameterName, parameterValue);
 		}
 		else if (isStringQuote(*src))
 		{
@@ -798,30 +795,22 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 	{
 		while (*src)
 		{
-			if (!isOpenSquareBracket( *src))
-			{
-				throw std::runtime_error( "open square bracket '[' expected to start phrase type declaration");
-			}
-			(void)parse_OPERATOR(src);
-
-			if (!isAlnum(*src))
-			{
-				throw std::runtime_error( "alphanumeric identifier (phrase type) expected at start of a query feature declaration");
-			}
-			std::string phraseType = parse_IDENTIFIER( src);
-
-			if (!isCloseSquareBracket( *src))
-			{
-				throw std::runtime_error( "close square bracket ']' expected to end phrase type declaration");
-			}
-			(void)parse_OPERATOR(src);
-
 			if (!isAlpha(*src))
 			{
 				throw std::runtime_error( "identifier (feature type name) expected after assign '=' in a query phrase type declaration");
 			}
 			std::string featureType = parse_IDENTIFIER( src);
+			std::string phraseType = featureType;
+			if (isSlash( *src))
+			{
+				(void)parse_OPERATOR(src);
 
+				if (!isAlnum(*src))
+				{
+					throw std::runtime_error( "alphanumeric identifier (phrase type) after feature type name and slash '/' ");
+				}
+				phraseType = parse_IDENTIFIER( src);
+			}
 			if (!isAssign( *src))
 			{
 				throw std::runtime_error( "assignment operator '=' expected after feature type identifier in a query phrase type declaration");
@@ -934,28 +923,18 @@ static std::string parseQueryPhraseType( char const*& src)
 	}
 	else
 	{
-		return Constants::query_default_phrase_type();
+		return std::string();
 	}
 }
 
 
-static bool isVariableRef( const char* src)
-{
-	return (isOpenSquareBracket(*src));
-}
-
 static std::string parseVariableRef( char const*& src)
 {
 	std::string rt;
-	if (isOpenSquareBracket(*src))
+	if (isAssign(*src))
 	{
 		(void)parse_OPERATOR(src);
 		rt = parse_IDENTIFIER( src);
-		if (!isCloseSquareBracket(*src))
-		{
-			throw std::runtime_error( "expected close angle bracket ']' at end of variable reference");
-		}
-		(void)parse_OPERATOR(src);
 	}
 	return rt;
 }
@@ -1013,11 +992,13 @@ static void parseQueryExpression(
 		QueryInterface& query,
 		const QueryAnalyzerInterface* analyzer,
 		const QueryProcessorInterface* queryproc,
+		const std::string& defaultPhraseType,
 		char const*& src)
 {
 	std::string functionName;
 	if (isAlpha( *src))
 	{
+		char const* src_bk = src;
 		functionName = parse_IDENTIFIER(src);
 		if (isOpenOvalBracket(*src))
 		{
@@ -1027,7 +1008,7 @@ static void parseQueryExpression(
 			if (!isCloseOvalBracket( *src)) while (*src)
 			{
 				argc++;
-				parseQueryExpression( query, analyzer, queryproc, src);
+				parseQueryExpression( query, analyzer, queryproc, defaultPhraseType, src);
 				if (isComma( *src))
 				{
 					(void)parse_OPERATOR( src);
@@ -1036,45 +1017,39 @@ static void parseQueryExpression(
 				break;
 			}
 			int range = 0;
-			if (isColon( *src))
+			if (isOr( *src))
 			{
+				(void)parse_OPERATOR( src);
 				range = parse_INTEGER( src);
-				if (!isCloseOvalBracket( *src))
-				{
-					throw std::runtime_error( "comma ',' as query argument separator or close oval bracket ')' as end of a query expression expected");
-				}
 			}
-			else if (!isCloseOvalBracket( *src))
+			if (!isCloseOvalBracket( *src))
 			{
 				throw std::runtime_error( "comma ',' as query argument separator or colon ':' as range specifier or close oval bracket ')' as end of a query expression expected");
 			}
+			(void)parse_OPERATOR( src);
 			const PostingJoinOperatorInterface*
 				function = queryproc->getPostingJoinOperator( functionName);
 			query.pushExpression( function, argc, range);
-			if (isVariableRef( src))
-			{
-				query.attachVariable( parseVariableRef( src));
-			}
+			return;
 		}
 		else
 		{
-			std::string queryPhrase = functionName;
-			std::string phraseType = parseQueryPhraseType( src);
-			pushQueryPhrase( query, analyzer, queryproc, phraseType, queryPhrase);
-			if (isVariableRef( src))
-			{
-				query.attachVariable( parseVariableRef( src));
-			}
+			src = src_bk;
 		}
 	}
-	else if (isTextChar( *src) || isStringQuote( *src))
+	if (isTextChar( *src) || isStringQuote( *src))
 	{
 		std::string queryPhrase = parseQueryTerm( src);
 		std::string phraseType = parseQueryPhraseType( src);
-		pushQueryPhrase( query, analyzer, queryproc, phraseType, queryPhrase);
-		if (isVariableRef( src))
+		if (phraseType.empty())
 		{
-			query.attachVariable( parseVariableRef( src));
+			phraseType = defaultPhraseType;
+		}
+		pushQueryPhrase( query, analyzer, queryproc, phraseType, queryPhrase);
+		std::string variableName = parseVariableRef( src);
+		if (!variableName.empty())
+		{
+			query.attachVariable( variableName);
 		}
 	}
 	else
@@ -1266,81 +1241,78 @@ DLL_PUBLIC void strus::loadQuery(
 	char const* src = source.c_str();
 	try
 	{
-		enum Section
-		{
-			SectionFeature,
-			SectionCondition
-		};
-		Section section = SectionFeature;
-		std::string featureSet = Constants::query_default_feature_set();
-		float featureWeight = 1.0;
-
 		skipSpaces(src);
 		while (*src)
 		{
-			// Parse query section, if defined:
-			if (isOpenSquareBracket( *src))
+			// Parse query section:
+			if (!isOpenSquareBracket( *src))
 			{
-				(void)parse_OPERATOR( src);
-				if (!isAlnum(*src))
+				throw std::runtime_error( "expected open square bracket to start query section declaration");
+			}
+			(void)parse_OPERATOR( src);
+			if (!isAlnum(*src))
+			{
+				throw std::runtime_error("query section identifier expected after open square bracket '['");
+			}
+			std::string name = parse_IDENTIFIER( src);
+			if (isEqual( name, "Feature"))
+			{
+				float featureWeight = 1.0;
+
+				if (!isAlnum( *src))
 				{
-					throw std::runtime_error("query section identifier expected after open square bracket '['");
+					throw std::runtime_error( "feature set identifier expected after keyword 'Feature' in query section definition");
 				}
-				std::string name = parse_IDENTIFIER( src);
-				if (isEqual( name, "Feature"))
+				std::string featureSet = parse_IDENTIFIER( src);
+
+				if (!isColon(*src))
 				{
-					section = SectionFeature;
-
-					if (!isAlnum( *src))
-					{
-						throw std::runtime_error("feature set identifier expected after keyword 'Feature' in query section definition");
-					}
-					featureSet = parse_IDENTIFIER( src);
-
-					if (isDigit(*src))
-					{
-						featureWeight = parse_FLOAT( src);
-					}
-					else
-					{
-						featureWeight = 1.0;
-					}
+					throw std::runtime_error( "colon ':' expected after feature set name in query section definition");
 				}
-				else if (isEqual( name, "Condition"))
-				{
-					section = SectionCondition;
+				(void)parse_OPERATOR(src);
+				std::string defaultPhraseType = parse_IDENTIFIER( src);
 
-					featureSet.clear();
+				if (isDigit(*src))
+				{
+					featureWeight = parse_FLOAT( src);
+				}
+				else
+				{
 					featureWeight = 1.0;
 				}
-				else
-				{
-					throw std::runtime_error( std::string( "unknown query section identifier '") + name + "'");
-				}
-				if (isCloseSquareBracket( *src))
-				{
-					(void)parse_OPERATOR( src);
-				}
-				else
+				if (!isCloseSquareBracket( *src))
 				{
 					throw std::runtime_error( "close square bracket ']' expected to terminate query section declaration");
 				}
-				
-			}
-			// Parse expression, depending on section defined:
-			switch (section)
-			{
-				case SectionFeature:
-					parseQueryExpression( query, analyzer, queryproc, src);
-					query.defineFeature( featureSet, featureWeight);
-					break;
-				case SectionCondition:
-					parseMetaDataRestriction( query, analyzer, src);
-					break;
-			};
-			if (isSemiColon(*src))
-			{
 				(void)parse_OPERATOR( src);
+				while (*src && !isOpenSquareBracket( *src))
+				{
+					parseQueryExpression( query, analyzer, queryproc, defaultPhraseType, src);
+					query.defineFeature( featureSet, featureWeight);
+				}
+			}
+			else if (isEqual( name, "Condition"))
+			{
+				if (!isCloseSquareBracket( *src))
+				{
+					throw std::runtime_error( "close square bracket ']' expected to terminate query section declaration");
+				}
+				while (*src && !isOpenSquareBracket( *src))
+				{
+					parseMetaDataRestriction( query, analyzer, src);
+					if (isSemiColon(*src))
+					{
+						(void)parse_OPERATOR( src);
+					}
+					else if (*src && !isOpenSquareBracket( *src))
+					{
+						throw std::runtime_error( "semicolon ';' as separator of meta data restrictions");
+					}
+				}
+			}
+			else
+			{
+				throw std::runtime_error( std::string( "unknown query section identifier '") + name + "'");
 			}
 		}
 	}
