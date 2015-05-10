@@ -131,7 +131,6 @@ float parser::parse_FLOAT( char const*& src)
 {
 	unsigned int digitsAllowed = 9;
 	float rt = 0.0;
-	float div = 1.0;
 	if (*src == '-')
 	{
 		++src;
@@ -145,13 +144,13 @@ float parser::parse_FLOAT( char const*& src)
 	}
 	if (isDot( *src))
 	{
+		float div = 1.0;
 		++src;
-		while (isDigit( *src) && digitsAllowed)
+		while (isDigit( *src))
 		{
 			div /= 10.0;
-			rt = (rt * 10.0) + (*src - '0');
+			rt += (*src - '0') * div;
 			++src;
-			--digitsAllowed;
 		}
 	}
 	if (!digitsAllowed)
@@ -159,7 +158,7 @@ float parser::parse_FLOAT( char const*& src)
 		throw std::runtime_error( "floating point number out of range");
 	}
 	skipSpaces( src);
-	return rt * div;
+	return rt;
 }
 
 char parser::parse_OPERATOR( char const*& src)
