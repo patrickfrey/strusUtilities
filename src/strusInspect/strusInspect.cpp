@@ -246,6 +246,21 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 	}
 }
 
+static void inspectDocAttributeNames( const strus::StorageClientInterface& storage, const char** key, int size)
+{
+	if (size > 0) throw std::runtime_error( "too many arguments");
+
+	std::auto_ptr<strus::AttributeReaderInterface>
+		attreader( storage.createAttributeReader());
+	std::vector<std::string> alist = attreader->getAttributeNames();
+	std::vector<std::string>::const_iterator ai = alist.begin(), ae = alist.end();
+
+	for (; ai != ae; ++ai)
+	{
+		std::cout << *ai << std::endl;
+	}
+}
+
 static void inspectDocMetaData( const strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
@@ -495,6 +510,8 @@ int main( int argc, const char* argv[])
 			std::cerr << "            \"attribute\" <name> [<doc-id/no>]" << std::endl;
 			std::cerr << "               = Get the value of a document attribute" << std::endl;
 			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cerr << "            \"attrnames\"" << std::endl;
+			std::cerr << "               = Get the list of all attribute names defined for the storage" << std::endl;
 			std::cerr << "            \"content\" <type> [<doc-id/no>]" << std::endl;
 			std::cerr << "               = Get the content of the forward index for a type" << std::endl;
 			std::cerr << "                 If doc is not specified then dump content for all docs." << std::endl;
@@ -591,6 +608,10 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "attribute"))
 		{
 			inspectDocAttribute( *storage, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "attrnames"))
+		{
+			inspectDocAttributeNames( *storage, inpectarg, inpectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "content"))
 		{

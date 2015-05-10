@@ -148,7 +148,7 @@ void InsertProcessor::run()
 							docid = fitr->c_str();
 							//... define file path as hardcoded docid attribute
 						}
-	
+
 						// Define hardcoded document metadata, if known:
 						if (hasDoclenAttribute)
 						{
