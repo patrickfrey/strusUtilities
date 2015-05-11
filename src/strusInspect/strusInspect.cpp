@@ -587,11 +587,15 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "ttf"))
 		{
+			/*[-]*/std::cerr << "LINE " << (int)__LINE__ << std::endl;
 			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTermOccurrencies, inpectarg, inpectargsize);
+			/*[-]*/std::cerr << "LINE " << (int)__LINE__ << std::endl;
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "ttc"))
 		{
+			/*[-]*/std::cerr << "LINE " << (int)__LINE__ << std::endl;
 			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTerms, inpectarg, inpectargsize);
+			/*[-]*/std::cerr << "LINE " << (int)__LINE__ << std::endl;
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nofdocs"))
 		{
@@ -633,6 +637,7 @@ int main( int argc, const char* argv[])
 		{
 			throw std::runtime_error( std::string( "unknown item to inspect '") + what + "'");
 		}
+		/*[-]*/std::cerr << "done" << std::endl;
 		return 0;
 	}
 	catch (const std::runtime_error& e)
