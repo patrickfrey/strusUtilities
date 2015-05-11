@@ -180,7 +180,8 @@ static void parseWeightingConfig(
 	std::string functionName = parse_IDENTIFIER( src);
 	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
 	std::auto_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance());
-	std::vector<std::string> weightedFeatureSets;
+	typedef QueryEvalInterface::FeatureParameter FeatureParameter;
+	std::vector<FeatureParameter> featureParameters;
 
 	if (!isOpenOvalBracket( *src))
 	{
@@ -200,7 +201,13 @@ static void parseWeightingConfig(
 			throw std::runtime_error( "assingment operator '=' expected after weighting function parameter name");
 		}
 		(void)parse_OPERATOR(src);
-		if (isDigit(*src) || isMinus(*src))
+		if (isPercent(*src))
+		{
+			(void)parse_OPERATOR(src);
+			std::string parameterValue = parse_IDENTIFIER( src);
+			featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
+		}
+		else if (isDigit(*src) || isMinus(*src))
 		{
 			ArithmeticVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
@@ -226,29 +233,7 @@ static void parseWeightingConfig(
 		throw std::runtime_error( "close oval bracket ')' expected at end of weighting function parameter list");
 	}
 	(void)parse_OPERATOR(src);
-	if (isOpenSquareBracket( *src))
-	{
-		(void)parse_OPERATOR( src);
-	
-		while (*src && isAlnum( *src))
-		{
-			weightedFeatureSets.push_back( parse_IDENTIFIER( src));
-			if (isComma( *src))
-			{
-				(void)parse_OPERATOR( src);
-			}
-			else
-			{
-				break;
-			}
-		}
-		if (!isCloseSquareBracket( *src))
-		{
-			throw std::runtime_error( "close square bracket ']' expected at end of weighting feature set list");
-		}
-		(void)parse_OPERATOR( src);
-	}
-	qeval.addWeightingFunction( functionName, function.get(), weightedFeatureSets, weight); 
+	qeval.addWeightingFunction( functionName, function.get(), featureParameters, weight); 
 	(void)function.release();
 }
 
@@ -260,8 +245,8 @@ static void parseSummarizerConfig(
 {
 	std::string functionName;
 	std::string resultAttribute;
-	typedef QueryEvalInterface::SummarizerFeatureParameter SummarizerFeatureParameter;
-	std::vector<SummarizerFeatureParameter> featureParameters;
+	typedef QueryEvalInterface::FeatureParameter FeatureParameter;
+	std::vector<FeatureParameter> featureParameters;
 
 	if (!isAlpha( *src))
 	{
@@ -303,7 +288,7 @@ static void parseSummarizerConfig(
 		{
 			(void)parse_OPERATOR(src);
 			std::string parameterValue = parse_IDENTIFIER( src);
-			featureParameters.push_back( SummarizerFeatureParameter( parameterName, parameterValue));
+			featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
 		}
 		else if (isDigit(*src) || isMinus(*src))
 		{
