@@ -191,6 +191,12 @@ static void parseWeightingConfig(
 
 	if (!isCloseOvalBracket( *src)) for (;;)
 	{
+		bool isFeatureParam = false;
+		if (isDot(*src))
+		{
+			(void)parse_OPERATOR(src);
+			isFeatureParam = true;
+		}
 		if (!isAlpha( *src))
 		{
 			throw std::runtime_error( "identifier as start of parameter declaration (assignment parameter name to parameter value) expected");
@@ -201,26 +207,38 @@ static void parseWeightingConfig(
 			throw std::runtime_error( "assingment operator '=' expected after weighting function parameter name");
 		}
 		(void)parse_OPERATOR(src);
-		if (isPercent(*src))
+		if (isDigit(*src) || isMinus(*src))
 		{
-			(void)parse_OPERATOR(src);
-			std::string parameterValue = parse_IDENTIFIER( src);
-			featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
-		}
-		else if (isDigit(*src) || isMinus(*src))
-		{
+			if (isFeatureParam)
+			{
+				throw std::runtime_error("feature parameter argument must be an identifier or string and not a number");
+			}
 			ArithmeticVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
 		}
 		else if (isStringQuote(*src))
 		{
 			std::string parameterValue = parse_STRING( src);
-			function->addStringParameter( parameterName, parameterValue);
+			if (isFeatureParam)
+			{
+				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
+			}
+			else
+			{
+				function->addStringParameter( parameterName, parameterValue);
+			}
 		}
 		else
 		{
 			std::string parameterValue = parse_IDENTIFIER( src);
-			function->addStringParameter( parameterName, parameterValue);
+			if (isFeatureParam)
+			{
+				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
+			}
+			else
+			{
+				function->addStringParameter( parameterName, parameterValue);
+			}
 		}
 		if (!isComma( *src))
 		{
@@ -274,6 +292,12 @@ static void parseSummarizerConfig(
 
 	if (!isCloseOvalBracket( *src)) for (;;)
 	{
+		bool isFeatureParam = false;
+		if (isDot(*src))
+		{
+			(void)parse_OPERATOR(src);
+			isFeatureParam = true;
+		}
 		if (!isAlpha( *src))
 		{
 			throw std::runtime_error( "identifier as start of parameter declaration (assignment parameter name to parameter value) expected");
@@ -284,26 +308,38 @@ static void parseSummarizerConfig(
 			throw std::runtime_error( "assignment operator '=' expected after summarizer function parameter name");
 		}
 		(void)parse_OPERATOR(src);
-		if (isPercent(*src))
+		if (isDigit(*src) || isMinus(*src))
 		{
-			(void)parse_OPERATOR(src);
-			std::string parameterValue = parse_IDENTIFIER( src);
-			featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
-		}
-		else if (isDigit(*src) || isMinus(*src))
-		{
+			if (isFeatureParam)
+			{
+				throw std::runtime_error("feature parameter argument must be an identifier or string and not a number");
+			}
 			ArithmeticVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
 		}
 		else if (isStringQuote(*src))
 		{
 			std::string parameterValue = parse_STRING( src);
-			function->addStringParameter( parameterName, parameterValue);
+			if (isFeatureParam)
+			{
+				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
+			}
+			else
+			{
+				function->addStringParameter( parameterName, parameterValue);
+			}
 		}
 		else
 		{
 			std::string parameterValue = parse_IDENTIFIER( src);
-			function->addStringParameter( parameterName, parameterValue);
+			if (isFeatureParam)
+			{
+				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
+			}
+			else
+			{
+				function->addStringParameter( parameterName, parameterValue);
+			}
 		}
 		if (!isComma( *src))
 		{

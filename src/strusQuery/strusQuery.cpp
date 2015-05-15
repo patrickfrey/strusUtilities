@@ -273,6 +273,7 @@ int main( int argc_, const char* argv_[])
 		// Load global statistics from file if specified:
 		if (opt("globalstats"))
 		{
+			std::vector<std::string> pathlist( opt.list("globalstats"));
 			std::string filename = opt[ "globalstats"];
 			std::ifstream file;
 			file.exceptions( std::ifstream::failbit | std::ifstream::badbit);

@@ -73,7 +73,7 @@ std::string utils::tostring( int val)
 	}
 	catch (...)
 	{
-		throw std::runtime_error( "failed to convert number to string (out of memory)");
+		throw std::runtime_error( "failed to convert number to string");
 	}
 }
 
