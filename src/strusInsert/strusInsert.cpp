@@ -310,7 +310,7 @@ int main( int argc_, const char* argv_[])
 			inserterThreads->wait_termination();
 		}
 		fileCrawlerThread->wait_termination();
-		std::cerr << "done" << std::endl;
+		std::cerr << std::endl << "done" << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
