@@ -109,7 +109,7 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 				strus::Index pos=0;
 				while (0!=(pos=itr->skipPos(pos+1)))
 				{
-					std::cout << pos;
+					std::cout << ' ' << pos;
 				}
 				std::cout << std::endl;
 			}
