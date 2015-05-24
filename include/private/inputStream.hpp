@@ -31,7 +31,7 @@
 #include "private/utils.hpp"
 #include <string>
 #include <fstream>
-#include <iostream>
+#include <cstdio>
 
 namespace strus {
 
@@ -53,16 +53,16 @@ public:
 	/// \return the number of bytes read
 	std::size_t read( char* buf, std::size_t bufsize);
 
-	/// \brief Get the stream object as STL stream
-	/// \return the STL stream object
-	std::istream& stream()
-	{
-		return *m_stream;
-	}
+	/// \brief Read a line
+	/// \param[in,out] buf where to write to
+	/// \param[in] bufsize allocation size of 'buf' (capacity) 
+	/// \return pointer to the line read
+	const char* readline( char* buf, std::size_t bufsize);
 
 private:
-	std::istream* m_stream;
+	FILE* m_fh;
 	std::string m_docpath;
+	std::ifstream m_stream;
 };
 
 }

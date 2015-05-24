@@ -217,7 +217,6 @@ int main( int argc, const char* argv[])
 		{
 			throw std::runtime_error("no update operation type specified as option (one of --attribute,--metadata,--useraccess is mandatory)");
 		}
-		strus::InputStream input( updateBatchPath);
 		unsigned int nofUpdates = 0;
 		unsigned int transactionSize = 10000;
 		if (opt("commit"))
@@ -228,15 +227,15 @@ int main( int argc, const char* argv[])
 		{
 			case UpdateOpMetadata:
 				nofUpdates = strus::loadDocumentMetaDataAssignments(
-						*storage, elemname, input.stream(), transactionSize);
+						*storage, elemname, updateBatchPath, transactionSize);
 				break;
 			case UpdateOpAttribute:
 				nofUpdates = strus::loadDocumentAttributeAssignments(
-						*storage, elemname, input.stream(), transactionSize);
+						*storage, elemname, updateBatchPath, transactionSize);
 				break;
 			case UpdateOpUserAccess:
 				nofUpdates = strus::loadDocumentUserRightsAssignments(
-						*storage, input.stream(), transactionSize);
+						*storage, updateBatchPath, transactionSize);
 				break;
 		}
 		std::cerr << "done " << nofUpdates << " update operations" << std::endl;

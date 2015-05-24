@@ -36,56 +36,60 @@ InputStream::InputStream( const std::string& docpath)
 {
 	if (docpath == "-")
 	{
-		m_stream = &std::cin;
+		m_fh = stdin;
 	}
 	else
 	{
-		std::ifstream* in = new std::ifstream();
-		in->open( docpath.c_str(), std::fstream::in | std::ios::binary);
-		if (!*in)
+		m_fh = ::fopen( docpath.c_str(), "rb");
+		if (!m_fh)
 		{
-			delete in;
-			throw std::runtime_error( std::string( "failed to read file to insert '") + docpath + "'");
-		}
-		else
-		{
-			m_stream = in;
+			char buf[ 256];
+			snprintf( buf, sizeof(buf), "failed to open file %s for reading (errno %d)", docpath.c_str(), errno);
+			throw std::runtime_error( buf);
 		}
 	}
 }
 
 InputStream::~InputStream()
 {
-	if (m_stream != &std::cin)
+	if (m_fh != stdin)
 	{
-		delete m_stream;
+		::fclose( m_fh);
 	}
 }
 
 std::size_t InputStream::read( char* buf, std::size_t bufsize)
 {
-	try
+	std::size_t  rt = ::fread( buf, 1, bufsize, m_fh);
+	if (!rt)
 	{
-		m_stream->read( buf, bufsize);
-		return m_stream->gcount();
-	}
-	catch (const std::istream::failure& err)
-	{
-		if (m_stream->eof())
+		if (!feof( m_fh))
 		{
-			return m_stream->gcount();
+			unsigned int ec = ::ferror( m_fh);
+			char buf[ 256];
+			snprintf( buf, sizeof(buf), "failed to read from file %s (errno %d)", m_docpath.c_str(), ec);
+			throw std::runtime_error( buf);
 		}
-		throw std::runtime_error( std::string("error reading file '") + m_docpath + "': " + err.what());
 	}
-	catch (const std::exception& err)
-	{
-		throw std::runtime_error( std::string("error reading file '") + m_docpath + "': " + err.what());
-	}
-	catch (...)
-	{
-		throw std::runtime_error( std::string("uncaught exception reading file '") + m_docpath + "':");
-	}
+	return rt;
 }
+
+const char* InputStream::readline( char* buf, std::size_t bufsize)
+{
+	char* rt = ::fgets( buf, sizeof(buf), m_fh);
+	if (!rt)
+	{
+		if (!feof( m_fh))
+		{
+			unsigned int ec = ::ferror( m_fh);
+			char buf[ 256];
+			snprintf( buf, sizeof(buf), "failed to read from file %s (errno %d)", m_docpath.c_str(), ec);
+			throw std::runtime_error( buf);
+		}
+	}
+	return rt;
+}
+
 
 
 

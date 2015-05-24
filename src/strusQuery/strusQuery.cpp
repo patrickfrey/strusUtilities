@@ -275,16 +275,9 @@ int main( int argc_, const char* argv_[])
 		{
 			std::vector<std::string> pathlist( opt.list("globalstats"));
 			std::string filename = opt[ "globalstats"];
-			std::ifstream file;
-			file.exceptions( std::ifstream::failbit | std::ifstream::badbit);
 			try 
 			{
-				file.open( filename.c_str(), std::fstream::in);
-				strus::loadGlobalStatistics( *storage, file);
-			}
-			catch (const std::ifstream::failure& err)
-			{
-				throw std::runtime_error( std::string( "failed to read global statistics from file '") + filename + "': " + err.what());
+				strus::loadGlobalStatistics( *storage, filename);
 			}
 			catch (const std::runtime_error& err)
 			{

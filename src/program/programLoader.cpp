@@ -52,6 +52,7 @@
 #include "strus/peerStorageTransactionInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/reference.hpp"
+#include "private/inputStream.hpp"
 #include "private/utils.hpp"
 #include <string>
 #include <vector>
@@ -1417,17 +1418,19 @@ static int readInteger( std::string::const_iterator& si, const std::string::cons
 
 DLL_PUBLIC void strus::loadGlobalStatistics(
 		StorageClientInterface& storage,
-		std::istream& stream)
+		const std::string& file)
 {
 	std::auto_ptr<PeerStorageTransactionInterface>
 		transaction( storage.createPeerStorageTransaction());
 	std::size_t linecnt = 1;
+	InputStream stream( file);
 	try
 	{
-		std::string line;
-		for (; std::getline( stream, line); ++linecnt)
+		char line[ 2048];
+		for (; stream.readline( line, sizeof(line)); ++linecnt)
 		{
-			std::string::const_iterator li = line.begin(), le = line.end();
+			std::string linebuf( line);
+			std::string::const_iterator li = linebuf.begin(), le = linebuf.end();
 			if (li != le)
 			{
 				std::string tok = readToken( li, le);
@@ -1456,17 +1459,6 @@ DLL_PUBLIC void strus::loadGlobalStatistics(
 			}
 		}
 		transaction->commit();
-	}
-	catch (const std::istream::failure& err)
-	{
-		if (stream.eof())
-		{
-			transaction->commit();
-			return;
-		}
-		throw std::runtime_error( std::string( "file read error on line ")
-			+ utils::tostring( linecnt)
-			+ ": " + err.what());
 	}
 	catch (const std::runtime_error& err)
 	{
@@ -1574,10 +1566,11 @@ enum StorageValueType
 static unsigned int loadStorageValues(
 		StorageClientInterface& storage,
 		const std::string& elementName,
-		std::istream& stream,
+		const std::string& file,
 		StorageValueType valueType,
 		unsigned int commitsize)
 {
+	InputStream stream( file);
 	unsigned int rt = 0;
 	std::auto_ptr<StorageTransactionInterface>
 		transaction( storage.createTransaction());
@@ -1585,10 +1578,10 @@ static unsigned int loadStorageValues(
 	unsigned int commitcnt = 0;
 	try
 	{
-		std::string line;
-		for (; std::getline( stream, line); ++linecnt)
+		char line[ 2048];
+		for (; stream.readline( line, sizeof(line)); ++linecnt)
 		{
-			char const* itr = line.c_str();
+			char const* itr = line;
 			Index docno = parseDocno( storage, itr);
 
 			if (!docno) continue;
@@ -1649,20 +1642,6 @@ static unsigned int loadStorageValues(
 		}
 		return rt;
 	}
-	catch (const std::istream::failure& err)
-	{
-		if (stream.eof())
-		{
-			if (commitcnt)
-			{
-				transaction->commit();
-			}
-			return rt;
-		}
-		throw std::runtime_error( std::string( "file read error on line ")
-			+ utils::tostring( linecnt)
-			+ ": " + err.what());
-	}
 	catch (const std::runtime_error& err)
 	{
 		throw std::runtime_error( std::string( "error on line ")
@@ -1675,29 +1654,29 @@ static unsigned int loadStorageValues(
 DLL_PUBLIC unsigned int strus::loadDocumentMetaDataAssignments(
 		StorageClientInterface& storage,
 		const std::string& metadataName,
-		std::istream& stream,
+		const std::string& file,
 		unsigned int commitsize)
 {
-	return loadStorageValues( storage, metadataName, stream, StorageValueMetaData, commitsize);
+	return loadStorageValues( storage, metadataName, file, StorageValueMetaData, commitsize);
 }
 
 
 DLL_PUBLIC unsigned int strus::loadDocumentAttributeAssignments(
 		StorageClientInterface& storage,
 		const std::string& attributeName,
-		std::istream& stream,
+		const std::string& file,
 		unsigned int commitsize)
 {
-	return loadStorageValues( storage, attributeName, stream, StorageValueAttribute, commitsize);
+	return loadStorageValues( storage, attributeName, file, StorageValueAttribute, commitsize);
 }
 
 
 DLL_PUBLIC unsigned int strus::loadDocumentUserRightsAssignments(
 		StorageClientInterface& storage,
-		std::istream& stream,
+		const std::string& file,
 		unsigned int commitsize)
 {
-	return loadStorageValues( storage, std::string(), stream, StorageUserRights, commitsize);
+	return loadStorageValues( storage, std::string(), file, StorageUserRights, commitsize);
 }
 
 

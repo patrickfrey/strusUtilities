@@ -30,7 +30,6 @@
 #define _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #include <string>
 #include <vector>
-#include <istream>
 
 namespace strus {
 
@@ -121,43 +120,43 @@ bool scanNextProgram(
 
 /// \brief Load the global statistics for a storage from a stream
 /// \param[in,out] storage the storage to instrument
-/// \param[in,out] stream the stream to read from
+/// \param[in] file the file to read from
 void loadGlobalStatistics(
 		StorageClientInterface& storage,
-		std::istream& stream);
+		const std::string& file);
 
 /// \brief Load some meta data assignments for a storage from a stream
 /// \param[in,out] storage the storage to instrument
 /// \param[in] metadataName name of the meta data field to assign
-/// \param[in,out] stream the stream to read from
+/// \param[in] file the file to read from
 /// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
 /// \return the number of documents (non distinct) updated
 unsigned int loadDocumentMetaDataAssignments(
 		StorageClientInterface& storage,
 		const std::string& metadataName,
-		std::istream& stream,
+		const std::string& file,
 		unsigned int commitsize=0);
 
 /// \brief Load some attribute assignments for a storage from a stream
 /// \param[in,out] storage the storage to instrument
 /// \param[in] attributeName name of the attribute to assign
-/// \param[in,out] stream the stream to read from
+/// \param[in] file the file to read from
 /// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
 /// \return the number of documents (non distinct) updated
 unsigned int loadDocumentAttributeAssignments(
 		StorageClientInterface& storage,
 		const std::string& attributeName,
-		std::istream& stream,
+		const std::string& file,
 		unsigned int commitsize=0);
 
 /// \brief Load some user rights assignments for a storage from a stream
 /// \param[in,out] storage the storage to instrument
-/// \param[in,out] stream the stream to read from
+/// \param[in] file the file to read from
 /// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
 /// \return the number of documents (non distinct) updated
 unsigned int loadDocumentUserRightsAssignments(
 		StorageClientInterface& storage,
-		std::istream& stream,
+		const std::string& file,
 		unsigned int commitsize=0);
 
 }//namespace
