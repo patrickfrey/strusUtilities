@@ -1586,6 +1586,7 @@ static unsigned int loadStorageValues(
 		char line[ 2048];
 		for (; stream.readline( line, sizeof(line)); ++linecnt)
 		{
+			/*[-]*/std::cout << "read line " << "(" << line << ")" << ' ' << (int)__LINE__ << std::endl;
 			char const* itr = line;
 			Index docno = parseDocno( storage, itr);
 
