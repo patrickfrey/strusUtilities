@@ -76,15 +76,15 @@ std::size_t InputStream::read( char* buf, std::size_t bufsize)
 
 const char* InputStream::readline( char* buf, std::size_t bufsize)
 {
-	char* rt = ::fgets( buf, sizeof(buf), m_fh);
+	char* rt = ::fgets( buf, bufsize, m_fh);
 	if (!rt)
 	{
 		if (!feof( m_fh))
 		{
 			unsigned int ec = ::ferror( m_fh);
-			char buf[ 256];
-			snprintf( buf, sizeof(buf), "failed to read from file %s (errno %d)", m_docpath.c_str(), ec);
-			throw std::runtime_error( buf);
+			char msgbuf[ 256];
+			snprintf( msgbuf, sizeof(msgbuf), "failed to read from file %s (errno %d)", m_docpath.c_str(), ec);
+			throw std::runtime_error( msgbuf);
 		}
 	}
 	return rt;
