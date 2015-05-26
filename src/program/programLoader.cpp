@@ -1470,22 +1470,27 @@ DLL_PUBLIC void strus::loadGlobalStatistics(
 
 static Index parseDocno( StorageClientInterface& storage, char const*& itr)
 {
+	/*[-]*/std::cout << "parseDocno " << itr << ' ' << (int)__LINE__ << std::endl;
 	if (isDigit(*itr) && is_INTEGER(itr))
 	{
+		/*[-]*/std::cout << "parseDocno " << itr << ' ' << (int)__LINE__ << std::endl;
 		return parse_UNSIGNED1( itr);
 	}
 	else if (isStringQuote(*itr))
 	{
+		/*[-]*/std::cout << "parseDocno " << itr << ' ' << (int)__LINE__ << std::endl;
 		std::string docid = parse_STRING(itr);
 		return storage.documentNumber( docid);
 	}
 	else
 	{
+		/*[-]*/std::cout << "parseDocno " << itr << ' ' << (int)__LINE__ << std::endl;
 		std::string docid;
 		for (; isSpace(*itr); ++itr)
 		{
 			docid.push_back( *itr);
 		}
+		/*[-]*/std::cout << "parseDocno " << docid << ' ' << (int)__LINE__ << std::endl;
 		return storage.documentNumber( docid);
 	}
 }
