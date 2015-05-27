@@ -93,8 +93,8 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 12,
-				"h,help", "S,silent", "u,user:", "n,nofranks:",
+				argc_, argv_, 13,
+				"h,help", "S,silent", "u,user:", "n,nofranks:", "i,firstrank:",
 				"g,globalstats:", "t,time", "v,version", "m,module:",
 				"M,moduledir:", "R,resourcedir:", "s,storage:", "r,rpc:");
 		if (opt( "help")) printUsageAndExit = true;
@@ -166,6 +166,8 @@ int main( int argc_, const char* argv_[])
 			std::cerr << "    Use user name <NAME> for the query" << std::endl;
 			std::cerr << "-n|--nofranks <N>" << std::endl;
 			std::cerr << "    Return maximum <N> ranks as query result" << std::endl;
+			std::cerr << "-i|--firstrank <N>" << std::endl;
+			std::cerr << "    Return the result starting with rank <N> as first rank" << std::endl;
 			std::cerr << "-S|--silent" << std::endl;
 			std::cerr << "    No output of results" << std::endl;
 			std::cerr << "-g|--globalstats <FILE>" << std::endl;
@@ -186,6 +188,7 @@ int main( int argc_, const char* argv_[])
 		bool measureDuration = opt( "time");
 		std::string username;
 		std::size_t nofRanks = 20;
+		std::size_t firstRank = 0;
 		std::string storagecfg;
 		if (opt("user"))
 		{
@@ -194,6 +197,10 @@ int main( int argc_, const char* argv_[])
 		if (opt("nofranks"))
 		{
 			nofRanks = opt.asUint( "nofranks");
+		}
+		if (opt("firstrank"))
+		{
+			firstRank = opt.asUint( "firstrank");
 		}
 		if (opt("storage"))
 		{
@@ -323,7 +330,7 @@ int main( int argc_, const char* argv_[])
 			strus::loadQuery( *query, analyzer.get(), qproc, qs);
 
 			query->setMaxNofRanks( nofRanks);
-			query->setMinRank( 0);
+			query->setMinRank( firstRank);
 			if (!username.empty())
 			{
 				query->setUserName( username);
@@ -331,7 +338,7 @@ int main( int argc_, const char* argv_[])
 			std::vector<strus::ResultDocument>
 				ranklist = query->evaluate();
 	
-			if (!silent) std::cout << "ranked list (maximum 20 matches):" << std::endl;
+			if (!silent) std::cout << "ranked list (starting with rank " << firstRank << ", maximum " << nofRanks << " results):" << std::endl;
 			std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
 			for (int widx=1; wi != we; ++wi,++widx)
 			{
