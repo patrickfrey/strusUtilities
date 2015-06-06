@@ -31,7 +31,7 @@
 #include "strus/index.hpp"
 #include "strus/arithmeticVariant.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
-#include "strus/documentAnalyzerInstanceInterface.hpp"
+#include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
@@ -98,8 +98,8 @@ void InsertProcessor::run()
 			try
 			{
 				strus::InputStream input( *fitr);
-				std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-					analyzerInstance( m_analyzer->createInstance());
+				std::auto_ptr<strus::DocumentAnalyzerContextInterface>
+					analyzerContext( m_analyzer->createContext());
 
 				enum {AnalyzerBufSize=8192};
 				char buf[ AnalyzerBufSize];
@@ -109,11 +109,11 @@ void InsertProcessor::run()
 				{
 					std::size_t readsize = input.read( buf, sizeof(buf));
 					eof = (readsize != sizeof(buf));
-					analyzerInstance->putInput( buf, readsize, eof);
+					analyzerContext->putInput( buf, readsize, eof);
 
 					// Analyze the document and print the result:
 					strus::analyzer::Document doc;
-					while (!m_terminated && analyzerInstance->analyzeNext( doc))
+					while (!m_terminated && analyzerContext->analyzeNext( doc))
 					{
 						// Create the storage transaction document with the correct docid:
 						std::vector<strus::analyzer::Attribute>::const_iterator

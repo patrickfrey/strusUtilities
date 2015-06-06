@@ -30,7 +30,7 @@
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/segmenterInterface.hpp"
-#include "strus/segmenterInstanceInterface.hpp"
+#include "strus/segmenterContextInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/reference.hpp"
@@ -178,8 +178,8 @@ int main( int argc, const char* argv[])
 
 		// Load the document:
 		strus::InputStream input( docpath);
-		std::auto_ptr<strus::SegmenterInstanceInterface>
-			segmenterInstance( segmenter->createInstance());
+		std::auto_ptr<strus::SegmenterContextInterface>
+			segmenterContext( segmenter->createContext());
 
 		enum {SegmenterBufSize=8192};
 		char buf[ SegmenterBufSize];
@@ -193,14 +193,14 @@ int main( int argc, const char* argv[])
 				eof = true;
 				continue;
 			}
-			segmenterInstance->putInput( buf, readsize, readsize != SegmenterBufSize);
+			segmenterContext->putInput( buf, readsize, readsize != SegmenterBufSize);
 
 			// Segment the input:
 			int segid;
 			strus::SegmenterPosition segpos;
 			const char* segdata;
 			std::size_t segsize;
-			while (segmenterInstance->getNext( segid, segpos, segdata, segsize))
+			while (segmenterContext->getNext( segid, segpos, segdata, segsize))
 			{
 				if (printIndices)
 				{

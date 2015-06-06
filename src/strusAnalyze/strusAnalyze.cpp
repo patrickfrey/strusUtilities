@@ -31,7 +31,7 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
-#include "strus/documentAnalyzerInstanceInterface.hpp"
+#include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
@@ -179,8 +179,8 @@ int main( int argc, const char* argv[])
 
 		// Load the document:
 		strus::InputStream input( docpath);
-		std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-			analyzerInstance( analyzer->createInstance());
+		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
+			analyzerContext( analyzer->createContext());
 
 		enum {AnalyzerBufSize=8192};
 		char buf[ AnalyzerBufSize];
@@ -194,11 +194,11 @@ int main( int argc, const char* argv[])
 				eof = true;
 				continue;
 			}
-			analyzerInstance->putInput( buf, readsize, readsize != AnalyzerBufSize);
+			analyzerContext->putInput( buf, readsize, readsize != AnalyzerBufSize);
 
 			// Analyze the document and print the result:
 			strus::analyzer::Document doc;
-			while (analyzerInstance->analyzeNext( doc))
+			while (analyzerContext->analyzeNext( doc))
 			{
 				if (!doc.subDocumentTypeName().empty())
 				{

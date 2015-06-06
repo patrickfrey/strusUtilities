@@ -32,7 +32,7 @@
 #include "strus/arithmeticVariant.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
-#include "strus/documentAnalyzerInstanceInterface.hpp"
+#include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
@@ -109,8 +109,8 @@ void CheckInsertProcessor::run()
 			{
 				// Read the input file to analyze:
 				strus::InputStream input( *fitr);
-				std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-					analyzerInstance( m_analyzer->createInstance());
+				std::auto_ptr<strus::DocumentAnalyzerContextInterface>
+					analyzerContext( m_analyzer->createContext());
 
 				enum {AnalyzerBufSize=8192};
 				char buf[ AnalyzerBufSize];
@@ -124,11 +124,11 @@ void CheckInsertProcessor::run()
 						eof = true;
 						continue;
 					}
-					analyzerInstance->putInput( buf, readsize, readsize != AnalyzerBufSize);
+					analyzerContext->putInput( buf, readsize, readsize != AnalyzerBufSize);
 
 					// Analyze the document and print the result:
 					strus::analyzer::Document doc;
-					while (analyzerInstance->analyzeNext( doc))
+					while (analyzerContext->analyzeNext( doc))
 					{
 						std::vector<strus::analyzer::Attribute>::const_iterator
 							oi = doc.attributes().begin(),

@@ -28,7 +28,7 @@
 */
 #include "keyMapGenProcessor.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
-#include "strus/documentAnalyzerInstanceInterface.hpp"
+#include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/fileio.hpp"
 #include "fileCrawlerInterface.hpp"
@@ -141,8 +141,8 @@ void KeyMapGenProcessor::run()
 				{
 					// Read the input file to analyze:
 					strus::InputStream input( *fitr);
-					std::auto_ptr<strus::DocumentAnalyzerInstanceInterface>
-						analyzerInstance( m_analyzer->createInstance());
+					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
+						analyzerContext( m_analyzer->createContext());
 
 					enum {AnalyzerBufSize=8192};
 					char buf[ AnalyzerBufSize];
@@ -156,11 +156,11 @@ void KeyMapGenProcessor::run()
 							eof = true;
 							continue;
 						}
-						analyzerInstance->putInput( buf, readsize, readsize != AnalyzerBufSize);
+						analyzerContext->putInput( buf, readsize, readsize != AnalyzerBufSize);
 			
 						// Analyze the document and print the result:
 						strus::analyzer::Document doc;
-						while (analyzerInstance->analyzeNext( doc))
+						while (analyzerContext->analyzeNext( doc))
 						{
 							// Define all search index term occurrencies:
 							std::vector<strus::analyzer::Term>::const_iterator

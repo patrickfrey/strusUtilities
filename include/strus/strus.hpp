@@ -63,10 +63,10 @@
 // Query processor (functions for the query evaluation used for ranking and summarization):
 #include "strus/lib/queryproc.hpp"
 #include "strus/queryProcessorInterface.hpp"
-#include "strus/summarizerExecutionContextInterface.hpp"
+#include "strus/summarizerFunctionContextInterface.hpp"
 #include "strus/summarizerFunctionInterface.hpp"
 #include "strus/summarizerFunctionInstanceInterface.hpp"
-#include "strus/weightingExecutionContextInterface.hpp"
+#include "strus/weightingFunctionContextInterface.hpp"
 #include "strus/weightingFunctionInterface.hpp"
 #include "strus/weightingFunctionInstanceInterface.hpp"
 
@@ -81,6 +81,7 @@
 #include "strus/lib/analyzer.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/analyzer/attribute.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/analyzer/metaData.hpp"
@@ -92,20 +93,20 @@
 
 // Document segmenter (segmenting a document into typed text segments that can be processed by the analyzer):
 #include "strus/lib/segmenter_textwolf.hpp"
-#include "strus/segmenterInstanceInterface.hpp"
+#include "strus/segmenterContextInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 
 // Tokenizer (functions for the text processor to split a text segment into tokens):
 #include "strus/lib/tokenizer_word.hpp"
 #include "strus/lib/tokenizer_punctuation.hpp"
 #include "strus/analyzer/token.hpp"
-#include "strus/tokenizerExecutionContextInterface.hpp"
+#include "strus/tokenizerFunctionContextInterface.hpp"
 #include "strus/tokenizerFunctionInterface.hpp"
 #include "strus/tokenizerFunctionInstanceInterface.hpp"
 
 // Token normalizer (functions for the text processor to map tokens to normalized terms for the storage):
 #include "strus/lib/normalizer_snowball.hpp"
-#include "strus/normalizerExecutionContextInterface.hpp"
+#include "strus/normalizerFunctionContextInterface.hpp"
 #include "strus/normalizerFunctionInterface.hpp"
 #include "strus/normalizerFunctionInstanceInterface.hpp"
 
