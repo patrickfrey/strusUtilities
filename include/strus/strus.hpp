@@ -112,5 +112,17 @@
 
 // Loading and building strus objects from source (some parsers for languages to configure strus objects from source):
 #include "strus/programLoader.hpp"
+
+// Loading strus objects from modules
+#include "strus/analyzerModule.hpp"
+#include "strus/storageModule.hpp"
+#include "strus/moduleEntryPoint.hpp"
+#include "strus/moduleLoaderInterface.hpp"
+
+// Version info
+#include "strus/versionModule.hpp"
+#include "strus/versionAnalyzer.hpp"
+#include "strus/versionStorage.hpp"
+
 #endif
 
