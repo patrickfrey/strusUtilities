@@ -69,7 +69,7 @@ void CommitQueue::handleWaitingTransactions()
 	{
 		Index nofDocs;
 		Index nofDocsAllocated;
-		unsigned int nofOpenTransactions;
+		unsigned int nofOpenTransactions = 0;
 		Reference<StorageTransactionInterface>
 			transaction = getNextTransaction(
 				nofDocs, nofDocsAllocated, nofOpenTransactions);
