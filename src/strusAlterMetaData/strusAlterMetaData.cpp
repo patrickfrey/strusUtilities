@@ -217,7 +217,7 @@ int main( int argc, const char* argv[])
 			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() < 2)
 			{
@@ -254,44 +254,44 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
-			std::cerr << "<config>  : configuration string of the storage" << std::endl;
-			std::cerr << "            semicolon';' separated list of assignments:" << std::endl;
-			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
-			std::cerr << "<cmds>    : semicolon separated list of commands:" << std::endl;
-			std::cerr << "            alter <name> <newname> <newtype>" << std::endl;
-			std::cerr << "              <name>    :name of the element to change" << std::endl;
-			std::cerr << "              <newname> :new name of the element" << std::endl;
-			std::cerr << "              <newtype> :new type (*) of the element" << std::endl;
-			std::cerr << "            add <name> <type>" << std::endl;
-			std::cerr << "              <name>    :name of the element to add" << std::endl;
-			std::cerr << "              <type>    :type (*) of the element to add" << std::endl;
-			std::cerr << "            delete <name>" << std::endl;
-			std::cerr << "              <name>    :name of the element to remove" << std::endl;
-			std::cerr << "            rename <name> <newname>" << std::endl;
-			std::cerr << "              <name>    :name of the element to rename" << std::endl;
-			std::cerr << "              <newname> :new name of the element" << std::endl;
-			std::cerr << "            clear <name>" << std::endl;
-			std::cerr << "              <name>    :name of the element to clear all values" << std::endl;
-			std::cerr << "(*)       :type of an element is one of the following:" << std::endl;
-			std::cerr << "              INT8      :one byte signed integer value" << std::endl;
-			std::cerr << "              UINT8     :one byte unsigned integer value" << std::endl;
-			std::cerr << "              INT16     :two bytes signed integer value" << std::endl;
-			std::cerr << "              UINT16    :two bytes unsigned integer value" << std::endl;
-			std::cerr << "              INT32     :four bytes signed integer value" << std::endl;
-			std::cerr << "              UINT32    :four bytes unsigned integer value" << std::endl;
-			std::cerr << "              FLOAT16   :two bytes floating point value (IEEE 754 small)" << std::endl;
-			std::cerr << "              FLOAT32   :four bytes floating point value (IEEE 754 single)" << std::endl;
-			std::cerr << "description: Executes a list of alter the meta data table commands." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "    Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
+			std::cout << "<config>  : configuration string of the storage" << std::endl;
+			std::cout << "            semicolon';' separated list of assignments:" << std::endl;
+			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
+			std::cout << "<cmds>    : semicolon separated list of commands:" << std::endl;
+			std::cout << "            alter <name> <newname> <newtype>" << std::endl;
+			std::cout << "              <name>    :name of the element to change" << std::endl;
+			std::cout << "              <newname> :new name of the element" << std::endl;
+			std::cout << "              <newtype> :new type (*) of the element" << std::endl;
+			std::cout << "            add <name> <type>" << std::endl;
+			std::cout << "              <name>    :name of the element to add" << std::endl;
+			std::cout << "              <type>    :type (*) of the element to add" << std::endl;
+			std::cout << "            delete <name>" << std::endl;
+			std::cout << "              <name>    :name of the element to remove" << std::endl;
+			std::cout << "            rename <name> <newname>" << std::endl;
+			std::cout << "              <name>    :name of the element to rename" << std::endl;
+			std::cout << "              <newname> :new name of the element" << std::endl;
+			std::cout << "            clear <name>" << std::endl;
+			std::cout << "              <name>    :name of the element to clear all values" << std::endl;
+			std::cout << "(*)       :type of an element is one of the following:" << std::endl;
+			std::cout << "              INT8      :one byte signed integer value" << std::endl;
+			std::cout << "              UINT8     :one byte unsigned integer value" << std::endl;
+			std::cout << "              INT16     :two bytes signed integer value" << std::endl;
+			std::cout << "              UINT16    :two bytes unsigned integer value" << std::endl;
+			std::cout << "              INT32     :four bytes signed integer value" << std::endl;
+			std::cout << "              UINT32    :four bytes unsigned integer value" << std::endl;
+			std::cout << "              FLOAT16   :two bytes floating point value (IEEE 754 small)" << std::endl;
+			std::cout << "              FLOAT32   :four bytes floating point value (IEEE 754 single)" << std::endl;
+			std::cout << "description: Executes a list of alter the meta data table commands." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "    Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
 			return rt;
 		}
 		std::string storagecfg = opt[0];

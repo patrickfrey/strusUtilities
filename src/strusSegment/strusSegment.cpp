@@ -80,7 +80,7 @@ int main( int argc, const char* argv[])
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 1)
 			{
@@ -117,29 +117,29 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusSegment [options] <document>" << std::endl;
-			std::cerr << "<document>  = path to document to segment ('-' for stdin)" << std::endl;
-			std::cerr << "description: Segments a document with the expressions (-e) specified" << std::endl;
-			std::cerr << "             and dumps the resulting segments to stdout." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "   Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-s|--segmenter <NAME>" << std::endl;
-			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
-			std::cerr << "-e|--expression <EXPR>" << std::endl;
-			std::cerr << "    Use the expression <EXPR> to select documents (default '//()')" << std::endl;
-			std::cerr << "-i|--index" << std::endl;
-			std::cerr << "    Print the indices of the expressions matching as prefix with ':'" << std::endl;
-			std::cerr << "-p|--position" << std::endl;
-			std::cerr << "    Print the positions of the expressions matching as prefix" << std::endl;
-			std::cerr << "-q|--quot <STR>" << std::endl;
-			std::cerr << "    Use the string <STR> as quote for the result (default \"\'\")" << std::endl;
+			std::cout << "usage: strusSegment [options] <document>" << std::endl;
+			std::cout << "<document>  = path to document to segment ('-' for stdin)" << std::endl;
+			std::cout << "description: Segments a document with the expressions (-e) specified" << std::endl;
+			std::cout << "             and dumps the resulting segments to stdout." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-s|--segmenter <NAME>" << std::endl;
+			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "-e|--expression <EXPR>" << std::endl;
+			std::cout << "    Use the expression <EXPR> to select documents (default '//()')" << std::endl;
+			std::cout << "-i|--index" << std::endl;
+			std::cout << "    Print the indices of the expressions matching as prefix with ':'" << std::endl;
+			std::cout << "-p|--position" << std::endl;
+			std::cout << "    Print the positions of the expressions matching as prefix" << std::endl;
+			std::cout << "-q|--quot <STR>" << std::endl;
+			std::cout << "    Use the string <STR> as quote for the result (default \"\'\")" << std::endl;
 			return rt;
 		}
 		std::string docpath = opt[0];

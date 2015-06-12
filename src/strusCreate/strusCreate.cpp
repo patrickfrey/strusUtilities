@@ -78,7 +78,7 @@ int main( int argc, const char* argv[])
 			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 1)
 			{
@@ -116,20 +116,20 @@ int main( int argc, const char* argv[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusCreate [options] <config>" << std::endl;
-			std::cerr << "<config>  = storage configuration string" << std::endl;
-			std::cerr << "            semicolon ';' separated list of assignments:" << std::endl;
-			printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
-			std::cerr << "description: Creates a storage with its key value store database." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "   Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "usage: strusCreate [options] <config>" << std::endl;
+			std::cout << "<config>  = storage configuration string" << std::endl;
+			std::cout << "            semicolon ';' separated list of assignments:" << std::endl;
+			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
+			std::cout << "description: Creates a storage with its key value store database." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
 			return rt;
 		}
 		std::auto_ptr<strus::StorageObjectBuilderInterface>

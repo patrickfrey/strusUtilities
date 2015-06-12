@@ -69,7 +69,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
@@ -107,31 +107,31 @@ int main( int argc_, const char* argv_[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
-			std::cerr << "<program> = path of analyzer program" << std::endl;
-			std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
-			std::cerr << "description: Dumps a list of terms as result of document" << std::endl;
-			std::cerr << "    anaylsis of a file or directory. The dump can be loaded by" << std::endl;
-			std::cerr << "    the storage on startup to create a map of frequently used terms." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "   Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
-			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
-			std::cerr << "-s|--segmenter <NAME>" << std::endl;
-			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
-			std::cerr << "-t|--threads <N>" << std::endl;
-			std::cerr << "    Set <N> as number of threads to use"  << std::endl;
-			std::cerr << "-u|--unit <N>" << std::endl;
-			std::cerr << "    Set <N> as number of files processed per iteration (default 1000)" << std::endl;
-			std::cerr << "-n|--results <N>" << std::endl;
-			std::cerr << "    Set <N> as number of elements in the key map generated" << std::endl;
+			std::cout << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
+			std::cout << "<program> = path of analyzer program" << std::endl;
+			std::cout << "<docpath> = path of document or directory to insert" << std::endl;
+			std::cout << "description: Dumps a list of terms as result of document" << std::endl;
+			std::cout << "    anaylsis of a file or directory. The dump can be loaded by" << std::endl;
+			std::cout << "    the storage on startup to create a map of frequently used terms." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-R|--resourcedir <DIR>" << std::endl;
+			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "-s|--segmenter <NAME>" << std::endl;
+			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "-t|--threads <N>" << std::endl;
+			std::cout << "    Set <N> as number of threads to use"  << std::endl;
+			std::cout << "-u|--unit <N>" << std::endl;
+			std::cout << "    Set <N> as number of files processed per iteration (default 1000)" << std::endl;
+			std::cout << "-n|--results <N>" << std::endl;
+			std::cout << "    Set <N> as number of elements in the key map generated" << std::endl;
 			return rt;
 		}
 

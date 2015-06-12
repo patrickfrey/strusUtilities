@@ -89,7 +89,7 @@ int main( int argc, const char* argv[])
 			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() < 1)
 			{
@@ -126,39 +126,39 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusUpdateStorage [options] <updatefile>" << std::endl;
-			std::cerr << "<updatefile>  = file with the batch of updates ('-' for stdin)" << std::endl;
-			std::cerr << "description: Executes a batch of updates of attributes, meta data" << std::endl;
-			std::cerr << "             or user rights in a storage." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "    Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-r|--rpc <ADDR>" << std::endl;
-			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
-			std::cerr << "-s|--storage <CONFIG>" << std::endl;
-			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "usage: strusUpdateStorage [options] <updatefile>" << std::endl;
+			std::cout << "<updatefile>  = file with the batch of updates ('-' for stdin)" << std::endl;
+			std::cout << "description: Executes a batch of updates of attributes, meta data" << std::endl;
+			std::cout << "             or user rights in a storage." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "    Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-r|--rpc <ADDR>" << std::endl;
+			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "-s|--storage <CONFIG>" << std::endl;
+			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
-				printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
-			std::cerr << "-a|--attribute <NAME>" << std::endl;
-			std::cerr << "    The update batch is a list of attributes assignments" << std::endl;
-			std::cerr << "    The name of the updated attribute is <NAME>." << std::endl;
-			std::cerr << "-m|--metadata <NAME>" << std::endl;
-			std::cerr << "    The update batch is a list of meta data assignments." << std::endl;
-			std::cerr << "    The name of the updated meta data element is <NAME>." << std::endl;
-			std::cerr << "-u|--useraccess" << std::endl;
-			std::cerr << "    The update batch is a list of user right assignments." << std::endl;
-			std::cerr << "-c|--commit <N>" << std::endl;
-			std::cerr << "    Set <N> as number of updates per transaction (default 10000)" << std::endl;
-			std::cerr << "    If <N> is set to 0 then only one commit is done at the end" << std::endl;
+			std::cout << "-a|--attribute <NAME>" << std::endl;
+			std::cout << "    The update batch is a list of attributes assignments" << std::endl;
+			std::cout << "    The name of the updated attribute is <NAME>." << std::endl;
+			std::cout << "-m|--metadata <NAME>" << std::endl;
+			std::cout << "    The update batch is a list of meta data assignments." << std::endl;
+			std::cout << "    The name of the updated meta data element is <NAME>." << std::endl;
+			std::cout << "-u|--useraccess" << std::endl;
+			std::cout << "    The update batch is a list of user right assignments." << std::endl;
+			std::cout << "-c|--commit <N>" << std::endl;
+			std::cout << "    Set <N> as number of updates per transaction (default 10000)" << std::endl;
+			std::cout << "    If <N> is set to 0 then only one commit is done at the end" << std::endl;
 			return rt;
 		}
 		std::string storagecfg;

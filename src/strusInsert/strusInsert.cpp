@@ -109,7 +109,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
@@ -149,43 +149,43 @@ int main( int argc_, const char* argv_[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusInsert [options] <program> <docpath>" << std::endl;
-			std::cerr << "<program> = path of analyzer program" << std::endl;
-			std::cerr << "<docpath> = path of document or directory to insert" << std::endl;
-			std::cerr << "description: Insert a document or a set of documents into a storage." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "   Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-s|--storage <CONFIG>" << std::endl;
-			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "usage: strusInsert [options] <program> <docpath>" << std::endl;
+			std::cout << "<program> = path of analyzer program" << std::endl;
+			std::cout << "<docpath> = path of document or directory to insert" << std::endl;
+			std::cout << "description: Insert a document or a set of documents into a storage." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-s|--storage <CONFIG>" << std::endl;
+			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
-				printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
-			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
-			std::cerr << "-r|--rpc <ADDR>" << std::endl;
-			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
-			std::cerr << "-g|--segmenter <NAME>" << std::endl;
-			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf)" << std::endl;
-			std::cerr << "-t|--threads <N>" << std::endl;
-			std::cerr << "    Set <N> as number of inserter threads to use"  << std::endl;
-			std::cerr << "-c|--commit <N>" << std::endl;
-			std::cerr << "    Set <N> as number of documents inserted per transaction (default 1000)" << std::endl;
-			std::cerr << "-f|--fetch <N>" << std::endl;
-			std::cerr << "    Set <N> as number of files fetched in each inserter iteration" << std::endl;
-			std::cerr << "    Default is the value of option '--commit' (one document/file)" << std::endl;
-			std::cerr << "-n|--new" << std::endl;
-			std::cerr << "    All inserts are new; use preallocated document numbers" << std::endl;
-			std::cerr << "-L|--logerror <FILE>" << std::endl;
-			std::cerr << "    Write the last error occurred to <FILE> in case of an exception"  << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-R|--resourcedir <DIR>" << std::endl;
+			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "-r|--rpc <ADDR>" << std::endl;
+			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "-g|--segmenter <NAME>" << std::endl;
+			std::cout << "    Use the document segmenter with name <NAME> (default textwolf)" << std::endl;
+			std::cout << "-t|--threads <N>" << std::endl;
+			std::cout << "    Set <N> as number of inserter threads to use"  << std::endl;
+			std::cout << "-c|--commit <N>" << std::endl;
+			std::cout << "    Set <N> as number of documents inserted per transaction (default 1000)" << std::endl;
+			std::cout << "-f|--fetch <N>" << std::endl;
+			std::cout << "    Set <N> as number of files fetched in each inserter iteration" << std::endl;
+			std::cout << "    Default is the value of option '--commit' (one document/file)" << std::endl;
+			std::cout << "-n|--new" << std::endl;
+			std::cout << "    All inserts are new; use preallocated document numbers" << std::endl;
+			std::cout << "-L|--logerror <FILE>" << std::endl;
+			std::cout << "    Write the last error occurred to <FILE> in case of an exception"  << std::endl;
 			return rt;
 		}
 		bool allInsertsNew = opt( "new");

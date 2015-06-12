@@ -450,7 +450,7 @@ int main( int argc, const char* argv[])
 			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() < 1)
 			{
@@ -484,62 +484,62 @@ int main( int argc, const char* argv[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusInspect [options] <what...>" << std::endl;
-			std::cerr << "<what>    : what to inspect:" << std::endl;
-			std::cerr << "            \"pos\" <type> <value> [<doc-id/no>]" << std::endl;
-			std::cerr << "               = Get the list of positions for a search index feature." << std::endl;
-			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
-			std::cerr << "            \"ff\" <type> <value> [<doc-id/no>]" << std::endl;
-			std::cerr << "               = Get the feature frequency for a search index feature" << std::endl;
-			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
-			std::cerr << "            \"df\" <type> <value>" << std::endl;
-			std::cerr << "               = Get the document frequency for a search index feature" << std::endl;
-			std::cerr << "            \"ttf\" <type> [<doc-id/no>]" << std::endl;
-			std::cerr << "               = Get the term type frequency in a document" << std::endl;
-			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
-			std::cerr << "            \"ttc\" <type> [<doc-id/no>]" << std::endl;
-			std::cerr << "               = Get the term type count (distinct) in a document" << std::endl;
-			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
-			std::cerr << "            \"nofdocs\"" << std::endl;
-			std::cerr << "               = Get the local number of documents in the storage" << std::endl;
-			std::cerr << "            \"metadata\" <name> [<doc-id/no>]" << std::endl;
-			std::cerr << "               = Get the value of a meta data element" << std::endl;
-			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
-			std::cerr << "            \"metatable\"" << std::endl;
-			std::cerr << "               = Get the schema of the meta data table" << std::endl;
-			std::cerr << "            \"attribute\" <name> [<doc-id/no>]" << std::endl;
-			std::cerr << "               = Get the value of a document attribute" << std::endl;
-			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
-			std::cerr << "            \"attrnames\"" << std::endl;
-			std::cerr << "               = Get the list of all attribute names defined for the storage" << std::endl;
-			std::cerr << "            \"content\" <type> [<doc-id/no>]" << std::endl;
-			std::cerr << "               = Get the content of the forward index for a type" << std::endl;
-			std::cerr << "                 If doc is not specified then dump content for all docs." << std::endl;
-			std::cerr << "            \"fwstats\" <type> [<doc-id/no>]" << std::endl;
-			std::cerr << "               = Get the statistis of the forward index for a type" << std::endl;
-			std::cerr << "                 If doc is not specified then dump value for all docs." << std::endl;
-			std::cerr << "            \"token\" <type> <doc-id/no>" << std::endl;
-			std::cerr << "               = Get the list of terms in the forward index for a type" << std::endl;
-			std::cerr << "            \"docno\" <docid>" << std::endl;
-			std::cerr << "               = Get the internal local document number for a document id" << std::endl;
-			std::cerr << "description: Inspect some data in the storage." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "    Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-r|--rpc <ADDR>" << std::endl;
-			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
-			std::cerr << "-s|--storage <CONFIG>" << std::endl;
-			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "usage: strusInspect [options] <what...>" << std::endl;
+			std::cout << "<what>    : what to inspect:" << std::endl;
+			std::cout << "            \"pos\" <type> <value> [<doc-id/no>]" << std::endl;
+			std::cout << "               = Get the list of positions for a search index feature." << std::endl;
+			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cout << "            \"ff\" <type> <value> [<doc-id/no>]" << std::endl;
+			std::cout << "               = Get the feature frequency for a search index feature" << std::endl;
+			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cout << "            \"df\" <type> <value>" << std::endl;
+			std::cout << "               = Get the document frequency for a search index feature" << std::endl;
+			std::cout << "            \"ttf\" <type> [<doc-id/no>]" << std::endl;
+			std::cout << "               = Get the term type frequency in a document" << std::endl;
+			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cout << "            \"ttc\" <type> [<doc-id/no>]" << std::endl;
+			std::cout << "               = Get the term type count (distinct) in a document" << std::endl;
+			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cout << "            \"nofdocs\"" << std::endl;
+			std::cout << "               = Get the local number of documents in the storage" << std::endl;
+			std::cout << "            \"metadata\" <name> [<doc-id/no>]" << std::endl;
+			std::cout << "               = Get the value of a meta data element" << std::endl;
+			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cout << "            \"metatable\"" << std::endl;
+			std::cout << "               = Get the schema of the meta data table" << std::endl;
+			std::cout << "            \"attribute\" <name> [<doc-id/no>]" << std::endl;
+			std::cout << "               = Get the value of a document attribute" << std::endl;
+			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cout << "            \"attrnames\"" << std::endl;
+			std::cout << "               = Get the list of all attribute names defined for the storage" << std::endl;
+			std::cout << "            \"content\" <type> [<doc-id/no>]" << std::endl;
+			std::cout << "               = Get the content of the forward index for a type" << std::endl;
+			std::cout << "                 If doc is not specified then dump content for all docs." << std::endl;
+			std::cout << "            \"fwstats\" <type> [<doc-id/no>]" << std::endl;
+			std::cout << "               = Get the statistis of the forward index for a type" << std::endl;
+			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
+			std::cout << "            \"token\" <type> <doc-id/no>" << std::endl;
+			std::cout << "               = Get the list of terms in the forward index for a type" << std::endl;
+			std::cout << "            \"docno\" <docid>" << std::endl;
+			std::cout << "               = Get the internal local document number for a document id" << std::endl;
+			std::cout << "description: Inspect some data in the storage." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "    Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-r|--rpc <ADDR>" << std::endl;
+			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "-s|--storage <CONFIG>" << std::endl;
+			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
-				printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
 			return rt;
 		}

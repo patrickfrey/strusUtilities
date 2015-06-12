@@ -105,7 +105,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 3)
 			{
@@ -145,43 +145,43 @@ int main( int argc_, const char* argv_[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusQuery [options] <anprg> <qeprg> <query>" << std::endl;
-			std::cerr << "<anprg>   = path of query analyzer program" << std::endl;
-			std::cerr << "<qeprg>   = path of query eval program" << std::endl;
-			std::cerr << "<query>   = path of query or '-' for stdin" << std::endl;
-			std::cerr << "description: Executes a query or a list of queries from a file." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "    Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-s|--storage <CONFIG>" << std::endl;
-			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "usage: strusQuery [options] <anprg> <qeprg> <query>" << std::endl;
+			std::cout << "<anprg>   = path of query analyzer program" << std::endl;
+			std::cout << "<qeprg>   = path of query eval program" << std::endl;
+			std::cout << "<query>   = path of query or '-' for stdin" << std::endl;
+			std::cout << "description: Executes a query or a list of queries from a file." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "    Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-s|--storage <CONFIG>" << std::endl;
+			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
-				printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
-			std::cerr << "-u|--user <NAME>" << std::endl;
-			std::cerr << "    Use user name <NAME> for the query" << std::endl;
-			std::cerr << "-n|--nofranks <N>" << std::endl;
-			std::cerr << "    Return maximum <N> ranks as query result" << std::endl;
-			std::cerr << "-i|--firstrank <N>" << std::endl;
-			std::cerr << "    Return the result starting with rank <N> as first rank" << std::endl;
-			std::cerr << "-S|--silent" << std::endl;
-			std::cerr << "    No output of results" << std::endl;
-			std::cerr << "-g|--globalstats <FILE>" << std::endl;
-			std::cerr << "    Load global statistics of peers from file <FILE>" << std::endl;
-			std::cerr << "-t|--time" << std::endl;
-			std::cerr << "    Do print duration of pure query evaluation" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
-			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
-			std::cerr << "-r|--rpc <ADDR>" << std::endl;
-			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "-u|--user <NAME>" << std::endl;
+			std::cout << "    Use user name <NAME> for the query" << std::endl;
+			std::cout << "-n|--nofranks <N>" << std::endl;
+			std::cout << "    Return maximum <N> ranks as query result" << std::endl;
+			std::cout << "-i|--firstrank <N>" << std::endl;
+			std::cout << "    Return the result starting with rank <N> as first rank" << std::endl;
+			std::cout << "-S|--silent" << std::endl;
+			std::cout << "    No output of results" << std::endl;
+			std::cout << "-g|--globalstats <FILE>" << std::endl;
+			std::cout << "    Load global statistics of peers from file <FILE>" << std::endl;
+			std::cout << "-t|--time" << std::endl;
+			std::cout << "    Do print duration of pure query evaluation" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-R|--resourcedir <DIR>" << std::endl;
+			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "-r|--rpc <ADDR>" << std::endl;
+			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
 			return rt;
 		}
 		bool silent = opt( "silent");

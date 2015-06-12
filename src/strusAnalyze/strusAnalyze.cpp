@@ -80,7 +80,7 @@ int main( int argc, const char* argv[])
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
@@ -118,23 +118,23 @@ int main( int argc, const char* argv[])
 
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusAnalyze [options] <program> <document>" << std::endl;
-			std::cerr << "<program>   = path of analyzer program" << std::endl;
-			std::cerr << "<document>  = path of document to analyze ('-' for stdin)" << std::endl;
-			std::cerr << "description: Analyzes a document and dumps the result to stdout." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "   Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
-			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
-			std::cerr << "-s|--segmenter <NAME>" << std::endl;
-			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "usage: strusAnalyze [options] <program> <document>" << std::endl;
+			std::cout << "<program>   = path of analyzer program" << std::endl;
+			std::cout << "<document>  = path of document to analyze ('-' for stdin)" << std::endl;
+			std::cout << "description: Analyzes a document and dumps the result to stdout." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-R|--resourcedir <DIR>" << std::endl;
+			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "-s|--segmenter <NAME>" << std::endl;
+			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
 			return rt;
 		}
 		std::string analyzerprg = opt[0];

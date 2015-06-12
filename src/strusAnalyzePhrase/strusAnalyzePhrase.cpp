@@ -78,7 +78,7 @@ int main( int argc, const char* argv[])
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 1)
 			{
@@ -115,29 +115,29 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusAnalyze [options] <phrasepath>" << std::endl;
-			std::cerr << "<phrasepath> = path to phrase to analyze ('-' for stdin)" << std::endl;
-			std::cerr << "description: tokenizes and normalizes a text segment" << std::endl;
-			std::cerr << "             and prints the result to stdout." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "   Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
-			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
-			std::cerr << "-t|--tokenizer <CALL>" << std::endl;
-			std::cerr << "    Use the tokenizer <CALL> (default 'content')" << std::endl;
-			std::cerr << "-n|--normalizer <CALL>" << std::endl;
-			std::cerr << "    Use the normalizer <CALL> (default 'orig')" << std::endl;
-			std::cerr << "-q|--quot <STR>" << std::endl;
-			std::cerr << "    Use the string <STR> as quote for the result (default \"\'\")" << std::endl;
-			std::cerr << "-p|--plain" << std::endl;
-			std::cerr << "    Do not print position and define default quotes as empty" << std::endl;
+			std::cout << "usage: strusAnalyze [options] <phrasepath>" << std::endl;
+			std::cout << "<phrasepath> = path to phrase to analyze ('-' for stdin)" << std::endl;
+			std::cout << "description: tokenizes and normalizes a text segment" << std::endl;
+			std::cout << "             and prints the result to stdout." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-R|--resourcedir <DIR>" << std::endl;
+			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "-t|--tokenizer <CALL>" << std::endl;
+			std::cout << "    Use the tokenizer <CALL> (default 'content')" << std::endl;
+			std::cout << "-n|--normalizer <CALL>" << std::endl;
+			std::cout << "    Use the normalizer <CALL> (default 'orig')" << std::endl;
+			std::cout << "-q|--quot <STR>" << std::endl;
+			std::cout << "    Use the string <STR> as quote for the result (default \"\'\")" << std::endl;
+			std::cout << "-p|--plain" << std::endl;
+			std::cout << "    Do not print position and define default quotes as empty" << std::endl;
 			return rt;
 		}
 		std::string resultQuot = "'";

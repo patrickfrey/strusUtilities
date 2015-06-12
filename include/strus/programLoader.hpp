@@ -26,11 +26,14 @@
 
 --------------------------------------------------------------------
 */
+/// \brief Various functions to instantiate strus components from configuration programs loaded from source
+/// \file programLoader.hpp
 #ifndef _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #include <string>
 #include <vector>
 
+/// \brief strus toplevel namespace
 namespace strus {
 
 /// \brief Forward declaration
@@ -68,7 +71,6 @@ void loadQueryAnalyzerProgram(
 		const std::string& source);
 
 /// \brief Load a phrase type definition from its source components
-/// \param[in] query query interface to instrument
 /// \param[in] analyzer program for analyzing text segments in the query
 /// \param[in] textproc provider for text processing functions
 /// \param[in] phrasetype name of phrase type to define
@@ -107,7 +109,7 @@ void loadQuery(
 /// \brief Scan a source for the next program segment in a source that contains multiple programs.
 ///		The programs are separated by "\r\n.\r\n" or "\n.\n".
 ///		No escaping of this sequence possible.
-/// \param[out] the program segment scanned
+/// \param[out] segment the program segment scanned
 /// \param[in] itr scanning iterator on a source containing one or multiple programs
 /// \param[in] end end iterator of the source to scan
 /// \return true, if there was a segment left to scan

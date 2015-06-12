@@ -99,7 +99,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
-		else
+		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
@@ -138,38 +138,38 @@ int main( int argc_, const char* argv_[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cerr << "usage: strusCheckInsert [options] <program> <docpath>" << std::endl;
-			std::cerr << "<program> = path of analyzer program" << std::endl;
-			std::cerr << "<docpath> = path of document or directory to check" << std::endl;
-			std::cerr << "description: Checks if a storage contains all data of a document set." << std::endl;
-			std::cerr << "options:" << std::endl;
-			std::cerr << "-h|--help" << std::endl;
-			std::cerr << "   Print this usage and do nothing else" << std::endl;
-			std::cerr << "-v|--version" << std::endl;
-			std::cerr << "    Print the program version and do nothing else" << std::endl;
-			std::cerr << "-s|--storage <CONFIG>" << std::endl;
-			std::cerr << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "usage: strusCheckInsert [options] <program> <docpath>" << std::endl;
+			std::cout << "<program> = path of analyzer program" << std::endl;
+			std::cout << "<docpath> = path of document or directory to check" << std::endl;
+			std::cout << "description: Checks if a storage contains all data of a document set." << std::endl;
+			std::cout << "options:" << std::endl;
+			std::cout << "-h|--help" << std::endl;
+			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "-v|--version" << std::endl;
+			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "-s|--storage <CONFIG>" << std::endl;
+			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cerr << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
-				printStorageConfigOptions( std::cerr, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
-			std::cerr << "-m|--module <MOD>" << std::endl;
-			std::cerr << "    Load components from module <MOD>" << std::endl;
-			std::cerr << "-M|--moduledir <DIR>" << std::endl;
-			std::cerr << "    Search modules to load first in <DIR>" << std::endl;
-			std::cerr << "-R|--resourcedir <DIR>" << std::endl;
-			std::cerr << "    Search resource files for analyzer first in <DIR>" << std::endl;
-			std::cerr << "-r|--rpc <ADDR>" << std::endl;
-			std::cerr << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
-			std::cerr << "-g|--segmenter <NAME>" << std::endl;
-			std::cerr << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
-			std::cerr << "-t|--threads <N>" << std::endl;
-			std::cerr << "    Set <N> as number of inserter threads to use"  << std::endl;
-			std::cerr << "-l|--logfile <FILE>" << std::endl;
-			std::cerr << "    Set <FILE> as output file (default stdout)"  << std::endl;
-			std::cerr << "-n|--notify <N>" << std::endl;
-			std::cerr << "    Set <N> as notification interval (number of documents)" << std::endl;
+			std::cout << "-m|--module <MOD>" << std::endl;
+			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "-M|--moduledir <DIR>" << std::endl;
+			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-R|--resourcedir <DIR>" << std::endl;
+			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "-r|--rpc <ADDR>" << std::endl;
+			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "-g|--segmenter <NAME>" << std::endl;
+			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "-t|--threads <N>" << std::endl;
+			std::cout << "    Set <N> as number of inserter threads to use"  << std::endl;
+			std::cout << "-l|--logfile <FILE>" << std::endl;
+			std::cout << "    Set <FILE> as output file (default stdout)"  << std::endl;
+			std::cout << "-n|--notify <N>" << std::endl;
+			std::cout << "    Set <N> as notification interval (number of documents)" << std::endl;
 			return rt;
 		}
 		unsigned int nofThreads = opt.asUint( "threads");
