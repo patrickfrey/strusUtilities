@@ -5,6 +5,9 @@ The project strusUtilities provides some command line programs to create, delete
 a strus information retrieval collection storage.
 It also provides a library to load data into strus define in configuration programs in a 
 specific syntax. The interface of this program loader library is introduced here.
+The program loader library uses the public interfaces of strus and does not create a parallel
+universe. Everything you can instantiate with this interface can also be constructed using
+the strus core or analyzer interface.
 
 
 Programs for analyzer configuration:

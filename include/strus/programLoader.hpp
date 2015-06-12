@@ -56,6 +56,7 @@ class StorageClientInterface;
 /// \param[in] analyzer analyzer program to instatiate
 /// \param[in] textproc provider for text processing functions
 /// \param[in] source source string (not a file name!) to parse
+/// \note The grammar of the analyzer program source is defined <a href="http://www.project-strus.net/grammar_analyerprg.htm">here</a>.
 void loadDocumentAnalyzerProgram(
 		DocumentAnalyzerInterface& analyzer,
 		const TextProcessorInterface* textproc,
