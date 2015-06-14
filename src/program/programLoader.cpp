@@ -1234,8 +1234,7 @@ static void parseMetaDataRestriction(
 			operands = parseMetaDataOperands( src);
 
 		QueryInterface::CompareOperator
-			cmpop = invertedOperator(
-					parseMetaDataComparionsOperator( src));
+			cmpop = invertedOperator( parseMetaDataComparionsOperator( src));
 
 		if (!isAlpha( *src))
 		{
