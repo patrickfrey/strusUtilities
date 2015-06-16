@@ -43,6 +43,8 @@
 #include "private/utils.hpp"
 #include "private/inputStream.hpp"
 #include "fileCrawlerInterface.hpp"
+#include <cmath>
+#include <limits>
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/interprocess/smart_ptr/unique_ptr.hpp>
@@ -229,9 +231,16 @@ void CheckInsertProcessor::run()
 							mi = doc.metadata().begin(), me = doc.metadata().end();
 						for (; mi != me; ++mi)
 						{
-							strus::ArithmeticVariant value(
-								strus::arithmeticVariantFromString( mi->value()));
-							storagedoc->setMetaData( mi->name(), value);
+							double val = mi->value();
+							if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
+							{
+								strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+								storagedoc->setMetaData( mi->name(), av);
+							}
+							else
+							{
+								storagedoc->setMetaData( mi->name(), (float) val);
+							}
 						}
 	
 						// Issue warning for documents cut because they are too big to insert:
