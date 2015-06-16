@@ -40,8 +40,8 @@
 #include "strus/normalizerFunctionInstanceInterface.hpp"
 #include "strus/tokenizerFunctionInterface.hpp"
 #include "strus/tokenizerFunctionInstanceInterface.hpp"
-#include "strus/statisticsFunctionInterface.hpp"
-#include "strus/statisticsFunctionInstanceInterface.hpp"
+#include "strus/aggregatorFunctionInterface.hpp"
+#include "strus/aggregatorFunctionInstanceInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryEvalInterface.hpp"
@@ -440,7 +440,7 @@ enum FeatureClass
 	FeatMetaData,
 	FeatAttribute,
 	FeatSubDocument,
-	FeatStatistics
+	FeatAggregator
 };
 
 static FeatureClass featureClassFromName( const std::string& name)
@@ -465,11 +465,11 @@ static FeatureClass featureClassFromName( const std::string& name)
 	{
 		return FeatSubDocument;
 	}
-	if (isEqual( name, "Statistics"))
+	if (isEqual( name, "Aggregator"))
 	{
-		return FeatStatistics;
+		return FeatAggregator;
 	}
-	throw std::runtime_error( std::string( "illegal feature class name '") + name + " (expected one of {SearchIndex, ForwardIndex, MetaData, Attribute, Document, Statistics})");
+	throw std::runtime_error( std::string( "illegal feature class name '") + name + " (expected one of {SearchIndex, ForwardIndex, MetaData, Attribute, Document, Aggregator})");
 }
 
 static std::vector<std::string> parseArgumentList( char const*& src)
@@ -602,11 +602,11 @@ static FunctionConfig parseTokenizerConfig( char const*& src)
 	return FunctionConfig( name, arg);
 }
 
-static FunctionConfig parseStatisticsFunctionConfig( char const*& src)
+static FunctionConfig parseAggregatorFunctionConfig( char const*& src)
 {
 	std::string name;
 	std::vector<std::string> arg;
-	parseFunctionDef( "statistics function", name, arg, src);
+	parseFunctionDef( "aggregator function", name, arg, src);
 	return FunctionConfig( name, arg);
 }
 
@@ -758,8 +758,8 @@ static void parseFeatureDef(
 			break;
 		case FeatSubDocument:
 			throw std::logic_error("illegal call of parse feature definition for sub document");
-		case FeatStatistics:
-			throw std::logic_error("illegal call of parse feature definition for statistics");
+		case FeatAggregator:
+			throw std::logic_error("illegal call of parse feature definition for aggregator");
 	}
 	std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
 		ri = normalizer_ref.begin(), re = normalizer_ref.end();
@@ -813,13 +813,13 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 				std::string xpathexpr( parseXpathExpression( src));
 				analyzer.defineSubDocument( identifier, xpathexpr);
 			}
-			else if (featclass == FeatStatistics)
+			else if (featclass == FeatAggregator)
 			{
-				std::auto_ptr<StatisticsFunctionInstanceInterface> statfunc;
-				FunctionConfig cfg = parseStatisticsFunctionConfig( src);
-				const StatisticsFunctionInterface* sf = textproc->getStatisticsFunction( cfg.name());
+				std::auto_ptr<AggregatorFunctionInstanceInterface> statfunc;
+				FunctionConfig cfg = parseAggregatorFunctionConfig( src);
+				const AggregatorFunctionInterface* sf = textproc->getAggregator( cfg.name());
 				statfunc.reset( sf->createInstance( cfg.args()));
-				analyzer.defineStatisticsMetaData( identifier, statfunc.get());
+				analyzer.defineAggregatedMetaData( identifier, statfunc.get());
 				statfunc.release();
 			}
 			else
