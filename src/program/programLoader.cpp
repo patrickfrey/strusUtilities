@@ -40,6 +40,8 @@
 #include "strus/normalizerFunctionInstanceInterface.hpp"
 #include "strus/tokenizerFunctionInterface.hpp"
 #include "strus/tokenizerFunctionInstanceInterface.hpp"
+#include "strus/statisticsFunctionInterface.hpp"
+#include "strus/statisticsFunctionInstanceInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryEvalInterface.hpp"
@@ -437,7 +439,8 @@ enum FeatureClass
 	FeatForwardIndexTerm,
 	FeatMetaData,
 	FeatAttribute,
-	FeatSubDocument
+	FeatSubDocument,
+	FeatStatistics
 };
 
 static FeatureClass featureClassFromName( const std::string& name)
@@ -462,7 +465,11 @@ static FeatureClass featureClassFromName( const std::string& name)
 	{
 		return FeatSubDocument;
 	}
-	throw std::runtime_error( std::string( "illegal feature class name '") + name + " (expected one of {SearchIndex, ForwardIndex, MetaData, Attribute})");
+	if (isEqual( name, "Statistics"))
+	{
+		return FeatStatistics;
+	}
+	throw std::runtime_error( std::string( "illegal feature class name '") + name + " (expected one of {SearchIndex, ForwardIndex, MetaData, Attribute, Document, Statistics})");
 }
 
 static std::vector<std::string> parseArgumentList( char const*& src)
@@ -595,6 +602,14 @@ static FunctionConfig parseTokenizerConfig( char const*& src)
 	return FunctionConfig( name, arg);
 }
 
+static FunctionConfig parseStatisticsFunctionConfig( char const*& src)
+{
+	std::string name;
+	std::vector<std::string> arg;
+	parseFunctionDef( "statistics function", name, arg, src);
+	return FunctionConfig( name, arg);
+}
+
 
 static DocumentAnalyzerInterface::FeatureOptions
 	parseFeatureOptions( char const*& src)
@@ -658,38 +673,15 @@ static DocumentAnalyzerInterface::FeatureOptions
 	return rt;
 }
 
-static void parseFeatureDef(
-	DocumentAnalyzerInterface& analyzer,
-	const TextProcessorInterface* textproc,
-	const std::string& featurename,
-	char const*& src,
-	FeatureClass featureClass)
+static std::string parseXpathExpression( char const*& src)
 {
-	std::string xpathexpr;
-	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
-	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
-	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
-	
-	if (featureClass != FeatSubDocument)
-	{
-		std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
-		std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
-		for (; ni != ne; ++ni)
-		{
-			const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
-			normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
-			normalizer.push_back( normalizer_ref.back().get());
-		}
-		FunctionConfig tokenizercfg = parseTokenizerConfig( src);
-		const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
-		tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
-	}
 	if (isStringQuote(*src))
 	{
-		xpathexpr = parse_STRING( src);
+		return parse_STRING( src);
 	}
 	else
 	{
+		std::string rt;
 		char const* start = src;
 		while (*src && !isSpace(*src) && *src != ';' && *src != '{')
 		{
@@ -704,10 +696,39 @@ static void parseFeatureDef(
 				++src;
 			}
 		}
-		xpathexpr.append( start, src-start);
+		rt.append( start, src-start);
 		skipSpaces( src);
+		return rt;
 	}
+}
 
+static void parseFeatureDef(
+	DocumentAnalyzerInterface& analyzer,
+	const TextProcessorInterface* textproc,
+	const std::string& featurename,
+	char const*& src,
+	FeatureClass featureClass)
+{
+	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
+	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
+
+	// [1] Parse normalizer:
+	std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
+	std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
+	for (; ni != ne; ++ni)
+	{
+		const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
+		normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
+		normalizer.push_back( normalizer_ref.back().get());
+	}
+	// [2] Parse tokenizer:
+	FunctionConfig tokenizercfg = parseTokenizerConfig( src);
+	const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+	tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+
+	// [3] Parse selection expression:
+	std::string xpathexpr( parseXpathExpression( src));
 	switch (featureClass)
 	{
 		case FeatSearchIndexTerm:
@@ -736,8 +757,9 @@ static void parseFeatureDef(
 				tokenizer.get(), normalizer);
 			break;
 		case FeatSubDocument:
-			analyzer.defineSubDocument( featurename, xpathexpr);
-			break;
+			throw std::logic_error("illegal call of parse feature definition for sub document");
+		case FeatStatistics:
+			throw std::logic_error("illegal call of parse feature definition for statistics");
 	}
 	std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
 		ri = normalizer_ref.begin(), re = normalizer_ref.end();
@@ -780,15 +802,29 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 			{
 				throw std::runtime_error( "feature type name (identifier) expected at start of a feature declaration");
 			}
-			std::string featuretype = parse_IDENTIFIER( src);
-			if (isAssign( *src))
+			std::string identifier = parse_IDENTIFIER( src);
+			if (!isAssign( *src))
 			{
-				(void)parse_OPERATOR(src);
-				parseFeatureDef( analyzer, textproc, featuretype, src, featclass);
+				throw std::runtime_error( "assignment operator '=' expected after set identifier in a feature declaration");
+			}
+			(void)parse_OPERATOR(src);
+			if (featclass == FeatSubDocument)
+			{
+				std::string xpathexpr( parseXpathExpression( src));
+				analyzer.defineSubDocument( identifier, xpathexpr);
+			}
+			else if (featclass == FeatStatistics)
+			{
+				std::auto_ptr<StatisticsFunctionInstanceInterface> statfunc;
+				FunctionConfig cfg = parseStatisticsFunctionConfig( src);
+				const StatisticsFunctionInterface* sf = textproc->getStatisticsFunction( cfg.name());
+				statfunc.reset( sf->createInstance( cfg.args()));
+				analyzer.defineStatisticsMetaData( identifier, statfunc.get());
+				statfunc.release();
 			}
 			else
 			{
-				throw std::runtime_error( "assignment operator '=' expected after set identifier in a feature declaration");
+				parseFeatureDef( analyzer, textproc, identifier, src, featclass);
 			}
 			if (!isSemiColon(*src))
 			{
