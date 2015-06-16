@@ -219,8 +219,16 @@ void InsertProcessor::run()
 							double val = mi->value();
 							if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
 							{
-								strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-								storagedoc->setMetaData( mi->name(), av);
+								if (val < 0.0)
+								{
+									strus::ArithmeticVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+									storagedoc->setMetaData( mi->name(), av);
+								}
+								else
+								{
+									strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+									storagedoc->setMetaData( mi->name(), av);
+								}
 							}
 							else
 							{
