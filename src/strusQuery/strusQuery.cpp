@@ -314,7 +314,7 @@ int main( int argc_, const char* argv_[])
 		}
 
 		unsigned int nofQueries = 0;
-		double startTime;
+		double startTime = 0.0;
 		if (measureDuration)
 		{
 			startTime = getTimeStamp();
