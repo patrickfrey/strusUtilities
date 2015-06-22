@@ -673,7 +673,7 @@ static DocumentAnalyzerInterface::FeatureOptions
 	return rt;
 }
 
-static std::string parseXpathExpression( char const*& src)
+static std::string parseSelectorExpression( char const*& src)
 {
 	if (isStringQuote(*src))
 	{
@@ -683,7 +683,7 @@ static std::string parseXpathExpression( char const*& src)
 	{
 		std::string rt;
 		char const* start = src;
-		while (*src && !isSpace(*src) && *src != ';' && *src != '{')
+		while (*src && *src != ';')
 		{
 			if (*src == '\'' || *src == '\"')
 			{
@@ -728,7 +728,7 @@ static void parseFeatureDef(
 	tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
 
 	// [3] Parse selection expression:
-	std::string xpathexpr( parseXpathExpression( src));
+	std::string xpathexpr( parseSelectorExpression( src));
 	switch (featureClass)
 	{
 		case FeatSearchIndexTerm:
@@ -810,7 +810,7 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 			(void)parse_OPERATOR(src);
 			if (featclass == FeatSubDocument)
 			{
-				std::string xpathexpr( parseXpathExpression( src));
+				std::string xpathexpr( parseSelectorExpression( src));
 				analyzer.defineSubDocument( identifier, xpathexpr);
 			}
 			else if (featclass == FeatAggregator)
