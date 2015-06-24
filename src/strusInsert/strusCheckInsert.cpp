@@ -86,10 +86,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 11,
+				argc_, argv_, 12,
 				"h,help", "t,threads:", "l,logfile:",
 				"n,notify:", "v,version", "R,resourcedir:",
-				"M,moduledir:", "m,module:",
+				"M,moduledir:", "m,module:", "x,extension:",
 				"r,rpc:", "g,segmenter:", "s,storage:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
@@ -164,6 +164,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "-x|--extension <EXT>" << std::endl;
+			std::cout << "    Grab the files with extension <EXT> (default \".xml\")" << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
 			std::cout << "    Set <N> as number of inserter threads to use"  << std::endl;
 			std::cout << "-l|--logfile <FILE>" << std::endl;
@@ -191,12 +193,20 @@ int main( int argc_, const char* argv_[])
 		}
 		std::string analyzerprg = opt[0];
 		std::string datapath = opt[1];
+		std::string fileext = ".xml";
 		std::string segmenter;
 		if (opt( "segmenter"))
 		{
 			segmenter = opt[ "segmenter"];
 		}
-
+		if (opt( "extension"))
+		{
+			fileext = opt[ "extension"];
+			if (fileext.size() && fileext[0] != '.')
+			{
+				fileext = std::string(".") + fileext;
+			}
+		}
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -249,7 +259,7 @@ int main( int argc_, const char* argv_[])
 
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
-				datapath, notificationInterval, nofThreads*5+5);
+				datapath, notificationInterval, nofThreads*5+5, fileext);
 
 		std::auto_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(

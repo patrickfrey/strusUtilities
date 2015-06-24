@@ -34,10 +34,12 @@ using namespace strus;
 FileCrawler::FileCrawler(
 		const std::string& path_,
 		std::size_t transactionSize_,
-		std::size_t nofChunksReadAhead_)
+		std::size_t nofChunksReadAhead_,
+		const std::string& extension_)
 
 	:m_transactionSize(transactionSize_)
 	,m_nofChunksReadAhead(nofChunksReadAhead_)
+	,m_extension(extension_)
 	,m_chunkquesize(0)
 	,m_terminated(false)
 {
@@ -79,7 +81,7 @@ void FileCrawler::findFilesToProcess()
 	{
 		std::vector<std::string> files;
 		std::string path = *m_diritr;
-		unsigned int ec = strus::readDir( path, ".xml", files);
+		unsigned int ec = strus::readDir( path, m_extension, files);
 		if (ec)
 		{
 			std::cerr << "could not read directory to process '" << path << "' (file system error '" << ec << ")" << std::endl;

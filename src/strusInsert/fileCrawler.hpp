@@ -46,7 +46,8 @@ public:
 	FileCrawler(
 			const std::string& path_,
 			std::size_t transactionSize_,
-			std::size_t nofChunksReadAhead_=10);
+			std::size_t nofChunksReadAhead_,
+			const std::string& extension_);
 
 	virtual ~FileCrawler();
 
@@ -72,6 +73,7 @@ private:
 private:
 	std::size_t m_transactionSize;
 	std::size_t m_nofChunksReadAhead;
+	std::string m_extension;
 	std::list<std::string> m_directories;
 	std::list<std::string>::iterator m_diritr;
 
