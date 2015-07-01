@@ -54,10 +54,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient));
+					strus::DatabaseInterface::CmdCreate));
 	strus::printIndentMultilineString(
 				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient));
+					strus::StorageInterface::CmdCreate));
 }
 
 
