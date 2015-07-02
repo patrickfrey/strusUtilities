@@ -77,198 +77,201 @@ void InsertProcessor::sigStop()
 void InsertProcessor::run()
 {
 	Index docnoRangeStart = 0;
-	std::vector<std::string> files;
-	std::vector<std::string>::const_iterator fitr;
-
-	std::auto_ptr<strus::MetaDataReaderInterface> metadata( 
-		m_storage->createMetaDataReader());
-
-	bool hasDoclenAttribute
-		= metadata->hasElement( strus::Constants::metadata_doclen());
-
-	while (m_crawler->fetch( files))
+	unsigned int docCount = 0;
+	try
 	{
+		std::vector<std::string> files;
+		std::vector<std::string>::const_iterator fitr;
+	
+		std::auto_ptr<strus::MetaDataReaderInterface> metadata( 
+			m_storage->createMetaDataReader());
+	
+		bool hasDoclenAttribute
+			= metadata->hasElement( strus::Constants::metadata_doclen());
+	
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
-		unsigned int docCount = 0;
-
-		fitr = files.begin();
-		for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
+	
+		while (m_crawler->fetch( files))
 		{
-			try
+			fitr = files.begin();
+			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
 			{
-				strus::InputStream input( *fitr);
-				std::auto_ptr<strus::DocumentAnalyzerContextInterface>
-					analyzerContext( m_analyzer->createContext());
-
-				enum {AnalyzerBufSize=8192};
-				char buf[ AnalyzerBufSize];
-				bool eof = false;
-
-				while (!eof)
+				try
 				{
-					std::size_t readsize = input.read( buf, sizeof(buf));
-					eof = (readsize != sizeof(buf));
-					analyzerContext->putInput( buf, readsize, eof);
-
-					// Analyze the document and print the result:
-					strus::analyzer::Document doc;
-					while (!m_terminated && analyzerContext->analyzeNext( doc))
+					strus::InputStream input( *fitr);
+					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
+						analyzerContext( m_analyzer->createContext());
+	
+					enum {AnalyzerBufSize=8192};
+					char buf[ AnalyzerBufSize];
+					bool eof = false;
+	
+					while (!eof)
 					{
-						// Create the storage transaction document with the correct docid:
-						std::vector<strus::analyzer::Attribute>::const_iterator
-							oi = doc.attributes().begin(),
-							oe = doc.attributes().end();
-						for (;oi != oe
-							&& oi->name() != strus::Constants::attribute_docid();
-							++oi){}
-						const char* docid = 0;
-						std::auto_ptr<strus::StorageDocumentInterface> storagedoc;
-						if (m_docnoAllocator && !docnoRangeStart)
+						std::size_t readsize = input.read( buf, sizeof(buf));
+						eof = (readsize != sizeof(buf));
+						analyzerContext->putInput( buf, readsize, eof);
+	
+						// Analyze the document and print the result:
+						strus::analyzer::Document doc;
+						while (!m_terminated && analyzerContext->analyzeNext( doc))
 						{
-							docnoRangeStart = m_docnoAllocator->allocDocnoRange( m_transactionSize);
-							m_commitque->pushTransactionPromise( docnoRangeStart);
-						}
-						Index docno = (docnoRangeStart)?(docnoRangeStart + docCount):0;
-						if (oi != oe)
-						{
-							storagedoc.reset(
-								transaction->createDocument(
-									oi->value(), docno));
-							docid = oi->value().c_str();
-							//... use the docid from the analyzer if defined there
-						}
-						else
-						{
-							storagedoc.reset(
-								transaction->createDocument(
-									*fitr, docno));
-							storagedoc->setAttribute(
-								strus::Constants::attribute_docid(), *fitr);
-							docid = fitr->c_str();
-							//... define file path as hardcoded docid attribute
-						}
-
-						// Define hardcoded document metadata, if known:
-						if (hasDoclenAttribute)
-						{
-							strus::Index lastPos = (doc.searchIndexTerms().empty())
-									?0:doc.searchIndexTerms()[ 
-										doc.searchIndexTerms().size()-1].pos();
-							storagedoc->setMetaData(
-								strus::Constants::metadata_doclen(),
-								strus::ArithmeticVariant( lastPos));
-						}
-						unsigned int maxpos = 0;
-						// Define all search index term occurrencies:
-						std::vector<strus::analyzer::Term>::const_iterator
-							ti = doc.searchIndexTerms().begin(),
-							te = doc.searchIndexTerms().end();
-						for (; ti != te; ++ti)
-						{
-							if (ti->pos() > Constants::storage_max_position_info())
+							// Create the storage transaction document with the correct docid:
+							std::vector<strus::analyzer::Attribute>::const_iterator
+								oi = doc.attributes().begin(),
+								oe = doc.attributes().end();
+							for (;oi != oe
+								&& oi->name() != strus::Constants::attribute_docid();
+								++oi){}
+							const char* docid = 0;
+							std::auto_ptr<strus::StorageDocumentInterface> storagedoc;
+							if (m_docnoAllocator && !docnoRangeStart)
 							{
-								// Cut positions away that are out of range.
-								//	Issue a warning later:
-								if (ti->pos() > maxpos)
-								{
-									maxpos = ti->pos();
-								}
+								docnoRangeStart = m_docnoAllocator->allocDocnoRange( m_transactionSize);
+								m_commitque->pushTransactionPromise( docnoRangeStart);
+							}
+							Index docno = (docnoRangeStart)?(docnoRangeStart + docCount):0;
+							if (oi != oe)
+							{
+								storagedoc.reset(
+									transaction->createDocument(
+										oi->value(), docno));
+								docid = oi->value().c_str();
+								//... use the docid from the analyzer if defined there
 							}
 							else
 							{
-								storagedoc->addSearchIndexTerm(
-									ti->type(), ti->value(), ti->pos());
+								storagedoc.reset(
+									transaction->createDocument(
+										*fitr, docno));
+								storagedoc->setAttribute(
+									strus::Constants::attribute_docid(), *fitr);
+								docid = fitr->c_str();
+								//... define file path as hardcoded docid attribute
 							}
-						}
 	
-						// Define all forward index terms:
-						std::vector<strus::analyzer::Term>::const_iterator
-							fi = doc.forwardIndexTerms().begin(),
-							fe = doc.forwardIndexTerms().end();
-						for (; fi != fe; ++fi)
-						{
-							if (fi->pos() > Constants::storage_max_position_info())
+							// Define hardcoded document metadata, if known:
+							if (hasDoclenAttribute)
 							{
-								// Cut positions away that are out of range. Issue a warning later:
-								if (fi->pos() > maxpos)
-								{
-									maxpos = fi->pos();
-								}
+								strus::Index lastPos = (doc.searchIndexTerms().empty())
+										?0:doc.searchIndexTerms()[ 
+											doc.searchIndexTerms().size()-1].pos();
+								storagedoc->setMetaData(
+									strus::Constants::metadata_doclen(),
+									strus::ArithmeticVariant( lastPos));
 							}
-							else
+							unsigned int maxpos = 0;
+							// Define all search index term occurrencies:
+							std::vector<strus::analyzer::Term>::const_iterator
+								ti = doc.searchIndexTerms().begin(),
+								te = doc.searchIndexTerms().end();
+							for (; ti != te; ++ti)
 							{
-								storagedoc->addForwardIndexTerm(
-									fi->type(), fi->value(), fi->pos());
-							}
-						}
-	
-						// Define all attributes extracted from the document analysis:
-						std::vector<strus::analyzer::Attribute>::const_iterator
-							ai = doc.attributes().begin(), ae = doc.attributes().end();
-						for (; ai != ae; ++ai)
-						{
-							storagedoc->setAttribute( ai->name(), ai->value());
-						}
-
-						// Define all metadata elements extracted from the document analysis:
-						std::vector<strus::analyzer::MetaData>::const_iterator
-							mi = doc.metadata().begin(), me = doc.metadata().end();
-						for (; mi != me; ++mi)
-						{
-							double val = mi->value();
-							if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
-							{
-								if (val < 0.0)
+								if (ti->pos() > Constants::storage_max_position_info())
 								{
-									strus::ArithmeticVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-									storagedoc->setMetaData( mi->name(), av);
+									// Cut positions away that are out of range.
+									//	Issue a warning later:
+									if (ti->pos() > maxpos)
+									{
+										maxpos = ti->pos();
+									}
 								}
 								else
 								{
-									strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-									storagedoc->setMetaData( mi->name(), av);
+									storagedoc->addSearchIndexTerm(
+										ti->type(), ti->value(), ti->pos());
 								}
 							}
-							else
+		
+							// Define all forward index terms:
+							std::vector<strus::analyzer::Term>::const_iterator
+								fi = doc.forwardIndexTerms().begin(),
+								fe = doc.forwardIndexTerms().end();
+							for (; fi != fe; ++fi)
 							{
-								storagedoc->setMetaData( mi->name(), (float) val);
+								if (fi->pos() > Constants::storage_max_position_info())
+								{
+									// Cut positions away that are out of range. Issue a warning later:
+									if (fi->pos() > maxpos)
+									{
+										maxpos = fi->pos();
+									}
+								}
+								else
+								{
+									storagedoc->addForwardIndexTerm(
+										fi->type(), fi->value(), fi->pos());
+								}
 							}
-						}
-
-						// Issue warning for documents cut because they are too big to insert:
-						if (maxpos > Constants::storage_max_position_info())
-						{
-							std::cerr << "token positions of document '" << docid << "' are out or range (document too big, " << maxpos << " token positions assigned)" << std::endl;
-						}
-
-						// Finish document completed:
-						storagedoc->done();
-						docCount++;
-
-						if (docCount == m_transactionSize && docCount && !m_terminated)
-						{
-							m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCount);
-							transaction.reset( m_storage->createTransaction());
-							docCount = 0;
-							docnoRangeStart = 0;
+		
+							// Define all attributes extracted from the document analysis:
+							std::vector<strus::analyzer::Attribute>::const_iterator
+								ai = doc.attributes().begin(), ae = doc.attributes().end();
+							for (; ai != ae; ++ai)
+							{
+								storagedoc->setAttribute( ai->name(), ai->value());
+							}
+	
+							// Define all metadata elements extracted from the document analysis:
+							std::vector<strus::analyzer::MetaData>::const_iterator
+								mi = doc.metadata().begin(), me = doc.metadata().end();
+							for (; mi != me; ++mi)
+							{
+								double val = mi->value();
+								if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
+								{
+									if (val < 0.0)
+									{
+										strus::ArithmeticVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+										storagedoc->setMetaData( mi->name(), av);
+									}
+									else
+									{
+										strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+										storagedoc->setMetaData( mi->name(), av);
+									}
+								}
+								else
+								{
+									storagedoc->setMetaData( mi->name(), (float) val);
+								}
+							}
+	
+							// Issue warning for documents cut because they are too big to insert:
+							if (maxpos > Constants::storage_max_position_info())
+							{
+								std::cerr << "token positions of document '" << docid << "' are out or range (document too big, " << maxpos << " token positions assigned)" << std::endl;
+							}
+	
+							// Finish document completed:
+							storagedoc->done();
+							docCount++;
+	
+							if (docCount == m_transactionSize && docCount && !m_terminated)
+							{
+								m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCount);
+								transaction.reset( m_storage->createTransaction());
+								docCount = 0;
+								docnoRangeStart = 0;
+							}
 						}
 					}
 				}
-			}
-			catch (const std::bad_alloc& err)
-			{
-				std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
-				if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
-				docnoRangeStart = 0;
-				docCount = 0;
-			}
-			catch (const std::runtime_error& err)
-			{
-				std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
-				if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
-				docnoRangeStart = 0;
-				docCount = 0;
+				catch (const std::bad_alloc& err)
+				{
+					std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
+					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
+					docnoRangeStart = 0;
+					docCount = 0;
+				}
+				catch (const std::runtime_error& err)
+				{
+					std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
+					docnoRangeStart = 0;
+					docCount = 0;
+				}
 			}
 		}
 		if (!m_terminated && docCount)
@@ -284,6 +287,18 @@ void InsertProcessor::run()
 			}
 			m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCountAllocated);
 		}
+	}
+	catch (const std::bad_alloc& err)
+	{
+		std::cerr << "failed to complete inserts due to a memory allocation error" << std::endl;
+		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
+		docnoRangeStart = 0;
+	}
+	catch (const std::runtime_error& err)
+	{
+		std::cerr << "failed to complete inserts: " << err.what() << std::endl;
+		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
+		docnoRangeStart = 0;
 	}
 }
 
