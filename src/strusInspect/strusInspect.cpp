@@ -508,6 +508,8 @@ int main( int argc, const char* argv[])
 			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
 			std::cout << "            \"nofdocs\"" << std::endl;
 			std::cout << "               = Get the local number of documents in the storage" << std::endl;
+			std::cout << "            \"maxdocno\"" << std::endl;
+			std::cout << "               = Get the maximum document number allocated in the local storage" << std::endl;
 			std::cout << "            \"metadata\" <name> [<doc-id/no>]" << std::endl;
 			std::cout << "               = Get the value of a meta data element" << std::endl;
 			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
