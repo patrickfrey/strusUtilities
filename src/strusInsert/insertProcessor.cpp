@@ -286,6 +286,8 @@ void InsertProcessor::run()
 				}
 			}
 			m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCountAllocated);
+			docCount = 0;
+			docnoRangeStart = 0;
 		}
 	}
 	catch (const std::bad_alloc& err)
