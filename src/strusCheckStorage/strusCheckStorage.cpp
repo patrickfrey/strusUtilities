@@ -167,6 +167,7 @@ int main( int argc, const char* argv[])
 			storage( storageBuilder->createStorageClient( storagecfg));
 
 		storage->checkStorage( std::cerr);
+		std::cerr << "done" << std::endl;
 		return 0;
 	}
 	catch (const std::runtime_error& e)
