@@ -75,9 +75,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 6,
+				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:");
+				"r,rpc:", "s,storage:", "e,exists");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -133,6 +133,8 @@ int main( int argc, const char* argv[])
 				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
+			std::cout << "-e|--exists" << std::endl;
+			std::cout << "   Checks if the database of the storage exists and return 'yes'/'no'" << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    Load components from module <MOD>" << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -163,11 +165,26 @@ int main( int argc, const char* argv[])
 		{
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 		}
-		std::auto_ptr<strus::StorageClientInterface>
-			storage( storageBuilder->createStorageClient( storagecfg));
-
-		storage->checkStorage( std::cerr);
-		std::cerr << "done" << std::endl;
+		if (opt("exists"))
+		{
+			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);
+			if (dbi->exists( storagecfg))
+			{
+				std::cout << "yes" << std::endl;
+			}
+			else
+			{
+				std::cout << "no" << std::endl;
+			}
+		}
+		else
+		{
+			std::auto_ptr<strus::StorageClientInterface>
+				storage( storageBuilder->createStorageClient( storagecfg));
+	
+			storage->checkStorage( std::cerr);
+			std::cerr << "done" << std::endl;
+		}
 		return 0;
 	}
 	catch (const std::runtime_error& e)
