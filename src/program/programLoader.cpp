@@ -842,6 +842,115 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 	}
 }
 
+
+DLL_PUBLIC bool strus::isAnalyzerMapSource( const std::string& source)
+{
+	char const* src = source.c_str();
+	skipSpaces(src);
+	if (isAlpha(*src))
+	{
+		std::string id = parse_IDENTIFIER( src);
+		if (isEqual( id, "MIME") || isEqual( id, "SCHEME") || isEqual( id, "SEGMENTER") || isEqual( id, "PROGRAM")) return true;
+	}
+	return false;
+}
+
+static std::string parseAnalyzerMapValue( char const*& itr)
+{
+	std::string val;
+	if (isStringQuote( *itr))
+	{
+		val = parse_STRING( itr);
+	}
+	else
+	{
+		for (;*itr && !isSpace(*itr) && !isColon(*itr); ++itr)
+		{
+			val.push_back( *itr);
+		}
+	}
+	return val;
+}
+
+DLL_PUBLIC void strus::loadAnalyzerMap(
+		std::vector<AnalyzerMapElement>& mapdef,
+		const std::string& source)
+{
+	enum Mask {MSK_MIME=0x01, MSK_SCHEME=0x02, MSK_PROGRAM=0x04, MSK_SEGMENTER=0x08};
+	AnalyzerMapElement elem;
+	int mask = 0;
+	char const* src = source.c_str();
+	skipSpaces(src);
+	try
+	{
+	while (*src)
+	{
+		if (isSemiColon(*src))
+		{
+			(void)parse_OPERATOR( src);
+			if ((mask & MSK_PROGRAM) == 0)
+			{
+				mapdef.push_back( elem);
+				elem.clear();
+				mask = 0;
+			}
+			else if (!mask)
+			{
+				throw std::runtime_error( "empty declaration");
+			}
+			else
+			{
+				throw std::runtime_error( "PROGRAM missing in declaration");
+			}
+		}
+		if (isAlpha(*src))
+		{
+			std::string id = parse_IDENTIFIER( src);
+			if (isEqual( id, "MIME"))
+			{
+				if (mask & MSK_MIME) throw std::runtime_error( "duplicate definition of MIME");
+				mask |= MSK_MIME;
+				elem.mimeType = parseAnalyzerMapValue( src);
+			}
+			else if (isEqual( id, "SCHEME"))
+			{
+				if (mask & MSK_SCHEME) throw std::runtime_error( "duplicate definition of SCHEME");
+				mask |= MSK_SCHEME;
+				elem.scheme = parseAnalyzerMapValue( src);
+			}
+			else if (isEqual( id, "PROGRAM"))
+			{
+				if (mask & MSK_PROGRAM) throw std::runtime_error( "duplicate definition of PROGRAM");
+				mask |= MSK_PROGRAM;
+				elem.prgFilename = parseAnalyzerMapValue( src);
+			}
+			else if (isEqual( id, "SEGMENTER"))
+			{
+				if (mask & MSK_SEGMENTER) throw std::runtime_error( "duplicate definition of SEGMENTER");
+				mask |= MSK_SEGMENTER;
+				elem.segmenter = parseAnalyzerMapValue( src);
+			}
+			else
+			{
+				throw std::runtime_error( std::string( "unknown identifier '") + id + "'");
+			}
+		}
+	}
+	if (mask)
+	{
+		throw std::runtime_error( "unterminated definition, missing semicolon at end of source");
+	}
+	}
+	catch (const std::runtime_error& e)
+	{
+		throw std::runtime_error(
+			std::string( "error in query document class to analyzer map program ")
+			+ errorPosition( source.c_str(), src)
+			+ ": " + e.what());
+	}
+}
+
+
 DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 		QueryAnalyzerInterface& analyzer,
 		const TextProcessorInterface* textproc,

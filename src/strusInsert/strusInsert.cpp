@@ -266,17 +266,9 @@ int main( int argc_, const char* argv_[])
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 
-		// Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
-			return 4;
-		}
-		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
+		// Load analyzer program(s):
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
+		analyzerMap.defineProgram( "text/xml", "", segmenter, analyzerprg);
 
 		// Start inserter process:
 		strus::utils::ScopedPtr<strus::CommitQueue>
@@ -300,7 +292,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
-				storage.get(), analyzer.get(), docnoAllocator.get(),
+				storage.get(), textproc, analyzerMap, docnoAllocator.get(),
 				commitQue.get(), fileCrawler, transactionSize);
 			inserter.run();
 		}
@@ -314,7 +306,7 @@ int main( int argc_, const char* argv_[])
 			{
 				inserterThreads->start(
 					new strus::InsertProcessor(
-						storage.get(), analyzer.get(), docnoAllocator.get(),
+						storage.get(), textproc, analyzerMap, docnoAllocator.get(),
 						commitQue.get(), fileCrawler, transactionSize));
 			}
 			inserterThreads->wait_termination();

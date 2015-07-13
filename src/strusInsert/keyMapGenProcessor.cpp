@@ -29,6 +29,7 @@
 #include "keyMapGenProcessor.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
+#include "strus/textProcessorInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/fileio.hpp"
 #include "fileCrawlerInterface.hpp"
@@ -102,11 +103,13 @@ void KeyMapGenResultList::printKeyOccurrenceList( std::ostream& out, std::size_t
 }
 
 KeyMapGenProcessor::KeyMapGenProcessor(
-		DocumentAnalyzerInterface* analyzer_,
+		const TextProcessorInterface* textproc_,
+		const AnalyzerMap& analyzerMap_,
 		KeyMapGenResultList* que_,
 		FileCrawlerInterface* crawler_)
 
-	:m_analyzer(analyzer_)
+	:m_textproc(textproc_)
+	,m_analyzerMap(analyzerMap_)
 	,m_que(que_)
 	,m_crawler(crawler_)
 	,m_terminated(false)
@@ -139,11 +142,26 @@ void KeyMapGenProcessor::run()
 			{
 				try
 				{
-					// Read the input file to analyze:
+					// Read the input file to analyze and detect its document type:
 					strus::InputStream input( *fitr);
+					char hdrbuf[ 1024];
+					std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+					strus::DocumentClass dclass;
+					if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+					{
+						std::cerr << "failed to detect document class of file '" << *fitr << "'" << std::endl; 
+						continue;
+					}
+					strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
+					if (!analyzer)
+					{
+						std::cerr << "no analyzer defined for document class with MIME type '" << dclass.mimeType() << "' scheme '" << dclass.scheme() << "'" << std::endl; 
+						continue;
+					}
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
-						analyzerContext( m_analyzer->createContext());
-
+						analyzerContext( analyzer->createContext( dclass));
+	
+					// Analyze the document (with subdocuments) and update the key map:
 					enum {AnalyzerBufSize=8192};
 					char buf[ AnalyzerBufSize];
 					bool eof = false;

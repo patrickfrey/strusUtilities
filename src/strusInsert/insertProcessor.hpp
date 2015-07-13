@@ -29,11 +29,14 @@
 #ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #include "private/utils.hpp"
+#include "analyzerMap.hpp"
 
 namespace strus {
 
 /// \brief Forward declaration
 class StorageClientInterface;
+/// \brief Forward declaration
+class TextProcessorInterface;
 /// \brief Forward declaration
 class DocumentAnalyzerInterface;
 /// \brief Forward declaration
@@ -49,7 +52,8 @@ class InsertProcessor
 public:
 	InsertProcessor(
 			StorageClientInterface* storage_,
-			DocumentAnalyzerInterface* analyzer_,
+			const TextProcessorInterface* textproc_,
+			const AnalyzerMap& analyzerMap_,
 			DocnoRangeAllocatorInterface* docnoAllocator_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
@@ -62,7 +66,8 @@ public:
 
 private:
 	StorageClientInterface* m_storage;
-	DocumentAnalyzerInterface* m_analyzer;
+	const TextProcessorInterface* m_textproc;
+	AnalyzerMap m_analyzerMap;
 	DocnoRangeAllocatorInterface* m_docnoAllocator;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;

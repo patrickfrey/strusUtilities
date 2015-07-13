@@ -28,6 +28,7 @@
 */
 #include "fileCrawler.hpp"
 #include "private/utils.hpp"
+#include "strus/private/fileio.hpp"
 
 using namespace strus;
 
@@ -81,7 +82,7 @@ void FileCrawler::findFilesToProcess()
 	{
 		std::vector<std::string> files;
 		std::string path = *m_diritr;
-		unsigned int ec = strus::readDir( path, m_extension, files);
+		unsigned int ec = strus::readDirFiles( path, m_extension, files);
 		if (ec)
 		{
 			std::cerr << "could not read directory to process '" << path << "' (file system error '" << ec << ")" << std::endl;
@@ -102,7 +103,7 @@ void FileCrawler::findFilesToProcess()
 			}
 		}
 		std::vector<std::string> subdirs;
-		ec = strus::readDir( path, "", subdirs);
+		ec = strus::readDirSubDirs( path, subdirs);
 		m_diritr = m_directories.erase( m_diritr);
 		if (ec)
 		{

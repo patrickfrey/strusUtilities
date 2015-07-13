@@ -177,22 +177,14 @@ int main( int argc_, const char* argv_[])
 
 		// Create objects for keymap generation:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			builder( moduleLoader->createAnalyzerObjectBuilder());
+			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
-			analyzer( builder->createDocumentAnalyzer( segmenter));
+			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 
-		// [2] Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program '" << analyzerprg << "' (file system error " << ec << ")" << std::endl;
-			return 4;
-		}
-		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
-		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
+		// [2] Load analyzer program(s):
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
+		analyzerMap.defineProgram( "text/xml", "", segmenter, analyzerprg);
 
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler* fileCrawler
@@ -210,7 +202,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
-				analyzer.get(), &resultList, fileCrawler);
+				textproc, analyzerMap, &resultList, fileCrawler);
 			processor.run();
 		}
 		else
@@ -222,7 +214,7 @@ int main( int argc_, const char* argv_[])
 			{
 				processors->start(
 					new strus::KeyMapGenProcessor(
-						analyzer.get(), &resultList, fileCrawler));
+						textproc, analyzerMap, &resultList, fileCrawler));
 			}
 			processors->wait_termination();
 		}

@@ -26,46 +26,48 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
+#ifndef _STRUS_ANALYZER_MAP_HPP_INCLUDED
+#define _STRUS_ANALYZER_MAP_HPP_INCLUDED
+#include "strus/documentClass.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
 #include "private/utils.hpp"
-#include "analyzerMap.hpp"
 #include <string>
 
 namespace strus {
 
 /// \brief Forward declaration
-class StorageClientInterface;
+class DocumentClass;
 /// \brief Forward declaration
-class TextProcessorInterface;
-/// \brief Forward declaration
-class DocumentAnalyzerInterface;
-/// \brief Forward declaration
-class FileCrawlerInterface;
+class AnalyzerObjectBuilderInterface;
 
-class CheckInsertProcessor
+class AnalyzerMap
 {
 public:
-	CheckInsertProcessor(
-			StorageClientInterface* storage_,
-			const TextProcessorInterface* textproc_,
-			const AnalyzerMap& analyzerMap_,
-			FileCrawlerInterface* crawler_,
-			const std::string& logfile_);
+	explicit AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_)
+		:m_builder(builder_){}
+	AnalyzerMap( const AnalyzerMap& o)
+		:m_map(o.m_map),m_builder(o.m_builder){}
 
-	~CheckInsertProcessor();
+	void defineProgram(
+			const std::string& mimeType,
+			const std::string& scheme,
+			const std::string& segmenter,
+			const std::string& prgfile);
 
-	void sigStop();
-	void run();
+	DocumentAnalyzerInterface* get( const DocumentClass& dclass) const;
 
 private:
-	StorageClientInterface* m_storage;
-	const TextProcessorInterface* m_textproc;
-	AnalyzerMap m_analyzerMap;
-	FileCrawlerInterface* m_crawler;
-	utils::AtomicBool m_terminated;
-	std::string m_logfile;
+	void defineAnalyzerProgramSource(
+			const std::string& mimeType,
+			const std::string& scheme,
+			const std::string& segmenter,
+			const std::string& analyzerProgramSource);
+
+	typedef std::map<std::string,utils::SharedPtr<DocumentAnalyzerInterface> > Map;
+	Map m_map;
+	const strus::AnalyzerObjectBuilderInterface* m_builder;
 };
 
 }//namespace
 #endif
+

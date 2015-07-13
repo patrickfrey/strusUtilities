@@ -193,7 +193,7 @@ int main( int argc_, const char* argv_[])
 		}
 		std::string analyzerprg = opt[0];
 		std::string datapath = opt[1];
-		std::string fileext = ".xml";
+		std::string fileext;
 		std::string segmenter;
 		if (opt( "segmenter"))
 		{
@@ -244,19 +244,12 @@ int main( int argc_, const char* argv_[])
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
 
-		// Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program '" << analyzerprg << "' (file system error " << ec << ")" << std::endl;
-			return 4;
-		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 
+		// Load analyzer program(s):
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
+		analyzerMap.defineProgram( "text/xml", "", segmenter, analyzerprg);
+		
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
 				datapath, notificationInterval, nofThreads*5+5, fileext);
@@ -270,7 +263,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::CheckInsertProcessor checker(
-				storage.get(), analyzer.get(), fileCrawler, logfile);
+				storage.get(), textproc, analyzerMap, fileCrawler, logfile);
 			checker.run();
 		}
 		else
@@ -284,7 +277,7 @@ int main( int argc_, const char* argv_[])
 			{
 				checkInsertThreads->start(
 					new strus::CheckInsertProcessor(
-						storage.get(), analyzer.get(),
+						storage.get(), textproc, analyzerMap,
 						fileCrawler, logfile));
 			}
 			checkInsertThreads->wait_termination();

@@ -50,14 +50,16 @@ using namespace strus;
 
 InsertProcessor::InsertProcessor(
 		StorageClientInterface* storage_,
-		DocumentAnalyzerInterface* analyzer_,
+		const TextProcessorInterface* textproc_,
+		const AnalyzerMap& analyzerMap_,
 		DocnoRangeAllocatorInterface* docnoAllocator_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
 		unsigned int transactionSize_)
 
 	:m_storage(storage_)
-	,m_analyzer(analyzer_)
+	,m_textproc(textproc_)
+	,m_analyzerMap(analyzerMap_)
 	,m_docnoAllocator(docnoAllocator_)
 	,m_commitque(commitque_)
 	,m_crawler(crawler_)
@@ -99,10 +101,26 @@ void InsertProcessor::run()
 			{
 				try
 				{
+					// Read the input file to analyze and detect its document type:
 					strus::InputStream input( *fitr);
+					char hdrbuf[ 1024];
+					std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+					strus::DocumentClass dclass;
+					if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+					{
+						std::cerr << "failed to detect document class of file '" << *fitr << "'" << std::endl; 
+						continue;
+					}
+					strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
+					if (!analyzer)
+					{
+						std::cerr << "no analyzer defined for document class with MIME type '" << dclass.mimeType() << "' scheme '" << dclass.scheme() << "'" << std::endl; 
+						continue;
+					}
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
-						analyzerContext( m_analyzer->createContext());
+						analyzerContext( analyzer->createContext( dclass));
 	
+					// Analyze the document (with subdocuments) and insert it:
 					enum {AnalyzerBufSize=8192};
 					char buf[ AnalyzerBufSize];
 					bool eof = false;
