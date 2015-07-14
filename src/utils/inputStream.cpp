@@ -96,7 +96,7 @@ std::size_t InputStream::readAhead( char* buf, std::size_t bufsize)
 		throw std::runtime_error( "subsequent calls of readAhead not allowed");
 	}
 	m_buffer.clear();
-	m_buffer.append( buf, bufsize);
+	m_buffer.append( buf, rt);
 	return rt;
 }
 
