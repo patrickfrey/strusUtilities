@@ -33,7 +33,7 @@
 using namespace strus;
 
 InputStream::InputStream( const std::string& docpath)
-	:m_docpath(docpath)
+	:m_fh(0),m_docpath(docpath),m_bufferidx(0)
 {
 	if (docpath == "-")
 	{
