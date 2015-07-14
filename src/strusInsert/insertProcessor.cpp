@@ -93,7 +93,7 @@ void InsertProcessor::run()
 	
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
-	
+
 		while (m_crawler->fetch( files))
 		{
 			fitr = files.begin();
