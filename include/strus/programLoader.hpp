@@ -91,11 +91,10 @@ struct AnalyzerMapElement
 {
 	AnalyzerMapElement(){}
 	AnalyzerMapElement( const AnalyzerMapElement& o)
-		:mimeType(o.mimeType),scheme(o.scheme),segmenter(o.segmenter),prgFilename(o.prgFilename){}
+		:scheme(o.scheme),segmenter(o.segmenter),prgFilename(o.prgFilename){}
 	void clear()
-		{mimeType.clear(); scheme.clear(); segmenter.clear(); prgFilename.clear();}
+		{scheme.clear(); segmenter.clear(); prgFilename.clear();}
 
-	std::string mimeType;		///< document MIME type (e.g. "text/html")
 	std::string scheme;		///< document class id type or list of element descriptions
 	std::string segmenter;		///< segmenter to use
 	std::string prgFilename;	///< analyzer program to use

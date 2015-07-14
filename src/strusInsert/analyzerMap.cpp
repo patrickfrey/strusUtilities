@@ -36,7 +36,6 @@
 using namespace strus;
 
 void AnalyzerMap::defineProgram(
-		const std::string& mimeType,
 		const std::string& scheme,
 		const std::string& segmenter,
 		const std::string& prgfile)
@@ -61,17 +60,6 @@ void AnalyzerMap::defineProgram(
 		std::vector<AnalyzerMapElement>::iterator mi = mapdef.begin(), me = mapdef.end();
 		for (; mi != me; ++mi)
 		{
-			if (mi->mimeType.empty())
-			{
-				if (mimeType.empty())
-				{
-					mi->mimeType = "text/xml";
-				}
-				else
-				{
-					mi->mimeType = mimeType;
-				}
-			}
 			if (mi->segmenter.empty())
 			{
 				mi->segmenter = segmenter;
@@ -86,7 +74,7 @@ void AnalyzerMap::defineProgram(
 			}
 			try
 			{
-				defineAnalyzerProgramSource( mi->mimeType, mi->scheme, mi->segmenter, programSource);
+				defineAnalyzerProgramSource( mi->scheme, mi->segmenter, programSource);
 			}
 			catch (const std::runtime_error& err)
 			{
@@ -96,19 +84,11 @@ void AnalyzerMap::defineProgram(
 	}
 	else
 	{
-		if (mimeType.empty())
-		{
-			defineAnalyzerProgramSource( "text/xml", scheme, segmenter, programSource);
-		}
-		else
-		{
-			defineAnalyzerProgramSource( mimeType, scheme, segmenter, programSource);
-		}
+		defineAnalyzerProgramSource( scheme, segmenter, programSource);
 	}
 }
 
 void AnalyzerMap::defineAnalyzerProgramSource(
-		const std::string& mimeType,
 		const std::string& scheme,
 		const std::string& segmenter,
 		const std::string& analyzerProgramSource)
@@ -116,6 +96,7 @@ void AnalyzerMap::defineAnalyzerProgramSource(
 	utils::SharedPtr<strus::DocumentAnalyzerInterface>
 		analyzer( m_builder->createDocumentAnalyzer( segmenter));
 
+	std::string mimeType = analyzer->mimeType();
 	const strus::TextProcessorInterface* textproc = m_builder->getTextProcessor();
 	strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 

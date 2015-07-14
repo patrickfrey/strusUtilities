@@ -139,7 +139,7 @@ int main( int argc_, const char* argv_[])
 		if (printUsageAndExit)
 		{
 			std::cout << "usage: strusCheckInsert [options] <program> <docpath>" << std::endl;
-			std::cout << "<program> = path of analyzer program" << std::endl;
+			std::cout << "<program> = path of analyzer program or analyzer map program" << std::endl;
 			std::cout << "<docpath> = path of document or directory to check" << std::endl;
 			std::cout << "description: Checks if a storage contains all data of a document set." << std::endl;
 			std::cout << "options:" << std::endl;
@@ -248,7 +248,7 @@ int main( int argc_, const char* argv_[])
 
 		// Load analyzer program(s):
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
-		analyzerMap.defineProgram( "text/xml", "", segmenter, analyzerprg);
+		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
 		
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(

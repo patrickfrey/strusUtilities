@@ -850,7 +850,7 @@ DLL_PUBLIC bool strus::isAnalyzerMapSource( const std::string& source)
 	if (isAlpha(*src))
 	{
 		std::string id = parse_IDENTIFIER( src);
-		if (isEqual( id, "MIME") || isEqual( id, "SCHEME") || isEqual( id, "SEGMENTER") || isEqual( id, "PROGRAM")) return true;
+		if (isEqual( id, "SCHEME") || isEqual( id, "SEGMENTER") || isEqual( id, "PROGRAM")) return true;
 	}
 	return false;
 }
@@ -876,7 +876,7 @@ DLL_PUBLIC void strus::loadAnalyzerMap(
 		std::vector<AnalyzerMapElement>& mapdef,
 		const std::string& source)
 {
-	enum Mask {MSK_MIME=0x01, MSK_SCHEME=0x02, MSK_PROGRAM=0x04, MSK_SEGMENTER=0x08};
+	enum Mask {MSK_SCHEME=0x01, MSK_PROGRAM=0x02, MSK_SEGMENTER=0x04};
 	AnalyzerMapElement elem;
 	int mask = 0;
 	char const* src = source.c_str();
@@ -906,13 +906,7 @@ DLL_PUBLIC void strus::loadAnalyzerMap(
 		if (isAlpha(*src))
 		{
 			std::string id = parse_IDENTIFIER( src);
-			if (isEqual( id, "MIME"))
-			{
-				if (mask & MSK_MIME) throw std::runtime_error( "duplicate definition of MIME");
-				mask |= MSK_MIME;
-				elem.mimeType = parseAnalyzerMapValue( src);
-			}
-			else if (isEqual( id, "SCHEME"))
+			if (isEqual( id, "SCHEME"))
 			{
 				if (mask & MSK_SCHEME) throw std::runtime_error( "duplicate definition of SCHEME");
 				mask |= MSK_SCHEME;

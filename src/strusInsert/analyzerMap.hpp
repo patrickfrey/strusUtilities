@@ -49,7 +49,6 @@ public:
 		:m_map(o.m_map),m_builder(o.m_builder){}
 
 	void defineProgram(
-			const std::string& mimeType,
 			const std::string& scheme,
 			const std::string& segmenter,
 			const std::string& prgfile);
@@ -58,7 +57,6 @@ public:
 
 private:
 	void defineAnalyzerProgramSource(
-			const std::string& mimeType,
 			const std::string& scheme,
 			const std::string& segmenter,
 			const std::string& analyzerProgramSource);

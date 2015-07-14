@@ -108,7 +108,7 @@ int main( int argc_, const char* argv_[])
 		if (printUsageAndExit)
 		{
 			std::cout << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
-			std::cout << "<program> = path of analyzer program" << std::endl;
+			std::cout << "<program> = path of analyzer program  or analyzer map program" << std::endl;
 			std::cout << "<docpath> = path of document or directory to insert" << std::endl;
 			std::cout << "description: Dumps a list of terms as result of document" << std::endl;
 			std::cout << "    anaylsis of a file or directory. The dump can be loaded by" << std::endl;
@@ -184,7 +184,7 @@ int main( int argc_, const char* argv_[])
 
 		// [2] Load analyzer program(s):
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
-		analyzerMap.defineProgram( "text/xml", "", segmenter, analyzerprg);
+		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
 
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler* fileCrawler
