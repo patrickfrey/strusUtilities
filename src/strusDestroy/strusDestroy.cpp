@@ -169,6 +169,7 @@ int main( int argc, const char* argv[])
 			builder( moduleLoader->createStorageObjectBuilder());
 		const strus::DatabaseInterface* dbi = builder->getDatabase( databasecfg);
 		dbi->destroyDatabase( databasecfg);
+		std::cerr << "storage successfully destroyed." << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{

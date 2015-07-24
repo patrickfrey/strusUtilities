@@ -199,6 +199,7 @@ int main( int argc, const char* argv[])
 			database( dbi->createClient( databasecfg));
 
 		sti->createStorage( storagecfg, database.get());
+		std::cerr << "storage successfully created." << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
