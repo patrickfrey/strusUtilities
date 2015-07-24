@@ -145,7 +145,7 @@ int main( int argc, const char* argv[])
 
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusDestroy [options] <config>" << std::endl;
+			std::cout << "usage: strusDestroy [options]" << std::endl;
 			std::cout << "description: Removes an existing storage database." << std::endl;
 			std::cout << "options:" << std::endl;
 			std::cout << "-h|--help" << std::endl;
