@@ -144,7 +144,7 @@ int main( int argc, const char* argv[])
 			rt = 10003;
 			printUsageAndExit = true;
 		}
-		else if (nof_databasecfg == 0)
+		else if (!printUsageAndExit && nof_databasecfg == 0)
 		{
 			std::cerr << "ERROR missing configuration option: --storage or --configfile has to be defined" << std::endl;
 			rt = 10004;
