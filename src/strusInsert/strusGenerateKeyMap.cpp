@@ -127,7 +127,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-s|--segmenter <NAME>" << std::endl;
 			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
-			std::cout << "    Grab the files with extension <EXT> (default \".xml\")" << std::endl;
+			std::cout << "    Grab only the files with extension <EXT> (default all files)" << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
 			std::cout << "    Set <N> as number of threads to use"  << std::endl;
 			std::cout << "-u|--unit <N>" << std::endl;
@@ -145,7 +145,7 @@ int main( int argc_, const char* argv_[])
 			unitSize = opt.asUint( "unit");
 		}
 		unsigned int nofResults = opt.asUint( "results");
-		std::string fileext = ".xml";
+		std::string fileext = "";
 		std::string segmenter;
 		if (opt( "segmenter"))
 		{

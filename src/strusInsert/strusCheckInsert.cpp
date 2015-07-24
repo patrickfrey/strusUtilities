@@ -165,7 +165,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
-			std::cout << "    Grab the files with extension <EXT> (default \".xml\")" << std::endl;
+			std::cout << "    Grab only the files with extension <EXT> (default all files)" << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
 			std::cout << "    Set <N> as number of inserter threads to use"  << std::endl;
 			std::cout << "-l|--logfile <FILE>" << std::endl;
