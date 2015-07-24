@@ -82,7 +82,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 0)
+			if (opt.nofargs() > 1)
 			{
 				std::cerr << "ERROR too many arguments" << std::endl;
 				printUsageAndExit = true;
@@ -132,6 +132,12 @@ int main( int argc, const char* argv[])
 			nof_databasecfg += 1;
 			databasecfg = opt[ "storage"];
 		}
+		if (opt.nofargs() == 1)
+		{
+			std::cerr << "WARNING passing storage as first parameter instead of option -s (deprecated)" << std::endl;
+			nof_databasecfg += 1;
+			databasecfg = opt[0];
+		}
 		if (nof_databasecfg > 1)
 		{
 			std::cerr << "ERROR conflicting configuration options specified: --storage and --configfile" << std::endl;
@@ -144,7 +150,6 @@ int main( int argc, const char* argv[])
 			rt = 10004;
 			printUsageAndExit = true;
 		}
-
 		if (printUsageAndExit)
 		{
 			std::cout << "usage: strusCreate [options]" << std::endl;
