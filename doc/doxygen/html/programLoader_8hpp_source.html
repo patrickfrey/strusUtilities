@@ -32,6 +32,7 @@
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
     </ul>
   </div>
@@ -112,62 +113,90 @@
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                <span class="keyword">const</span> std::string&amp; normalizersrc,</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;                <span class="keyword">const</span> std::string&amp; tokenizersrc);</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespacestrus.html#a179c609f8b8509055e58801a11c631b5">loadQueryEvalProgram</a>(</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                QueryEvalInterface&amp; qeval,</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;                <span class="keyword">const</span> QueryProcessorInterface* qproc,</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                <span class="keyword">const</span> std::string&amp; source);</div>
+<div class="line"><a name="l00090"></a><span class="lineno"><a class="line" href="structstrus_1_1AnalyzerMapElement.html">   90</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structstrus_1_1AnalyzerMapElement.html">AnalyzerMapElement</a></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;{</div>
+<div class="line"><a name="l00092"></a><span class="lineno"><a class="line" href="structstrus_1_1AnalyzerMapElement.html#a37361cdd3b4beb857dd59095449d2f64">   92</a></span>&#160;        <a class="code" href="structstrus_1_1AnalyzerMapElement.html#a37361cdd3b4beb857dd59095449d2f64">AnalyzerMapElement</a>(){}</div>
+<div class="line"><a name="l00093"></a><span class="lineno"><a class="line" href="structstrus_1_1AnalyzerMapElement.html#a6463b733d80472fa0d27ff0ec759d1f6">   93</a></span>&#160;        <a class="code" href="structstrus_1_1AnalyzerMapElement.html#a6463b733d80472fa0d27ff0ec759d1f6">AnalyzerMapElement</a>( <span class="keyword">const</span> <a class="code" href="structstrus_1_1AnalyzerMapElement.html">AnalyzerMapElement</a>&amp; o)</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;                :<a class="code" href="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea">scheme</a>(o.<a class="code" href="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea">scheme</a>),<a class="code" href="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6">segmenter</a>(o.<a class="code" href="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6">segmenter</a>),<a class="code" href="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb">prgFilename</a>(o.<a class="code" href="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb">prgFilename</a>){}</div>
+<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="structstrus_1_1AnalyzerMapElement.html#a8fedf559b8921f741ae066822fcc1a51">   95</a></span>&#160;        <span class="keywordtype">void</span> <a class="code" href="structstrus_1_1AnalyzerMapElement.html#a8fedf559b8921f741ae066822fcc1a51">clear</a>()</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                {<a class="code" href="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea">scheme</a>.clear(); <a class="code" href="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6">segmenter</a>.clear(); <a class="code" href="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb">prgFilename</a>.clear();}</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespacestrus.html#a49844064c435ebd8d6f63fbdbe7d86ba">loadQuery</a>(</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                QueryInterface&amp; query,</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                <span class="keyword">const</span> QueryAnalyzerInterface* analyzer,</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                <span class="keyword">const</span> QueryProcessorInterface* qproc,</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                <span class="keyword">const</span> std::string&amp; source);</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a81dc11bdf897937b4d299ea04c16a70b">scanNextProgram</a>(</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                std::string&amp; segment,</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                std::string::const_iterator&amp; itr,</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;                <span class="keyword">const</span> std::string::const_iterator&amp; end);</div>
+<div class="line"><a name="l00098"></a><span class="lineno"><a class="line" href="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea">   98</a></span>&#160;        std::string <a class="code" href="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea">scheme</a>;             </div>
+<div class="line"><a name="l00099"></a><span class="lineno"><a class="line" href="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6">   99</a></span>&#160;        std::string <a class="code" href="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6">segmenter</a>;          </div>
+<div class="line"><a name="l00100"></a><span class="lineno"><a class="line" href="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb">  100</a></span>&#160;        std::string <a class="code" href="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb">prgFilename</a>;        </div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;};</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a2911e27cec87fa7cfe3eef992844179b">isAnalyzerMapSource</a>( <span class="keyword">const</span> std::string&amp; source);</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespacestrus.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531">loadAnalyzerMap</a>(</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                std::vector&lt;AnalyzerMapElement&gt;&amp; mapdef,</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;                <span class="keyword">const</span> std::string&amp; source);</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespacestrus.html#a179c609f8b8509055e58801a11c631b5">loadQueryEvalProgram</a>(</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;                QueryEvalInterface&amp; qeval,</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;                <span class="keyword">const</span> QueryProcessorInterface* qproc,</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;                <span class="keyword">const</span> std::string&amp; source);</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespacestrus.html#a0ea3e50fb506574b87482fa4d9395130">loadGlobalStatistics</a>(</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;                StorageClientInterface&amp; storage,</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;                <span class="keyword">const</span> std::string&amp; file);</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespacestrus.html#aa07612ff516a0060b5553be16ab2189d">loadDocumentMetaDataAssignments</a>(</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;                StorageClientInterface&amp; storage,</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;                <span class="keyword">const</span> std::string&amp; metadataName,</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;                <span class="keyword">const</span> std::string&amp; file,</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;                <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> commitsize=0);</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespacestrus.html#ad97273a58853126ce38dc3b9b869dec3">loadDocumentAttributeAssignments</a>(</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;                StorageClientInterface&amp; storage,</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;                <span class="keyword">const</span> std::string&amp; attributeName,</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;                <span class="keyword">const</span> std::string&amp; file,</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> commitsize=0);</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespacestrus.html#ab15b8cc704d45d80d179f874a95d9efa">loadDocumentUserRightsAssignments</a>(</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;                StorageClientInterface&amp; storage,</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;                <span class="keyword">const</span> std::string&amp; file,</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;                <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> commitsize=0);</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;}<span class="comment">//namespace</span></div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespacestrus.html#a49844064c435ebd8d6f63fbdbe7d86ba">loadQuery</a>(</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;                QueryInterface&amp; query,</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;                <span class="keyword">const</span> QueryAnalyzerInterface* analyzer,</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;                <span class="keyword">const</span> QueryProcessorInterface* qproc,</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;                <span class="keyword">const</span> std::string&amp; source);</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a81dc11bdf897937b4d299ea04c16a70b">scanNextProgram</a>(</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;                std::string&amp; segment,</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;                std::string::const_iterator&amp; itr,</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;                <span class="keyword">const</span> std::string::const_iterator&amp; end);</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespacestrus.html#a0ea3e50fb506574b87482fa4d9395130">loadGlobalStatistics</a>(</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;                StorageClientInterface&amp; storage,</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;                <span class="keyword">const</span> std::string&amp; file);</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespacestrus.html#aa07612ff516a0060b5553be16ab2189d">loadDocumentMetaDataAssignments</a>(</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;                StorageClientInterface&amp; storage,</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;                <span class="keyword">const</span> std::string&amp; metadataName,</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;                <span class="keyword">const</span> std::string&amp; file,</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;                <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> commitsize=0);</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespacestrus.html#ad97273a58853126ce38dc3b9b869dec3">loadDocumentAttributeAssignments</a>(</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;                StorageClientInterface&amp; storage,</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;                <span class="keyword">const</span> std::string&amp; attributeName,</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;                <span class="keyword">const</span> std::string&amp; file,</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;                <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> commitsize=0);</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="namespacestrus.html#ab15b8cc704d45d80d179f874a95d9efa">loadDocumentUserRightsAssignments</a>(</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;                StorageClientInterface&amp; storage,</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;                <span class="keyword">const</span> std::string&amp; file,</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;                <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> commitsize=0);</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;}<span class="comment">//namespace</span></div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="preprocessor"></span></div>
 <div class="ttc" id="namespacestrus_html_a49844064c435ebd8d6f63fbdbe7d86ba"><div class="ttname"><a href="namespacestrus.html#a49844064c435ebd8d6f63fbdbe7d86ba">strus::loadQuery</a></div><div class="ttdeci">void loadQuery(QueryInterface &amp;query, const QueryAnalyzerInterface *analyzer, const QueryProcessorInterface *qproc, const std::string &amp;source)</div><div class="ttdoc">Load a query from source (query language) </div></div>
+<div class="ttc" id="namespacestrus_html_a2911e27cec87fa7cfe3eef992844179b"><div class="ttname"><a href="namespacestrus.html#a2911e27cec87fa7cfe3eef992844179b">strus::isAnalyzerMapSource</a></div><div class="ttdeci">bool isAnalyzerMapSource(const std::string &amp;source)</div><div class="ttdoc">Determine if &#39;source&#39; is most likely a source describing an analyzer map. </div></div>
+<div class="ttc" id="structstrus_1_1AnalyzerMapElement_html"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html">strus::AnalyzerMapElement</a></div><div class="ttdoc">Description of one element of an analyzer map. </div><div class="ttdef"><b>Definition:</b> programLoader.hpp:90</div></div>
+<div class="ttc" id="structstrus_1_1AnalyzerMapElement_html_a8fedf559b8921f741ae066822fcc1a51"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html#a8fedf559b8921f741ae066822fcc1a51">strus::AnalyzerMapElement::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdef"><b>Definition:</b> programLoader.hpp:95</div></div>
+<div class="ttc" id="structstrus_1_1AnalyzerMapElement_html_a79671ebb863c804524055303f2beddfb"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb">strus::AnalyzerMapElement::prgFilename</a></div><div class="ttdeci">std::string prgFilename</div><div class="ttdoc">analyzer program to use </div><div class="ttdef"><b>Definition:</b> programLoader.hpp:100</div></div>
 <div class="ttc" id="namespacestrus_html_ad97273a58853126ce38dc3b9b869dec3"><div class="ttname"><a href="namespacestrus.html#ad97273a58853126ce38dc3b9b869dec3">strus::loadDocumentAttributeAssignments</a></div><div class="ttdeci">unsigned int loadDocumentAttributeAssignments(StorageClientInterface &amp;storage, const std::string &amp;attributeName, const std::string &amp;file, unsigned int commitsize=0)</div><div class="ttdoc">Load some attribute assignments for a storage from a stream. </div></div>
+<div class="ttc" id="structstrus_1_1AnalyzerMapElement_html_aab65387bb4385579dabc6c1b84d168ea"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea">strus::AnalyzerMapElement::scheme</a></div><div class="ttdeci">std::string scheme</div><div class="ttdoc">document class id type or list of element descriptions </div><div class="ttdef"><b>Definition:</b> programLoader.hpp:98</div></div>
 <div class="ttc" id="namespacestrus_html_ac388811dc7b9e30963512fb5d5d9991f"><div class="ttname"><a href="namespacestrus.html#ac388811dc7b9e30963512fb5d5d9991f">strus::loadDocumentAnalyzerProgram</a></div><div class="ttdeci">void loadDocumentAnalyzerProgram(DocumentAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;source)</div><div class="ttdoc">Load a document analyzer program from source. </div></div>
 <div class="ttc" id="namespacestrus_html_a179c609f8b8509055e58801a11c631b5"><div class="ttname"><a href="namespacestrus.html#a179c609f8b8509055e58801a11c631b5">strus::loadQueryEvalProgram</a></div><div class="ttdeci">void loadQueryEvalProgram(QueryEvalInterface &amp;qeval, const QueryProcessorInterface *qproc, const std::string &amp;source)</div><div class="ttdoc">Load a query evaluation program from source. </div></div>
+<div class="ttc" id="structstrus_1_1AnalyzerMapElement_html_aa30302aa77f75d72081424cb2fac80f6"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6">strus::AnalyzerMapElement::segmenter</a></div><div class="ttdeci">std::string segmenter</div><div class="ttdoc">segmenter to use </div><div class="ttdef"><b>Definition:</b> programLoader.hpp:99</div></div>
+<div class="ttc" id="structstrus_1_1AnalyzerMapElement_html_a37361cdd3b4beb857dd59095449d2f64"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html#a37361cdd3b4beb857dd59095449d2f64">strus::AnalyzerMapElement::AnalyzerMapElement</a></div><div class="ttdeci">AnalyzerMapElement()</div><div class="ttdef"><b>Definition:</b> programLoader.hpp:92</div></div>
 <div class="ttc" id="namespacestrus_html_a1d484d34983a957cd3ec0cce0e4dcc0e"><div class="ttname"><a href="namespacestrus.html#a1d484d34983a957cd3ec0cce0e4dcc0e">strus::loadQueryAnalyzerProgram</a></div><div class="ttdeci">void loadQueryAnalyzerProgram(QueryAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;source)</div><div class="ttdoc">Load a query analyzer program from source. </div></div>
 <div class="ttc" id="namespacestrus_html_ab15b8cc704d45d80d179f874a95d9efa"><div class="ttname"><a href="namespacestrus.html#ab15b8cc704d45d80d179f874a95d9efa">strus::loadDocumentUserRightsAssignments</a></div><div class="ttdeci">unsigned int loadDocumentUserRightsAssignments(StorageClientInterface &amp;storage, const std::string &amp;file, unsigned int commitsize=0)</div><div class="ttdoc">Load some user rights assignments for a storage from a stream. </div></div>
+<div class="ttc" id="namespacestrus_html_a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><div class="ttname"><a href="namespacestrus.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531">strus::loadAnalyzerMap</a></div><div class="ttdeci">void loadAnalyzerMap(std::vector&lt; AnalyzerMapElement &gt; &amp;mapdef, const std::string &amp;source)</div><div class="ttdoc">Load a map of definitions describing how different document types are mapped to an analyzer program...</div></div>
 <div class="ttc" id="namespacestrus_html_a81dc11bdf897937b4d299ea04c16a70b"><div class="ttname"><a href="namespacestrus.html#a81dc11bdf897937b4d299ea04c16a70b">strus::scanNextProgram</a></div><div class="ttdeci">bool scanNextProgram(std::string &amp;segment, std::string::const_iterator &amp;itr, const std::string::const_iterator &amp;end)</div><div class="ttdoc">Scan a source for the next program segment in a source that contains multiple programs. The programs are separated by &quot;\r\n.\r\n&quot; or &quot;\n.\n&quot;. No escaping of this sequence possible. </div></div>
 <div class="ttc" id="namespacestrus_html_a0ea3e50fb506574b87482fa4d9395130"><div class="ttname"><a href="namespacestrus.html#a0ea3e50fb506574b87482fa4d9395130">strus::loadGlobalStatistics</a></div><div class="ttdeci">void loadGlobalStatistics(StorageClientInterface &amp;storage, const std::string &amp;file)</div><div class="ttdoc">Load the global statistics for a storage from a stream. </div></div>
 <div class="ttc" id="namespacestrus_html_aa07612ff516a0060b5553be16ab2189d"><div class="ttname"><a href="namespacestrus.html#aa07612ff516a0060b5553be16ab2189d">strus::loadDocumentMetaDataAssignments</a></div><div class="ttdeci">unsigned int loadDocumentMetaDataAssignments(StorageClientInterface &amp;storage, const std::string &amp;metadataName, const std::string &amp;file, unsigned int commitsize=0)</div><div class="ttdoc">Load some meta data assignments for a storage from a stream. </div></div>
+<div class="ttc" id="structstrus_1_1AnalyzerMapElement_html_a6463b733d80472fa0d27ff0ec759d1f6"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html#a6463b733d80472fa0d27ff0ec759d1f6">strus::AnalyzerMapElement::AnalyzerMapElement</a></div><div class="ttdeci">AnalyzerMapElement(const AnalyzerMapElement &amp;o)</div><div class="ttdef"><b>Definition:</b> programLoader.hpp:93</div></div>
 <div class="ttc" id="namespacestrus_html_ac36ee5dd03da94f559e78fb5df6fc714"><div class="ttname"><a href="namespacestrus.html#ac36ee5dd03da94f559e78fb5df6fc714">strus::loadQueryAnalyzerPhraseType</a></div><div class="ttdeci">void loadQueryAnalyzerPhraseType(QueryAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;phrasetype, const std::string &amp;featuretype, const std::string &amp;normalizersrc, const std::string &amp;tokenizersrc)</div><div class="ttdoc">Load a phrase type definition from its source components. </div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 12 2015 22:32:56 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 25 2015 12:27:30 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

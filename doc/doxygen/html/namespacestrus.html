@@ -32,6 +32,7 @@
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li class="current"><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
     </ul>
   </div>
@@ -44,6 +45,7 @@
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">strus Namespace Reference</div>  </div>
@@ -53,6 +55,12 @@
 <p>strus toplevel namespace  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstrus_1_1AnalyzerMapElement.html">AnalyzerMapElement</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Description of one element of an analyzer map.  <a href="structstrus_1_1AnalyzerMapElement.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ac388811dc7b9e30963512fb5d5d9991f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#ac388811dc7b9e30963512fb5d5d9991f">loadDocumentAnalyzerProgram</a> (DocumentAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;source)</td></tr>
@@ -64,6 +72,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ac36ee5dd03da94f559e78fb5df6fc714"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#ac36ee5dd03da94f559e78fb5df6fc714">loadQueryAnalyzerPhraseType</a> (QueryAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;phrasetype, const std::string &amp;featuretype, const std::string &amp;normalizersrc, const std::string &amp;tokenizersrc)</td></tr>
 <tr class="memdesc:ac36ee5dd03da94f559e78fb5df6fc714"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a phrase type definition from its source components.  <a href="#ac36ee5dd03da94f559e78fb5df6fc714">More...</a><br/></td></tr>
 <tr class="separator:ac36ee5dd03da94f559e78fb5df6fc714"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2911e27cec87fa7cfe3eef992844179b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a2911e27cec87fa7cfe3eef992844179b">isAnalyzerMapSource</a> (const std::string &amp;source)</td></tr>
+<tr class="memdesc:a2911e27cec87fa7cfe3eef992844179b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if 'source' is most likely a source describing an analyzer map.  <a href="#a2911e27cec87fa7cfe3eef992844179b">More...</a><br/></td></tr>
+<tr class="separator:a2911e27cec87fa7cfe3eef992844179b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531">loadAnalyzerMap</a> (std::vector&lt; <a class="el" href="structstrus_1_1AnalyzerMapElement.html">AnalyzerMapElement</a> &gt; &amp;mapdef, const std::string &amp;source)</td></tr>
+<tr class="memdesc:a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a map of definitions describing how different document types are mapped to an analyzer program.  <a href="#a5ad9bbcebb5c5c6c0d8ee05a96e6b531">More...</a><br/></td></tr>
+<tr class="separator:a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a179c609f8b8509055e58801a11c631b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a179c609f8b8509055e58801a11c631b5">loadQueryEvalProgram</a> (QueryEvalInterface &amp;qeval, const QueryProcessorInterface *qproc, const std::string &amp;source)</td></tr>
 <tr class="memdesc:a179c609f8b8509055e58801a11c631b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a query evaluation program from source.  <a href="#a179c609f8b8509055e58801a11c631b5">More...</a><br/></td></tr>
 <tr class="separator:a179c609f8b8509055e58801a11c631b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -89,6 +103,66 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>strus toplevel namespace </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a2911e27cec87fa7cfe3eef992844179b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool strus::isAnalyzerMapSource </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>source</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Determine if 'source' is most likely a source describing an analyzer map. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>source candidate </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>true, if yes, false, else </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a5ad9bbcebb5c5c6c0d8ee05a96e6b531"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void strus::loadAnalyzerMap </td>
+          <td>(</td>
+          <td class="paramtype">std::vector&lt; AnalyzerMapElement &gt; &amp;&#160;</td>
+          <td class="paramname"><em>mapdef</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>source</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Load a map of definitions describing how different document types are mapped to an analyzer program. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">mapdef</td><td>list of definitions to instrument </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>source with definitions </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="ac388811dc7b9e30963512fb5d5d9991f"></a>
 <div class="memitem">
 <div class="memproto">
@@ -122,7 +196,7 @@ Functions</h2></td></tr>
 <p>Load a document analyzer program from source. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">analyzer</td><td>analyzer program to instatiate </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">analyzer</td><td>analyzer program to instatiate </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">textproc</td><td>provider for text processing functions </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>source string (not a file name!) to parse </td></tr>
   </table>
@@ -349,7 +423,7 @@ Functions</h2></td></tr>
 <p>Load a query from source (query language) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">query</td><td>query interface to instrument </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">query</td><td>query interface to instrument </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">analyzer</td><td>program for analyzing text segments in the query </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">qproc</td><td>query processor interface for info about objects loaded </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>source string (not a file name!) to parse </td></tr>
@@ -410,7 +484,7 @@ Functions</h2></td></tr>
 <p>Load a phrase type definition from its source components. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">analyzer</td><td>program for analyzing text segments in the query </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">analyzer</td><td>program for analyzing text segments in the query </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">textproc</td><td>provider for text processing functions </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">phrasetype</td><td>name of phrase type to define </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">featuretype</td><td>name of the feature type produced by the defined phrase type </td></tr>
@@ -455,7 +529,7 @@ Functions</h2></td></tr>
 <p>Load a query analyzer program from source. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">analyzer</td><td>analyzer program to instatiate </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">analyzer</td><td>analyzer program to instatiate </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">textproc</td><td>provider for text processing functions </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>source string (not a file name!) to parse </td></tr>
   </table>
@@ -497,7 +571,7 @@ Functions</h2></td></tr>
 <p>Load a query evaluation program from source. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">qeval</td><td>query evaluation interface to instrument </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">qeval</td><td>query evaluation interface to instrument </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">qproc</td><td>query processor interface for info about objects loaded </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">source</td><td>source string (not a file name!) to parse </td></tr>
   </table>
@@ -555,7 +629,7 @@ Functions</h2></td></tr>
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 12 2015 22:32:56 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 25 2015 12:27:30 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

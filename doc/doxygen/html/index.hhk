@@ -4,6 +4,18 @@
 <param name="FrameName" value="right">
 </OBJECT>
 <UL>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a37361cdd3b4beb857dd59095449d2f64"><param name="Name" value="AnalyzerMapElement"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a8fedf559b8921f741ae066822fcc1a51"><param name="Name" value="clear"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a2911e27cec87fa7cfe3eef992844179b"><param name="Name" value="isAnalyzerMapSource"></OBJECT>
+  <UL>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a2911e27cec87fa7cfe3eef992844179b"><param name="Name" value="programLoader.hpp"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a2911e27cec87fa7cfe3eef992844179b"><param name="Name" value="strus"></OBJECT>
+  </UL>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><param name="Name" value="loadAnalyzerMap"></OBJECT>
+  <UL>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><param name="Name" value="programLoader.hpp"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><param name="Name" value="strus"></OBJECT>
+  </UL>
   <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ac388811dc7b9e30963512fb5d5d9991f"><param name="Name" value="loadDocumentAnalyzerProgram"></OBJECT>
   <UL>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ac388811dc7b9e30963512fb5d5d9991f"><param name="Name" value="programLoader.hpp"></OBJECT>
@@ -49,8 +61,11 @@
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a179c609f8b8509055e58801a11c631b5"><param name="Name" value="programLoader.hpp"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a179c609f8b8509055e58801a11c631b5"><param name="Name" value="strus"></OBJECT>
   </UL>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb"><param name="Name" value="prgFilename"></OBJECT>
   <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html"><param name="Name" value="programLoader.hpp"></OBJECT>
   <UL>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#a2911e27cec87fa7cfe3eef992844179b"><param name="Name" value="isAnalyzerMapSource"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><param name="Name" value="loadAnalyzerMap"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#ac388811dc7b9e30963512fb5d5d9991f"><param name="Name" value="loadDocumentAnalyzerProgram"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#ad97273a58853126ce38dc3b9b869dec3"><param name="Name" value="loadDocumentAttributeAssignments"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#aa07612ff516a0060b5553be16ab2189d"><param name="Name" value="loadDocumentMetaDataAssignments"></OBJECT>
@@ -67,8 +82,21 @@
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a81dc11bdf897937b4d299ea04c16a70b"><param name="Name" value="programLoader.hpp"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a81dc11bdf897937b4d299ea04c16a70b"><param name="Name" value="strus"></OBJECT>
   </UL>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea"><param name="Name" value="scheme"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6"><param name="Name" value="segmenter"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html"><param name="Name" value="strus"></OBJECT>
+  <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html"><param name="Name" value="strus::AnalyzerMapElement"></OBJECT>
+  <UL>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a37361cdd3b4beb857dd59095449d2f64"><param name="Name" value="AnalyzerMapElement"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a8fedf559b8921f741ae066822fcc1a51"><param name="Name" value="clear"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb"><param name="Name" value="prgFilename"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea"><param name="Name" value="scheme"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6"><param name="Name" value="segmenter"></OBJECT>
+  </UL>
   <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html"><param name="Name" value="strus"></OBJECT>
   <UL>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a2911e27cec87fa7cfe3eef992844179b"><param name="Name" value="isAnalyzerMapSource"></OBJECT>
+    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><param name="Name" value="loadAnalyzerMap"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ac388811dc7b9e30963512fb5d5d9991f"><param name="Name" value="loadDocumentAnalyzerProgram"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ad97273a58853126ce38dc3b9b869dec3"><param name="Name" value="loadDocumentAttributeAssignments"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#aa07612ff516a0060b5553be16ab2189d"><param name="Name" value="loadDocumentMetaDataAssignments"></OBJECT>

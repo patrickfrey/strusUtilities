@@ -32,6 +32,7 @@
     <ul class="tablist">
       <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="namespaces.html"><span>Namespaces</span></a></li>
+      <li><a href="annotated.html"><span>Classes</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
     </ul>
   </div>
@@ -47,6 +48,7 @@
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
@@ -61,6 +63,12 @@
 </div>
 <p><a href="programLoader_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstrus_1_1AnalyzerMapElement.html">strus::AnalyzerMapElement</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Description of one element of an analyzer map.  <a href="structstrus_1_1AnalyzerMapElement.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespacestrus"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html">strus</a></td></tr>
@@ -78,6 +86,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ac36ee5dd03da94f559e78fb5df6fc714"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#ac36ee5dd03da94f559e78fb5df6fc714">strus::loadQueryAnalyzerPhraseType</a> (QueryAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;phrasetype, const std::string &amp;featuretype, const std::string &amp;normalizersrc, const std::string &amp;tokenizersrc)</td></tr>
 <tr class="memdesc:ac36ee5dd03da94f559e78fb5df6fc714"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a phrase type definition from its source components.  <a href="#ac36ee5dd03da94f559e78fb5df6fc714">More...</a><br/></td></tr>
 <tr class="separator:ac36ee5dd03da94f559e78fb5df6fc714"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2911e27cec87fa7cfe3eef992844179b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a2911e27cec87fa7cfe3eef992844179b">strus::isAnalyzerMapSource</a> (const std::string &amp;source)</td></tr>
+<tr class="memdesc:a2911e27cec87fa7cfe3eef992844179b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if 'source' is most likely a source describing an analyzer map.  <a href="#a2911e27cec87fa7cfe3eef992844179b">More...</a><br/></td></tr>
+<tr class="separator:a2911e27cec87fa7cfe3eef992844179b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a5ad9bbcebb5c5c6c0d8ee05a96e6b531">strus::loadAnalyzerMap</a> (std::vector&lt; AnalyzerMapElement &gt; &amp;mapdef, const std::string &amp;source)</td></tr>
+<tr class="memdesc:a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a map of definitions describing how different document types are mapped to an analyzer program.  <a href="#a5ad9bbcebb5c5c6c0d8ee05a96e6b531">More...</a><br/></td></tr>
+<tr class="separator:a5ad9bbcebb5c5c6c0d8ee05a96e6b531"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a179c609f8b8509055e58801a11c631b5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a179c609f8b8509055e58801a11c631b5">strus::loadQueryEvalProgram</a> (QueryEvalInterface &amp;qeval, const QueryProcessorInterface *qproc, const std::string &amp;source)</td></tr>
 <tr class="memdesc:a179c609f8b8509055e58801a11c631b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a query evaluation program from source.  <a href="#a179c609f8b8509055e58801a11c631b5">More...</a><br/></td></tr>
 <tr class="separator:a179c609f8b8509055e58801a11c631b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -106,7 +120,7 @@ Functions</h2></td></tr>
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 12 2015 22:32:56 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 25 2015 12:27:30 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
