@@ -32,11 +32,14 @@
 #include <vector>
 #include <string>
 #include "private/utils.hpp"
+#include "analyzerMap.hpp"
 
 namespace strus {
 
 /// \brief Forward declaration
 class DocumentAnalyzerInterface;
+/// \brief Forward declaration
+class TextProcessorInterface;
 /// \brief Forward declaration
 class FileCrawlerInterface;
 
@@ -78,7 +81,8 @@ class KeyMapGenProcessor
 {
 public:
 	KeyMapGenProcessor(
-			DocumentAnalyzerInterface* analyzer_,
+			const TextProcessorInterface* textproc_,
+			const AnalyzerMap& analyzerMap_,
 			KeyMapGenResultList* que_,
 			FileCrawlerInterface* crawler_);
 
@@ -88,7 +92,8 @@ public:
 	void run();
 
 private:
-	DocumentAnalyzerInterface* m_analyzer;
+	const TextProcessorInterface* m_textproc;
+	AnalyzerMap m_analyzerMap;
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
 	utils::AtomicBool m_terminated;

@@ -78,7 +78,7 @@ void CommitQueue::handleWaitingTransactions()
 		transaction->commit();
 		Index totalNofDocuments = m_storage->localNofDocumentsInserted();
 		Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
-		::printf( "\rinserted %u documents (total %u), %u transactions open    ",
+		::printf( "\rinserted %u documents (total %u), %u transactions open     ",
 				nofDocsInserted, totalNofDocuments, nofOpenTransactions);
 		::fflush(stdout);
 	}

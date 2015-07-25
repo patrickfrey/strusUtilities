@@ -59,10 +59,18 @@ public:
 	/// \return pointer to the line read
 	const char* readline( char* buf, std::size_t bufsize);
 
+	/// \brief Read some data and keep it in a buffer for the next read
+	/// \param[in,out] buf where to write to
+	/// \param[in] bufsize allocation size of 'buf' (capacity) 
+	/// \return the number of bytes read
+	std::size_t readAhead( char* buf, std::size_t bufsize);
+
 private:
 	FILE* m_fh;
 	std::string m_docpath;
 	std::ifstream m_stream;
+	std::string m_buffer;
+	std::size_t m_bufferidx;
 };
 
 }

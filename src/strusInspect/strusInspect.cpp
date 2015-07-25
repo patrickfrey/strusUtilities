@@ -211,6 +211,12 @@ static void inspectNofDocuments( const strus::StorageClientInterface& storage, c
 	std::cout << storage.localNofDocumentsInserted() << std::endl;
 }
 
+static void inspectMaxDocumentNumber( const strus::StorageClientInterface& storage, const char**, int size)
+{
+	if (size > 0) throw std::runtime_error( "too many arguments");
+	std::cout << storage.maxDocumentNumber() << std::endl;
+}
+
 static void inspectDocAttribute( const strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw std::runtime_error( "too many arguments");
@@ -502,6 +508,8 @@ int main( int argc, const char* argv[])
 			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
 			std::cout << "            \"nofdocs\"" << std::endl;
 			std::cout << "               = Get the local number of documents in the storage" << std::endl;
+			std::cout << "            \"maxdocno\"" << std::endl;
+			std::cout << "               = Get the maximum document number allocated in the local storage" << std::endl;
 			std::cout << "            \"metadata\" <name> [<doc-id/no>]" << std::endl;
 			std::cout << "               = Get the value of a meta data element" << std::endl;
 			std::cout << "                 If doc is not specified then dump value for all docs." << std::endl;
@@ -596,6 +604,10 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "nofdocs"))
 		{
 			inspectNofDocuments( *storage, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "maxdocno"))
+		{
+			inspectMaxDocumentNumber( *storage, inpectarg, inpectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "metadata"))
 		{

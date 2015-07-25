@@ -29,12 +29,15 @@
 #ifndef _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
 #define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
 #include "private/utils.hpp"
+#include "analyzerMap.hpp"
 #include <string>
 
 namespace strus {
 
 /// \brief Forward declaration
 class StorageClientInterface;
+/// \brief Forward declaration
+class TextProcessorInterface;
 /// \brief Forward declaration
 class DocumentAnalyzerInterface;
 /// \brief Forward declaration
@@ -45,7 +48,8 @@ class CheckInsertProcessor
 public:
 	CheckInsertProcessor(
 			StorageClientInterface* storage_,
-			DocumentAnalyzerInterface* analyzer_,
+			const TextProcessorInterface* textproc_,
+			const AnalyzerMap& analyzerMap_,
 			FileCrawlerInterface* crawler_,
 			const std::string& logfile_);
 
@@ -56,7 +60,8 @@ public:
 
 private:
 	StorageClientInterface* m_storage;
-	DocumentAnalyzerInterface* m_analyzer;
+	const TextProcessorInterface* m_textproc;
+	AnalyzerMap m_analyzerMap;
 	FileCrawlerInterface* m_crawler;
 	utils::AtomicBool m_terminated;
 	std::string m_logfile;

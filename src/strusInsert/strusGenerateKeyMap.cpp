@@ -58,9 +58,9 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 9,
+				argc_, argv_, 10,
 				"h,help", "t,threads:", "u,unit:",
-				"n,results:", "v,version", "m,module:",
+				"n,results:", "v,version", "m,module:", "x,extension:",
 				"s,segmenter:", "M,moduledir:", "R,resourcedir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
@@ -108,7 +108,7 @@ int main( int argc_, const char* argv_[])
 		if (printUsageAndExit)
 		{
 			std::cout << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
-			std::cout << "<program> = path of analyzer program" << std::endl;
+			std::cout << "<program> = path of analyzer program  or analyzer map program" << std::endl;
 			std::cout << "<docpath> = path of document or directory to insert" << std::endl;
 			std::cout << "description: Dumps a list of terms as result of document" << std::endl;
 			std::cout << "    anaylsis of a file or directory. The dump can be loaded by" << std::endl;
@@ -126,6 +126,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
 			std::cout << "-s|--segmenter <NAME>" << std::endl;
 			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "-x|--extension <EXT>" << std::endl;
+			std::cout << "    Grab only the files with extension <EXT> (default all files)" << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
 			std::cout << "    Set <N> as number of threads to use"  << std::endl;
 			std::cout << "-u|--unit <N>" << std::endl;
@@ -143,14 +145,22 @@ int main( int argc_, const char* argv_[])
 			unitSize = opt.asUint( "unit");
 		}
 		unsigned int nofResults = opt.asUint( "results");
+		std::string fileext = "";
 		std::string segmenter;
 		if (opt( "segmenter"))
 		{
 			segmenter = opt[ "segmenter"];
 		}
+		if (opt( "extension"))
+		{
+			fileext = opt[ "extension"];
+			if (fileext.size() && fileext[0] != '.')
+			{
+				fileext = std::string(".") + fileext;
+			}
+		}
 		std::string analyzerprg = opt[0];
 		std::string datapath = opt[1];
-
 
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
@@ -167,27 +177,19 @@ int main( int argc_, const char* argv_[])
 
 		// Create objects for keymap generation:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			builder( moduleLoader->createAnalyzerObjectBuilder());
+			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
-			analyzer( builder->createDocumentAnalyzer( segmenter));
+			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 
-		// [2] Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program '" << analyzerprg << "' (file system error " << ec << ")" << std::endl;
-			return 4;
-		}
-		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
-		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
+		// [2] Load analyzer program(s):
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
+		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
 
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
-				datapath, unitSize, nofThreads*5+5);
+				datapath, unitSize, nofThreads*5+5, fileext);
 
 		// [3] Start threads:
 		std::auto_ptr< strus::Thread< strus::FileCrawler> >
@@ -200,7 +202,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
-				analyzer.get(), &resultList, fileCrawler);
+				textproc, analyzerMap, &resultList, fileCrawler);
 			processor.run();
 		}
 		else
@@ -212,7 +214,7 @@ int main( int argc_, const char* argv_[])
 			{
 				processors->start(
 					new strus::KeyMapGenProcessor(
-						analyzer.get(), &resultList, fileCrawler));
+						textproc, analyzerMap, &resultList, fileCrawler));
 			}
 			processors->wait_termination();
 		}

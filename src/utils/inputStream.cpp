@@ -28,11 +28,12 @@
 */
 #include "private/inputStream.hpp"
 #include <stdexcept>
+#include <cstring>
 
 using namespace strus;
 
 InputStream::InputStream( const std::string& docpath)
-	:m_docpath(docpath)
+	:m_fh(0),m_docpath(docpath),m_bufferidx(0)
 {
 	if (docpath == "-")
 	{
@@ -60,17 +61,42 @@ InputStream::~InputStream()
 
 std::size_t InputStream::read( char* buf, std::size_t bufsize)
 {
-	std::size_t  rt = ::fread( buf, 1, bufsize, m_fh);
+	unsigned int idx = 0;
+	if (m_bufferidx < m_buffer.size())
+	{
+		std::size_t nn = m_buffer.size() - m_bufferidx;
+		if (nn > bufsize) nn = bufsize;
+		std::memcpy( buf, m_buffer.c_str()+m_bufferidx, nn);
+		m_bufferidx += nn;
+		if (m_bufferidx == m_buffer.size())
+		{
+			m_buffer.clear();
+		}
+		idx = nn;
+	}
+	std::size_t rt = ::fread( buf + idx, 1, bufsize - idx, m_fh) + idx;
 	if (!rt)
 	{
 		if (!feof( m_fh))
 		{
 			unsigned int ec = ::ferror( m_fh);
-			char buf[ 256];
-			snprintf( buf, sizeof(buf), "failed to read from file %s (errno %d)", m_docpath.c_str(), ec);
-			throw std::runtime_error( buf);
+			char errbuf[ 256];
+			snprintf( errbuf, sizeof( errbuf), "failed to read from file %s (errno %d)", m_docpath.c_str(), ec);
+			throw std::runtime_error( errbuf);
 		}
 	}
+	return rt;
+}
+
+std::size_t InputStream::readAhead( char* buf, std::size_t bufsize)
+{
+	std::size_t rt = read( buf, bufsize);
+	if (m_bufferidx != m_buffer.size())
+	{
+		throw std::runtime_error( "subsequent calls of readAhead not allowed");
+	}
+	m_buffer.clear();
+	m_buffer.append( buf, rt);
 	return rt;
 }
 

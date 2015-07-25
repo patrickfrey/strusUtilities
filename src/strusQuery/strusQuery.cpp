@@ -314,7 +314,7 @@ int main( int argc_, const char* argv_[])
 		}
 
 		unsigned int nofQueries = 0;
-		double startTime;
+		double startTime = 0.0;
 		if (measureDuration)
 		{
 			startTime = getTimeStamp();
@@ -333,10 +333,9 @@ int main( int argc_, const char* argv_[])
 			query->setMinRank( firstRank);
 			if (!username.empty())
 			{
-				query->setUserName( username);
+				query->addUserName( username);
 			}
-			std::vector<strus::ResultDocument>
-				ranklist = query->evaluate();
+			std::vector<strus::ResultDocument> ranklist = query->evaluate();
 	
 			if (!silent) std::cout << "ranked list (starting with rank " << firstRank << ", maximum " << nofRanks << " results):" << std::endl;
 			std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();

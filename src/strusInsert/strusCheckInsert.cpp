@@ -86,10 +86,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 11,
+				argc_, argv_, 12,
 				"h,help", "t,threads:", "l,logfile:",
 				"n,notify:", "v,version", "R,resourcedir:",
-				"M,moduledir:", "m,module:",
+				"M,moduledir:", "m,module:", "x,extension:",
 				"r,rpc:", "g,segmenter:", "s,storage:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
@@ -139,7 +139,7 @@ int main( int argc_, const char* argv_[])
 		if (printUsageAndExit)
 		{
 			std::cout << "usage: strusCheckInsert [options] <program> <docpath>" << std::endl;
-			std::cout << "<program> = path of analyzer program" << std::endl;
+			std::cout << "<program> = path of analyzer program or analyzer map program" << std::endl;
 			std::cout << "<docpath> = path of document or directory to check" << std::endl;
 			std::cout << "description: Checks if a storage contains all data of a document set." << std::endl;
 			std::cout << "options:" << std::endl;
@@ -164,6 +164,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "-x|--extension <EXT>" << std::endl;
+			std::cout << "    Grab only the files with extension <EXT> (default all files)" << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
 			std::cout << "    Set <N> as number of inserter threads to use"  << std::endl;
 			std::cout << "-l|--logfile <FILE>" << std::endl;
@@ -191,12 +193,20 @@ int main( int argc_, const char* argv_[])
 		}
 		std::string analyzerprg = opt[0];
 		std::string datapath = opt[1];
+		std::string fileext;
 		std::string segmenter;
 		if (opt( "segmenter"))
 		{
 			segmenter = opt[ "segmenter"];
 		}
-
+		if (opt( "extension"))
+		{
+			fileext = opt[ "extension"];
+			if (fileext.size() && fileext[0] != '.')
+			{
+				fileext = std::string(".") + fileext;
+			}
+		}
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -234,22 +244,15 @@ int main( int argc_, const char* argv_[])
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
 
-		// Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program '" << analyzerprg << "' (file system error " << ec << ")" << std::endl;
-			return 4;
-		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 
+		// Load analyzer program(s):
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
+		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
+		
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(
-				datapath, notificationInterval, nofThreads*5+5);
+				datapath, notificationInterval, nofThreads*5+5, fileext);
 
 		std::auto_ptr< strus::Thread< strus::FileCrawler> >
 			fileCrawlerThread(
@@ -260,7 +263,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::CheckInsertProcessor checker(
-				storage.get(), analyzer.get(), fileCrawler, logfile);
+				storage.get(), textproc, analyzerMap, fileCrawler, logfile);
 			checker.run();
 		}
 		else
@@ -274,7 +277,7 @@ int main( int argc_, const char* argv_[])
 			{
 				checkInsertThreads->start(
 					new strus::CheckInsertProcessor(
-						storage.get(), analyzer.get(),
+						storage.get(), textproc, analyzerMap,
 						fileCrawler, logfile));
 			}
 			checkInsertThreads->wait_termination();

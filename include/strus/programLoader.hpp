@@ -53,7 +53,7 @@ class StorageClientInterface;
 
 
 /// \brief Load a document analyzer program from source
-/// \param[in] analyzer analyzer program to instatiate
+/// \param[in,out] analyzer analyzer program to instatiate
 /// \param[in] textproc provider for text processing functions
 /// \param[in] source source string (not a file name!) to parse
 /// \note The grammar of the analyzer program source is defined <a href="http://www.project-strus.net/grammar_analyerprg.htm">here</a>.
@@ -63,7 +63,7 @@ void loadDocumentAnalyzerProgram(
 		const std::string& source);
 
 /// \brief Load a query analyzer program from source
-/// \param[in] analyzer analyzer program to instatiate
+/// \param[in,out] analyzer analyzer program to instatiate
 /// \param[in] textproc provider for text processing functions
 /// \param[in] source source string (not a file name!) to parse
 void loadQueryAnalyzerProgram(
@@ -72,7 +72,7 @@ void loadQueryAnalyzerProgram(
 		const std::string& source);
 
 /// \brief Load a phrase type definition from its source components
-/// \param[in] analyzer program for analyzing text segments in the query
+/// \param[in,out] analyzer program for analyzing text segments in the query
 /// \param[in] textproc provider for text processing functions
 /// \param[in] phrasetype name of phrase type to define
 /// \param[in] featuretype name of the feature type produced by the defined phrase type
@@ -86,8 +86,34 @@ void loadQueryAnalyzerPhraseType(
 		const std::string& normalizersrc,
 		const std::string& tokenizersrc);
 
+/// \brief Description of one element of an analyzer map
+struct AnalyzerMapElement
+{
+	AnalyzerMapElement(){}
+	AnalyzerMapElement( const AnalyzerMapElement& o)
+		:scheme(o.scheme),segmenter(o.segmenter),prgFilename(o.prgFilename){}
+	void clear()
+		{scheme.clear(); segmenter.clear(); prgFilename.clear();}
+
+	std::string scheme;		///< document class id type or list of element descriptions
+	std::string segmenter;		///< segmenter to use
+	std::string prgFilename;	///< analyzer program to use
+};
+
+/// \brief Determine if 'source' is most likely a source describing an analyzer map
+/// \param[in] source source candidate
+/// \return true, if yes, false, else
+bool isAnalyzerMapSource( const std::string& source);
+
+/// \brief Load a map of definitions describing how different document types are mapped to an analyzer program
+/// \param[in] mapdef list of definitions to instrument
+/// \param[in] source source with definitions
+void loadAnalyzerMap(
+		std::vector<AnalyzerMapElement>& mapdef,
+		const std::string& source);
+
 /// \brief Load a query evaluation program from source
-/// \param[in] qeval query evaluation interface to instrument
+/// \param[in,out] qeval query evaluation interface to instrument
 /// \param[in] qproc query processor interface for info about objects loaded
 /// \param[in] source source string (not a file name!) to parse
 void loadQueryEvalProgram(
@@ -96,7 +122,7 @@ void loadQueryEvalProgram(
 		const std::string& source);
 
 /// \brief Load a query from source (query language)
-/// \param[in] query query interface to instrument
+/// \param[in,out] query query interface to instrument
 /// \param[in] analyzer program for analyzing text segments in the query
 /// \param[in] qproc query processor interface for info about objects loaded
 /// \param[in] source source string (not a file name!) to parse

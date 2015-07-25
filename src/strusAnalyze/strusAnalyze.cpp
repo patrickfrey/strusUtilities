@@ -38,6 +38,7 @@
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/documentClass.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "private/inputStream.hpp"
@@ -177,11 +178,20 @@ int main( int argc, const char* argv[])
 		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
 		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 
-		// Load the document:
+		// Load the document and get its properties:
 		strus::InputStream input( docpath);
+		char hdrbuf[ 1024];
+		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+		strus::DocumentClass dclass;
+		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+		{
+			std::cerr << "ERROR failed to detect document class"; 
+			return 5;
+		}
 		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
-			analyzerContext( analyzer->createContext());
+			analyzerContext( analyzer->createContext( dclass));
 
+		// Process the document:
 		enum {AnalyzerBufSize=8192};
 		char buf[ AnalyzerBufSize];
 		bool eof = false;

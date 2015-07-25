@@ -27,8 +27,10 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/documentClass.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
+#include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/segmenterContextInterface.hpp"
 #include "strus/programLoader.hpp"
@@ -160,6 +162,7 @@ int main( int argc, const char* argv[])
 			builder( moduleLoader->createAnalyzerObjectBuilder());
 		std::auto_ptr<strus::SegmenterInterface>
 			segmenter( builder->createSegmenter( segmenterName));
+		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
 
 		// Load expressions:
 		if (opt("expression"))
@@ -176,11 +179,20 @@ int main( int argc, const char* argv[])
 			segmenter->defineSelectorExpression( 0, "//()");
 		}
 
-		// Load the document:
+		// Load the document and get its properties:
 		strus::InputStream input( docpath);
+		char hdrbuf[ 1024];
+		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+		strus::DocumentClass dclass;
+		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+		{
+			std::cerr << "ERROR failed to detect document class"; 
+			return 5;
+		}
 		std::auto_ptr<strus::SegmenterContextInterface>
-			segmenterContext( segmenter->createContext());
+			segmenterContext( segmenter->createContext( dclass));
 
+		// Process the document:
 		enum {SegmenterBufSize=8192};
 		char buf[ SegmenterBufSize];
 		bool eof = false;

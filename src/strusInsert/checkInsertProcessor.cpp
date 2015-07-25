@@ -31,6 +31,7 @@
 #include "strus/index.hpp"
 #include "strus/arithmeticVariant.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
+#include "strus/documentClass.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
@@ -43,6 +44,8 @@
 #include "private/utils.hpp"
 #include "private/inputStream.hpp"
 #include "fileCrawlerInterface.hpp"
+#include <cmath>
+#include <limits>
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/interprocess/smart_ptr/unique_ptr.hpp>
@@ -51,12 +54,14 @@ using namespace strus;
 
 CheckInsertProcessor::CheckInsertProcessor(
 		StorageClientInterface* storage_,
-		DocumentAnalyzerInterface* analyzer_,
+		const TextProcessorInterface* textproc_,
+		const AnalyzerMap& analyzerMap_,
 		FileCrawlerInterface* crawler_,
 		const std::string& logfile_)
 
 	:m_storage(storage_)
-	,m_analyzer(analyzer_)
+	,m_textproc(textproc_)
+	,m_analyzerMap(analyzerMap_)
 	,m_crawler(crawler_)
 	,m_terminated(false)
 	,m_logfile(logfile_)
@@ -107,11 +112,26 @@ void CheckInsertProcessor::run()
 		{
 			try
 			{
-				// Read the input file to analyze:
+				// Read the input file to analyze and detect its document type:
 				strus::InputStream input( *fitr);
+				char hdrbuf[ 1024];
+				std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+				strus::DocumentClass dclass;
+				if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+				{
+					std::cerr << "failed to detect document class of file '" << *fitr << "'" << std::endl; 
+					continue;
+				}
+				strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
+				if (!analyzer)
+				{
+					std::cerr << "no analyzer defined for document class with MIME type '" << dclass.mimeType() << "' scheme '" << dclass.scheme() << "'" << std::endl; 
+					continue;
+				}
 				std::auto_ptr<strus::DocumentAnalyzerContextInterface>
-					analyzerContext( m_analyzer->createContext());
+					analyzerContext( analyzer->createContext( dclass));
 
+				// Analyze the document (with subdocuments) and check it:
 				enum {AnalyzerBufSize=8192};
 				char buf[ AnalyzerBufSize];
 				bool eof = false;
@@ -229,9 +249,24 @@ void CheckInsertProcessor::run()
 							mi = doc.metadata().begin(), me = doc.metadata().end();
 						for (; mi != me; ++mi)
 						{
-							strus::ArithmeticVariant value(
-								strus::arithmeticVariantFromString( mi->value()));
-							storagedoc->setMetaData( mi->name(), value);
+							double val = mi->value();
+							if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
+							{
+								if (val < 0.0)
+								{
+									strus::ArithmeticVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+									storagedoc->setMetaData( mi->name(), av);
+								}
+								else
+								{
+									strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+									storagedoc->setMetaData( mi->name(), av);
+								}
+							}
+							else
+							{
+								storagedoc->setMetaData( mi->name(), (float) val);
+							}
 						}
 	
 						// Issue warning for documents cut because they are too big to insert:

@@ -26,19 +26,46 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_UTILITIES_VERSION_HPP_INCLUDED
-#define _STRUS_UTILITIES_VERSION_HPP_INCLUDED
+#ifndef _STRUS_ANALYZER_MAP_HPP_INCLUDED
+#define _STRUS_ANALYZER_MAP_HPP_INCLUDED
+#include "strus/documentClass.hpp"
+#include "strus/documentAnalyzerInterface.hpp"
+#include "private/utils.hpp"
+#include <string>
 
-namespace strus
+namespace strus {
+
+/// \brief Forward declaration
+class DocumentClass;
+/// \brief Forward declaration
+class AnalyzerObjectBuilderInterface;
+
+class AnalyzerMap
 {
+public:
+	explicit AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_)
+		:m_builder(builder_){}
+	AnalyzerMap( const AnalyzerMap& o)
+		:m_map(o.m_map),m_builder(o.m_builder){}
 
-#define STRUS_UTILITIES_VERSION (\
-	0 * 1000000\
-	+ 1 * 10000\
-	+ 4\
-)
+	void defineProgram(
+			const std::string& scheme,
+			const std::string& segmenter,
+			const std::string& prgfile);
 
-#define STRUS_UTILITIES_VERSION_STRING "0.1.4"
+	DocumentAnalyzerInterface* get( const DocumentClass& dclass) const;
+
+private:
+	void defineAnalyzerProgramSource(
+			const std::string& scheme,
+			const std::string& segmenter,
+			const std::string& analyzerProgramSource);
+
+	typedef std::map<std::string,utils::SharedPtr<DocumentAnalyzerInterface> > Map;
+	Map m_map;
+	const strus::AnalyzerObjectBuilderInterface* m_builder;
+};
 
 }//namespace
 #endif
+

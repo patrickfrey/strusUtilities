@@ -37,6 +37,7 @@
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "private/utils.hpp"
+#include "strus/private/fileio.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include <iostream>
@@ -54,10 +55,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient));
+					strus::DatabaseInterface::CmdCreate));
 	strus::printIndentMultilineString(
 				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient));
+					strus::StorageInterface::CmdCreate));
 }
 
 
@@ -69,8 +70,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 4,
-				"h,help", "v,version", "m,module:", "M,moduledir:");
+				argc, argv, 6,
+				"h,help", "v,version", "m,module:", "M,moduledir:",
+				"s,storage:", "S,configfile:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -85,12 +87,6 @@ int main( int argc, const char* argv[])
 				std::cerr << "ERROR too many arguments" << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
-			}
-			if (opt.nofargs() < 1)
-			{
-				std::cerr << "ERROR too few arguments" << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
@@ -113,13 +109,50 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
-
+		std::string databasecfg;
+		int nof_databasecfg = 0;
+		if (opt("configfile"))
+		{
+			nof_databasecfg += 1;
+			int ec = strus::readFile( opt[ "configfile"], databasecfg);
+			if (ec)
+			{
+				std::cerr << "ERROR failed to read configuration file " << opt[ "configfile"] << " (file system error " << ec << ")" << std::endl;
+				rt = 2;
+				printUsageAndExit = true;
+			}
+			std::string::iterator di = databasecfg.begin(), de = databasecfg.end();
+			for (; di != de; ++di)
+			{
+				if ((unsigned char)*di < 32) *di = ' ';
+			}
+		}
+		if (opt("storage"))
+		{
+			nof_databasecfg += 1;
+			databasecfg = opt[ "storage"];
+		}
+		if (opt.nofargs() == 1)
+		{
+			std::cerr << "WARNING passing storage as first parameter instead of option -s (deprecated)" << std::endl;
+			nof_databasecfg += 1;
+			databasecfg = opt[0];
+		}
+		if (nof_databasecfg > 1)
+		{
+			std::cerr << "ERROR conflicting configuration options specified: --storage and --configfile" << std::endl;
+			rt = 10003;
+			printUsageAndExit = true;
+		}
+		else if (!printUsageAndExit && nof_databasecfg == 0)
+		{
+			std::cerr << "ERROR missing configuration option: --storage or --configfile has to be defined" << std::endl;
+			rt = 10004;
+			printUsageAndExit = true;
+		}
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusCreate [options] <config>" << std::endl;
-			std::cout << "<config>  = storage configuration string" << std::endl;
-			std::cout << "            semicolon ';' separated list of assignments:" << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
+			std::cout << "usage: strusCreate [options]" << std::endl;
 			std::cout << "description: Creates a storage with its key value store database." << std::endl;
 			std::cout << "options:" << std::endl;
 			std::cout << "-h|--help" << std::endl;
@@ -130,14 +163,20 @@ int main( int argc, const char* argv[])
 			std::cout << "    Load components from module <MOD>" << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "-s|--storage <CONFIG>" << std::endl;
+			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg);
+			std::cout << "-S|--configfile <FILENAME>" << std::endl;
+			std::cout << "    Define the storage configuration file as <FILENAME>" << std::endl;
+			std::cout << "    <FILENAME> is a file containing the configuration string" << std::endl;
 			return rt;
 		}
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
 			builder( moduleLoader->createStorageObjectBuilder());
-		const strus::DatabaseInterface* dbi = builder->getDatabase( (opt.nofargs()>=1?opt[0]:""));
+		const strus::DatabaseInterface* dbi = builder->getDatabase( databasecfg);
 		const strus::StorageInterface* sti = builder->getStorage();
 
-		std::string databasecfg( opt[0]);
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, databasecfg, "database");
 		std::string storagecfg( databasecfg);
@@ -160,6 +199,7 @@ int main( int argc, const char* argv[])
 			database( dbi->createClient( databasecfg));
 
 		sti->createStorage( storagecfg, database.get());
+		std::cerr << "storage successfully created." << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{

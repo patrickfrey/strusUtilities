@@ -40,6 +40,8 @@
 #include "strus/normalizerFunctionInstanceInterface.hpp"
 #include "strus/tokenizerFunctionInterface.hpp"
 #include "strus/tokenizerFunctionInstanceInterface.hpp"
+#include "strus/aggregatorFunctionInterface.hpp"
+#include "strus/aggregatorFunctionInstanceInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryEvalInterface.hpp"
@@ -437,7 +439,8 @@ enum FeatureClass
 	FeatForwardIndexTerm,
 	FeatMetaData,
 	FeatAttribute,
-	FeatSubDocument
+	FeatSubDocument,
+	FeatAggregator
 };
 
 static FeatureClass featureClassFromName( const std::string& name)
@@ -462,7 +465,11 @@ static FeatureClass featureClassFromName( const std::string& name)
 	{
 		return FeatSubDocument;
 	}
-	throw std::runtime_error( std::string( "illegal feature class name '") + name + " (expected one of {SearchIndex, ForwardIndex, MetaData, Attribute})");
+	if (isEqual( name, "Aggregator"))
+	{
+		return FeatAggregator;
+	}
+	throw std::runtime_error( std::string( "illegal feature class name '") + name + " (expected one of {SearchIndex, ForwardIndex, MetaData, Attribute, Document, Aggregator})");
 }
 
 static std::vector<std::string> parseArgumentList( char const*& src)
@@ -595,6 +602,14 @@ static FunctionConfig parseTokenizerConfig( char const*& src)
 	return FunctionConfig( name, arg);
 }
 
+static FunctionConfig parseAggregatorFunctionConfig( char const*& src)
+{
+	std::string name;
+	std::vector<std::string> arg;
+	parseFunctionDef( "aggregator function", name, arg, src);
+	return FunctionConfig( name, arg);
+}
+
 
 static DocumentAnalyzerInterface::FeatureOptions
 	parseFeatureOptions( char const*& src)
@@ -658,40 +673,17 @@ static DocumentAnalyzerInterface::FeatureOptions
 	return rt;
 }
 
-static void parseFeatureDef(
-	DocumentAnalyzerInterface& analyzer,
-	const TextProcessorInterface* textproc,
-	const std::string& featurename,
-	char const*& src,
-	FeatureClass featureClass)
+static std::string parseSelectorExpression( char const*& src)
 {
-	std::string xpathexpr;
-	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
-	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
-	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
-	
-	if (featureClass != FeatSubDocument)
-	{
-		std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
-		std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
-		for (; ni != ne; ++ni)
-		{
-			const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
-			normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
-			normalizer.push_back( normalizer_ref.back().get());
-		}
-		FunctionConfig tokenizercfg = parseTokenizerConfig( src);
-		const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
-		tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
-	}
 	if (isStringQuote(*src))
 	{
-		xpathexpr = parse_STRING( src);
+		return parse_STRING( src);
 	}
 	else
 	{
+		std::string rt;
 		char const* start = src;
-		while (*src && !isSpace(*src) && *src != ';' && *src != '{')
+		while (*src && *src != ';')
 		{
 			if (*src == '\'' || *src == '\"')
 			{
@@ -704,10 +696,39 @@ static void parseFeatureDef(
 				++src;
 			}
 		}
-		xpathexpr.append( start, src-start);
+		rt.append( start, src-start);
 		skipSpaces( src);
+		return rt;
 	}
+}
 
+static void parseFeatureDef(
+	DocumentAnalyzerInterface& analyzer,
+	const TextProcessorInterface* textproc,
+	const std::string& featurename,
+	char const*& src,
+	FeatureClass featureClass)
+{
+	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
+	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
+
+	// [1] Parse normalizer:
+	std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
+	std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
+	for (; ni != ne; ++ni)
+	{
+		const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
+		normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
+		normalizer.push_back( normalizer_ref.back().get());
+	}
+	// [2] Parse tokenizer:
+	FunctionConfig tokenizercfg = parseTokenizerConfig( src);
+	const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+	tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+
+	// [3] Parse selection expression:
+	std::string xpathexpr( parseSelectorExpression( src));
 	switch (featureClass)
 	{
 		case FeatSearchIndexTerm:
@@ -736,8 +757,9 @@ static void parseFeatureDef(
 				tokenizer.get(), normalizer);
 			break;
 		case FeatSubDocument:
-			analyzer.defineSubDocument( featurename, xpathexpr);
-			break;
+			throw std::logic_error("illegal call of parse feature definition for sub document");
+		case FeatAggregator:
+			throw std::logic_error("illegal call of parse feature definition for aggregator");
 	}
 	std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
 		ri = normalizer_ref.begin(), re = normalizer_ref.end();
@@ -780,15 +802,29 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 			{
 				throw std::runtime_error( "feature type name (identifier) expected at start of a feature declaration");
 			}
-			std::string featuretype = parse_IDENTIFIER( src);
-			if (isAssign( *src))
+			std::string identifier = parse_IDENTIFIER( src);
+			if (!isAssign( *src))
 			{
-				(void)parse_OPERATOR(src);
-				parseFeatureDef( analyzer, textproc, featuretype, src, featclass);
+				throw std::runtime_error( "assignment operator '=' expected after set identifier in a feature declaration");
+			}
+			(void)parse_OPERATOR(src);
+			if (featclass == FeatSubDocument)
+			{
+				std::string xpathexpr( parseSelectorExpression( src));
+				analyzer.defineSubDocument( identifier, xpathexpr);
+			}
+			else if (featclass == FeatAggregator)
+			{
+				std::auto_ptr<AggregatorFunctionInstanceInterface> statfunc;
+				FunctionConfig cfg = parseAggregatorFunctionConfig( src);
+				const AggregatorFunctionInterface* sf = textproc->getAggregator( cfg.name());
+				statfunc.reset( sf->createInstance( cfg.args()));
+				analyzer.defineAggregatedMetaData( identifier, statfunc.get());
+				statfunc.release();
 			}
 			else
 			{
-				throw std::runtime_error( "assignment operator '=' expected after set identifier in a feature declaration");
+				parseFeatureDef( analyzer, textproc, identifier, src, featclass);
 			}
 			if (!isSemiColon(*src))
 			{
@@ -805,6 +841,109 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 			+ ": " + e.what());
 	}
 }
+
+
+DLL_PUBLIC bool strus::isAnalyzerMapSource( const std::string& source)
+{
+	char const* src = source.c_str();
+	skipSpaces(src);
+	if (isAlpha(*src))
+	{
+		std::string id = parse_IDENTIFIER( src);
+		if (isEqual( id, "SCHEME") || isEqual( id, "SEGMENTER") || isEqual( id, "PROGRAM")) return true;
+	}
+	return false;
+}
+
+static std::string parseAnalyzerMapValue( char const*& itr)
+{
+	std::string val;
+	if (isStringQuote( *itr))
+	{
+		val = parse_STRING( itr);
+	}
+	else
+	{
+		for (;*itr && !isSpace(*itr) && !isColon(*itr); ++itr)
+		{
+			val.push_back( *itr);
+		}
+	}
+	return val;
+}
+
+DLL_PUBLIC void strus::loadAnalyzerMap(
+		std::vector<AnalyzerMapElement>& mapdef,
+		const std::string& source)
+{
+	enum Mask {MSK_SCHEME=0x01, MSK_PROGRAM=0x02, MSK_SEGMENTER=0x04};
+	AnalyzerMapElement elem;
+	int mask = 0;
+	char const* src = source.c_str();
+	skipSpaces(src);
+	try
+	{
+	while (*src)
+	{
+		if (isSemiColon(*src))
+		{
+			(void)parse_OPERATOR( src);
+			if ((mask & MSK_PROGRAM) == 0)
+			{
+				mapdef.push_back( elem);
+				elem.clear();
+				mask = 0;
+			}
+			else if (!mask)
+			{
+				throw std::runtime_error( "empty declaration");
+			}
+			else
+			{
+				throw std::runtime_error( "PROGRAM missing in declaration");
+			}
+		}
+		if (isAlpha(*src))
+		{
+			std::string id = parse_IDENTIFIER( src);
+			if (isEqual( id, "SCHEME"))
+			{
+				if (mask & MSK_SCHEME) throw std::runtime_error( "duplicate definition of SCHEME");
+				mask |= MSK_SCHEME;
+				elem.scheme = parseAnalyzerMapValue( src);
+			}
+			else if (isEqual( id, "PROGRAM"))
+			{
+				if (mask & MSK_PROGRAM) throw std::runtime_error( "duplicate definition of PROGRAM");
+				mask |= MSK_PROGRAM;
+				elem.prgFilename = parseAnalyzerMapValue( src);
+			}
+			else if (isEqual( id, "SEGMENTER"))
+			{
+				if (mask & MSK_SEGMENTER) throw std::runtime_error( "duplicate definition of SEGMENTER");
+				mask |= MSK_SEGMENTER;
+				elem.segmenter = parseAnalyzerMapValue( src);
+			}
+			else
+			{
+				throw std::runtime_error( std::string( "unknown identifier '") + id + "'");
+			}
+		}
+	}
+	if (mask)
+	{
+		throw std::runtime_error( "unterminated definition, missing semicolon at end of source");
+	}
+	}
+	catch (const std::runtime_error& e)
+	{
+		throw std::runtime_error(
+			std::string( "error in query document class to analyzer map program ")
+			+ errorPosition( source.c_str(), src)
+			+ ": " + e.what());
+	}
+}
+
 
 DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 		QueryAnalyzerInterface& analyzer,
@@ -1234,8 +1373,7 @@ static void parseMetaDataRestriction(
 			operands = parseMetaDataOperands( src);
 
 		QueryInterface::CompareOperator
-			cmpop = invertedOperator(
-					parseMetaDataComparionsOperator( src));
+			cmpop = invertedOperator( parseMetaDataComparionsOperator( src));
 
 		if (!isAlpha( *src))
 		{
