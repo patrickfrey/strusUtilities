@@ -237,10 +237,14 @@ int main( int argc_, const char* argv_[])
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
 		}
-		else
+		else if (opt("storage"))
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+		}
+		else
+		{
+			throw std::runtime_error( "neither storage (option --storage) nor rpc proxy (option --rpc) specified");
 		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
@@ -354,7 +358,7 @@ int main( int argc_, const char* argv_[])
 			double endTime = getTimeStamp();
 			double duration = endTime - startTime;
 			std::cerr << "evaluated " << nofQueries << " queries in "
-					<< std::fixed << std::setw(6) << std::setprecision(3)
+					<< std::fixed << std::setw(6) << std::setprecision(4)
 					<< duration << " seconds" << std::endl;
 		}
 		return 0;
