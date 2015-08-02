@@ -2,4 +2,5 @@
 - Initial release
 * Fri Jul 24 2015  Patrick Frey  <patrickpfrey@yahoo.com>
 - v0.1.4 Possibility to define storage configuration as content of file for strusCreate and strusDestroy. storage parameter is passed as required option now instead of as parameter.
-
+* Sun Aug 2 2015  Patrick Frey  <patrickpfrey@yahoo.com>
+- v0.1.5 Added RPC proxying also for analyzer programs. Added new program strusAnalyzeQuery. Changed query analyzer to use bulk analyzer interface.
