@@ -48,6 +48,7 @@ src/strusCreate/strusCreate
 src/strusDestroy/strusDestroy
 src/strusAnalyze/strusAnalyze
 src/strusAnalyzePhrase/strusAnalyzePhrase
+src/strusAnalyzeQuery/strusAnalyzeQuery
 src/strusInsert/strusInsert
 src/strusInsert/strusCheckInsert
 src/strusInsert/strusGenerateKeyMap
