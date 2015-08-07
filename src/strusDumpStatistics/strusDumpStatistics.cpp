@@ -38,6 +38,7 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storagePeerInterface.hpp"
+#include "strus/storagePeerClientInterface.hpp"
 #include "strus/storagePeerTransactionInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/constants.hpp"
@@ -70,13 +71,13 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 }
 
 
-class StorageStatsDumperInstance
+class StorageStatsDumperTransaction
 	:public strus::StoragePeerTransactionInterface
 {
 public:
-	StorageStatsDumperInstance(){}
+	StorageStatsDumperTransaction(){}
 
-	virtual ~StorageStatsDumperInstance(){}
+	virtual ~StorageStatsDumperTransaction(){}
 
 	virtual void populateNofDocumentsInsertedChange(
 			int increment)
@@ -106,18 +107,46 @@ public:
 	virtual void rollback(){}
 };
 
+class StorageStatsDumperClient
+	:public strus::StoragePeerClientInterface
+{
+public:
+	StorageStatsDumperClient(){}
+	virtual ~StorageStatsDumperClient(){}
+
+	virtual strus::StoragePeerTransactionInterface* createTransaction() const
+	{
+		return new StorageStatsDumperTransaction();
+	}
+};
+
 class StorageStatsDumper
 	:public strus::StoragePeerInterface
 {
 public:
-	StorageStatsDumper(){};
+	StorageStatsDumper(){}
+
 	virtual ~StorageStatsDumper(){}
 
-	virtual strus::StoragePeerTransactionInterface* createTransaction() const
+	virtual strus::StoragePeerClientInterface* createClient(
+			strus::StorageClientInterface*,
+			const std::string&) const
 	{
-		return new StorageStatsDumperInstance();
+		return new StorageStatsDumperClient();
+	}
+
+	virtual const char* getConfigDescription() const
+	{
+		return "";
+	}
+
+	virtual const char** getConfigParameters() const
+	{
+		static const char* ar[] = {0};
+		return ar;
 	}
 };
+
 
 
 int main( int argc, const char* argv[])
@@ -221,7 +250,9 @@ int main( int argc, const char* argv[])
 			storage( storageBuilder->createStorageClient( storagecfg));
 
 		StorageStatsDumper statsDumper;
-		storage->defineStoragePeerInterface( &statsDumper, true/*do populate init state*/);
+		std::auto_ptr<strus::StoragePeerClientInterface> statsDumperClient( statsDumper.createClient( 0, ""));
+
+		storage->defineStoragePeerClient( statsDumperClient.get(), true/*do populate init state*/);
 	}
 	catch (const std::runtime_error& e)
 	{
