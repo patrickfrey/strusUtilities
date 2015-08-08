@@ -28,7 +28,7 @@ link_directories(
 # PROGRAMS
 # ------------------------------
 add_executable( strusAnalyzeQuery ${source_files} )
-target_link_libraries( strusAnalyzeQuery  strus_private_utils  ${strusmodule_LIBRARIES} strus_program ${strusanalyzer_LIBRARIES} ${strusrpc_LIBRARIES} ${strus_LIBRARIES}  )
+target_link_libraries( strusAnalyzeQuery  strus_private_utils  ${strusmodule_LIBRARIES} strus_program strus_utils strus_module strus_rpc_client strus_rpc_client_socket )
 
 
 # ------------------------------
