@@ -29,7 +29,7 @@ link_directories(
 # PROGRAMS
 # ------------------------------
 add_executable( strusQuery ${source_files} )
-target_link_libraries( strusQuery  strus_private_utils strus_program ${strus_LIBRARIES} ${strusmodule_LIBRARIES} ${strusrpc_LIBRARIES} )
+target_link_libraries( strusQuery  strus_private_utils strus_program strus_utils strus_module strus_rpc_client strus_rpc_client_socket )
 
 
 # ------------------------------

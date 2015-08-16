@@ -35,10 +35,10 @@ namespace strus
 #define STRUS_UTILITIES_VERSION (\
 	0 * 1000000\
 	+ 1 * 10000\
-	+ 4\
+	+ 6\
 )
 
-#define STRUS_UTILITIES_VERSION_STRING "0.1.4"
+#define STRUS_UTILITIES_VERSION_STRING "0.1.6"
 
 }//namespace
 #endif

@@ -27,6 +27,10 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
+#include "strus/rpcClientInterface.hpp"
+#include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
@@ -71,9 +75,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 6,
-				"h,help", "v,version", "m,module:",
-				"s,segmenter:", "M,moduledir:", "R,resourcedir:");
+				argc, argv, 7,
+				"h,help", "v,version", "m,module:", "r,rpc:",
+				"g,segmenter:", "M,moduledir:", "R,resourcedir:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -99,6 +103,7 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
 		if (opt("moduledir"))
 		{
+			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --moduledir and --rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -109,6 +114,7 @@ int main( int argc, const char* argv[])
 		}
 		if (opt("module"))
 		{
+			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --module and --rpc");
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
@@ -134,8 +140,10 @@ int main( int argc, const char* argv[])
 			std::cout << "    Search modules to load first in <DIR>" << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
 			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
-			std::cout << "-s|--segmenter <NAME>" << std::endl;
+			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "-r|--rpc <ADDR>" << std::endl;
+			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
 			return rt;
 		}
 		std::string analyzerprg = opt[0];
@@ -149,6 +157,7 @@ int main( int argc, const char* argv[])
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
+			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --resourcedir and --rpc");
 			std::vector<std::string> pathlist( opt.list("resourcedir"));
 			std::vector<std::string>::const_iterator
 				pi = pathlist.begin(), pe = pathlist.end();
@@ -160,10 +169,23 @@ int main( int argc, const char* argv[])
 		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
 
 		// Create objects for analyzer:
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			builder( moduleLoader->createAnalyzerObjectBuilder());
+		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
+		std::auto_ptr<strus::RpcClientInterface> rpcClient;
+		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+
+		if (opt("rpc"))
+		{
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
+			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			(void)messaging.release();
+			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+		}
+		else
+		{
+			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+		}
 		std::auto_ptr<strus::DocumentAnalyzerInterface>
-			analyzer( builder->createDocumentAnalyzer( segmenter));
+			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
 
 		// Load analyzer program:
 		unsigned int ec;
@@ -175,7 +197,7 @@ int main( int argc, const char* argv[])
 			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
 			return 4;
 		}
-		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 
 		// Load the document and get its properties:
@@ -279,5 +301,6 @@ int main( int argc, const char* argv[])
 	}
 	return -1;
 }
+
 
 

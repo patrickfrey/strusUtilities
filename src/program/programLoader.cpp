@@ -49,9 +49,8 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/storageDocumentUpdateInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
-#include "strus/peerStorageTransactionInterface.hpp"
+#include "strus/storageDocumentUpdateInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/reference.hpp"
 #include "private/inputStream.hpp"
@@ -1100,58 +1099,132 @@ static std::string parseVariableRef( char const*& src)
 	return rt;
 }
 
-static void pushQueryPhrase(
+
+struct QueryStackElement
+{
+	QueryStackElement( const PostingJoinOperatorInterface* function_, int arg_, int range_, float weight_)
+		:function(function_),arg(arg_),range(range_),weight(weight_){}
+	QueryStackElement( const QueryStackElement& o)
+		:function(o.function),arg(o.arg),range(o.range),name(o.name),weight(o.weight){}
+	QueryStackElement()
+		:function(0),arg(-1),range(0),weight(0.0f){}
+
+	const PostingJoinOperatorInterface* function;
+	int arg;
+	int range;
+	std::string name;
+	float weight;
+};
+
+struct QueryStack
+{
+	QueryStack( const QueryStack& o)
+		:ar(o.ar),phraseBulk(o.phraseBulk){}
+	QueryStack(){}
+
+	std::vector<QueryStackElement> ar;
+	std::vector<QueryAnalyzerInterface::Phrase> phraseBulk;
+
+	void defineFeature( const std::string& featureSet, float weight)
+	{
+		ar.push_back( QueryStackElement( 0, -1/*arg*/, 0, weight));
+		ar.back().name = featureSet;
+	}
+
+	void pushPhrase( const std::string& phraseType, const std::string& phraseContent, const std::string& variableName)
+	{
+		ar.push_back( QueryStackElement( 0, phraseBulk.size(), 0, 0.0));
+		phraseBulk.push_back( QueryAnalyzerInterface::Phrase( phraseType, phraseContent));
+		if (!variableName.empty())
+		{
+			ar.back().name = variableName;
+		}
+	}
+
+	void pushExpression( const PostingJoinOperatorInterface* function, int arg, int range, const std::string& variableName)
+	{
+		ar.push_back( QueryStackElement( function, arg, range, 0.0));
+		if (!variableName.empty())
+		{
+			ar.back().name = variableName;
+		}
+	}
+};
+
+static void translateQuery(
 		QueryInterface& query,
 		const QueryAnalyzerInterface* analyzer,
 		const QueryProcessorInterface* queryproc,
-		const std::string& phraseType,
-		const std::string& content)
+		const QueryStack& stk)
 {
-	std::vector<analyzer::Term>
-		queryTerms = analyzer->analyzePhrase( phraseType, content);
-	std::vector<analyzer::Term>::const_iterator
-		ti = queryTerms.begin(), te = queryTerms.end();
-	if (ti == te)
+	std::vector<analyzer::TermVector> analyzerResult = analyzer->analyzePhraseBulk( stk.phraseBulk);
+	std::vector<QueryStackElement>::const_iterator si = stk.ar.begin(), se = stk.ar.end();
+	for (; si != se; ++si)
 	{
-		throw std::runtime_error( std::string( "query analyzer returned empty list of terms for query phrase '") + content + "'");
-	}
-	unsigned int pos = 0;
-	std::size_t seq_argc = 0;
-	while (ti != te)
-	{
-		if (pos == 0 || ti->pos() != pos)
+		if (si->function)
 		{
-			++seq_argc;
-			std::size_t join_argc = 0;
-			pos = ti->pos();
-			for (; ti != te && ti->pos() == pos; ++ti)
+			// Expression function definition:
+			query.pushExpression( si->function, si->arg, si->range);
+			if (!si->name.empty())
 			{
-				join_argc++;
-				query.pushTerm( ti->type(), ti->value());
+				query.attachVariable( si->name);
 			}
-			if (join_argc > 1)
+		}
+		else if (si->arg < 0)
+		{
+			// Feature definition:
+			query.defineFeature( si->name, si->weight);
+		}
+		else
+		{
+			// Term definition:
+			std::vector<analyzer::Term>::const_iterator
+				ti = analyzerResult[ si->arg].begin(), te = analyzerResult[si->arg].end();
+			if (ti == te)
 			{
-				const PostingJoinOperatorInterface* join 
+				throw std::runtime_error( std::string( "query analyzer returned empty list of terms for query phrase ") + stk.phraseBulk[ si->arg].type() + ": '" + stk.phraseBulk[ si->arg].content() + "'");
+			}
+			unsigned int pos = 0;
+			std::size_t seq_argc = 0;
+			while (ti != te)
+			{
+				if (pos == 0 || ti->pos() != pos)
+				{
+					++seq_argc;
+					std::size_t join_argc = 0;
+					pos = ti->pos();
+					for (; ti != te && ti->pos() == pos; ++ti)
+					{
+						join_argc++;
+						query.pushTerm( ti->type(), ti->value());
+					}
+					if (join_argc > 1)
+					{
+						const PostingJoinOperatorInterface* join 
+							= queryproc->getPostingJoinOperator(
+								Constants::operator_query_phrase_same_position());
+		
+						query.pushExpression( join, join_argc, 0);
+					}
+				}
+			}
+			if (seq_argc > 1)
+			{
+				const PostingJoinOperatorInterface* seq
 					= queryproc->getPostingJoinOperator(
-						Constants::operator_query_phrase_same_position());
-				
-				query.pushExpression( join, join_argc, 0);
+						Constants::operator_query_phrase_sequence());
+				query.pushExpression( seq, seq_argc, pos);
+			}
+			if (!si->name.empty())
+			{
+				query.attachVariable( si->name);
 			}
 		}
 	}
-	if (seq_argc > 1)
-	{
-		const PostingJoinOperatorInterface* seq
-			= queryproc->getPostingJoinOperator(
-				Constants::operator_query_phrase_sequence());
-		query.pushExpression( seq, seq_argc, pos);
-	}
 }
 
-
 static void parseQueryExpression(
-		QueryInterface& query,
-		const QueryAnalyzerInterface* analyzer,
+		QueryStack& querystack,
 		const QueryProcessorInterface* queryproc,
 		const std::string& defaultPhraseType,
 		char const*& src)
@@ -1169,7 +1242,7 @@ static void parseQueryExpression(
 			if (!isCloseOvalBracket( *src)) while (*src)
 			{
 				argc++;
-				parseQueryExpression( query, analyzer, queryproc, defaultPhraseType, src);
+				parseQueryExpression( querystack, queryproc, defaultPhraseType, src);
 				if (isComma( *src))
 				{
 					(void)parse_OPERATOR( src);
@@ -1190,7 +1263,9 @@ static void parseQueryExpression(
 			(void)parse_OPERATOR( src);
 			const PostingJoinOperatorInterface*
 				function = queryproc->getPostingJoinOperator( functionName);
-			query.pushExpression( function, argc, range);
+			std::string variableName = parseVariableRef( src);
+
+			querystack.pushExpression( function, argc, range, variableName);
 			return;
 		}
 		else
@@ -1206,12 +1281,9 @@ static void parseQueryExpression(
 		{
 			phraseType = defaultPhraseType;
 		}
-		pushQueryPhrase( query, analyzer, queryproc, phraseType, queryPhrase);
 		std::string variableName = parseVariableRef( src);
-		if (!variableName.empty())
-		{
-			query.attachVariable( variableName);
-		}
+
+		querystack.pushPhrase( phraseType, queryPhrase, variableName);
 	}
 	else
 	{
@@ -1401,6 +1473,7 @@ DLL_PUBLIC void strus::loadQuery(
 	char const* src = source.c_str();
 	try
 	{
+		QueryStack querystack;
 		skipSpaces(src);
 		while (*src)
 		{
@@ -1447,8 +1520,8 @@ DLL_PUBLIC void strus::loadQuery(
 				(void)parse_OPERATOR( src);
 				while (*src && !isOpenSquareBracket( *src))
 				{
-					parseQueryExpression( query, analyzer, queryproc, defaultPhraseType, src);
-					query.defineFeature( featureSet, featureWeight);
+					parseQueryExpression( querystack, queryproc, defaultPhraseType, src);
+					querystack.defineFeature( featureSet, featureWeight);
 				}
 			}
 			else if (isEqual( name, "Condition"))
@@ -1475,6 +1548,7 @@ DLL_PUBLIC void strus::loadQuery(
 				throw std::runtime_error( std::string( "unknown query section identifier '") + name + "'");
 			}
 		}
+		translateQuery( query, analyzer, queryproc, querystack);
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -1517,93 +1591,6 @@ DLL_PUBLIC bool strus::scanNextProgram(
 	}
 	segment = std::string( start, si);
 	return true;
-}
-
-
-static std::string readToken( std::string::const_iterator& si, const std::string::const_iterator& se)
-{
-	std::string rt;
-	for (;*si && !isSpace( *si); ++si)
-	{
-		rt.push_back( *si);
-	}
-	for (; *si && isSpace( *si); ++si){}
-	return rt;
-}
-
-static int readInteger( std::string::const_iterator& si, const std::string::const_iterator& se)
-{
-	int rt = 0, prev_rt = 0;
-	bool sign = false;
-	if (*si == '-')
-	{
-		sign = true;
-		++si;
-	}
-	for (;*si && isDigit( *si); ++si)
-	{
-		rt = rt * 10 + *si - '0';
-		if (prev_rt > rt)
-		{
-			throw std::runtime_error( "integer value out of range");
-		}
-		prev_rt = rt;
-	}
-	for (; isSpace( *si); ++si){}
-	return (sign)?-rt:rt;
-}
-
-
-DLL_PUBLIC void strus::loadGlobalStatistics(
-		StorageClientInterface& storage,
-		const std::string& file)
-{
-	std::auto_ptr<PeerStorageTransactionInterface>
-		transaction( storage.createPeerStorageTransaction());
-	std::size_t linecnt = 1;
-	InputStream stream( file);
-	try
-	{
-		char line[ 2048];
-		for (; stream.readline( line, sizeof(line)); ++linecnt)
-		{
-			std::string linebuf( line);
-			std::string::const_iterator li = linebuf.begin(), le = linebuf.end();
-			if (li != le)
-			{
-				std::string tok = readToken( li, le);
-				if (tok == Constants::storage_statistics_document_frequency())
-				{
-					int df = readInteger( li, le);
-					std::string termtype = readToken( li, le);
-					std::string termvalue = Protocol::decodeString( readToken( li, le));
-
-					transaction->updateDocumentFrequencyChange(
-							termtype.c_str(), termvalue.c_str(), df);
-				}
-				else if (tok == Constants::storage_statistics_number_of_documents())
-				{
-					int nofDocs = readInteger( li, le);
-					transaction->updateNofDocumentsInsertedChange( nofDocs);
-				}
-				else
-				{
-					throw std::runtime_error( "unexpected token at start of line");
-				}
-			}
-			if (li != le)
-			{
-				throw std::runtime_error( "unconsumed characters at end of line");
-			}
-		}
-		transaction->commit();
-	}
-	catch (const std::runtime_error& err)
-	{
-		throw std::runtime_error( std::string( "error on line ")
-			+ utils::tostring( linecnt)
-			+ ": " + err.what());
-	}
 }
 
 static Index parseDocno( StorageClientInterface& storage, char const*& itr)

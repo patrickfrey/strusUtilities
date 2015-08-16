@@ -147,13 +147,6 @@ bool scanNextProgram(
 		std::string::const_iterator& itr,
 		const std::string::const_iterator& end);
 
-/// \brief Load the global statistics for a storage from a stream
-/// \param[in,out] storage the storage to instrument
-/// \param[in] file the file to read from
-void loadGlobalStatistics(
-		StorageClientInterface& storage,
-		const std::string& file);
-
 /// \brief Load some meta data assignments for a storage from a stream
 /// \param[in,out] storage the storage to instrument
 /// \param[in] metadataName name of the meta data field to assign

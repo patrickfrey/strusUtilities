@@ -37,13 +37,14 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/storagePeerInterface.hpp"
-#include "strus/storagePeerTransactionInterface.hpp"
+#include "strus/peerMessageProcessorInterface.hpp"
+#include "strus/peerMessageBuilderInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/private/protocol.hpp"
+#include "strus/private/fileio.hpp"
 #include "private/version.hpp"
 #include "private/utils.hpp"
 #include "private/programOptions.hpp"
@@ -70,56 +71,6 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 }
 
 
-class StorageStatsDumperInstance
-	:public strus::StoragePeerTransactionInterface
-{
-public:
-	StorageStatsDumperInstance(){}
-
-	virtual ~StorageStatsDumperInstance(){}
-
-	virtual void populateNofDocumentsInsertedChange(
-			int increment)
-	{
-		std::cout << strus::Constants::storage_statistics_number_of_documents()
-				<< ' ' << increment
-				<< std::endl;
-	}
-
-	virtual void populateDocumentFrequencyChange(
-			const char* termtype,
-			const char* termvalue,
-			int increment,
-			bool isnew)
-	{
-		std::cout << strus::Constants::storage_statistics_document_frequency()
-				<< ' ' << increment
-				<< ' ' << termtype
-				<< ' ' << strus::Protocol::encodeString( termvalue)
-				<< std::endl;
-	}
-
-	virtual void try_commit(){}
-
-	virtual void final_commit(){}
-
-	virtual void rollback(){}
-};
-
-class StorageStatsDumper
-	:public strus::StoragePeerInterface
-{
-public:
-	StorageStatsDumper(){};
-	virtual ~StorageStatsDumper(){}
-
-	virtual strus::StoragePeerTransactionInterface* createTransaction() const
-	{
-		return new StorageStatsDumperInstance();
-	}
-};
-
-
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -128,9 +79,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 6,
+				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:");
+				"r,rpc:", "s,storage:", "p,peermsgproc");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -140,9 +91,15 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 0)
+			if (opt.nofargs() > 1)
 			{
 				std::cerr << "ERROR too many arguments" << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() == 0)
+			{
+				std::cerr << "ERROR too few arguments" << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
@@ -169,12 +126,22 @@ int main( int argc, const char* argv[])
 				moduleLoader->loadModule( *mi);
 			}
 		}
+		if (opt("peermsgproc"))
+		{
+			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --peermsgproc and --rpc");
+			std::string peermsgproc( opt["peermsgproc"]);
+			moduleLoader->enablePeerMessageProcessor( peermsgproc);
+		}
+		else
+		{
+			moduleLoader->enablePeerMessageProcessor( "");
+		}
 
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusDumpStatistics [options]" << std::endl;
+			std::cout << "usage: strusDumpStatistics [options] <filename>" << std::endl;
 			std::cout << "description: Dumps the statisics that would be populated to" << std::endl;
-			std::cout << "    other peer storages in case of a distributed index to stout." << std::endl;
+			std::cout << "    other peer storages in case of a distributed index to a file." << std::endl;
 			std::cout << "options:" << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "   Print this usage and do nothing else" << std::endl;
@@ -193,6 +160,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    Search modules to load first in <DIR>" << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "-p|--peermsgproc <NAME>" << std::endl;
+			std::cout << "    Use peer message processor with name <NAME>" << std::endl;
 			return rt;
 		}
 		std::string storagecfg;
@@ -201,6 +170,7 @@ int main( int argc, const char* argv[])
 			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
 			storagecfg = opt["storage"];
 		}
+		std::string outputfile( opt[0]);
 
 		// Create objects for dump:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -220,8 +190,22 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
 
-		StorageStatsDumper statsDumper;
-		storage->defineStoragePeerInterface( &statsDumper, true/*do populate init state*/);
+		storage->startPeerInit();
+		const char* msg;
+		std::size_t msgsize;
+		std::string output;
+		while (storage->fetchPeerMessage( msg, msgsize))
+		{
+			output.append( msg, msgsize);
+		}
+		unsigned int ec = strus::writeFile( outputfile, output);
+		// .... yes, it's idiodoc to buffer the whole content in memory (to be solved later)
+		if (!ec)
+		{
+			std::ostringstream msg;
+			msg << ec;
+			throw std::runtime_error( std::string( "error writing global statistics to file '") + outputfile + "' (system error code " + msg.str() + ")");
+		}
 	}
 	catch (const std::runtime_error& e)
 	{

@@ -37,8 +37,6 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/storagePeerInterface.hpp"
-#include "strus/storagePeerTransactionInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/cmdLineOpt.hpp"

@@ -46,6 +46,7 @@
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
+#include "strus/private/fileio.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
@@ -94,7 +95,7 @@ int main( int argc_, const char* argv_[])
 	{
 		opt = strus::ProgramOptions(
 				argc_, argv_, 13,
-				"h,help", "S,silent", "u,user:", "n,nofranks:", "i,firstrank:",
+				"h,help", "Q,quiet", "u,user:", "n,nofranks:", "i,firstrank:",
 				"g,globalstats:", "t,time", "v,version", "m,module:",
 				"M,moduledir:", "R,resourcedir:", "s,storage:", "r,rpc:");
 		if (opt( "help")) printUsageAndExit = true;
@@ -168,7 +169,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    Return maximum <N> ranks as query result" << std::endl;
 			std::cout << "-i|--firstrank <N>" << std::endl;
 			std::cout << "    Return the result starting with rank <N> as first rank" << std::endl;
-			std::cout << "-S|--silent" << std::endl;
+			std::cout << "-Q|--quiet" << std::endl;
 			std::cout << "    No output of results" << std::endl;
 			std::cout << "-g|--globalstats <FILE>" << std::endl;
 			std::cout << "    Load global statistics of peers from file <FILE>" << std::endl;
@@ -184,7 +185,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
 			return rt;
 		}
-		bool silent = opt( "silent");
+		bool quiet = opt( "quiet");
 		bool measureDuration = opt( "time");
 		std::string username;
 		std::size_t nofRanks = 20;
@@ -237,10 +238,14 @@ int main( int argc_, const char* argv_[])
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
 		}
-		else
+		else if (opt("storage"))
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+		}
+		else
+		{
+			throw std::runtime_error( "neither storage (option --storage) nor rpc proxy (option --rpc) specified");
 		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
@@ -284,7 +289,15 @@ int main( int argc_, const char* argv_[])
 			std::string filename = opt[ "globalstats"];
 			try 
 			{
-				strus::loadGlobalStatistics( *storage, filename);
+				std::string content;
+				unsigned int ec = strus::readFile( filename, content);
+				if (ec)
+				{
+					std::ostringstream msg;
+					msg << ec;
+					throw std::runtime_error( std::string( "error reading global statistics file '") + filename + "' (system error code " + msg.str() + ")");
+				}
+				storage->pushPeerMessage( content.c_str(), content.size());
 			}
 			catch (const std::runtime_error& err)
 			{
@@ -337,15 +350,15 @@ int main( int argc_, const char* argv_[])
 			}
 			std::vector<strus::ResultDocument> ranklist = query->evaluate();
 	
-			if (!silent) std::cout << "ranked list (starting with rank " << firstRank << ", maximum " << nofRanks << " results):" << std::endl;
+			if (!quiet) std::cout << "ranked list (starting with rank " << firstRank << ", maximum " << nofRanks << " results):" << std::endl;
 			std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
 			for (int widx=1; wi != we; ++wi,++widx)
 			{
-				if (!silent) std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
+				if (!quiet) std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
 				std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
 				for (; ai != ae; ++ai)
 				{
-					if (!silent) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
+					if (!quiet) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
 				}
 			}
 		}
@@ -354,7 +367,7 @@ int main( int argc_, const char* argv_[])
 			double endTime = getTimeStamp();
 			double duration = endTime - startTime;
 			std::cerr << "evaluated " << nofQueries << " queries in "
-					<< std::fixed << std::setw(6) << std::setprecision(3)
+					<< std::fixed << std::setw(6) << std::setprecision(4)
 					<< duration << " seconds" << std::endl;
 		}
 		return 0;

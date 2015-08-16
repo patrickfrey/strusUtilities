@@ -231,6 +231,7 @@ int main( int argc_, const char* argv_[])
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
+			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --resourcedir and --rpc");
 			std::vector<std::string> pathlist( opt.list("resourcedir"));
 			std::vector<std::string>::const_iterator
 				pi = pathlist.begin(), pe = pathlist.end();
