@@ -46,6 +46,7 @@
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
+#include "strus/private/fileio.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
@@ -288,7 +289,15 @@ int main( int argc_, const char* argv_[])
 			std::string filename = opt[ "globalstats"];
 			try 
 			{
-				strus::loadGlobalStatistics( *storage, filename);
+				std::string content;
+				unsigned int ec = strus::readFile( filename, content);
+				if (ec)
+				{
+					std::ostringstream msg;
+					msg << ec;
+					throw std::runtime_error( std::string( "error reading global statistics file '") + filename + "' (system error code " + msg.str() + ")");
+				}
+				storage->pushPeerMessage( content.c_str(), content.size());
 			}
 			catch (const std::runtime_error& err)
 			{

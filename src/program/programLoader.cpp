@@ -49,9 +49,8 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/storageDocumentUpdateInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
-#include "strus/peerStorageTransactionInterface.hpp"
+#include "strus/storageDocumentUpdateInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/reference.hpp"
 #include "private/inputStream.hpp"
@@ -1592,93 +1591,6 @@ DLL_PUBLIC bool strus::scanNextProgram(
 	}
 	segment = std::string( start, si);
 	return true;
-}
-
-
-static std::string readToken( std::string::const_iterator& si, const std::string::const_iterator& se)
-{
-	std::string rt;
-	for (;*si && !isSpace( *si); ++si)
-	{
-		rt.push_back( *si);
-	}
-	for (; *si && isSpace( *si); ++si){}
-	return rt;
-}
-
-static int readInteger( std::string::const_iterator& si, const std::string::const_iterator& se)
-{
-	int rt = 0, prev_rt = 0;
-	bool sign = false;
-	if (*si == '-')
-	{
-		sign = true;
-		++si;
-	}
-	for (;*si && isDigit( *si); ++si)
-	{
-		rt = rt * 10 + *si - '0';
-		if (prev_rt > rt)
-		{
-			throw std::runtime_error( "integer value out of range");
-		}
-		prev_rt = rt;
-	}
-	for (; isSpace( *si); ++si){}
-	return (sign)?-rt:rt;
-}
-
-
-DLL_PUBLIC void strus::loadGlobalStatistics(
-		StorageClientInterface& storage,
-		const std::string& file)
-{
-	std::auto_ptr<PeerStorageTransactionInterface>
-		transaction( storage.createPeerStorageTransaction());
-	std::size_t linecnt = 1;
-	InputStream stream( file);
-	try
-	{
-		char line[ 2048];
-		for (; stream.readline( line, sizeof(line)); ++linecnt)
-		{
-			std::string linebuf( line);
-			std::string::const_iterator li = linebuf.begin(), le = linebuf.end();
-			if (li != le)
-			{
-				std::string tok = readToken( li, le);
-				if (tok == Constants::storage_statistics_document_frequency())
-				{
-					int df = readInteger( li, le);
-					std::string termtype = readToken( li, le);
-					std::string termvalue = Protocol::decodeString( readToken( li, le));
-
-					transaction->updateDocumentFrequencyChange(
-							termtype.c_str(), termvalue.c_str(), df, true);
-				}
-				else if (tok == Constants::storage_statistics_number_of_documents())
-				{
-					int nofDocs = readInteger( li, le);
-					transaction->updateNofDocumentsInsertedChange( nofDocs);
-				}
-				else
-				{
-					throw std::runtime_error( "unexpected token at start of line");
-				}
-			}
-			if (li != le)
-			{
-				throw std::runtime_error( "unconsumed characters at end of line");
-			}
-		}
-		(void)transaction->commit();
-	}
-	catch (const std::runtime_error& err)
-	{
-		throw std::runtime_error( std::string( "error on line ")
-			+ utils::tostring( linecnt)
-			+ ": " + err.what());
-	}
 }
 
 static Index parseDocno( StorageClientInterface& storage, char const*& itr)
