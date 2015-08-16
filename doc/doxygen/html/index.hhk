@@ -36,11 +36,6 @@
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ab15b8cc704d45d80d179f874a95d9efa"><param name="Name" value="programLoader.hpp"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ab15b8cc704d45d80d179f874a95d9efa"><param name="Name" value="strus"></OBJECT>
   </UL>
-  <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a0ea3e50fb506574b87482fa4d9395130"><param name="Name" value="loadGlobalStatistics"></OBJECT>
-  <UL>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a0ea3e50fb506574b87482fa4d9395130"><param name="Name" value="programLoader.hpp"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a0ea3e50fb506574b87482fa4d9395130"><param name="Name" value="strus"></OBJECT>
-  </UL>
   <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a49844064c435ebd8d6f63fbdbe7d86ba"><param name="Name" value="loadQuery"></OBJECT>
   <UL>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a49844064c435ebd8d6f63fbdbe7d86ba"><param name="Name" value="programLoader.hpp"></OBJECT>
@@ -70,7 +65,6 @@
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#ad97273a58853126ce38dc3b9b869dec3"><param name="Name" value="loadDocumentAttributeAssignments"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#aa07612ff516a0060b5553be16ab2189d"><param name="Name" value="loadDocumentMetaDataAssignments"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#ab15b8cc704d45d80d179f874a95d9efa"><param name="Name" value="loadDocumentUserRightsAssignments"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#a0ea3e50fb506574b87482fa4d9395130"><param name="Name" value="loadGlobalStatistics"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#a49844064c435ebd8d6f63fbdbe7d86ba"><param name="Name" value="loadQuery"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#ac36ee5dd03da94f559e78fb5df6fc714"><param name="Name" value="loadQueryAnalyzerPhraseType"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="programLoader_8hpp.html#a1d484d34983a957cd3ec0cce0e4dcc0e"><param name="Name" value="loadQueryAnalyzerProgram"></OBJECT>
@@ -101,7 +95,6 @@
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ad97273a58853126ce38dc3b9b869dec3"><param name="Name" value="loadDocumentAttributeAssignments"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#aa07612ff516a0060b5553be16ab2189d"><param name="Name" value="loadDocumentMetaDataAssignments"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ab15b8cc704d45d80d179f874a95d9efa"><param name="Name" value="loadDocumentUserRightsAssignments"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a0ea3e50fb506574b87482fa4d9395130"><param name="Name" value="loadGlobalStatistics"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a49844064c435ebd8d6f63fbdbe7d86ba"><param name="Name" value="loadQuery"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#ac36ee5dd03da94f559e78fb5df6fc714"><param name="Name" value="loadQueryAnalyzerPhraseType"></OBJECT>
     <LI><OBJECT type="text/sitemap"><param name="Local" value="namespacestrus.html#a1d484d34983a957cd3ec0cce0e4dcc0e"><param name="Name" value="loadQueryAnalyzerProgram"></OBJECT>
