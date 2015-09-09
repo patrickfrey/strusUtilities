@@ -682,7 +682,7 @@ static std::string parseSelectorExpression( char const*& src)
 	{
 		std::string rt;
 		char const* start = src;
-		while (*src && *src != ';')
+		while (*src && *src != ';' && *src != '{')
 		{
 			if (*src == '\'' || *src == '\"')
 			{
@@ -726,31 +726,43 @@ static void parseFeatureDef(
 	const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
 	tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
 
-	// [3] Parse selection expression:
+	// [3] Parse feature options, if defined:
+	DocumentAnalyzerInterface::FeatureOptions featopt( parseFeatureOptions( src));
+
+	// [4] Parse selection expression:
 	std::string xpathexpr( parseSelectorExpression( src));
+
 	switch (featureClass)
 	{
 		case FeatSearchIndexTerm:
 			analyzer.addSearchIndexFeature(
 				featurename, xpathexpr,
 				tokenizer.get(), normalizer,
-				parseFeatureOptions( src));
+				featopt);
 			break;
 
 		case FeatForwardIndexTerm:
 			analyzer.addForwardIndexFeature(
 				featurename, xpathexpr,
 				tokenizer.get(), normalizer,
-				parseFeatureOptions( src));
+				featopt);
 			break;
 
 		case FeatMetaData:
+			if (featopt.opt())
+			{
+				throw std::runtime_error("no feature options expected for meta data feature");
+			}
 			analyzer.defineMetaData(
 				featurename, xpathexpr,
 				tokenizer.get(), normalizer);
 			break;
 
 		case FeatAttribute:
+			if (featopt.opt())
+			{
+				throw std::runtime_error("no feature options expected for attribute feature");
+			}
 			analyzer.defineAttribute(
 				featurename, xpathexpr,
 				tokenizer.get(), normalizer);
