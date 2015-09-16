@@ -279,6 +279,7 @@ void InsertProcessor::run()
 				catch (const std::bad_alloc& err)
 				{
 					std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
+					transaction.reset( m_storage->createTransaction());
 					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 					docnoRangeStart = 0;
 					docCount = 0;
@@ -286,6 +287,7 @@ void InsertProcessor::run()
 				catch (const std::runtime_error& err)
 				{
 					std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+					transaction.reset( m_storage->createTransaction());
 					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 					docnoRangeStart = 0;
 					docCount = 0;
