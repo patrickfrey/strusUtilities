@@ -181,6 +181,10 @@ static void parseWeightingConfig(
 	}
 	std::string functionName = parse_IDENTIFIER( src);
 	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
+	if (!wf)
+	{
+		throw std::runtime_error( std::string("weighting function not defined: '") + functionName + "'");
+	}
 	std::auto_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance());
 	typedef QueryEvalInterface::FeatureParameter FeatureParameter;
 	std::vector<FeatureParameter> featureParameters;
@@ -284,6 +288,10 @@ static void parseSummarizerConfig(
 	}
 	functionName = utils::tolower( parse_IDENTIFIER( src));
 	const SummarizerFunctionInterface* sf = queryproc->getSummarizerFunction( functionName);
+	if (!sf)
+	{
+		throw std::runtime_error( std::string("summarizer function not defined: '") + functionName + "'");
+	}
 	std::auto_ptr<SummarizerFunctionInstanceInterface> function( sf->createInstance( queryproc));
 
 	if (!isOpenOvalBracket( *src))
@@ -1215,7 +1223,10 @@ static void translateQuery(
 						const PostingJoinOperatorInterface* join 
 							= queryproc->getPostingJoinOperator(
 								Constants::operator_query_phrase_same_position());
-		
+						if (!join)
+						{
+							throw std::runtime_error( std::string("posting join operator not defined: '") + Constants::operator_query_phrase_same_position() + "'");
+						}
 						query.pushExpression( join, join_argc, 0);
 					}
 				}
@@ -1225,6 +1236,10 @@ static void translateQuery(
 				const PostingJoinOperatorInterface* seq
 					= queryproc->getPostingJoinOperator(
 						Constants::operator_query_phrase_sequence());
+				if (!seq)
+				{
+					throw std::runtime_error( std::string("posting join operator not defined: '") + Constants::operator_query_phrase_sequence() + "'");
+				}
 				query.pushExpression( seq, seq_argc, pos);
 			}
 			if (!si->name.empty())
@@ -1275,6 +1290,10 @@ static void parseQueryExpression(
 			(void)parse_OPERATOR( src);
 			const PostingJoinOperatorInterface*
 				function = queryproc->getPostingJoinOperator( functionName);
+			if (!function)
+			{
+				throw std::runtime_error( std::string("posting join operator not defined: '") + functionName + "'");
+			}
 			std::string variableName = parseVariableRef( src);
 
 			querystack.pushExpression( function, argc, range, variableName);

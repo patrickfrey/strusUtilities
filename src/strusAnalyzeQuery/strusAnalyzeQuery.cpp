@@ -59,6 +59,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
+#include <algorithm>
 #include <iomanip>
 
 #undef STRUS_LOWLEVEL_DEBUG
@@ -67,7 +68,8 @@ class Query
 	:public strus::QueryInterface
 {
 public:
-	Query(){}
+	Query()
+		:m_maxNofRanks(20),m_minRank(0),m_evalset_defined(false){}
 
 	virtual ~Query(){}
 
@@ -170,6 +172,17 @@ public:
 		m_restrictions.push_back( Restriction( opr, name, operand, newGroup));
 	}
 
+	virtual void addDocumentEvaluationSet(
+			const std::vector<strus::Index>& docnolist_)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << "called addDocumentEvaluationSet " << docnolist_.size() << std::endl;
+#endif
+		m_evalset_docnolist.insert( m_evalset_docnolist.end(), docnolist_.begin(), docnolist_.end());
+		std::sort( m_evalset_docnolist.begin(), m_evalset_docnolist.end());
+		m_evalset_defined = true;
+	}
+
 	virtual void setMaxNofRanks( std::size_t maxNofRanks_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -236,6 +249,16 @@ public:
 			{
 				out << "user '" << *ui << "'" << std::endl;
 			}
+		}
+		if (m_evalset_defined)
+		{
+			std::vector<strus::Index>::const_iterator vi = m_evalset_docnolist.begin(), ve = m_evalset_docnolist.end();
+			out << "Evalation document docno set:" << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				out << " " << *vi;
+			}
+			out << std::endl;
 		}
 	}
 
@@ -368,6 +391,8 @@ private:
 	std::size_t m_maxNofRanks;
 	std::size_t m_minRank;
 	std::vector<std::string> m_users;
+	std::vector<strus::Index> m_evalset_docnolist;
+	bool m_evalset_defined;
 };
 
 
