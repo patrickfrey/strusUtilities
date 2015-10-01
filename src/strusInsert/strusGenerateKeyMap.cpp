@@ -27,12 +27,14 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/error.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/programLoader.hpp"
@@ -40,6 +42,8 @@
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "private/utils.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include "fileCrawler.hpp"
 #include "keyMapGenProcessor.hpp"
 #include "thread.hpp"
@@ -53,6 +57,7 @@
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
+	strus::ErrorBufferInterface* errorBuffer = 0;
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
@@ -62,6 +67,15 @@ int main( int argc_, const char* argv_[])
 				"h,help", "t,threads:", "u,unit:",
 				"n,results:", "v,version", "m,module:", "x,extension:",
 				"s,segmenter:", "M,moduledir:", "R,resourcedir:");
+
+		unsigned int nofThreads = 0;
+		if (opt("threads"))
+		{
+			nofThreads = opt.asUint( "threads");
+		}
+		errorBuffer = strus::createErrorBuffer_standard( stderr, nofThreads+2);
+		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
+
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -84,7 +98,7 @@ int main( int argc_, const char* argv_[])
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -138,7 +152,6 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// [1] Build objects:
-		unsigned int nofThreads = opt.asUint( "threads");
 		unsigned int unitSize = 1000;
 		if (opt( "unit"))
 		{
@@ -225,18 +238,31 @@ int main( int argc_, const char* argv_[])
 		resultList.printKeyOccurrenceList( std::cout, nofResults);
 		
 		std::cerr << "done" << std::endl;
+		delete errorBuffer;
+		return 0;
+	}
+	catch (const std::bad_alloc&)
+	{
+		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cerr << "ERROR " << e.what() << std::endl;
-		return 6;
+		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		if (errormsg)
+		{
+			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+		}
+		else
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << std::endl;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "EXCEPTION " << e.what() << std::endl;
-		return 7;
+		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	return 0;
+	delete errorBuffer;
+	return -1;
 }
 
 

@@ -31,7 +31,7 @@ link_directories(
 # LIBRARIES
 # -------------------------------------------
 add_library( strus_program SHARED ${source_files} )
-target_link_libraries( strus_program strus_private_utils "${Boost_LIBRARIES}"  strus_utils strus_module strus_rpc_client strus_rpc_client_socket )
+target_link_libraries( strus_program strus_private_utils "${Boost_LIBRARIES}"  strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket )
 
 set_target_properties(
     strus_program

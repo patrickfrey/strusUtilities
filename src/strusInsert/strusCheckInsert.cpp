@@ -27,6 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/error.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
@@ -43,6 +44,7 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
@@ -52,6 +54,8 @@
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "private/utils.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "checkInsertProcessor.hpp"
@@ -81,6 +85,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
+	strus::ErrorBufferInterface* errorBuffer = 0;
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
@@ -91,6 +96,15 @@ int main( int argc_, const char* argv_[])
 				"n,notify:", "v,version", "R,resourcedir:",
 				"M,moduledir:", "m,module:", "x,extension:",
 				"r,rpc:", "g,segmenter:", "s,storage:");
+
+		unsigned int nofThreads = 0;
+		if (opt("threads"))
+		{
+			nofThreads = opt.asUint( "threads");
+		}
+		errorBuffer = strus::createErrorBuffer_standard( stderr, nofThreads+2);
+		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
+
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -114,7 +128,7 @@ int main( int argc_, const char* argv_[])
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
@@ -174,7 +188,6 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    Set <N> as notification interval (number of documents)" << std::endl;
 			return rt;
 		}
-		unsigned int nofThreads = opt.asUint( "threads");
 		std::string logfile = "-";
 		std::string storagecfg;
 		if (opt("logfile"))
@@ -227,8 +240,8 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
-			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
-			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
 			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
@@ -284,18 +297,31 @@ int main( int argc_, const char* argv_[])
 		}
 		fileCrawlerThread->wait_termination();
 		std::cerr << "done" << std::endl;
+		delete errorBuffer;
+		return 0;
+	}
+	catch (const std::bad_alloc&)
+	{
+		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cerr << "ERROR " << e.what() << std::endl;
-		return 6;
+		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		if (errormsg)
+		{
+			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+		}
+		else
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << std::endl;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "EXCEPTION " << e.what() << std::endl;
-		return 7;
+		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	return 0;
+	delete errorBuffer;
+	return -1;
 }
 
 

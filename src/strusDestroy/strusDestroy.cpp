@@ -27,15 +27,19 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/error.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -57,10 +61,14 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
+	strus::ErrorBufferInterface* errorBuffer = 0;
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
+		errorBuffer = strus::createErrorBuffer_standard( stderr, 2);
+		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
+
 		opt = strus::ProgramOptions(
 				argc, argv, 6,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
@@ -81,7 +89,7 @@ int main( int argc, const char* argv[])
 				rt = 1;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -170,15 +178,30 @@ int main( int argc, const char* argv[])
 		const strus::DatabaseInterface* dbi = builder->getDatabase( databasecfg);
 		dbi->destroyDatabase( databasecfg);
 		std::cerr << "storage successfully destroyed." << std::endl;
+		delete errorBuffer;
+		return 0;
+	}
+	catch (const std::bad_alloc&)
+	{
+		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cerr << "ERROR " << e.what() << std::endl;
+		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		if (errormsg)
+		{
+			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+		}
+		else
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << std::endl;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "EXCEPTION " << e.what() << std::endl;
+		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
+	delete errorBuffer;
 	return -1;
 }
 

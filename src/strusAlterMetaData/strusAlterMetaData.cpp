@@ -27,6 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/error.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
@@ -35,8 +36,11 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
@@ -127,7 +131,8 @@ static std::string parseIdentifier( std::string::const_iterator& si, const std::
 	si = skipSpaces( si, se);
 	if (!isIdentifier( *si))
 	{
-		throw std::runtime_error( std::string( "identifier (") + idname + ") expected at '" + std::string( si, se) + "'");
+		std::string str( si, se);
+		throw strus::runtime_error( _TXT( "identifier (%s) expected at '%s'"), idname, str.c_str());
 	}
 	std::string rt;
 	for (; si != se && isIdentifier( *si); ++si)
@@ -144,38 +149,38 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 
 	for (si = skipSpaces( si, se); si != se; si = skipSpaces( si, se))
 	{
-		std::string cmd( parseIdentifier( si, se, "command name"));
+		std::string cmd( parseIdentifier( si, se, _TXT("command name")));
 		if (strus::utils::caseInsensitiveEquals( cmd, "Alter"))
 		{
-			std::string name( parseIdentifier( si, se, "old element name"));
-			std::string newname( parseIdentifier( si, se, "new element name"));
-			std::string type( parseIdentifier( si, se, "new element type"));
+			std::string name( parseIdentifier( si, se, _TXT("old element name")));
+			std::string newname( parseIdentifier( si, se, _TXT("new element name")));
+			std::string type( parseIdentifier( si, se, _TXT("new element type")));
 
 			rt.push_back( AlterMetaDataCommand::AlterElement( name, newname, type));
 		}
 		else if (strus::utils::caseInsensitiveEquals( cmd, "Add"))
 		{
-			std::string name( parseIdentifier( si, se, "element name"));
-			std::string type( parseIdentifier( si, se, "element type name"));
+			std::string name( parseIdentifier( si, se, _TXT("element name")));
+			std::string type( parseIdentifier( si, se, _TXT("element type name")));
 
 			rt.push_back( AlterMetaDataCommand::AddElement( name, type));
 		}
 		else if (strus::utils::caseInsensitiveEquals( cmd, "Rename"))
 		{
-			std::string name( parseIdentifier( si, se, "old element name"));
-			std::string newname( parseIdentifier( si, se, "new element name"));
+			std::string name( parseIdentifier( si, se, _TXT("old element name")));
+			std::string newname( parseIdentifier( si, se, _TXT("new element name")));
 
 			rt.push_back( AlterMetaDataCommand::RenameElement( name, newname));
 		}
 		else if (strus::utils::caseInsensitiveEquals( cmd, "Delete"))
 		{
-			std::string name( parseIdentifier( si, se, "element name"));
+			std::string name( parseIdentifier( si, se, _TXT("element name")));
 
 			rt.push_back( AlterMetaDataCommand::DeleteElement( name));
 		}
 		else if (strus::utils::caseInsensitiveEquals( cmd, "Clear"))
 		{
-			std::string name( parseIdentifier( si, se, "element name"));
+			std::string name( parseIdentifier( si, se, _TXT("element name")));
 			
 			rt.push_back( AlterMetaDataCommand::ClearValue( name));
 		}
@@ -190,7 +195,8 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 		}
 		else
 		{
-			throw std::runtime_error( std::string( "semicolon expected as separator of commands at '...") + std::string( si, si+30));
+			std::string str( si, si+30);
+			throw strus::runtime_error( _TXT( "semicolon expected as separator of commands at '..."), str.c_str());
 		}
 	}
 	return rt;
@@ -200,10 +206,14 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
+	strus::ErrorBufferInterface* errorBuffer = 0;
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
+		errorBuffer = strus::createErrorBuffer_standard( stderr, 2);
+		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
+
 		opt = strus::ProgramOptions(
 				argc, argv, 4,
 				"h,help", "v,version", "m,module:", "M,moduledir:");
@@ -221,18 +231,21 @@ int main( int argc, const char* argv[])
 		{
 			if (opt.nofargs() < 2)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << "ERROR " << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() > 2)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << "ERROR " << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader(
+			strus::createModuleLoader( errorBuffer));
+		if (moduleLoader.get()) throw strus::runtime_error(_TXT("error creating module loader"));
+
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -255,43 +268,43 @@ int main( int argc, const char* argv[])
 		if (printUsageAndExit)
 		{
 			std::cout << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
-			std::cout << "<config>  : configuration string of the storage" << std::endl;
-			std::cout << "            semicolon';' separated list of assignments:" << std::endl;
+			std::cout << "<config>  : " << _TXT("configuration string of the storage") << std::endl;
+			std::cout << "            " << _TXT("semicolon';' separated list of assignments:") << std::endl;
 			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
-			std::cout << "<cmds>    : semicolon separated list of commands:" << std::endl;
+			std::cout << "<cmds>    : " << _TXT("semicolon separated list of commands:") << std::endl;
 			std::cout << "            alter <name> <newname> <newtype>" << std::endl;
-			std::cout << "              <name>    :name of the element to change" << std::endl;
-			std::cout << "              <newname> :new name of the element" << std::endl;
-			std::cout << "              <newtype> :new type (*) of the element" << std::endl;
+			std::cout << "              <name>    :" << _TXT("name of the element to change") << std::endl;
+			std::cout << "              <newname> :" << _TXT("new name of the element") << std::endl;
+			std::cout << "              <newtype> :" << _TXT("new type (*) of the element") << std::endl;
 			std::cout << "            add <name> <type>" << std::endl;
-			std::cout << "              <name>    :name of the element to add" << std::endl;
-			std::cout << "              <type>    :type (*) of the element to add" << std::endl;
+			std::cout << "              <name>    :" << _TXT("name of the element to add") << std::endl;
+			std::cout << "              <type>    :" << _TXT("type (*) of the element to add") << std::endl;
 			std::cout << "            delete <name>" << std::endl;
-			std::cout << "              <name>    :name of the element to remove" << std::endl;
+			std::cout << "              <name>    :" << _TXT("name of the element to remove") << std::endl;
 			std::cout << "            rename <name> <newname>" << std::endl;
-			std::cout << "              <name>    :name of the element to rename" << std::endl;
-			std::cout << "              <newname> :new name of the element" << std::endl;
+			std::cout << "              <name>    :" << _TXT("name of the element to rename") << std::endl;
+			std::cout << "              <newname> :" << _TXT("new name of the element") << std::endl;
 			std::cout << "            clear <name>" << std::endl;
-			std::cout << "              <name>    :name of the element to clear all values" << std::endl;
-			std::cout << "(*)       :type of an element is one of the following:" << std::endl;
-			std::cout << "              INT8      :one byte signed integer value" << std::endl;
-			std::cout << "              UINT8     :one byte unsigned integer value" << std::endl;
-			std::cout << "              INT16     :two bytes signed integer value" << std::endl;
-			std::cout << "              UINT16    :two bytes unsigned integer value" << std::endl;
-			std::cout << "              INT32     :four bytes signed integer value" << std::endl;
-			std::cout << "              UINT32    :four bytes unsigned integer value" << std::endl;
-			std::cout << "              FLOAT16   :two bytes floating point value (IEEE 754 small)" << std::endl;
-			std::cout << "              FLOAT32   :four bytes floating point value (IEEE 754 single)" << std::endl;
-			std::cout << "description: Executes a list of alter the meta data table commands." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << "              <name>    :" << _TXT("name of the element to clear all values") << std::endl;
+			std::cout << "(*)       :" << _TXT("type of an element is one of the following:") << std::endl;
+			std::cout << "              INT8      :" << _TXT("one byte signed integer value") << std::endl;
+			std::cout << "              UINT8     :" << _TXT("one byte unsigned integer value") << std::endl;
+			std::cout << "              INT16     :" << _TXT("two bytes signed integer value") << std::endl;
+			std::cout << "              UINT16    :" << _TXT("two bytes unsigned integer value") << std::endl;
+			std::cout << "              INT32     :" << _TXT("four bytes signed integer value") << std::endl;
+			std::cout << "              UINT32    :" << _TXT("four bytes unsigned integer value") << std::endl;
+			std::cout << "              FLOAT16   :" << _TXT("two bytes floating point value (IEEE 754 small)") << std::endl;
+			std::cout << "              FLOAT32   :" << _TXT("four bytes floating point value (IEEE 754 single)") << std::endl;
+			std::cout << _TXT("description: Executes a list of alter the meta data table commands.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "    Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			return rt;
 		}
 		std::string storagecfg = opt[0];
@@ -327,18 +340,33 @@ int main( int argc, const char* argv[])
 					break;
 			}
 		}
-		std::cerr << "updating meta data table changes..." << std::endl;
+		std::cerr << _TXT("updating meta data table changes...") << std::endl;
 		md->commit();
-		std::cerr << "done" << std::endl;
+		std::cerr << _TXT("done") << std::endl;
+		delete errorBuffer;
+		return 0;
+	}
+	catch (const std::bad_alloc&)
+	{
+		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cerr << "ERROR " << e.what() << std::endl;
+		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		if (errormsg)
+		{
+			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+		}
+		else
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << std::endl;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "EXCEPTION " << e.what() << std::endl;
+		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
+	delete errorBuffer;
 	return -1;
 }
 

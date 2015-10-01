@@ -31,6 +31,7 @@
 #include "strus/programLoader.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
+#include "strus/segmenterInterface.hpp"
 #include <stdexcept>
 
 using namespace strus;
@@ -90,13 +91,15 @@ void AnalyzerMap::defineProgram(
 
 void AnalyzerMap::defineAnalyzerProgramSource(
 		const std::string& scheme,
-		const std::string& segmenter,
+		const std::string& segmentername,
 		const std::string& analyzerProgramSource)
 {
+	std::auto_ptr<strus::SegmenterInterface>
+		segmenter( m_builder->createSegmenter( segmentername));
 	utils::SharedPtr<strus::DocumentAnalyzerInterface>
-		analyzer( m_builder->createDocumentAnalyzer( segmenter));
+		analyzer( m_builder->createDocumentAnalyzer( segmentername));
 
-	std::string mimeType = analyzer->mimeType();
+	std::string mimeType = segmenter->mimeType();
 	const strus::TextProcessorInterface* textproc = m_builder->getTextProcessor();
 	strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 

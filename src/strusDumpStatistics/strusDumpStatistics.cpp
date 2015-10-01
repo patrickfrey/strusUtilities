@@ -27,6 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/error.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
@@ -40,6 +41,7 @@
 #include "strus/peerMessageProcessorInterface.hpp"
 #include "strus/peerMessageBuilderInterface.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
@@ -48,6 +50,8 @@
 #include "private/version.hpp"
 #include "private/utils.hpp"
 #include "private/programOptions.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -74,10 +78,14 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
+	strus::ErrorBufferInterface* errorBuffer = 0;
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
+		errorBuffer = strus::createErrorBuffer_standard( stderr, 2);
+		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
+
 		opt = strus::ProgramOptions(
 				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
@@ -104,7 +112,7 @@ int main( int argc, const char* argv[])
 				rt = 1;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
@@ -178,8 +186,8 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
-			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
-			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
 			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 		}
@@ -206,15 +214,30 @@ int main( int argc, const char* argv[])
 			msg << ec;
 			throw std::runtime_error( std::string( "error writing global statistics to file '") + outputfile + "' (system error code " + msg.str() + ")");
 		}
+		delete errorBuffer;
+		return 0;
+	}
+	catch (const std::bad_alloc&)
+	{
+		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cerr << "ERROR " << e.what() << std::endl;
+		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		if (errormsg)
+		{
+			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+		}
+		else
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << std::endl;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "EXCEPTION " << e.what() << std::endl;
+		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
+	delete errorBuffer;
 	return -1;
 }
 
