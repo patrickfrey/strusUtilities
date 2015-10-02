@@ -42,6 +42,8 @@ class TextProcessorInterface;
 class DocumentAnalyzerInterface;
 /// \brief Forward declaration
 class FileCrawlerInterface;
+/// \brief Forward declaration
+class ErrorBufferInterface;
 
 class CheckInsertProcessor
 {
@@ -51,7 +53,8 @@ public:
 			const TextProcessorInterface* textproc_,
 			const AnalyzerMap& analyzerMap_,
 			FileCrawlerInterface* crawler_,
-			const std::string& logfile_);
+			const std::string& logfile_,
+			ErrorBufferInterface* errorhnd_);
 
 	~CheckInsertProcessor();
 
@@ -65,6 +68,7 @@ private:
 	FileCrawlerInterface* m_crawler;
 	utils::AtomicBool m_terminated;
 	std::string m_logfile;
+	ErrorBufferInterface* m_errorhnd;
 };
 
 }//namespace

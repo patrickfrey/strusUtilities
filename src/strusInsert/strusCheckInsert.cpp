@@ -57,7 +57,6 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "fileCrawler.hpp"
-#include "commitQueue.hpp"
 #include "checkInsertProcessor.hpp"
 #include "thread.hpp"
 #include <iostream>

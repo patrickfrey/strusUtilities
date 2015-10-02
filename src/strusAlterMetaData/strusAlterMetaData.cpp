@@ -53,9 +53,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
+	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	if (dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
+	if (sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -315,7 +318,10 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::StorageAlterMetaDataTableInterface> md;
 
 		builder.reset( moduleLoader->createStorageObjectBuilder());
+		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+
 		md.reset( builder->createAlterMetaDataTable( storagecfg));
+		if (!md.get()) throw strus::runtime_error(_TXT("failed to create storage alter metadata table structure"));
 
 		// Execute alter meta data table commands:
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();
@@ -341,7 +347,8 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::cerr << _TXT("updating meta data table changes...") << std::endl;
-		md->commit();
+		if (!md->commit()) throw strus::runtime_error(_TXT("alter meta data commit failed"));
+
 		std::cerr << _TXT("done") << std::endl;
 		delete errorBuffer;
 		return 0;

@@ -58,7 +58,8 @@ InsertProcessor::InsertProcessor(
 		DocnoRangeAllocatorInterface* docnoAllocator_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
-		unsigned int transactionSize_)
+		unsigned int transactionSize_,
+		ErrorBufferInterface* errorhnd_)
 
 	:m_storage(storage_)
 	,m_textproc(textproc_)
@@ -68,6 +69,7 @@ InsertProcessor::InsertProcessor(
 	,m_crawler(crawler_)
 	,m_transactionSize(transactionSize_)
 	,m_terminated(false)
+	,m_errorhnd(errorhnd_)
 {}
 
 InsertProcessor::~InsertProcessor()
@@ -90,12 +92,14 @@ void InsertProcessor::run()
 	
 		std::auto_ptr<strus::MetaDataReaderInterface> metadata( 
 			m_storage->createMetaDataReader());
-	
+		if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
+
 		bool hasDoclenAttribute
 			= metadata->hasElement( strus::Constants::metadata_doclen());
 	
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
+		if (!transaction.get()) throw strus::runtime_error(_TXT("error creating storage transaction"));
 
 		while (m_crawler->fetch( files))
 		{
@@ -122,7 +126,8 @@ void InsertProcessor::run()
 					}
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 						analyzerContext( analyzer->createContext( dclass));
-	
+					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
+
 					// Analyze the document (with subdocuments) and insert it:
 					enum {AnalyzerBufSize=8192};
 					char buf[ AnalyzerBufSize];
@@ -158,6 +163,7 @@ void InsertProcessor::run()
 								storagedoc.reset(
 									transaction->createDocument(
 										oi->value(), docno));
+								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document structure"));
 								docid = oi->value().c_str();
 								//... use the docid from the analyzer if defined there
 							}
@@ -165,6 +171,7 @@ void InsertProcessor::run()
 							{
 								storagedoc.reset(
 									transaction->createDocument( *fitr, docno));
+								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document structure"));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();
@@ -272,6 +279,7 @@ void InsertProcessor::run()
 							{
 								m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCount);
 								transaction.reset( m_storage->createTransaction());
+								if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
 								docCount = 0;
 								docnoRangeStart = 0;
 							}
@@ -282,14 +290,24 @@ void InsertProcessor::run()
 				{
 					std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 					transaction.reset( m_storage->createTransaction());
+					if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
 					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 					docnoRangeStart = 0;
 					docCount = 0;
 				}
 				catch (const std::runtime_error& err)
 				{
-					std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
+					const char* errmsg = m_errorhnd->fetchError();
+					if (errmsg)
+					{
+						std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': %s; %s"), fitr->c_str(), err.what(), errmsg) << std::endl;
+					}
+					else
+					{
+						std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
+					}
 					transaction.reset( m_storage->createTransaction());
+					if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
 					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 					docnoRangeStart = 0;
 					docCount = 0;
@@ -320,7 +338,15 @@ void InsertProcessor::run()
 	}
 	catch (const std::runtime_error& err)
 	{
-		std::cerr << utils::string_sprintf( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
+		const char* errmsg = m_errorhnd->fetchError();
+		if (errmsg)
+		{
+			std::cerr << utils::string_sprintf( _TXT("failed to complete inserts: %s; %s"), err.what(), errmsg) << std::endl;
+		}
+		else
+		{
+			std::cerr << utils::string_sprintf( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
+		}
 		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 		docnoRangeStart = 0;
 	}

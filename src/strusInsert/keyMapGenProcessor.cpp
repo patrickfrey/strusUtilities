@@ -107,13 +107,15 @@ KeyMapGenProcessor::KeyMapGenProcessor(
 		const TextProcessorInterface* textproc_,
 		const AnalyzerMap& analyzerMap_,
 		KeyMapGenResultList* que_,
-		FileCrawlerInterface* crawler_)
+		FileCrawlerInterface* crawler_,
+		ErrorBufferInterface* errorhnd_)
 
 	:m_textproc(textproc_)
 	,m_analyzerMap(analyzerMap_)
 	,m_que(que_)
 	,m_crawler(crawler_)
 	,m_terminated(false)
+	,m_errorhnd(errorhnd_)
 {}
 
 KeyMapGenProcessor::~KeyMapGenProcessor()
@@ -161,6 +163,7 @@ void KeyMapGenProcessor::run()
 					}
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 						analyzerContext( analyzer->createContext( dclass));
+					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
 	
 					// Analyze the document (with subdocuments) and update the key map:
 					enum {AnalyzerBufSize=8192};
@@ -229,7 +232,15 @@ void KeyMapGenProcessor::run()
 		}
 		catch (const std::runtime_error& err)
 		{
-			std::cerr << utils::string_sprintf(_TXT("failed to process chunk of %u: %s"), files.size(), err.what()) << std::endl;
+			const char* errmsg = m_errorhnd->fetchError();
+			if (errmsg)
+			{
+				std::cerr << utils::string_sprintf(_TXT("failed to process chunk of %u: %s; %s"), files.size(), err.what(), errmsg) << std::endl;
+			}
+			else
+			{
+				std::cerr << utils::string_sprintf(_TXT("failed to process chunk of %u: %s"), files.size(), err.what()) << std::endl;
+			}
 		}
 	}
 }

@@ -45,6 +45,8 @@ class CommitQueue;
 class FileCrawlerInterface;
 /// \brief Forward declaration
 class DocnoRangeAllocatorInterface;
+/// \brief Forward declaration
+class ErrorBufferInterface;
 
 
 class InsertProcessor
@@ -57,7 +59,8 @@ public:
 			DocnoRangeAllocatorInterface* docnoAllocator_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
-			unsigned int transactionSize_);
+			unsigned int transactionSize_,
+			ErrorBufferInterface* errorhnd_);
 
 	~InsertProcessor();
 
@@ -73,6 +76,7 @@ private:
 	FileCrawlerInterface* m_crawler;
 	unsigned int m_transactionSize;
 	utils::AtomicBool m_terminated;
+	ErrorBufferInterface* m_errorhnd;
 };
 
 }//namespace

@@ -50,8 +50,10 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageDocumentUpdateInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/reference.hpp"
+#include "strus/private/snprintf.h"
 #include "private/inputStream.hpp"
 #include "private/utils.hpp"
 #include "private/dll_tags.hpp"
@@ -66,27 +68,38 @@
 using namespace strus;
 using namespace strus::parser;
 
-static std::string errorPosition( const char* base, const char* itr)
+class ErrorPosition
 {
-	unsigned int line = 1;
-	unsigned int col = 1;
-	std::ostringstream msg;
-
-	for (unsigned int ii=0,nn=itr-base; ii < nn; ++ii)
+public:
+	ErrorPosition( const char* base, const char* itr)
 	{
-		if (base[ii] == '\n')
+		unsigned int line = 1;
+		unsigned int col = 1;
+		std::ostringstream msg;
+	
+		for (unsigned int ii=0,nn=itr-base; ii < nn; ++ii)
 		{
-			col = 1;
-			++line;
+			if (base[ii] == '\n')
+			{
+				col = 1;
+				++line;
+			}
+			else
+			{
+				++col;
+			}
 		}
-		else
-		{
-			++col;
-		}
+		strus_snprintf( m_buf, sizeof(m_buf), "at line %u column %u", line, col);
 	}
-	msg << "at line " << line << " column " << col;
-	return msg.str();
-}
+
+	const char* c_str() const
+	{
+		return m_buf;
+	}
+private:
+	char m_buf[ 128];
+};
+
 
 static std::string parseQueryTerm( char const*& src)
 {
@@ -181,12 +194,13 @@ static void parseWeightingConfig(
 		throw strus::runtime_error(_TXT( "weighting function identifier expected"));
 	}
 	std::string functionName = parse_IDENTIFIER( src);
+
 	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
-	if (!wf)
-	{
-		throw strus::runtime_error(_TXT( "weighting function not defined: '%s'"), functionName.c_str());
-	}
+	if (!wf) throw strus::runtime_error(_TXT( "weighting function '%s' not defined"), functionName.c_str());
+
 	std::auto_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance());
+	if (!function.get()) throw strus::runtime_error(_TXT( "failed to create weighting function '%s'"), functionName.c_str());
+
 	typedef QueryEvalInterface::FeatureParameter FeatureParameter;
 	std::vector<FeatureParameter> featureParameters;
 
@@ -288,12 +302,12 @@ static void parseSummarizerConfig(
 		throw strus::runtime_error(_TXT( "name of summarizer function expected after assignment in summarizer definition"));
 	}
 	functionName = utils::tolower( parse_IDENTIFIER( src));
+
 	const SummarizerFunctionInterface* sf = queryproc->getSummarizerFunction( functionName);
-	if (!sf)
-	{
-		throw strus::runtime_error(_TXT( "summarizer function not defined: '%s'"), functionName.c_str());
-	}
+	if (!sf) throw strus::runtime_error(_TXT( "summarizer function not defined: '%s'"), functionName.c_str());
+
 	std::auto_ptr<SummarizerFunctionInstanceInterface> function( sf->createInstance( queryproc));
+	if (!function.get()) throw strus::runtime_error(_TXT( "failed to create summarizer function instance '%s'"), functionName.c_str());
 
 	if (!isOpenOvalBracket( *src))
 	{
@@ -368,10 +382,11 @@ static void parseSummarizerConfig(
 }
 
 
-DLL_PUBLIC void strus::loadQueryEvalProgram(
+DLL_PUBLIC bool strus::loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
 		const QueryProcessorInterface* queryproc,
-		const std::string& source)
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
 	enum StatementKeyword {e_EVAL, e_SELECTION, e_RESTRICTION, e_TERM, e_SUMMARIZE};
@@ -431,11 +446,19 @@ DLL_PUBLIC void strus::loadQueryEvalProgram(
 				(void)parse_OPERATOR( src);
 			}
 		}
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("out of memory parsing query evaluation program %s"), pos.c_str());
+		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::string pos( errorPosition( source.c_str(), src));
-		throw strus::runtime_error(_TXT("error in query evaluation program %s: %s"), pos.c_str(), e.what());
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("error in query evaluation program %s: %s"), pos.c_str(), e.what());
+		return false;
 	}
 }
 
@@ -725,13 +748,21 @@ static void parseFeatureDef(
 	for (; ni != ne; ++ni)
 	{
 		const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
-		normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
-		normalizer.push_back( normalizer_ref.back().get());
+		if (!nm) throw strus::runtime_error(_TXT( "normalizer function '%s' not found"), ni->name().c_str());
+
+		Reference<NormalizerFunctionInstanceInterface> nmi( nm->createInstance( ni->args(), textproc));
+		if (!nmi.get()) throw strus::runtime_error(_TXT( "failed to create instance of normalizer function '%s'"), ni->name().c_str());
+
+		normalizer_ref.push_back( nmi);
+		normalizer.push_back( nmi.get());
 	}
 	// [2] Parse tokenizer:
 	FunctionConfig tokenizercfg = parseTokenizerConfig( src);
 	const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+	if (!tk) throw strus::runtime_error(_TXT( "tokenizer function '%s' not found"), tokenizercfg.name().c_str());
+
 	tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+	if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
 
 	// [3] Parse feature options, if defined:
 	DocumentAnalyzerInterface::FeatureOptions featopt( parseFeatureOptions( src));
@@ -789,10 +820,11 @@ static void parseFeatureDef(
 }
 
 
-DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
+DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 		DocumentAnalyzerInterface& analyzer,
 		const TextProcessorInterface* textproc,
-		const std::string& source)
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
 	skipSpaces(src);
@@ -835,8 +867,13 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 			{
 				std::auto_ptr<AggregatorFunctionInstanceInterface> statfunc;
 				FunctionConfig cfg = parseAggregatorFunctionConfig( src);
+
 				const AggregatorFunctionInterface* sf = textproc->getAggregator( cfg.name());
+				if (!sf) throw strus::runtime_error(_TXT( "unknown aggregator function '%s'"), cfg.name().c_str());
+				
 				statfunc.reset( sf->createInstance( cfg.args()));
+				if (!statfunc.get()) throw strus::runtime_error(_TXT( "failed to create instance of aggregator function '%s'"), cfg.name().c_str());
+
 				analyzer.defineAggregatedMetaData( identifier, statfunc.get());
 				statfunc.release();
 			}
@@ -850,25 +887,48 @@ DLL_PUBLIC void strus::loadDocumentAnalyzerProgram(
 			}
 			(void)parse_OPERATOR(src);
 		}
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("out of memory parsing document analyzer program %s"), pos.c_str());
+		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::string pos( errorPosition( source.c_str(), src));
-		throw strus::runtime_error(_TXT("error in document analyzer program %s: %s"), pos.c_str(), e.what());
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("error in document analyzer program %s: %s"), pos.c_str(), e.what());
+		return false;
 	}
 }
 
 
-DLL_PUBLIC bool strus::isAnalyzerMapSource( const std::string& source)
+DLL_PUBLIC bool strus::isAnalyzerMapSource(
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
 {
-	char const* src = source.c_str();
-	skipSpaces(src);
-	if (isAlpha(*src))
+	try
 	{
-		std::string id = parse_IDENTIFIER( src);
-		if (isEqual( id, "SCHEME") || isEqual( id, "SEGMENTER") || isEqual( id, "PROGRAM")) return true;
+		char const* src = source.c_str();
+		skipSpaces(src);
+		if (isAlpha(*src))
+		{
+			std::string id = parse_IDENTIFIER( src);
+			if (isEqual( id, "SCHEME") || isEqual( id, "SEGMENTER") || isEqual( id, "PROGRAM")) return true;
+		}
+		return false;
 	}
-	return false;
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report(_TXT("out of memory in check for analyzer map source"));
+		return false;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report(_TXT("error in check for analyzer map source: %s"), e.what());
+		return false;
+	}
 }
 
 static std::string parseAnalyzerMapValue( char const*& itr)
@@ -888,9 +948,10 @@ static std::string parseAnalyzerMapValue( char const*& itr)
 	return val;
 }
 
-DLL_PUBLIC void strus::loadAnalyzerMap(
+DLL_PUBLIC bool strus::loadAnalyzerMap(
 		std::vector<AnalyzerMapElement>& mapdef,
-		const std::string& source)
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
 {
 	enum Mask {MSK_SCHEME=0x01, MSK_PROGRAM=0x02, MSK_SEGMENTER=0x04};
 	AnalyzerMapElement elem;
@@ -899,70 +960,79 @@ DLL_PUBLIC void strus::loadAnalyzerMap(
 	skipSpaces(src);
 	try
 	{
-	while (*src)
-	{
-		if (isSemiColon(*src))
+		while (*src)
 		{
-			(void)parse_OPERATOR( src);
-			if ((mask & MSK_PROGRAM) == 0)
+			if (isSemiColon(*src))
 			{
-				mapdef.push_back( elem);
-				elem.clear();
-				mask = 0;
+				(void)parse_OPERATOR( src);
+				if ((mask & MSK_PROGRAM) == 0)
+				{
+					mapdef.push_back( elem);
+					elem.clear();
+					mask = 0;
+				}
+				else if (!mask)
+				{
+					throw strus::runtime_error( _TXT("empty declaration"));
+				}
+				else
+				{
+					throw strus::runtime_error( _TXT("PROGRAM missing in declaration"));
+				}
 			}
-			else if (!mask)
+			if (isAlpha(*src))
 			{
-				throw strus::runtime_error( _TXT("empty declaration"));
-			}
-			else
-			{
-				throw strus::runtime_error( _TXT("PROGRAM missing in declaration"));
+				std::string id = parse_IDENTIFIER( src);
+				if (isEqual( id, "SCHEME"))
+				{
+					if (mask & MSK_SCHEME) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
+					mask |= MSK_SCHEME;
+					elem.scheme = parseAnalyzerMapValue( src);
+				}
+				else if (isEqual( id, "PROGRAM"))
+				{
+					if (mask & MSK_PROGRAM) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
+					mask |= MSK_PROGRAM;
+					elem.prgFilename = parseAnalyzerMapValue( src);
+				}
+				else if (isEqual( id, "SEGMENTER"))
+				{
+					if (mask & MSK_SEGMENTER) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
+					mask |= MSK_SEGMENTER;
+					elem.segmenter = parseAnalyzerMapValue( src);
+				}
+				else
+				{
+					throw strus::runtime_error( _TXT( "unknown identifier '%s'"), id.c_str());
+				}
 			}
 		}
-		if (isAlpha(*src))
+		if (mask)
 		{
-			std::string id = parse_IDENTIFIER( src);
-			if (isEqual( id, "SCHEME"))
-			{
-				if (mask & MSK_SCHEME) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
-				mask |= MSK_SCHEME;
-				elem.scheme = parseAnalyzerMapValue( src);
-			}
-			else if (isEqual( id, "PROGRAM"))
-			{
-				if (mask & MSK_PROGRAM) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
-				mask |= MSK_PROGRAM;
-				elem.prgFilename = parseAnalyzerMapValue( src);
-			}
-			else if (isEqual( id, "SEGMENTER"))
-			{
-				if (mask & MSK_SEGMENTER) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
-				mask |= MSK_SEGMENTER;
-				elem.segmenter = parseAnalyzerMapValue( src);
-			}
-			else
-			{
-				throw strus::runtime_error( _TXT( "unknown identifier '%s'"), id.c_str());
-			}
+			throw strus::runtime_error( _TXT("unterminated definition, missing semicolon at end of source"));
 		}
+		return true;
 	}
-	if (mask)
+	catch (const std::bad_alloc&)
 	{
-		throw strus::runtime_error( _TXT("unterminated definition, missing semicolon at end of source"));
-	}
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("out of memory parsing query document class to analyzer map program %s"), pos.c_str());
+		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::string pos( errorPosition( source.c_str(), src));
-		throw strus::runtime_error(_TXT("error in query document class to analyzer map program %s: %s"), pos.c_str(), e.what());
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("error in query document class to analyzer map program %s: %s"), pos.c_str(), e.what());
+		return false;
 	}
 }
 
 
-DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
+DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 		QueryAnalyzerInterface& analyzer,
 		const TextProcessorInterface* textproc,
-		const std::string& source)
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
 	skipSpaces(src);
@@ -1001,12 +1071,20 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 			for (; ni != ne; ++ni)
 			{
 				const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
-				normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
-				normalizer.push_back( normalizer_ref.back().get());
+				if (!nm) throw strus::runtime_error(_TXT( "unknown normalizer function '%s'"), ni->name().c_str());
+
+				Reference<NormalizerFunctionInstanceInterface> nmi( nm->createInstance( ni->args(), textproc));
+				if (!nmi.get()) throw strus::runtime_error(_TXT( "failed to create instance of normalizer function '%s'"), ni->name().c_str());
+
+				normalizer_ref.push_back( nmi);
+				normalizer.push_back( nmi.get());
 			}
 			FunctionConfig tokenizercfg = parseTokenizerConfig( src);
 			const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+			if (!tk) throw strus::runtime_error(_TXT( "tokenizer function '%s' not found"), tokenizercfg.name().c_str());
+
 			tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+			if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
 
 			analyzer.definePhraseType(
 				phraseType, featureType, tokenizer.get(), normalizer);
@@ -1025,58 +1103,90 @@ DLL_PUBLIC void strus::loadQueryAnalyzerProgram(
 			}
 			(void)parse_OPERATOR(src);
 		}
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("out of memory loading query analyzer program %s"), pos.c_str());
+		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::string pos( errorPosition( source.c_str(), src));
-		throw strus::runtime_error(_TXT("error in query analyzer program %s: %s"), pos.c_str(), e.what());
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("error in query analyzer program %s: %s"), pos.c_str(), e.what());
+		return false;
 	}
 }
 
-DLL_PUBLIC void strus::loadQueryAnalyzerPhraseType(
+
+DLL_PUBLIC bool strus::loadQueryAnalyzerPhraseType(
 		QueryAnalyzerInterface& analyzer,
 		const TextProcessorInterface* textproc,
 		const std::string& phraseType,
 		const std::string& featureType,
 		const std::string& normalizersrc,
-		const std::string& tokenizersrc)
+		const std::string& tokenizersrc,
+		ErrorBufferInterface* errorhnd)
 {
-	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
-	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
-	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
-
-	char const* nsrc = normalizersrc.c_str();
-	std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( nsrc);
-	if ((std::size_t)(nsrc - normalizersrc.c_str()) < normalizersrc.size())
+	try
 	{
-		throw strus::runtime_error( _TXT("unexpected token after end of normalizer definition: '%s'"), nsrc);
+		std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+		std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
+		std::vector<NormalizerFunctionInstanceInterface*> normalizer;
+	
+		char const* nsrc = normalizersrc.c_str();
+		std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( nsrc);
+		if ((std::size_t)(nsrc - normalizersrc.c_str()) < normalizersrc.size())
+		{
+			throw strus::runtime_error( _TXT("unexpected token after end of normalizer definition: '%s'"), nsrc);
+		}
+		std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
+		for (; ni != ne; ++ni)
+		{
+			const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
+			if (!nm) throw strus::runtime_error(_TXT( "unknown normalizer function '%s'"), ni->name().c_str());
+	
+			Reference<NormalizerFunctionInstanceInterface> nmi( nm->createInstance( ni->args(), textproc));
+			if (!nmi.get()) throw strus::runtime_error(_TXT( "failed to create instance of normalizer function '%s'"), ni->name().c_str());
+	
+			normalizer_ref.push_back( nmi);
+			normalizer.push_back( nmi.get());
+		}
+		char const* tsrc = tokenizersrc.c_str();
+		FunctionConfig tokenizercfg = parseTokenizerConfig( tsrc);
+		if ((std::size_t)(tsrc - tokenizersrc.c_str()) < tokenizersrc.size())
+		{
+			throw strus::runtime_error( _TXT("unexpected token after end of tokenizer definition: '%s'"), nsrc);
+		}
+		const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+		if (!tk) throw strus::runtime_error(_TXT( "tokenizer function '%s' not found"), tokenizercfg.name().c_str());
+	
+		tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+		if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
+	
+		analyzer.definePhraseType(
+			phraseType, featureType, tokenizer.get(), normalizer);
+	
+		std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
+			ri = normalizer_ref.begin(), re = normalizer_ref.end();
+		for (; ri != re; ++ri)
+		{
+			(void)ri->release();
+		}
+		tokenizer.release();
+		return true;
 	}
-	std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
-	for (; ni != ne; ++ni)
+	catch (const std::bad_alloc&)
 	{
-		const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
-		normalizer_ref.push_back( nm->createInstance( ni->args(), textproc));
-		normalizer.push_back( normalizer_ref.back().get());
+		errorhnd->report(_TXT("out of memory loading query analyzer phrase type"));
+		return false;
 	}
-	char const* tsrc = tokenizersrc.c_str();
-	FunctionConfig tokenizercfg = parseTokenizerConfig( tsrc);
-	if ((std::size_t)(tsrc - tokenizersrc.c_str()) < tokenizersrc.size())
+	catch (const std::runtime_error& e)
 	{
-		throw strus::runtime_error( _TXT("unexpected token after end of tokenizer definition: '%s'"), nsrc);
+		errorhnd->report(_TXT("error in query analyzer phrase type: %s"), e.what());
+		return false;
 	}
-	const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
-	tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
-
-	analyzer.definePhraseType(
-		phraseType, featureType, tokenizer.get(), normalizer);
-
-	std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
-		ri = normalizer_ref.begin(), re = normalizer_ref.end();
-	for (; ri != re; ++ri)
-	{
-		(void)ri->release();
-	}
-	tokenizer.release();
 }
 
 
@@ -1492,11 +1602,12 @@ static void parseMetaDataRestriction(
 }
 
 
-DLL_PUBLIC void strus::loadQuery(
+DLL_PUBLIC bool strus::loadQuery(
 		QueryInterface& query,
 		const QueryAnalyzerInterface* analyzer,
 		const QueryProcessorInterface* queryproc,
-		const std::string& source)
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
 	try
@@ -1577,11 +1688,19 @@ DLL_PUBLIC void strus::loadQuery(
 			}
 		}
 		translateQuery( query, analyzer, queryproc, querystack);
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report( _TXT("out of memory parsing query source %s"), pos.c_str());
+		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::string pos( errorPosition( source.c_str(), src));
-		throw strus::runtime_error( _TXT("error in query source %s: %s"), pos.c_str(), e.what());
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report( _TXT("error in query source %s: %s"), pos.c_str(), e.what());
+		return false;
 	}
 }
 
@@ -1589,34 +1708,48 @@ DLL_PUBLIC void strus::loadQuery(
 DLL_PUBLIC bool strus::scanNextProgram(
 		std::string& segment,
 		std::string::const_iterator& si,
-		const std::string::const_iterator& se)
+		const std::string::const_iterator& se,
+		ErrorBufferInterface* errorhnd)
 {
-	for (; si != se && (unsigned char)*si <= 32; ++si){}
-	if (si == se) return false;
-
-	std::string::const_iterator start = si;
-	while (si != se)
+	try
 	{
-		for (; si != se && *si != '\n'; ++si){}
-		if (si != se)
+		for (; si != se && (unsigned char)*si <= 32; ++si){}
+		if (si == se) return false;
+	
+		std::string::const_iterator start = si;
+		while (si != se)
 		{
-			++si;
-			std::string::const_iterator end = si;
-
-			if (si != se && *si == '.')
+			for (; si != se && *si != '\n'; ++si){}
+			if (si != se)
 			{
 				++si;
-				if (si != se && (*si == '\r' || *si == '\n'))
+				std::string::const_iterator end = si;
+	
+				if (si != se && *si == '.')
 				{
 					++si;
-					segment = std::string( start, end);
-					return true;
+					if (si != se && (*si == '\r' || *si == '\n'))
+					{
+						++si;
+						segment = std::string( start, end);
+						return true;
+					}
 				}
 			}
 		}
+		segment = std::string( start, si);
+		return true;
 	}
-	segment = std::string( start, si);
-	return true;
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report( _TXT("out of memory scanning next program"));
+		return false;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report( _TXT("error scanning next program: %s"), e.what());
+		return false;
+	}
 }
 
 static Index parseDocno( StorageClientInterface& storage, char const*& itr)
@@ -1644,6 +1777,8 @@ static Index parseDocno( StorageClientInterface& storage, char const*& itr)
 static void storeMetaDataValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const ArithmeticVariant& val)
 {
 	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
+
 	update->setMetaData( name, val);
 	update->done();
 }
@@ -1651,6 +1786,7 @@ static void storeMetaDataValue( StorageTransactionInterface& transaction, const 
 static void storeAttributeValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const std::string& val)
 {
 	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
 	if (val.empty())
 	{
 		update->clearAttribute( name);
@@ -1665,6 +1801,7 @@ static void storeAttributeValue( StorageTransactionInterface& transaction, const
 static void storeUserRights( StorageTransactionInterface& transaction, const Index& docno, const std::string& val)
 {
 	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
 	char const* itr = val.c_str();
 	if (itr[0] == '+' && (itr[1] == ',' || !itr[1]))
 	{
@@ -1725,6 +1862,7 @@ static unsigned int loadStorageValues(
 	unsigned int rt = 0;
 	std::auto_ptr<StorageTransactionInterface>
 		transaction( storage.createTransaction());
+	if (!transaction.get()) throw strus::runtime_error( _TXT("failed to create storage transaction"));
 	std::size_t linecnt = 1;
 	unsigned int commitcnt = 0;
 	try
@@ -1780,16 +1918,24 @@ static unsigned int loadStorageValues(
 			}
 			if (++commitcnt == commitsize)
 			{
-				transaction->commit();
+				if (!transaction->commit())
+				{
+					throw strus::runtime_error(_TXT("transaction commit failed"));
+				}
 				commitcnt = 0;
 				transaction.reset( storage.createTransaction());
+				if (!transaction.get()) throw strus::runtime_error( _TXT("failed to recreate storage transaction after commit"));
 			}
 		}
 		if (commitcnt)
 		{
-			transaction->commit();
+			if (!transaction->commit())
+			{
+				throw strus::runtime_error(_TXT("transaction commit failed"));
+			}
 			commitcnt = 0;
 			transaction.reset( storage.createTransaction());
+			if (!transaction.get()) throw strus::runtime_error( _TXT("failed to recreate storage transaction after commit"));
 		}
 		return rt;
 	}
@@ -1804,9 +1950,23 @@ DLL_PUBLIC unsigned int strus::loadDocumentMetaDataAssignments(
 		StorageClientInterface& storage,
 		const std::string& metadataName,
 		const std::string& file,
-		unsigned int commitsize)
+		unsigned int commitsize,
+		ErrorBufferInterface* errorhnd)
 {
-	return loadStorageValues( storage, metadataName, file, StorageValueMetaData, commitsize);
+	try
+	{
+		return loadStorageValues( storage, metadataName, file, StorageValueMetaData, commitsize);
+	}
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report( _TXT("out of memory loading meta data assignments"));
+		return 0;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report( _TXT("error loading meta data assignments: %s"), e.what());
+		return 0;
+	}
 }
 
 
@@ -1814,18 +1974,46 @@ DLL_PUBLIC unsigned int strus::loadDocumentAttributeAssignments(
 		StorageClientInterface& storage,
 		const std::string& attributeName,
 		const std::string& file,
-		unsigned int commitsize)
+		unsigned int commitsize,
+		ErrorBufferInterface* errorhnd)
 {
-	return loadStorageValues( storage, attributeName, file, StorageValueAttribute, commitsize);
+	try
+	{
+		return loadStorageValues( storage, attributeName, file, StorageValueAttribute, commitsize);
+	}
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report( _TXT("out of memory loading attribute assignments"));
+		return 0;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report( _TXT("error loading attribute assignments: %s"), e.what());
+		return 0;
+	}
 }
 
 
 DLL_PUBLIC unsigned int strus::loadDocumentUserRightsAssignments(
 		StorageClientInterface& storage,
 		const std::string& file,
-		unsigned int commitsize)
+		unsigned int commitsize,
+		ErrorBufferInterface* errorhnd)
 {
-	return loadStorageValues( storage, std::string(), file, StorageUserRights, commitsize);
+	try
+	{
+		return loadStorageValues( storage, std::string(), file, StorageUserRights, commitsize);
+	}
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report( _TXT("out of memory loading user right assignments"));
+		return 0;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report( _TXT("error loading user right assignments: %s"), e.what());
+		return 0;
+	}
 }
 
 

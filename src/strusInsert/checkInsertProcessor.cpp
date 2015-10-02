@@ -61,7 +61,8 @@ CheckInsertProcessor::CheckInsertProcessor(
 		const TextProcessorInterface* textproc_,
 		const AnalyzerMap& analyzerMap_,
 		FileCrawlerInterface* crawler_,
-		const std::string& logfile_)
+		const std::string& logfile_,
+		ErrorBufferInterface* errorhnd_)
 
 	:m_storage(storage_)
 	,m_textproc(textproc_)
@@ -69,6 +70,7 @@ CheckInsertProcessor::CheckInsertProcessor(
 	,m_crawler(crawler_)
 	,m_terminated(false)
 	,m_logfile(logfile_)
+	,m_errorhnd(errorhnd_)
 {}
 
 CheckInsertProcessor::~CheckInsertProcessor()
@@ -104,6 +106,7 @@ void CheckInsertProcessor::run()
 
 	boost::scoped_ptr<strus::MetaDataReaderInterface> metadata( 
 		m_storage->createMetaDataReader());
+	if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
 
 	bool hasDoclenAttribute
 		= metadata->hasElement( strus::Constants::metadata_doclen());
@@ -134,6 +137,7 @@ void CheckInsertProcessor::run()
 				}
 				std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 					analyzerContext( analyzer->createContext( dclass));
+				if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
 
 				// Analyze the document (with subdocuments) and check it:
 				enum {AnalyzerBufSize=8192};
@@ -167,6 +171,7 @@ void CheckInsertProcessor::run()
 							storagedoc.reset(
 								m_storage->createDocumentChecker(
 									oi->value(), m_logfile));
+							if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document checker"));
 							docid = oi->value().c_str();
 							//... use the docid from the analyzer if defined there
 						}
@@ -175,6 +180,7 @@ void CheckInsertProcessor::run()
 							storagedoc.reset(
 								m_storage->createDocumentChecker(
 									*fitr, m_logfile));
+							if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document checker"));
 							storagedoc->setAttribute(
 								strus::Constants::attribute_docid(), *fitr);
 							docid = fitr->c_str();
@@ -288,7 +294,15 @@ void CheckInsertProcessor::run()
 			}
 			catch (const std::runtime_error& err)
 			{
-				std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
+				const char* errmsg = m_errorhnd->fetchError();
+				if (errmsg)
+				{
+					std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': %s; %s"), fitr->c_str(), err.what(), errmsg) << std::endl;
+				}
+				else
+				{
+					std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
+				}
 			}
 		}
 		filesChecked += files.size();
