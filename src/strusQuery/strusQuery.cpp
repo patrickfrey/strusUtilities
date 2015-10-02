@@ -49,7 +49,6 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/private/fileio.hpp"
-#include "strus/private/snprintf.h"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
@@ -91,15 +90,6 @@ static double getTimeStamp()
 	return (double)now.tv_usec / 1000000.0 + now.tv_sec;
 }
 
-static std::string message( const char* format, ...)
-{
-	char msgbuf[ 4096];
-	va_list ap;
-	va_start(ap, format);
-	strus_vsnprintf( msgbuf, sizeof(msgbuf), format, ap);
-	va_end(ap);
-	return std::string( msgbuf);
-}
 
 int main( int argc_, const char* argv_[])
 {
@@ -353,11 +343,11 @@ int main( int argc_, const char* argv_[])
 			}
 			std::vector<strus::ResultDocument> ranklist = query->evaluate();
 
-			if (!quiet) std::cout << message( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
+			if (!quiet) std::cout << strus::utils::string_sprintf( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
 			std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
 			for (int widx=1; wi != we; ++wi,++widx)
 			{
-				if (!quiet) std::cout << message( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
+				if (!quiet) std::cout << strus::utils::string_sprintf( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
 				std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
 				for (; ai != ae; ++ai)
 				{
@@ -369,7 +359,7 @@ int main( int argc_, const char* argv_[])
 		{
 			double endTime = getTimeStamp();
 			double duration = endTime - startTime;
-			std::cerr << message( _TXT("evaluated %u queries in %.4f seconds"), nofQueries, duration) << std::endl;
+			std::cerr << strus::utils::string_sprintf( _TXT("evaluated %u queries in %.4f seconds"), nofQueries, duration) << std::endl;
 		}
 		delete errorBuffer;
 		return 0;

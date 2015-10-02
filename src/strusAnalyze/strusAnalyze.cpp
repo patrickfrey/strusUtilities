@@ -45,7 +45,6 @@
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
-#include "strus/private/snprintf.h"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
@@ -73,15 +72,6 @@ struct TermOrder
 	}
 };
 
-static std::string message( const char* format, ...)
-{
-	char msgbuf[ 4096];
-	va_list ap;
-	va_start(ap, format);
-	strus_vsnprintf( msgbuf, sizeof(msgbuf), format, ap);
-	va_end(ap);
-	return std::string( msgbuf);
-}
 
 int main( int argc, const char* argv[])
 {
@@ -252,7 +242,7 @@ int main( int argc, const char* argv[])
 			{
 				if (!doc.subDocumentTypeName().empty())
 				{
-					std::cout << "-- " << message( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
+					std::cout << "-- " << strus::utils::string_sprintf( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
 				}
 				std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
 				std::sort( itermar.begin(), itermar.end(), TermOrder());

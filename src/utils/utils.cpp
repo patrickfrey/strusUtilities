@@ -27,6 +27,8 @@
 --------------------------------------------------------------------
 */
 #include "private/utils.hpp"
+#include "private/internationalization.hpp"
+#include "strus/private/snprintf.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -61,7 +63,7 @@ int utils::toint( const std::string& val)
 	}
 	catch (const boost::bad_lexical_cast& err)
 	{
-		throw std::runtime_error( std::string( "failed to convert string '") + val + "' to integer: " + err.what());
+		throw strus::runtime_error( _TXT( "failed to convert string '%s' to integer: "), val.c_str(), err.what());
 	}
 }
 
@@ -73,8 +75,17 @@ std::string utils::tostring( int val)
 	}
 	catch (...)
 	{
-		throw std::runtime_error( "failed to convert number to string");
+		throw strus::runtime_error( _TXT("failed to convert number to string"));
 	}
 }
 
+std::string utils::string_sprintf( const char* format, ...)
+{
+	char msgbuf[ 4096];
+	va_list ap;
+	va_start(ap, format);
+	strus_vsnprintf( msgbuf, sizeof(msgbuf), format, ap);
+	va_end(ap);
+	return std::string( msgbuf);
+}
 

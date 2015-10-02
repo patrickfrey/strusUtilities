@@ -27,6 +27,8 @@
 --------------------------------------------------------------------
 */
 #include "private/inputStream.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include <stdexcept>
 #include <cstring>
 
@@ -44,9 +46,7 @@ InputStream::InputStream( const std::string& docpath)
 		m_fh = ::fopen( docpath.c_str(), "rb");
 		if (!m_fh)
 		{
-			char buf[ 256];
-			snprintf( buf, sizeof(buf), "failed to open file %s for reading (errno %d)", docpath.c_str(), errno);
-			throw std::runtime_error( buf);
+			throw strus::runtime_error(_TXT("failed to open file '%s' for reading (errno %d)"), docpath.c_str(), errno);
 		}
 	}
 }
@@ -80,9 +80,7 @@ std::size_t InputStream::read( char* buf, std::size_t bufsize)
 		if (!feof( m_fh))
 		{
 			unsigned int ec = ::ferror( m_fh);
-			char errbuf[ 256];
-			snprintf( errbuf, sizeof( errbuf), "failed to read from file %s (errno %d)", m_docpath.c_str(), ec);
-			throw std::runtime_error( errbuf);
+			throw strus::runtime_error(_TXT("failed to read from file '%s' (errno %d)"), m_docpath.c_str(), ec);
 		}
 	}
 	return rt;
@@ -93,7 +91,7 @@ std::size_t InputStream::readAhead( char* buf, std::size_t bufsize)
 	std::size_t rt = read( buf, bufsize);
 	if (m_bufferidx != m_buffer.size())
 	{
-		throw std::runtime_error( "subsequent calls of readAhead not allowed");
+		throw strus::runtime_error( _TXT("subsequent calls of readAhead not allowed"));
 	}
 	m_buffer.clear();
 	m_buffer.append( buf, rt);
@@ -108,9 +106,7 @@ const char* InputStream::readline( char* buf, std::size_t bufsize)
 		if (!feof( m_fh))
 		{
 			unsigned int ec = ::ferror( m_fh);
-			char msgbuf[ 256];
-			snprintf( msgbuf, sizeof(msgbuf), "failed to read from file %s (errno %d)", m_docpath.c_str(), ec);
-			throw std::runtime_error( msgbuf);
+			throw strus::runtime_error(_TXT("failed to read from file '%s' (errno %d)"), m_docpath.c_str(), ec);
 		}
 	}
 	return rt;

@@ -35,6 +35,7 @@
 #include "fileCrawlerInterface.hpp"
 #include "private/utils.hpp"
 #include "private/inputStream.hpp"
+#include "private/internationalization.hpp"
 
 using namespace strus;
 
@@ -149,7 +150,7 @@ void KeyMapGenProcessor::run()
 					strus::DocumentClass dclass;
 					if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 					{
-						std::cerr << "failed to detect document class of file '" << *fitr << "'" << std::endl; 
+						std::cerr << utils::string_sprintf(_TXT("failed to detect document class of file '%s'"), fitr->c_str()) << "'" << std::endl; 
 						continue;
 					}
 					strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
@@ -202,11 +203,11 @@ void KeyMapGenProcessor::run()
 				}
 				catch (const std::bad_alloc& err)
 				{
-					std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
+					std::cerr << utils::string_sprintf(_TXT("failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 				}
 				catch (const std::runtime_error& err)
 				{
-					std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+					std::cerr << utils::string_sprintf(_TXT("failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
 				}
 			}
 			if (!m_terminated)
@@ -222,13 +223,13 @@ void KeyMapGenProcessor::run()
 				std::cerr << ".";
 			}
 		}
-		catch (const std::bad_alloc& err)
+		catch (const std::bad_alloc&)
 		{
-			std::cerr << "out of memory when processing chunk of " << files.size() << " documents: " << err.what() << std::endl;
+			std::cerr << utils::string_sprintf(_TXT("out of memory when processing chunk of %u"), files.size()) << std::endl;
 		}
 		catch (const std::runtime_error& err)
 		{
-			std::cerr << "failed to process chunk of " << files.size() << " documents: " << err.what() << std::endl;
+			std::cerr << utils::string_sprintf(_TXT("failed to process chunk of %u: %s"), files.size(), err.what()) << std::endl;
 		}
 	}
 }

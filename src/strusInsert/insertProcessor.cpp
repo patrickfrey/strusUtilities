@@ -40,7 +40,10 @@
 #include "strus/analyzer/document.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/fileio.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include "private/inputStream.hpp"
+#include "private/utils.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "commitQueue.hpp"
 #include <memory>
@@ -108,13 +111,13 @@ void InsertProcessor::run()
 					strus::DocumentClass dclass;
 					if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 					{
-						std::cerr << "failed to detect document class of file '" << *fitr << "'" << std::endl; 
+						std::cerr << utils::string_sprintf( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 						continue;
 					}
 					strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
 					if (!analyzer)
 					{
-						std::cerr << "no analyzer defined for document class with MIME type '" << dclass.mimeType() << "' scheme '" << dclass.scheme() << "'" << std::endl; 
+						std::cerr << utils::string_sprintf( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
 						continue;
 					}
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
@@ -161,8 +164,7 @@ void InsertProcessor::run()
 							else
 							{
 								storagedoc.reset(
-									transaction->createDocument(
-										*fitr, docno));
+									transaction->createDocument( *fitr, docno));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();
@@ -259,7 +261,7 @@ void InsertProcessor::run()
 							// Issue warning for documents cut because they are too big to insert:
 							if (maxpos > Constants::storage_max_position_info())
 							{
-								std::cerr << "token positions of document '" << docid << "' are out or range (document too big, " << maxpos << " token positions assigned)" << std::endl;
+								std::cerr << utils::string_sprintf( _TXT( "token positions of document '%s' are out or range (document too big, %u token positions assigned)"), docid, maxpos) << std::endl;
 							}
 	
 							// Finish document completed:
@@ -278,7 +280,7 @@ void InsertProcessor::run()
 				}
 				catch (const std::bad_alloc& err)
 				{
-					std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
+					std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 					transaction.reset( m_storage->createTransaction());
 					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 					docnoRangeStart = 0;
@@ -286,7 +288,7 @@ void InsertProcessor::run()
 				}
 				catch (const std::runtime_error& err)
 				{
-					std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+					std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
 					transaction.reset( m_storage->createTransaction());
 					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 					docnoRangeStart = 0;
@@ -312,13 +314,13 @@ void InsertProcessor::run()
 	}
 	catch (const std::bad_alloc& err)
 	{
-		std::cerr << "failed to complete inserts due to a memory allocation error" << std::endl;
+		std::cerr << _TXT("failed to complete inserts due to a memory allocation error") << std::endl;
 		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 		docnoRangeStart = 0;
 	}
 	catch (const std::runtime_error& err)
 	{
-		std::cerr << "failed to complete inserts: " << err.what() << std::endl;
+		std::cerr << utils::string_sprintf( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
 		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 		docnoRangeStart = 0;
 	}

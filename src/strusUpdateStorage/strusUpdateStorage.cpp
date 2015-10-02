@@ -46,7 +46,6 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
-#include "strus/private/snprintf.h"
 #include "private/version.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
@@ -69,16 +68,6 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	strus::printIndentMultilineString(
 				out, 12, sti->getConfigDescription(
 					strus::StorageInterface::CmdCreateClient));
-}
-
-static std::string message( const char* format, ...)
-{
-	char msgbuf[ 4096];
-	va_list ap;
-	va_start(ap, format);
-	strus_vsnprintf( msgbuf, sizeof(msgbuf), format, ap);
-	va_end(ap);
-	return std::string( msgbuf);
 }
 
 
@@ -267,7 +256,7 @@ int main( int argc, const char* argv[])
 						*storage, updateBatchPath, transactionSize);
 				break;
 		}
-		std::cerr << message( _TXT("done %u update operations"), nofUpdates) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("done %u update operations"), nofUpdates) << std::endl;
 		delete errorBuffer;
 		if (logfile) fclose( logfile);
 		return 0;

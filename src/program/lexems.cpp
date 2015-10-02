@@ -27,6 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "lexems.hpp"
+#include "private/internationalization.hpp"
 #include <string>
 #include <vector>
 #include <cstdarg>
@@ -93,11 +94,11 @@ std::string parser::parse_STRING( char const*& src)
 	char eb = *src++;
 	while (*src != eb)
 	{
-		if (*src == '\0' || *src == '\n') throw std::runtime_error("unterminated string");
+		if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
 		if (*src == '\\')
 		{
 			src++;
-			if (*src == '\0' || *src == '\n') throw std::runtime_error("unterminated string");
+			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
 		}
 		rt.push_back( *src++);
 	}
@@ -112,7 +113,7 @@ unsigned int parser::parse_UNSIGNED( char const*& src)
 	while (isDigit( *src))
 	{
 		unsigned int vv = (rt * 10) + (*src - '0');
-		if (vv <= rt) throw std::runtime_error( "index out of range");
+		if (vv <= rt) throw strus::runtime_error(_TXT("index out of range"));
 		rt = vv;
 		++src;
 	}
@@ -123,7 +124,7 @@ unsigned int parser::parse_UNSIGNED( char const*& src)
 unsigned int parser::parse_UNSIGNED1( char const*& src)
 {
 	unsigned int rt = parse_UNSIGNED( src);
-	if (rt == 0) throw std::runtime_error( "positive unsigned integer expected");
+	if (rt == 0) throw strus::runtime_error(_TXT("positive unsigned integer expected"));
 	return rt;
 }
 
@@ -155,7 +156,7 @@ float parser::parse_FLOAT( char const*& src)
 	}
 	if (!digitsAllowed)
 	{
-		throw std::runtime_error( "floating point number out of range");
+		throw strus::runtime_error(_TXT("floating point number out of range"));
 	}
 	skipSpaces( src);
 	return rt;
@@ -172,22 +173,22 @@ int parser::parse_INTEGER( char const*& src)
 {
 	int rt = 0;
 	int prev = 0;
-	if (!*src) throw std::runtime_error("integer expected");
+	if (!*src) throw strus::runtime_error(_TXT("integer expected"));
 	bool neg = false;
 	if (*src == '-')
 	{
 		++src;
 		neg = true;
 	}
-	if (!(*src >= '0' && *src <= '9')) throw std::runtime_error("integer expected");
+	if (!(*src >= '0' && *src <= '9')) throw strus::runtime_error(_TXT("integer expected"));
 
 	for (; *src >= '0' && *src <= '9'; ++src)
 	{
 		rt = (rt * 10) + (*src - '0');
-		if (prev > rt) throw std::runtime_error("integer number out of range");
+		if (prev > rt) throw strus::runtime_error(_TXT("integer number out of range"));
 		prev = rt;
 	}
-	if (isAlpha(*src)) throw std::runtime_error("integer expected");
+	if (isAlpha(*src)) throw strus::runtime_error(_TXT("integer expected"));
 
 	skipSpaces( src);
 	if (neg)
@@ -239,9 +240,8 @@ int parser::parse_KEYWORD( char const*& src, unsigned int nn, ...)
 	{
 		src = src_bk;
 		va_start( argp, nn);
-		throw std::runtime_error(
-			std::string( "unknown keyword '") + id
-			+ "', one of " + keywordList( argp, nn) + " expected");
+		std::string kw( keywordList( argp, nn));
+		throw strus::runtime_error(_TXT("unknown keyword '%s', one of %s expected"), id.c_str(), kw.c_str());
 	}
 	va_end( argp);
 	return ii;
@@ -263,14 +263,13 @@ int parser::parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsig
 	{
 		src = src_bk;
 		va_start( argp, nn);
-		throw std::runtime_error(
-			std::string( "unknown keyword '") + id
-			+ "', one of " + keywordList( argp, nn) + " expected");
+		std::string kw( keywordList( argp, nn));
+		throw strus::runtime_error(_TXT("unknown keyword '%s', one of %s expected"), id.c_str(), kw.c_str());
 	}
 	va_end( argp);
 	if ((duplicateflags & (1 << ii))!= 0)
 	{
-		throw std::runtime_error( std::string( "duplicate definition of '") + id + "'");
+		throw strus::runtime_error( _TXT( "duplicate definition of '%s'"), id.c_str());
 	}
 	duplicateflags |= (1 << ii);
 	return ii;
