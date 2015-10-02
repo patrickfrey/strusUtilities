@@ -49,6 +49,7 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
 #include "strus/private/fileio.hpp"
+#include "strus/private/snprintf.h"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
@@ -90,6 +91,16 @@ static double getTimeStamp()
 	return (double)now.tv_usec / 1000000.0 + now.tv_sec;
 }
 
+static std::string message( const char* format, ...)
+{
+	char msgbuf[ 4096];
+	va_list ap;
+	va_start(ap, format);
+	strus_vsnprintf( msgbuf, sizeof(msgbuf), format, ap);
+	va_end(ap);
+	return std::string( msgbuf);
+}
+
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
@@ -109,22 +120,22 @@ int main( int argc_, const char* argv_[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
-			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 3)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() < 3)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -132,7 +143,7 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
 		if (opt("moduledir"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -143,7 +154,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt("module"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --module and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--module", "--rpc");
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
@@ -154,43 +165,43 @@ int main( int argc_, const char* argv_[])
 
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusQuery [options] <anprg> <qeprg> <query>" << std::endl;
-			std::cout << "<anprg>   = path of query analyzer program" << std::endl;
-			std::cout << "<qeprg>   = path of query eval program" << std::endl;
-			std::cout << "<query>   = path of query or '-' for stdin" << std::endl;
-			std::cout << "description: Executes a query or a list of queries from a file." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusQuery [options] <anprg> <qeprg> <query>" << std::endl;
+			std::cout << "<anprg>   = " << _TXT("path of query analyzer program") << std::endl;
+			std::cout << "<qeprg>   = " << _TXT("path of query eval program") << std::endl;
+			std::cout << "<query>   = " << _TXT("path of query or '-' for stdin") << std::endl;
+			std::cout << _TXT("description: Executes a query or a list of queries from a file.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "    Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
-			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				std::cout << _TXT("    <CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
 			std::cout << "-u|--user <NAME>" << std::endl;
-			std::cout << "    Use user name <NAME> for the query" << std::endl;
+			std::cout << "    " << _TXT("Use user name <NAME> for the query") << std::endl;
 			std::cout << "-n|--nofranks <N>" << std::endl;
-			std::cout << "    Return maximum <N> ranks as query result" << std::endl;
+			std::cout << "    " << _TXT("Return maximum <N> ranks as query result") << std::endl;
 			std::cout << "-i|--firstrank <N>" << std::endl;
-			std::cout << "    Return the result starting with rank <N> as first rank" << std::endl;
+			std::cout << "    " << _TXT("Return the result starting with rank <N> as first rank") << std::endl;
 			std::cout << "-Q|--quiet" << std::endl;
-			std::cout << "    No output of results" << std::endl;
+			std::cout << "    " << _TXT("No output of results") << std::endl;
 			std::cout << "-g|--globalstats <FILE>" << std::endl;
-			std::cout << "    Load global statistics of peers from file <FILE>" << std::endl;
+			std::cout << "    " << _TXT("Load global statistics of peers from file <FILE>") << std::endl;
 			std::cout << "-t|--time" << std::endl;
-			std::cout << "    Do print duration of pure query evaluation" << std::endl;
+			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
-			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
-			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			return rt;
 		}
 		bool quiet = opt( "quiet");
@@ -213,7 +224,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt("storage"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			storagecfg = opt["storage"];
 		}
 		std::string analyzerprg = opt[0];
@@ -253,7 +264,7 @@ int main( int argc_, const char* argv_[])
 		}
 		else
 		{
-			throw std::runtime_error( "neither storage (option --storage) nor rpc proxy (option --rpc) specified");
+			throw strus::runtime_error( _TXT("neither storage (option --storage) nor rpc proxy (option --rpc) specified"));
 		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
@@ -271,23 +282,15 @@ int main( int argc_, const char* argv_[])
 		unsigned int ec;
 		std::string analyzerProgramSource;
 		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
-			return 2;
-		}
+		if (ec) throw strus::runtime_error(_TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
+
 		strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
 
 		// Load query evaluation program:
 		std::string qevalProgramSource;
 		ec = strus::readFile( queryprg, qevalProgramSource);
-		if (ec)
-		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load query eval program " << queryprg << " (file system error " << ec << ")" << std::endl;
-			return 3;
-		}
+		if (ec) throw strus::runtime_error(_TXT("failed to load query eval program %s (errno %u)"), queryprg.c_str(), ec);
+
 		strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource);
 
 		// Load global statistics from file if specified:
@@ -299,17 +302,13 @@ int main( int argc_, const char* argv_[])
 			{
 				std::string content;
 				unsigned int ec = strus::readFile( filename, content);
-				if (ec)
-				{
-					std::ostringstream msg;
-					msg << ec;
-					throw std::runtime_error( std::string( "error reading global statistics file '") + filename + "' (system error code " + msg.str() + ")");
-				}
+				if (ec) throw strus::runtime_error(_TXT("error reading global statistics file %s (errno %u)"), filename.c_str(), ec);
+
 				storage->pushPeerMessage( content.c_str(), content.size());
 			}
 			catch (const std::runtime_error& err)
 			{
-				throw std::runtime_error( std::string( "failed to read global statistics from file '") + filename + "': " + err.what());
+				throw strus::runtime_error(_TXT("failed to read global statistics file %s: %s"), filename.c_str(), err.what());
 			}
 		}
 
@@ -320,18 +319,14 @@ int main( int argc_, const char* argv_[])
 			ec = strus::readStdin( querystring);
 			if (ec)
 			{
-				std::cerr << "ERROR failed to read query string from stdin" << std::endl;
+				std::cerr << _TXT("failed to read query string from stdin") << std::endl;
 				return 3;
 			}
 		}
 		else
 		{
 			ec = strus::readFile( querypath, querystring);
-			if (ec)
-			{
-				std::cerr << "ERROR failed to read query string from file '" << querypath << "'" << std::endl;
-				return 4;
-			}
+			if (ec) throw strus::runtime_error(_TXT("failed to read query string from file %s (errno %u)"), querypath.c_str(), ec);
 		}
 
 		unsigned int nofQueries = 0;
@@ -357,12 +352,12 @@ int main( int argc_, const char* argv_[])
 				query->addUserName( username);
 			}
 			std::vector<strus::ResultDocument> ranklist = query->evaluate();
-	
-			if (!quiet) std::cout << "ranked list (starting with rank " << firstRank << ", maximum " << nofRanks << " results):" << std::endl;
+
+			if (!quiet) std::cout << message( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
 			std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
 			for (int widx=1; wi != we; ++wi,++widx)
 			{
-				if (!quiet) std::cout << "[" << widx << "] " << wi->docno() << " score " << wi->weight() << std::endl;
+				if (!quiet) std::cout << message( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
 				std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
 				for (; ai != ae; ++ai)
 				{
@@ -374,9 +369,7 @@ int main( int argc_, const char* argv_[])
 		{
 			double endTime = getTimeStamp();
 			double duration = endTime - startTime;
-			std::cerr << "evaluated " << nofQueries << " queries in "
-					<< std::fixed << std::setw(6) << std::setprecision(4)
-					<< duration << " seconds" << std::endl;
+			std::cerr << message( _TXT("evaluated %u queries in %.4f seconds"), nofQueries, duration) << std::endl;
 		}
 		delete errorBuffer;
 		return 0;

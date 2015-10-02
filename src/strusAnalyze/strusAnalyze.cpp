@@ -45,6 +45,7 @@
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/private/snprintf.h"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
@@ -72,6 +73,16 @@ struct TermOrder
 	}
 };
 
+static std::string message( const char* format, ...)
+{
+	char msgbuf[ 4096];
+	va_list ap;
+	va_start(ap, format);
+	strus_vsnprintf( msgbuf, sizeof(msgbuf), format, ap);
+	va_end(ap);
+	return std::string( msgbuf);
+}
+
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -90,21 +101,21 @@ int main( int argc, const char* argv[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("error too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() < 2)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("error too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -113,7 +124,7 @@ int main( int argc, const char* argv[])
 				moduleLoader( strus::createModuleLoader( errorBuffer));
 		if (opt("moduledir"))
 		{
-			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -124,7 +135,7 @@ int main( int argc, const char* argv[])
 		}
 		if (opt("module"))
 		{
-			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --module and --rpc");
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--module", "--rpc");
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
@@ -135,25 +146,25 @@ int main( int argc, const char* argv[])
 
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusAnalyze [options] <program> <document>" << std::endl;
-			std::cout << "<program>   = path of analyzer program" << std::endl;
-			std::cout << "<document>  = path of document to analyze ('-' for stdin)" << std::endl;
-			std::cout << "description: Analyzes a document and dumps the result to stdout." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusAnalyze [options] <program> <document>" << std::endl;
+			std::cout << "<program>   = " << _TXT("path of analyzer program") << std::endl;
+			std::cout << "<document>  = " << _TXT("path of document to analyze ('-' for stdin)") << std::endl;
+			std::cout << _TXT("description: Analyzes a document and dumps the result to stdout.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
-			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
-			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
-			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			return rt;
 		}
 		std::string analyzerprg = opt[0];
@@ -167,7 +178,7 @@ int main( int argc, const char* argv[])
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
-			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --resourcedir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--resourcedir", "--rpc");
 			std::vector<std::string> pathlist( opt.list("resourcedir"));
 			std::vector<std::string>::const_iterator
 				pi = pathlist.begin(), pe = pathlist.end();
@@ -203,9 +214,7 @@ int main( int argc, const char* argv[])
 		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec)
 		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
-			return 4;
+			throw strus::runtime_error( _TXT("failed to load analyzer program %s (file system error %u)"), analyzerprg.c_str(), ec);
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
@@ -217,8 +226,7 @@ int main( int argc, const char* argv[])
 		strus::DocumentClass dclass;
 		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 		{
-			std::cerr << "ERROR failed to detect document class"; 
-			return 5;
+			throw strus::runtime_error( _TXT("failed to detect document class")); 
 		}
 		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 			analyzerContext( analyzer->createContext( dclass));
@@ -244,7 +252,7 @@ int main( int argc, const char* argv[])
 			{
 				if (!doc.subDocumentTypeName().empty())
 				{
-					std::cout << "-- document " << doc.subDocumentTypeName() << std::endl;
+					std::cout << "-- " << message( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
 				}
 				std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
 				std::sort( itermar.begin(), itermar.end(), TermOrder());
@@ -252,7 +260,7 @@ int main( int argc, const char* argv[])
 				std::vector<strus::analyzer::Term>::const_iterator
 					ti = itermar.begin(), te = itermar.end();
 	
-				std::cout << std::endl << "search index terms:" << std::endl;
+				std::cout << std::endl << _TXT("search index terms:") << std::endl;
 				for (; ti != te; ++ti)
 				{
 					std::cout << ti->pos()
@@ -267,7 +275,7 @@ int main( int argc, const char* argv[])
 				std::vector<strus::analyzer::Term>::const_iterator
 					fi = ftermar.begin(), fe = ftermar.end();
 	
-				std::cout << std::endl << "forward index terms:" << std::endl;
+				std::cout << std::endl << _TXT("forward index terms:") << std::endl;
 				for (; fi != fe; ++fi)
 				{
 					std::cout << fi->pos()
@@ -279,7 +287,7 @@ int main( int argc, const char* argv[])
 				std::vector<strus::analyzer::MetaData>::const_iterator
 					mi = doc.metadata().begin(), me = doc.metadata().end();
 	
-				std::cout << std::endl << "metadata:" << std::endl;
+				std::cout << std::endl << _TXT("metadata:") << std::endl;
 				for (; mi != me; ++mi)
 				{
 					std::cout << mi->name()
@@ -290,7 +298,7 @@ int main( int argc, const char* argv[])
 				std::vector<strus::analyzer::Attribute>::const_iterator
 					ai = doc.attributes().begin(), ae = doc.attributes().end();
 		
-				std::cout << std::endl << "attributes:" << std::endl;
+				std::cout << std::endl << _TXT("attributes:") << std::endl;
 				for (; ai != ae; ++ai)
 				{
 					std::cout << ai->name()

@@ -87,21 +87,21 @@ int main( int argc, const char* argv[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 1)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() < 1)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -128,29 +128,29 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusSegment [options] <document>" << std::endl;
-			std::cout << "<document>  = path to document to segment ('-' for stdin)" << std::endl;
-			std::cout << "description: Segments a document with the expressions (-e) specified" << std::endl;
-			std::cout << "             and dumps the resulting segments to stdout." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusSegment [options] <document>" << std::endl;
+			std::cout << "<document>  = " << _TXT("path to document to segment ('-' for stdin)") << std::endl;
+			std::cout << _TXT("description: Segments a document with the expressions (-e) specified") << std::endl;
+			std::cout << "             " << _TXT("and dumps the resulting segments to stdout.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-s|--segmenter <NAME>" << std::endl;
-			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
 			std::cout << "-e|--expression <EXPR>" << std::endl;
-			std::cout << "    Use the expression <EXPR> to select documents (default '//()')" << std::endl;
+			std::cout << "    " << _TXT("Use the expression <EXPR> to select documents (default '//()')") << std::endl;
 			std::cout << "-i|--index" << std::endl;
-			std::cout << "    Print the indices of the expressions matching as prefix with ':'" << std::endl;
+			std::cout << "    " << _TXT("Print the indices of the expressions matching as prefix with ':'") << std::endl;
 			std::cout << "-p|--position" << std::endl;
-			std::cout << "    Print the positions of the expressions matching as prefix" << std::endl;
+			std::cout << "    " << _TXT("Print the positions of the expressions matching as prefix") << std::endl;
 			std::cout << "-q|--quot <STR>" << std::endl;
-			std::cout << "    Use the string <STR> as quote for the result (default \"\'\")" << std::endl;
+			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default \"\'\")") << std::endl;
 			return rt;
 		}
 		std::string docpath = opt[0];
@@ -197,7 +197,7 @@ int main( int argc, const char* argv[])
 		strus::DocumentClass dclass;
 		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 		{
-			std::cerr << "ERROR failed to detect document class"; 
+			std::cerr << _TXT("failed to detect document class"); 
 			return 5;
 		}
 		std::auto_ptr<strus::SegmenterContextInterface>

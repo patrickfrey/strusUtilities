@@ -83,18 +83,11 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient));
 }
 
-static void writeErrorLog( const std::string& filename, const char* msg)
-{
-	unsigned int ec = strus::writeFile( filename, msg);
-	if (ec)
-	{
-		std::cerr << "failed to write last error to file '" << filename << "' (error code " << ec << ")";
-	}
-}
 
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
+	FILE* logfile = 0;
 	strus::ErrorBufferInterface* errorBuffer = 0;
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
@@ -118,22 +111,22 @@ int main( int argc_, const char* argv_[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
-			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() < 2)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -141,7 +134,7 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
 		if (opt("moduledir"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir" ,"--rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -152,7 +145,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt("module"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --module and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--module", "--rpc");
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
@@ -163,50 +156,57 @@ int main( int argc_, const char* argv_[])
 
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusInsert [options] <program> <docpath>" << std::endl;
-			std::cout << "<program> = path of analyzer program or analyzer map program" << std::endl;
-			std::cout << "<docpath> = path of document or directory to insert" << std::endl;
-			std::cout << "description: Insert a document or a set of documents into a storage." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusInsert [options] <program> <docpath>" << std::endl;
+			std::cout << "<program> = " << _TXT("path of analyzer program or analyzer map program") << std::endl;
+			std::cout << "<docpath> = " << _TXT("path of document or directory to insert") << std::endl;
+			std::cout << _TXT("description: Insert a document or a set of documents into a storage.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
-			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
-			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
-			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
-			std::cout << "    Use the document segmenter with name <NAME> (default textwolf)" << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf)") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
-			std::cout << "    Grab only the files with extension <EXT> (default all files)" << std::endl;
+			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
-			std::cout << "    Set <N> as number of inserter threads to use"  << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of inserter threads to use") << std::endl;
 			std::cout << "-c|--commit <N>" << std::endl;
-			std::cout << "    Set <N> as number of documents inserted per transaction (default 1000)" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of documents inserted per transaction (default 1000)") << std::endl;
 			std::cout << "-f|--fetch <N>" << std::endl;
-			std::cout << "    Set <N> as number of files fetched in each inserter iteration" << std::endl;
-			std::cout << "    Default is the value of option '--commit' (one document/file)" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of files fetched in each inserter iteration") << std::endl;
+			std::cout << "    " << _TXT("Default is the value of option '--commit' (one document/file)") << std::endl;
 			std::cout << "-n|--new" << std::endl;
-			std::cout << "    All inserts are new; use preallocated document numbers" << std::endl;
+			std::cout << "    " << _TXT("All inserts are new; use preallocated document numbers") << std::endl;
 			std::cout << "-L|--logerror <FILE>" << std::endl;
-			std::cout << "    Write the last error occurred to <FILE> in case of an exception"  << std::endl;
+			std::cout << "    " << _TXT("Write the last error occurred to <FILE> in case of an exception")  << std::endl;
 			return rt;
 		}
 		bool allInsertsNew = opt( "new");
 		std::string storagecfg;
 		unsigned int transactionSize = 1000;
+		if (opt("logerror"))
+		{
+			std::string filename( opt["logerror"]);
+			logfile = fopen( filename.c_str(), "a+");
+			if (!logfile) throw strus::runtime_error(_TXT("error loading log file '%s' for appending (errno %u)"), filename.c_str(), errno);
+			errorBuffer->setLogFile( logfile);
+		}
 		if (opt("commit"))
 		{
 			transactionSize = opt.asUint( "commit");
@@ -218,7 +218,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt("storage"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			storagecfg = opt["storage"];
 		}
 		std::string analyzerprg = opt[0];
@@ -240,7 +240,7 @@ int main( int argc_, const char* argv_[])
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
-			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --resourcedir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--resourcedir", "--rpc");
 			std::vector<std::string> pathlist( opt.list("resourcedir"));
 			std::vector<std::string>::const_iterator
 				pi = pathlist.begin(), pe = pathlist.end();
@@ -324,6 +324,7 @@ int main( int argc_, const char* argv_[])
 		fileCrawlerThread->wait_termination();
 		std::cerr << std::endl << "done" << std::endl;
 		delete errorBuffer;
+		if (logfile) fclose( logfile);
 		return 0;
 	}
 	catch (const std::bad_alloc&)
@@ -347,6 +348,7 @@ int main( int argc_, const char* argv_[])
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
 	delete errorBuffer;
+	if (logfile) fclose( logfile);
 	return -1;
 }
 

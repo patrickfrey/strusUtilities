@@ -76,15 +76,15 @@ int main( int argc, const char* argv[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 1)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
@@ -114,13 +114,10 @@ int main( int argc, const char* argv[])
 		if (opt("configfile"))
 		{
 			nof_databasecfg += 1;
-			int ec = strus::readFile( opt[ "configfile"], databasecfg);
-			if (ec)
-			{
-				std::cerr << "ERROR failed to read configuration file " << opt[ "configfile"] << " (file system error " << ec << ")" << std::endl;
-				rt = 2;
-				printUsageAndExit = true;
-			}
+			std::string configfile = opt[ "configfile"];
+			int ec = strus::readFile( configfile, databasecfg);
+			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u)"), configfile.c_str(), ec);
+
 			std::string::iterator di = databasecfg.begin(), de = databasecfg.end();
 			for (; di != de; ++di)
 			{
@@ -129,7 +126,7 @@ int main( int argc, const char* argv[])
 		}
 		if (opt.nofargs() == 1)
 		{
-			std::cerr << "WARNING passing storage as first parameter instead of option -s (deprecated)" << std::endl;
+			std::cerr << _TXT("warning: passing storage as first parameter instead of option -s (deprecated)") << std::endl;
 			nof_databasecfg += 1;
 			databasecfg = opt[0];
 		}
@@ -140,44 +137,44 @@ int main( int argc, const char* argv[])
 		}
 		if (nof_databasecfg > 1)
 		{
-			std::cerr << "ERROR conflicting configuration options specified: --storage and --configfile" << std::endl;
+			std::cerr << _TXT("conflicting configuration options specified: --storage and --configfile") << std::endl;
 			rt = 10003;
 			printUsageAndExit = true;
 		}
 		else if (!printUsageAndExit && nof_databasecfg == 0)
 		{
-			std::cerr << "ERROR missing configuration option: --storage or --configfile has to be defined" << std::endl;
+			std::cerr << _TXT("missing configuration option: --storage or --configfile has to be defined") << std::endl;
 			rt = 10004;
 			printUsageAndExit = true;
 		}
 
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusDestroy [options]" << std::endl;
-			std::cout << "description: Removes an existing storage database." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusDestroy [options]" << std::endl;
+			std::cout << _TXT("description: Removes an existing storage database.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
-			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
-			std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
+			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg);
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
-			std::cout << "    Define the storage configuration file as <FILENAME>" << std::endl;
-			std::cout << "    <FILENAME> is a file containing the configuration string" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
+			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			return rt;
 		}
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
 			builder( moduleLoader->createStorageObjectBuilder());
 		const strus::DatabaseInterface* dbi = builder->getDatabase( databasecfg);
 		dbi->destroyDatabase( databasecfg);
-		std::cerr << "storage successfully destroyed." << std::endl;
+		std::cerr << _TXT("storage successfully destroyed.") << std::endl;
 		delete errorBuffer;
 		return 0;
 	}

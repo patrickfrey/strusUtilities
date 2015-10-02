@@ -46,6 +46,7 @@
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
+#include "strus/private/snprintf.h"
 #include "private/version.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
@@ -70,10 +71,21 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient));
 }
 
+static std::string message( const char* format, ...)
+{
+	char msgbuf[ 4096];
+	va_list ap;
+	va_start(ap, format);
+	strus_vsnprintf( msgbuf, sizeof(msgbuf), format, ap);
+	va_end(ap);
+	return std::string( msgbuf);
+}
+
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
+	FILE* logfile = 0;
 	strus::ErrorBufferInterface* errorBuffer = 0;
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
@@ -93,21 +105,21 @@ int main( int argc, const char* argv[])
 		}
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() < 1)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() > 1)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -134,45 +146,54 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusUpdateStorage [options] <updatefile>" << std::endl;
-			std::cout << "<updatefile>  = file with the batch of updates ('-' for stdin)" << std::endl;
-			std::cout << "description: Executes a batch of updates of attributes, meta data" << std::endl;
-			std::cout << "             or user rights in a storage." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusUpdateStorage [options] <updatefile>" << std::endl;
+			std::cout << "<updatefile>  = " << _TXT("file with the batch of updates ('-' for stdin)") << std::endl;
+			std::cout << _TXT("description: Executes a batch of updates of attributes, meta data") << std::endl;
+			std::cout << "             " << _TXT("or user rights in a storage.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "    Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
-			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
-			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
+				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
 			}
 			std::cout << "-a|--attribute <NAME>" << std::endl;
-			std::cout << "    The update batch is a list of attributes assignments" << std::endl;
-			std::cout << "    The name of the updated attribute is <NAME>." << std::endl;
+			std::cout << "    " << _TXT("The update batch is a list of attributes assignments") << std::endl;
+			std::cout << "    " << _TXT("The name of the updated attribute is <NAME>.") << std::endl;
 			std::cout << "-m|--metadata <NAME>" << std::endl;
-			std::cout << "    The update batch is a list of meta data assignments." << std::endl;
-			std::cout << "    The name of the updated meta data element is <NAME>." << std::endl;
+			std::cout << "    " << _TXT("The update batch is a list of meta data assignments.") << std::endl;
+			std::cout << "    " << _TXT("The name of the updated meta data element is <NAME>.") << std::endl;
 			std::cout << "-u|--useraccess" << std::endl;
-			std::cout << "    The update batch is a list of user right assignments." << std::endl;
+			std::cout << "    " << _TXT("The update batch is a list of user right assignments.") << std::endl;
 			std::cout << "-c|--commit <N>" << std::endl;
-			std::cout << "    Set <N> as number of updates per transaction (default 10000)" << std::endl;
-			std::cout << "    If <N> is set to 0 then only one commit is done at the end" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of updates per transaction (default 10000)") << std::endl;
+			std::cout << "    " << _TXT("If <N> is set to 0 then only one commit is done at the end") << std::endl;
+			std::cout << "-L|--logerror <FILE>" << std::endl;
+			std::cout << "    " << _TXT("Write the last error occurred to <FILE> in case of an exception")  << std::endl;
 			return rt;
+		}
+		if (opt("logerror"))
+		{
+			std::string filename( opt["logerror"]);
+			logfile = fopen( filename.c_str(), "a+");
+			if (!logfile) throw strus::runtime_error(_TXT("error loading log file '%s' for appending (errno %u)"), filename.c_str(), errno);
+			errorBuffer->setLogFile( logfile);
 		}
 		std::string storagecfg;
 		if (opt("storage"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --storage and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
 			storagecfg = opt["storage"];
 		}
 		
@@ -206,14 +227,14 @@ int main( int argc, const char* argv[])
 
 		if (opt("metadata"))
 		{
-			if (opt("attribute")) throw std::runtime_error("specified mutual exclusive options --attribute and --metadata");
-			if (opt("useraccess")) throw std::runtime_error("specified mutual exclusive options --useraccess and --metadata");
+			if (opt("attribute")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s") ,"--attribute", "--metadata");
+			if (opt("useraccess")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--useraccess", "--metadata");
 			elemname = opt["metadata"];
 			updateOperation = UpdateOpMetadata;
 		}
 		else if (opt("attribute"))
 		{
-			if (opt("useraccess")) throw std::runtime_error("specified mutual exclusive options --useraccess and --attribute");
+			if (opt("useraccess")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--useraccess", "--attribute");
 			elemname = opt["attribute"];
 			updateOperation = UpdateOpAttribute;
 		}
@@ -223,7 +244,7 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			throw std::runtime_error("no update operation type specified as option (one of --attribute,--metadata,--useraccess is mandatory)");
+			throw strus::runtime_error(_TXT("no update operation type specified as option (one of %s is mandatory)"), "--attribute,--metadata,--useraccess");
 		}
 		unsigned int nofUpdates = 0;
 		unsigned int transactionSize = 10000;
@@ -246,8 +267,9 @@ int main( int argc, const char* argv[])
 						*storage, updateBatchPath, transactionSize);
 				break;
 		}
-		std::cerr << "done " << nofUpdates << " update operations" << std::endl;
+		std::cerr << message( _TXT("done %u update operations"), nofUpdates) << std::endl;
 		delete errorBuffer;
+		if (logfile) fclose( logfile);
 		return 0;
 	}
 	catch (const std::bad_alloc&)
@@ -271,6 +293,7 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
 	delete errorBuffer;
+	if (logfile) fclose( logfile);
 	return -1;
 }
 

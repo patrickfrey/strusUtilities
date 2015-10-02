@@ -79,21 +79,21 @@ int main( int argc_, const char* argv_[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() < 2)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -121,33 +121,33 @@ int main( int argc_, const char* argv_[])
 
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
-			std::cout << "<program> = path of analyzer program  or analyzer map program" << std::endl;
-			std::cout << "<docpath> = path of document or directory to insert" << std::endl;
-			std::cout << "description: Dumps a list of terms as result of document" << std::endl;
-			std::cout << "    anaylsis of a file or directory. The dump can be loaded by" << std::endl;
-			std::cout << "    the storage on startup to create a map of frequently used terms." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
+			std::cout << "<program> = " << _TXT("path of analyzer program  or analyzer map program") << std::endl;
+			std::cout << "<docpath> = " << _TXT("path of document or directory to insert") << std::endl;
+			std::cout << _TXT("description: Dumps a list of terms as result of document") << std::endl;
+			std::cout << "    " << _TXT("anaylsis of a file or directory. The dump can be loaded by") << std::endl;
+			std::cout << "    " << _TXT("the storage on startup to create a map of frequently used terms.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
-			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-s|--segmenter <NAME>" << std::endl;
-			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
-			std::cout << "    Grab only the files with extension <EXT> (default all files)" << std::endl;
+			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
-			std::cout << "    Set <N> as number of threads to use"  << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of threads to use") << std::endl;
 			std::cout << "-u|--unit <N>" << std::endl;
-			std::cout << "    Set <N> as number of files processed per iteration (default 1000)" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of files processed per iteration (default 1000)") << std::endl;
 			std::cout << "-n|--results <N>" << std::endl;
-			std::cout << "    Set <N> as number of elements in the key map generated" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of elements in the key map generated") << std::endl;
 			return rt;
 		}
 
@@ -234,10 +234,10 @@ int main( int argc_, const char* argv_[])
 		fileCrawlerThread->wait_termination();
 
 		// [3] Final merge:
-		std::cerr << std::endl << "merging results:" << std::endl;
+		std::cerr << std::endl << _TXT("merging results:") << std::endl;
 		resultList.printKeyOccurrenceList( std::cout, nofResults);
 		
-		std::cerr << "done" << std::endl;
+		std::cerr << _TXT("done") << std::endl;
 		delete errorBuffer;
 		return 0;
 	}

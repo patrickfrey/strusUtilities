@@ -223,21 +223,21 @@ int main( int argc, const char* argv[])
 		}
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() < 2)
 			{
-				std::cerr << "ERROR " << _TXT("too few arguments") << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() > 2)
 			{
-				std::cerr << "ERROR " << _TXT("too many arguments") << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -267,7 +267,7 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusAlterMetaData [options] <config> <cmds>" << std::endl;
+			std::cout << _TXT("usage:") << " strusAlterMetaData [options] <config> <cmds>" << std::endl;
 			std::cout << "<config>  : " << _TXT("configuration string of the storage") << std::endl;
 			std::cout << "            " << _TXT("semicolon';' separated list of assignments:") << std::endl;
 			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
