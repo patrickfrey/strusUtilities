@@ -37,6 +37,7 @@
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/docnoRangeAllocatorInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/fileio.hpp"

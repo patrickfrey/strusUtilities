@@ -350,6 +350,10 @@ int main( int argc, const char* argv[])
 		if (!md->commit()) throw strus::runtime_error(_TXT("alter meta data commit failed"));
 
 		std::cerr << _TXT("done") << std::endl;
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("unhandled error in alter meta data"));
+		}
 		delete errorBuffer;
 		return 0;
 	}

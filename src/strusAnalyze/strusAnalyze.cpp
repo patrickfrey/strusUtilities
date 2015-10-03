@@ -189,16 +189,21 @@ int main( int argc, const char* argv[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
+			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 		}
 		std::auto_ptr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
 
 		// Load analyzer program:
 		unsigned int ec;
@@ -209,8 +214,11 @@ int main( int argc, const char* argv[])
 			throw strus::runtime_error( _TXT("failed to load analyzer program %s (file system error %u)"), analyzerprg.c_str(), ec);
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
-
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer))
+		{
+			throw strus::runtime_error( _TXT("failed to load analyzer program %s"), analyzerprg.c_str());
+		}
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
 		char hdrbuf[ 1024];
@@ -222,6 +230,7 @@ int main( int argc, const char* argv[])
 		}
 		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 			analyzerContext( analyzer->createContext( dclass));
+		if (!analyzerContext.get()) throw strus::runtime_error(_TXT("failed to create document analyzer context"));
 
 		// Process the document:
 		enum {AnalyzerBufSize=8192};
@@ -298,6 +307,10 @@ int main( int argc, const char* argv[])
 						  << std::endl;
 				}
 			}
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("error in analyze document"));
 		}
 		delete errorBuffer;
 		return 0;

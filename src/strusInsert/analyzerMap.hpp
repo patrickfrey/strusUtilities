@@ -39,14 +39,16 @@ namespace strus {
 class DocumentClass;
 /// \brief Forward declaration
 class AnalyzerObjectBuilderInterface;
+/// \brief Forward declaration
+class ErrorBufferInterface;
 
 class AnalyzerMap
 {
 public:
-	explicit AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_)
-		:m_builder(builder_){}
+	AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, ErrorBufferInterface* errorhnd_)
+		:m_builder(builder_),m_errorhnd(errorhnd_){}
 	AnalyzerMap( const AnalyzerMap& o)
-		:m_map(o.m_map),m_builder(o.m_builder){}
+		:m_map(o.m_map),m_builder(o.m_builder),m_errorhnd(o.m_errorhnd){}
 
 	void defineProgram(
 			const std::string& scheme,
@@ -64,6 +66,7 @@ private:
 	typedef std::map<std::string,utils::SharedPtr<DocumentAnalyzerInterface> > Map;
 	Map m_map;
 	const strus::AnalyzerObjectBuilderInterface* m_builder;
+	ErrorBufferInterface* m_errorhnd;
 };
 
 }//namespace

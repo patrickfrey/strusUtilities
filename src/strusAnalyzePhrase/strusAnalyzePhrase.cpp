@@ -103,6 +103,8 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -186,14 +188,20 @@ int main( int argc, const char* argv[])
 		// Create objects for analyzer:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
 			builder( moduleLoader->createAnalyzerObjectBuilder());
+		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 		std::auto_ptr<strus::QueryAnalyzerInterface>
 			analyzer( builder->createQueryAnalyzer());
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create analyzer"));
 		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Create phrase type (tokenizer and normalizer):
 		std::string phraseType;
-		strus::loadQueryAnalyzerPhraseType(
-				*analyzer, textproc, phraseType, "", normalizer, tokenizer);
+		if (!strus::loadQueryAnalyzerPhraseType(
+				*analyzer, textproc, phraseType, "", normalizer, tokenizer, errorBuffer))
+		{
+			throw strus::runtime_error(_TXT("failed to load analyze phrase type"));
+		}
 
 		// Load the phrase:
 		std::string phrase;
@@ -224,6 +232,10 @@ int main( int argc, const char* argv[])
 				std::cout << ti->pos() << " ";
 			}
 			std::cout << resultQuot << ti->value() << resultQuot << std::endl;
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("error in analyze phrase"));
 		}
 		delete errorBuffer;
 		return 0;

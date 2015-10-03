@@ -30,6 +30,7 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/fileio.hpp"
 #include "fileCrawlerInterface.hpp"

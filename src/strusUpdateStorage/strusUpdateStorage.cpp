@@ -58,9 +58,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
+	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	if (dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
+	if (sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -114,6 +117,7 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -193,16 +197,21 @@ int main( int argc, const char* argv[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			if (!messaging.get()) throw strus::runtime_error( _TXT("error creating rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
+			if (!rpcClient.get()) throw strus::runtime_error( _TXT("error creating rpc client"));
 			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating rpc storage object builder"));
 		}
 		else
 		{
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
+		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
 		enum UpdateOperation
 		{
@@ -245,20 +254,24 @@ int main( int argc, const char* argv[])
 		{
 			case UpdateOpMetadata:
 				nofUpdates = strus::loadDocumentMetaDataAssignments(
-						*storage, elemname, updateBatchPath, transactionSize);
+						*storage, elemname, updateBatchPath, transactionSize, errorBuffer);
 				break;
 			case UpdateOpAttribute:
 				nofUpdates = strus::loadDocumentAttributeAssignments(
-						*storage, elemname, updateBatchPath, transactionSize);
+						*storage, elemname, updateBatchPath, transactionSize, errorBuffer);
 				break;
 			case UpdateOpUserAccess:
 				nofUpdates = strus::loadDocumentUserRightsAssignments(
-						*storage, updateBatchPath, transactionSize);
+						*storage, updateBatchPath, transactionSize, errorBuffer);
 				break;
 		}
+		if (!nofUpdates && errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("error in update storage"));
+		}
 		std::cerr << strus::utils::string_sprintf( _TXT("done %u update operations"), nofUpdates) << std::endl;
-		delete errorBuffer;
 		if (logfile) fclose( logfile);
+		delete errorBuffer;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

@@ -99,6 +99,7 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -191,12 +192,15 @@ int main( int argc_, const char* argv_[])
 		// Create objects for keymap generation:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
+		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// [2] Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer);
 		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
 
 		strus::KeyMapGenResultList resultList;
@@ -215,7 +219,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
-				textproc, analyzerMap, &resultList, fileCrawler);
+				textproc, analyzerMap, &resultList, fileCrawler, errorBuffer);
 			processor.run();
 		}
 		else
@@ -227,7 +231,7 @@ int main( int argc_, const char* argv_[])
 			{
 				processors->start(
 					new strus::KeyMapGenProcessor(
-						textproc, analyzerMap, &resultList, fileCrawler));
+						textproc, analyzerMap, &resultList, fileCrawler, errorBuffer));
 			}
 			processors->wait_termination();
 		}
@@ -237,6 +241,10 @@ int main( int argc_, const char* argv_[])
 		std::cerr << std::endl << _TXT("merging results:") << std::endl;
 		resultList.printKeyOccurrenceList( std::cout, nofResults);
 		
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("unhandled error in generate key map"));
+		}
 		std::cerr << _TXT("done") << std::endl;
 		delete errorBuffer;
 		return 0;

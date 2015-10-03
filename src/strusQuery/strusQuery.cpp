@@ -71,9 +71,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
+	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	if (dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
+	if (sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -131,6 +134,7 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
@@ -242,31 +246,38 @@ int main( int argc_, const char* argv_[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
+			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
 			(void)messaging.release();
-			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-		}
-		else if (opt("storage"))
-		{
-			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("neither storage (option --storage) nor rpc proxy (option --rpc) specified"));
+			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
+		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 
 		strus::utils::ScopedPtr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer"));
 
 		strus::utils::ScopedPtr<strus::QueryEvalInterface>
 			qeval( storageBuilder->createQueryEval());
+		if (!qeval.get()) throw strus::runtime_error(_TXT("failed to create query evaluation interface"));
 
 		const strus::QueryProcessorInterface* qproc = storageBuilder->getQueryProcessor();
+		if (!qproc) throw strus::runtime_error(_TXT("failed to get query processor"));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Load query analyzer program:
 		unsigned int ec;
@@ -274,14 +285,19 @@ int main( int argc_, const char* argv_[])
 		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
 
-		strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
-
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer))
+		{
+			throw strus::runtime_error(_TXT("failed to load query analyzer program"));
+		}
 		// Load query evaluation program:
 		std::string qevalProgramSource;
 		ec = strus::readFile( queryprg, qevalProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load query eval program %s (errno %u)"), queryprg.c_str(), ec);
 
-		strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource);
+		if (!strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource, errorBuffer))
+		{
+			throw strus::runtime_error(_TXT("failed to load query evaluation program"));
+		}
 
 		// Load global statistics from file if specified:
 		if (opt("globalstats"))
@@ -307,11 +323,7 @@ int main( int argc_, const char* argv_[])
 		if (querypath == "-")
 		{
 			ec = strus::readStdin( querystring);
-			if (ec)
-			{
-				std::cerr << _TXT("failed to read query string from stdin") << std::endl;
-				return 3;
-			}
+			if (ec) throw strus::runtime_error( _TXT("failed to read query string from stdin (errno %u)"), ec);
 		}
 		else
 		{
@@ -327,13 +339,17 @@ int main( int argc_, const char* argv_[])
 		}
 		std::string::const_iterator si = querystring.begin(), se = querystring.end();
 		std::string qs;
-		while (strus::scanNextProgram( qs, si, se))
+		while (strus::scanNextProgram( qs, si, se, errorBuffer))
 		{
 			++nofQueries;
 			std::auto_ptr<strus::QueryInterface> query(
 				qeval->createQuery( storage.get()));
+			if (!query.get()) throw strus::runtime_error(_TXT("failed to create query object"));
 
-			strus::loadQuery( *query, analyzer.get(), qproc, qs);
+			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, errorBuffer))
+			{
+				throw strus::runtime_error(_TXT("failed to load query from source"));
+			}
 
 			query->setMaxNofRanks( nofRanks);
 			query->setMinRank( firstRank);
@@ -360,6 +376,10 @@ int main( int argc_, const char* argv_[])
 			double endTime = getTimeStamp();
 			double duration = endTime - startTime;
 			std::cerr << strus::utils::string_sprintf( _TXT("evaluated %u queries in %.4f seconds"), nofQueries, duration) << std::endl;
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("unhandled error in command line query"));
 		}
 		delete errorBuffer;
 		return 0;

@@ -27,7 +27,10 @@
 --------------------------------------------------------------------
 */
 #include "commitQueue.hpp"
+#include "private/internationalization.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include <cstdio>
+#include <stdexcept>
 
 using namespace strus;
 
@@ -86,7 +89,7 @@ void CommitQueue::handleWaitingTransactions()
 					nofDocsInserted, totalNofDocuments, nofOpenTransactions);
 			::fflush(stdout);
 		}
-		catch (const std::bas_alloc&)
+		catch (const std::bad_alloc&)
 		{
 			std::cerr << _TXT("out of memory handling transaction in queue") << std::endl;
 		}

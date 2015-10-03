@@ -107,6 +107,7 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -168,12 +169,16 @@ int main( int argc, const char* argv[])
 		}
 		// Create objects for segmenter:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			builder( moduleLoader->createAnalyzerObjectBuilder());
+			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
+		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 		std::auto_ptr<strus::SegmenterInterface>
-			segmentertype( builder->createSegmenter( segmenterName));
+			segmentertype( analyzerBuilder->createSegmenter( segmenterName));
+		if (!segmentertype.get()) throw strus::runtime_error(_TXT("failed to segmenter interface"));
 		std::auto_ptr<strus::SegmenterInstanceInterface>
 			segmenter( segmentertype->createInstance());
-		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
+		if (!segmenter.get()) throw strus::runtime_error(_TXT("failed to segmenter instance"));
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Load expressions:
 		if (opt("expression"))
@@ -197,11 +202,11 @@ int main( int argc, const char* argv[])
 		strus::DocumentClass dclass;
 		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 		{
-			std::cerr << _TXT("failed to detect document class"); 
-			return 5;
+			throw strus::runtime_error(_TXT("failed to detect document class")); 
 		}
 		std::auto_ptr<strus::SegmenterContextInterface>
 			segmenterContext( segmenter->createContext( dclass));
+		if (!segmenterContext.get()) throw strus::runtime_error(_TXT("failed to segmenter context"));
 
 		// Process the document:
 		enum {SegmenterBufSize=8192};
@@ -236,6 +241,10 @@ int main( int argc, const char* argv[])
 				std::cout << resultQuot << std::string(segdata,segsize)
 						<< resultQuot << std::endl;
 			}
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("unhandled error in segment document"));
 		}
 		delete errorBuffer;
 		return 0;

@@ -49,8 +49,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
+	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	if (dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -90,6 +92,7 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -171,9 +174,20 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
-			builder( moduleLoader->createStorageObjectBuilder());
-		const strus::DatabaseInterface* dbi = builder->getDatabase( databasecfg);
-		dbi->destroyDatabase( databasecfg);
+			storageBuilder( moduleLoader->createStorageObjectBuilder());
+		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+
+		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( databasecfg);
+		if (dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+
+		if (!dbi->destroyDatabase( databasecfg))
+		{
+			throw strus::runtime_error(_TXT("error destroying database"));
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("unhandled error in destroy storage"));
+		}
 		std::cerr << _TXT("storage successfully destroyed.") << std::endl;
 		delete errorBuffer;
 		return 0;

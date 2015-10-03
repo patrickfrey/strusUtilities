@@ -442,6 +442,7 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options --moduledir and --rpc"));
@@ -511,18 +512,25 @@ int main( int argc, const char* argv[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
+			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
 		std::auto_ptr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer"));
 
 		// Load analyzer program:
 		unsigned int ec;
@@ -533,8 +541,11 @@ int main( int argc, const char* argv[])
 			strus::runtime_error( _TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
-
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer))
+		{
+			throw strus::runtime_error( _TXT("failed to load query analyze program %s"), analyzerprg.c_str());
+		}
 		// Load the query source:
 		strus::InputStream input( querypath);
 		enum {AnalyzerBufSize=8192};
@@ -556,10 +567,18 @@ int main( int argc, const char* argv[])
 		// Load and print the query:
 		Query query;
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
-		strus::loadQuery( query, analyzer.get(), queryproc, querysource);
+		if (!queryproc) throw strus::runtime_error(_TXT("failed to get query processor"));
+		if (!strus::loadQuery( query, analyzer.get(), queryproc, querysource, errorBuffer))
+		{
+			throw strus::runtime_error( _TXT("failed to load query %s"), querypath.c_str());
+		}
 
 		query.check();
 		query.print( std::cout);
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("error in analyze query"));
+		}
 		delete errorBuffer;
 		return 0;
 	}

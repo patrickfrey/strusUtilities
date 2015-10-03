@@ -71,9 +71,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
+	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	if (dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
+	if (sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -132,6 +135,7 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir" ,"--rpc");
@@ -259,35 +263,46 @@ int main( int argc_, const char* argv_[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
+			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
 			(void)messaging.release();
-			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
+		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
+
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer);
 		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
 
 		// Start inserter process:
 		strus::utils::ScopedPtr<strus::CommitQueue>
-			commitQue( new strus::CommitQueue( storage.get()));
+			commitQue( new strus::CommitQueue( storage.get(), errorBuffer));
 
 		strus::utils::ScopedPtr<strus::DocnoRangeAllocatorInterface> docnoAllocator;
 		if (allInsertsNew)
 		{
 			docnoAllocator.reset( storage->createDocnoRangeAllocator());
+			if (!docnoAllocator.get()) throw strus::runtime_error(_TXT("failed to create docno range allocator"));
 		}
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
@@ -303,7 +318,7 @@ int main( int argc_, const char* argv_[])
 		{
 			strus::InsertProcessor inserter(
 				storage.get(), textproc, analyzerMap, docnoAllocator.get(),
-				commitQue.get(), fileCrawler, transactionSize);
+				commitQue.get(), fileCrawler, transactionSize, errorBuffer);
 			inserter.run();
 		}
 		else
@@ -317,11 +332,16 @@ int main( int argc_, const char* argv_[])
 				inserterThreads->start(
 					new strus::InsertProcessor(
 						storage.get(), textproc, analyzerMap, docnoAllocator.get(),
-						commitQue.get(), fileCrawler, transactionSize));
+						commitQue.get(), fileCrawler, transactionSize, errorBuffer));
 			}
 			inserterThreads->wait_termination();
 		}
 		fileCrawlerThread->wait_termination();
+
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("unhandled error in insert storage"));
+		}
 		std::cerr << std::endl << "done" << std::endl;
 		delete errorBuffer;
 		if (logfile) fclose( logfile);
