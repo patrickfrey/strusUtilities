@@ -39,7 +39,6 @@
 #include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/document.hpp"
-#include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/fileio.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"

@@ -49,7 +49,7 @@
 #include <stdexcept>
 
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
@@ -62,10 +62,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreate));
+					strus::DatabaseInterface::CmdCreate), errorhnd);
 	strus::printIndentMultilineString(
 				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreate));
+					strus::StorageInterface::CmdCreate), errorhnd);
 }
 
 
@@ -175,7 +175,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg);
+			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg, errorBuffer);
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
@@ -191,21 +191,24 @@ int main( int argc, const char* argv[])
 		if (sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 		std::string dbname;
-		(void)strus::extractStringFromConfigString( dbname, databasecfg, "database");
+		(void)strus::extractStringFromConfigString( dbname, databasecfg, "database", errorBuffer);
 		std::string storagecfg( databasecfg);
 
 		strus::removeKeysFromConfigString(
 				databasecfg,
 				sti->getConfigParameters(
-					strus::StorageInterface::CmdCreateClient));
+					strus::StorageInterface::CmdCreateClient), errorBuffer);
 		//... In database_cfg is now the pure database configuration without the storage settings
 
 		strus::removeKeysFromConfigString(
 				storagecfg,
 				dbi->getConfigParameters(
-					strus::DatabaseInterface::CmdCreateClient));
+					strus::DatabaseInterface::CmdCreateClient), errorBuffer);
 		//... In storage_cfg is now the pure storage configuration without the database settings
-
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse storage configuration"));
+		}
 		if (!dbi->createDatabase( databasecfg))
 		{
 			throw strus::runtime_error(_TXT("failed to create key/value store database files"));

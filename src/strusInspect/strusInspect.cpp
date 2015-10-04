@@ -47,7 +47,6 @@
 #include "strus/versionStorage.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/arithmeticVariant.hpp"
-#include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/configParser.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
@@ -58,7 +57,7 @@
 #include <cstring>
 #include <stdexcept>
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
@@ -71,10 +70,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient));
+					strus::DatabaseInterface::CmdCreateClient), errorhnd);
 	strus::printIndentMultilineString(
 				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient));
+					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
 namespace strus
@@ -298,7 +297,7 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 			strus::ArithmeticVariant value = metadata->getValue( hnd);
 			if (value.defined())
 			{
-				std::cout << docno << ' ' << value << std::endl;
+				std::cout << docno << ' ' << value.tostring().c_str() << std::endl;
 			}
 		}
 	}
@@ -312,7 +311,7 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 		strus::ArithmeticVariant value = metadata->getValue( hnd);
 		if (value.defined())
 		{
-			std::cout << value << std::endl;
+			std::cout << value.tostring().c_str() << std::endl;
 		}
 		else
 		{
@@ -570,7 +569,7 @@ int main( int argc, const char* argv[])
 			if (!opt("rpc"))
 			{
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer);
 			}
 			return rt;
 		}

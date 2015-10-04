@@ -187,7 +187,12 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
+		std::string resourcepath;
+		if (!strus::getParentPath( analyzerprg, resourcepath))
+		{
+			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
+		}
+		moduleLoader->addResourcePath( resourcepath);
 
 		// Create objects for keymap generation:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>

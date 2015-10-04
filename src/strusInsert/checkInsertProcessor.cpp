@@ -30,7 +30,6 @@
 #include "strus/constants.hpp"
 #include "strus/index.hpp"
 #include "strus/arithmeticVariant.hpp"
-#include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/documentClass.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"

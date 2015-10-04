@@ -49,7 +49,7 @@
 #include <cstring>
 #include <stdexcept>
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
@@ -62,10 +62,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient));
+					strus::DatabaseInterface::CmdCreateClient), errorhnd);
 	strus::printIndentMultilineString(
 				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient));
+					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
 class AlterMetaDataCommand
@@ -273,7 +273,7 @@ int main( int argc, const char* argv[])
 			std::cout << _TXT("usage:") << " strusAlterMetaData [options] <config> <cmds>" << std::endl;
 			std::cout << "<config>  : " << _TXT("configuration string of the storage") << std::endl;
 			std::cout << "            " << _TXT("semicolon';' separated list of assignments:") << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""));
+			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""), errorBuffer);
 			std::cout << "<cmds>    : " << _TXT("semicolon separated list of commands:") << std::endl;
 			std::cout << "            alter <name> <newname> <newtype>" << std::endl;
 			std::cout << "              <name>    :" << _TXT("name of the element to change") << std::endl;

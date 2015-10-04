@@ -44,7 +44,6 @@
 #include "strus/constants.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
-#include "strus/private/protocol.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
@@ -55,7 +54,7 @@
 #include <memory>
 
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
@@ -68,10 +67,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient));
+					strus::DatabaseInterface::CmdCreateClient), errorhnd);
 	strus::printIndentMultilineString(
 				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient));
+					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
 
@@ -144,7 +143,7 @@ int main( int argc, const char* argv[])
 			if (!opt("rpc"))
 			{
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer);
 			}
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;

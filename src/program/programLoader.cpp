@@ -29,7 +29,6 @@
 #include "strus/programLoader.hpp"
 #include "lexems.hpp"
 #include "strus/constants.hpp"
-#include "strus/private/protocol.hpp"
 #include "strus/arithmeticVariant.hpp"
 #include "strus/weightingFunctionInterface.hpp"
 #include "strus/weightingFunctionInstanceInterface.hpp"

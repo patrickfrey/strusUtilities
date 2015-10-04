@@ -45,7 +45,7 @@
 #include <stdexcept>
 
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
@@ -56,7 +56,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient));
+					strus::DatabaseInterface::CmdCreateClient), errorhnd);
 }
 
 
@@ -167,7 +167,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg);
+			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg, errorBuffer);
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;

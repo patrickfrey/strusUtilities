@@ -46,7 +46,6 @@
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
-#include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/documentClass.hpp"
 #include "private/programOptions.hpp"
@@ -245,8 +244,7 @@ public:
 			out << _TXT("Restrictions:") << std::endl;
 			for (; ri != re; ++ri)
 			{
-				std::string operandstr( arithmeticVariantToString( ri->operand));
-				out << strus::utils::string_sprintf( _TXT("restriction %s %s '%s'"), ri->name.c_str(), ri->oprname(), operandstr.c_str()) << std::endl;
+				out << strus::utils::string_sprintf( _TXT("restriction %s %s '%s'"), ri->name.c_str(), ri->oprname(), ri->operand.tostring().c_str()) << std::endl;
 			}
 		}
 		std::vector<std::string>::const_iterator ui = m_users.begin(), ue = m_users.end();
@@ -501,7 +499,12 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
+		std::string resourcepath;
+		if (!strus::getParentPath( analyzerprg, resourcepath))
+		{
+			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
+		}
+		moduleLoader->addResourcePath( resourcepath);
 
 		// Create objects for analyzer:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
