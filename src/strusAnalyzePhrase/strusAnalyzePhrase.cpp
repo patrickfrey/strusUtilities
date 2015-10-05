@@ -121,7 +121,10 @@ int main( int argc, const char* argv[])
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
 			{
-				moduleLoader->loadModule( *mi);
+				if (!moduleLoader->loadModule( *mi))
+				{
+					throw strus::runtime_error(_TXT("error failed to load module %s"), mi->c_str());
+				}
 			}
 		}
 		if (printUsageAndExit)
