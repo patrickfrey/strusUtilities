@@ -181,7 +181,7 @@ int main( int argc, const char* argv[])
 		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( databasecfg);
-		if (dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
 		if (!dbi->destroyDatabase( databasecfg))
 		{
