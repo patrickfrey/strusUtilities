@@ -71,14 +71,16 @@ struct TermOrder
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	strus::ErrorBufferInterface* errorBuffer = 0;
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( stderr, 2));
+	if (!errorBuffer.get())
+	{
+		std::cerr << _TXT("failed to create error buffer") << std::endl;
+		return -1;
+	}
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		errorBuffer = strus::createErrorBuffer_standard( stderr, 2);
-		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
-
 		opt = strus::ProgramOptions(
 				argc, argv, 9,
 				"h,help", "v,version", "s,segmenter:", "e,expression:",
@@ -106,7 +108,7 @@ int main( int argc, const char* argv[])
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -249,7 +251,6 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("unhandled error in segment document"));
 		}
-		delete errorBuffer;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
@@ -258,10 +259,10 @@ int main( int argc, const char* argv[])
 	}
 	catch (const std::runtime_error& e)
 	{
-		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		const char* errormsg = errorBuffer->fetchError();
 		if (errormsg)
 		{
-			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+			std::cerr << _TXT("ERROR ") << e.what() << ": " << errormsg << std::endl;
 		}
 		else
 		{
@@ -272,7 +273,6 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	delete errorBuffer;
 	return -1;
 }
 

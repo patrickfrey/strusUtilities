@@ -87,7 +87,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
-	strus::ErrorBufferInterface* errorBuffer = 0;
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( stderr, 2));
+	if (!errorBuffer.get())
+	{
+		std::cerr << _TXT("failed to create error buffer") << std::endl;
+		return -1;
+	}
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
@@ -104,9 +109,6 @@ int main( int argc_, const char* argv_[])
 		{
 			nofThreads = opt.asUint( "threads");
 		}
-		errorBuffer = strus::createErrorBuffer_standard( stderr, nofThreads+2);
-		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
-
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -130,7 +132,7 @@ int main( int argc_, const char* argv_[])
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -172,7 +174,7 @@ int main( int argc_, const char* argv_[])
 			if (!opt("rpc"))
 			{
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer);
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
@@ -254,9 +256,9 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
-			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
 			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
-			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
 			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
@@ -283,7 +285,7 @@ int main( int argc_, const char* argv_[])
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer);
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
 		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
 		
 		strus::FileCrawler* fileCrawler
@@ -299,7 +301,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::CheckInsertProcessor checker(
-				storage.get(), textproc, analyzerMap, fileCrawler, logfile, errorBuffer);
+				storage.get(), textproc, analyzerMap, fileCrawler, logfile, errorBuffer.get());
 			checker.run();
 		}
 		else
@@ -314,7 +316,7 @@ int main( int argc_, const char* argv_[])
 				checkInsertThreads->start(
 					new strus::CheckInsertProcessor(
 						storage.get(), textproc, analyzerMap,
-						fileCrawler, logfile, errorBuffer));
+						fileCrawler, logfile, errorBuffer.get()));
 			}
 			checkInsertThreads->wait_termination();
 		}
@@ -324,7 +326,6 @@ int main( int argc_, const char* argv_[])
 			throw strus::runtime_error(_TXT("unhandled error in check insert"));
 		}
 		std::cerr << _TXT("done") << std::endl;
-		delete errorBuffer;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
@@ -333,10 +334,10 @@ int main( int argc_, const char* argv_[])
 	}
 	catch (const std::runtime_error& e)
 	{
-		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		const char* errormsg = errorBuffer->fetchError();
 		if (errormsg)
 		{
-			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+			std::cerr << _TXT("ERROR ") << e.what() << ": " << errormsg << std::endl;
 		}
 		else
 		{
@@ -347,7 +348,6 @@ int main( int argc_, const char* argv_[])
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	delete errorBuffer;
 	return -1;
 }
 

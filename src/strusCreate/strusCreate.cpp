@@ -72,14 +72,16 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	strus::ErrorBufferInterface* errorBuffer = 0;
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( stderr, 2));
+	if (!errorBuffer.get())
+	{
+		std::cerr << _TXT("failed to create error buffer") << std::endl;
+		return -1;
+	}
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		errorBuffer = strus::createErrorBuffer_standard( stderr, 2);
-		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
-
 		opt = strus::ProgramOptions(
 				argc, argv, 6,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
@@ -100,7 +102,7 @@ int main( int argc, const char* argv[])
 				rt = 1;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -178,7 +180,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg, errorBuffer);
+			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg, errorBuffer.get());
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
@@ -194,19 +196,19 @@ int main( int argc, const char* argv[])
 		if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 		std::string dbname;
-		(void)strus::extractStringFromConfigString( dbname, databasecfg, "database", errorBuffer);
+		(void)strus::extractStringFromConfigString( dbname, databasecfg, "database", errorBuffer.get());
 		std::string storagecfg( databasecfg);
 
 		strus::removeKeysFromConfigString(
 				databasecfg,
 				sti->getConfigParameters(
-					strus::StorageInterface::CmdCreateClient), errorBuffer);
+					strus::StorageInterface::CmdCreateClient), errorBuffer.get());
 		//... In database_cfg is now the pure database configuration without the storage settings
 
 		strus::removeKeysFromConfigString(
 				storagecfg,
 				dbi->getConfigParameters(
-					strus::DatabaseInterface::CmdCreateClient), errorBuffer);
+					strus::DatabaseInterface::CmdCreateClient), errorBuffer.get());
 		//... In storage_cfg is now the pure storage configuration without the database settings
 		if (errorBuffer->hasError())
 		{
@@ -230,7 +232,6 @@ int main( int argc, const char* argv[])
 			throw strus::runtime_error(_TXT("unhandled error in create storage"));
 		}
 		std::cerr << _TXT("storage successfully created.") << std::endl;
-		delete errorBuffer;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
@@ -239,10 +240,10 @@ int main( int argc, const char* argv[])
 	}
 	catch (const std::runtime_error& e)
 	{
-		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		const char* errormsg = errorBuffer->fetchError();
 		if (errormsg)
 		{
-			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+			std::cerr << _TXT("ERROR ") << e.what() << ": " << errormsg << std::endl;
 		}
 		else
 		{
@@ -253,7 +254,6 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	delete errorBuffer;
 	return -1;
 }
 

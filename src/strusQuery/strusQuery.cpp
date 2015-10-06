@@ -97,14 +97,16 @@ static double getTimeStamp()
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
-	strus::ErrorBufferInterface* errorBuffer = 0;
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( stderr, 2));
+	if (!errorBuffer.get())
+	{
+		std::cerr << _TXT("failed to create error buffer") << std::endl;
+		return -1;
+	}
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		errorBuffer = strus::createErrorBuffer_standard( stderr, 2);
-		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
-
 		opt = strus::ProgramOptions(
 				argc_, argv_, 13,
 				"h,help", "Q,quiet", "u,user:", "n,nofranks:", "i,firstrank:",
@@ -133,7 +135,7 @@ int main( int argc_, const char* argv_[])
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer));
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -177,7 +179,7 @@ int main( int argc_, const char* argv_[])
 			if (!opt("rpc"))
 			{
 				std::cout << _TXT("    <CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer);
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
 			std::cout << "-u|--user <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use user name <NAME> for the query") << std::endl;
@@ -256,9 +258,9 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
-			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer));
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
 			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
-			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
 			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
@@ -296,7 +298,7 @@ int main( int argc_, const char* argv_[])
 		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
 
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer))
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query analyzer program"));
 		}
@@ -305,7 +307,7 @@ int main( int argc_, const char* argv_[])
 		ec = strus::readFile( queryprg, qevalProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load query eval program %s (errno %u)"), queryprg.c_str(), ec);
 
-		if (!strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource, errorBuffer))
+		if (!strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query evaluation program"));
 		}
@@ -350,14 +352,14 @@ int main( int argc_, const char* argv_[])
 		}
 		std::string::const_iterator si = querystring.begin(), se = querystring.end();
 		std::string qs;
-		while (strus::scanNextProgram( qs, si, se, errorBuffer))
+		while (strus::scanNextProgram( qs, si, se, errorBuffer.get()))
 		{
 			++nofQueries;
 			std::auto_ptr<strus::QueryInterface> query(
 				qeval->createQuery( storage.get()));
 			if (!query.get()) throw strus::runtime_error(_TXT("failed to create query object"));
 
-			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, errorBuffer))
+			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, errorBuffer.get()))
 			{
 				throw strus::runtime_error(_TXT("failed to load query from source"));
 			}
@@ -392,7 +394,6 @@ int main( int argc_, const char* argv_[])
 		{
 			throw strus::runtime_error(_TXT("unhandled error in command line query"));
 		}
-		delete errorBuffer;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
@@ -401,10 +402,10 @@ int main( int argc_, const char* argv_[])
 	}
 	catch (const std::runtime_error& e)
 	{
-		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		const char* errormsg = errorBuffer->fetchError();
 		if (errormsg)
 		{
-			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+			std::cerr << _TXT("ERROR ") << e.what() << ": " << errormsg << std::endl;
 		}
 		else
 		{
@@ -415,7 +416,6 @@ int main( int argc_, const char* argv_[])
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	delete errorBuffer;
 	return -1;
 }
 

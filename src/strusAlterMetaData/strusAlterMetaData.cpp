@@ -209,14 +209,16 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	strus::ErrorBufferInterface* errorBuffer = 0;
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( stderr, 2));
+	if (!errorBuffer.get())
+	{
+		std::cerr << _TXT("failed to create error buffer") << std::endl;
+		return -1;
+	}
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		errorBuffer = strus::createErrorBuffer_standard( stderr, 2);
-		if (!errorBuffer) throw strus::runtime_error( _TXT("failed to create error buffer"));
-
 		opt = strus::ProgramOptions(
 				argc, argv, 4,
 				"h,help", "v,version", "m,module:", "M,moduledir:");
@@ -246,7 +248,7 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader(
-			strus::createModuleLoader( errorBuffer));
+			strus::createModuleLoader( errorBuffer.get()));
 		if (moduleLoader.get()) throw strus::runtime_error(_TXT("error creating module loader"));
 
 		if (opt("moduledir"))
@@ -276,7 +278,7 @@ int main( int argc, const char* argv[])
 			std::cout << _TXT("usage:") << " strusAlterMetaData [options] <config> <cmds>" << std::endl;
 			std::cout << "<config>  : " << _TXT("configuration string of the storage") << std::endl;
 			std::cout << "            " << _TXT("semicolon';' separated list of assignments:") << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""), errorBuffer);
+			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""), errorBuffer.get());
 			std::cout << "<cmds>    : " << _TXT("semicolon separated list of commands:") << std::endl;
 			std::cout << "            alter <name> <newname> <newtype>" << std::endl;
 			std::cout << "              <name>    :" << _TXT("name of the element to change") << std::endl;
@@ -357,7 +359,6 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("unhandled error in alter meta data"));
 		}
-		delete errorBuffer;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
@@ -366,10 +367,10 @@ int main( int argc, const char* argv[])
 	}
 	catch (const std::runtime_error& e)
 	{
-		const char* errormsg = errorBuffer?errorBuffer->fetchError():0;
+		const char* errormsg = errorBuffer->fetchError();
 		if (errormsg)
 		{
-			std::cerr << _TXT("ERROR ") << errormsg << ": " << e.what() << std::endl;
+			std::cerr << _TXT("ERROR ") << e.what() << ": " << errormsg << std::endl;
 		}
 		else
 		{
@@ -380,7 +381,6 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	delete errorBuffer;
 	return -1;
 }
 
