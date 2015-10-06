@@ -240,11 +240,14 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		std::string resourcepath;
-		if (!strus::getParentPath( analyzerprg, resourcepath))
+		if (0!=strus::getParentPath( analyzerprg, resourcepath))
 		{
 			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
 		}
-		moduleLoader->addResourcePath( resourcepath);
+		if (!resourcepath.empty())
+		{
+			moduleLoader->addResourcePath( resourcepath);
+		}
 
 		// Create objects for query evaluation:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
