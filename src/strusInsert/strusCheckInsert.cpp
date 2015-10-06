@@ -71,9 +71,9 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
-	if (dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
+	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
