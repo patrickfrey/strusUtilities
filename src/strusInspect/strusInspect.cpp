@@ -456,7 +456,7 @@ static void inspectDocno( strus::StorageClientInterface& storage, const char** k
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( stderr, 2));
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
