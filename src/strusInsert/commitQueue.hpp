@@ -39,13 +39,16 @@
 #include <set>
 
 namespace strus {
+/// \brief Forward declaration
+class ErrorBufferInterface;
 
 class CommitQueue
 {
 public:
-	explicit CommitQueue(
-			StorageClientInterface* storage_)
-		:m_storage(storage_),m_nofDocuments(0),m_nofOpenTransactions(0)
+	CommitQueue(
+			StorageClientInterface* storage_,
+			ErrorBufferInterface* errorhnd_)
+		:m_storage(storage_),m_nofDocuments(0),m_nofOpenTransactions(0),m_errorhnd(errorhnd_)
 	{
 		m_nofDocuments = m_storage->localNofDocumentsInserted();
 	}
@@ -117,6 +120,7 @@ private:
 	utils::Mutex m_mutex_openTransactions;
 	std::set<Index> m_promisedTransactions;
 	utils::Mutex m_mutex_promisedTransactions;
+	ErrorBufferInterface* m_errorhnd;
 };
 
 }//namespace

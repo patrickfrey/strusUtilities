@@ -30,7 +30,6 @@
 #include "strus/constants.hpp"
 #include "strus/index.hpp"
 #include "strus/arithmeticVariant.hpp"
-#include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/documentClass.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
@@ -40,24 +39,30 @@
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/docnoRangeAllocatorInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "private/utils.hpp"
 #include "private/inputStream.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include "fileCrawlerInterface.hpp"
 #include <cmath>
 #include <limits>
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/interprocess/smart_ptr/unique_ptr.hpp>
+#include <stdarg.h>
 
 using namespace strus;
+
 
 CheckInsertProcessor::CheckInsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
 		const AnalyzerMap& analyzerMap_,
 		FileCrawlerInterface* crawler_,
-		const std::string& logfile_)
+		const std::string& logfile_,
+		ErrorBufferInterface* errorhnd_)
 
 	:m_storage(storage_)
 	,m_textproc(textproc_)
@@ -65,6 +70,7 @@ CheckInsertProcessor::CheckInsertProcessor(
 	,m_crawler(crawler_)
 	,m_terminated(false)
 	,m_logfile(logfile_)
+	,m_errorhnd(errorhnd_)
 {}
 
 CheckInsertProcessor::~CheckInsertProcessor()
@@ -100,6 +106,7 @@ void CheckInsertProcessor::run()
 
 	boost::scoped_ptr<strus::MetaDataReaderInterface> metadata( 
 		m_storage->createMetaDataReader());
+	if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
 
 	bool hasDoclenAttribute
 		= metadata->hasElement( strus::Constants::metadata_doclen());
@@ -119,17 +126,18 @@ void CheckInsertProcessor::run()
 				strus::DocumentClass dclass;
 				if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 				{
-					std::cerr << "failed to detect document class of file '" << *fitr << "'" << std::endl; 
+					std::cerr << utils::string_sprintf( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 					continue;
 				}
 				strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
 				if (!analyzer)
 				{
-					std::cerr << "no analyzer defined for document class with MIME type '" << dclass.mimeType() << "' scheme '" << dclass.scheme() << "'" << std::endl; 
+					std::cerr << utils::string_sprintf( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
 					continue;
 				}
 				std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 					analyzerContext( analyzer->createContext( dclass));
+				if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
 
 				// Analyze the document (with subdocuments) and check it:
 				enum {AnalyzerBufSize=8192};
@@ -163,6 +171,7 @@ void CheckInsertProcessor::run()
 							storagedoc.reset(
 								m_storage->createDocumentChecker(
 									oi->value(), m_logfile));
+							if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document checker"));
 							docid = oi->value().c_str();
 							//... use the docid from the analyzer if defined there
 						}
@@ -171,6 +180,7 @@ void CheckInsertProcessor::run()
 							storagedoc.reset(
 								m_storage->createDocumentChecker(
 									*fitr, m_logfile));
+							if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document checker"));
 							storagedoc->setAttribute(
 								strus::Constants::attribute_docid(), *fitr);
 							docid = fitr->c_str();
@@ -272,7 +282,7 @@ void CheckInsertProcessor::run()
 						// Issue warning for documents cut because they are too big to insert:
 						if (maxpos > Constants::storage_max_position_info())
 						{
-							std::cerr << "token positions of document '" << docid << "' are out or range (document too big, " << maxpos << " token positions assigned)" << std::endl;
+							std::cerr << utils::string_sprintf( _TXT( "token positions of document '%s' are out or range (document too big, %u token positions assigned)"), docid, maxpos) << std::endl;
 						}
 						storagedoc->done();
 					}
@@ -280,15 +290,24 @@ void CheckInsertProcessor::run()
 			}
 			catch (const std::bad_alloc& err)
 			{
-				std::cerr << "failed to check document '" << *fitr << "': memory allocation error" << std::endl;
+				std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 			}
 			catch (const std::runtime_error& err)
 			{
-				std::cerr << "failed to check document '" << *fitr << "': " << err.what() << std::endl;
+				const char* errmsg = m_errorhnd->fetchError();
+				if (errmsg)
+				{
+					std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': %s; %s"), fitr->c_str(), err.what(), errmsg) << std::endl;
+				}
+				else
+				{
+					std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
+				}
 			}
 		}
 		filesChecked += files.size();
-		std::cerr << "checked " << filesChecked << " documents" << std::endl;
+		std::cerr << utils::string_sprintf( _TXT( "\rchecked %u documents"), filesChecked) << std::endl;
 	}
 }
+
 

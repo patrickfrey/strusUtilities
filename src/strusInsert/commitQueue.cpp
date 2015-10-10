@@ -27,7 +27,10 @@
 --------------------------------------------------------------------
 */
 #include "commitQueue.hpp"
+#include "private/internationalization.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include <cstdio>
+#include <stdexcept>
 
 using namespace strus;
 
@@ -67,20 +70,41 @@ void CommitQueue::handleWaitingTransactions()
 {
 	for (;;)
 	{
-		Index nofDocs;
-		Index nofDocsAllocated;
-		unsigned int nofOpenTransactions = 0;
-		Reference<StorageTransactionInterface>
-			transaction = getNextTransaction(
-				nofDocs, nofDocsAllocated, nofOpenTransactions);
-		if (!transaction.get()) break;
-
-		transaction->commit();
-		Index totalNofDocuments = m_storage->localNofDocumentsInserted();
-		Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
-		::printf( "\rinserted %u documents (total %u), %u transactions open     ",
-				nofDocsInserted, totalNofDocuments, nofOpenTransactions);
-		::fflush(stdout);
+		try
+		{
+			Index nofDocs;
+			Index nofDocsAllocated;
+			unsigned int nofOpenTransactions = 0;
+			Reference<StorageTransactionInterface>
+				transaction = getNextTransaction(
+					nofDocs, nofDocsAllocated, nofOpenTransactions);
+			if (!transaction.get()) break;
+			if (!transaction->commit())
+			{
+				throw strus::runtime_error(_TXT("transaction commit failed"));
+			}
+			Index totalNofDocuments = m_storage->localNofDocumentsInserted();
+			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
+			::printf( "\rinserted %u documents (total %u), %u transactions open     ",
+					nofDocsInserted, totalNofDocuments, nofOpenTransactions);
+			::fflush(stdout);
+		}
+		catch (const std::bad_alloc&)
+		{
+			std::cerr << _TXT("out of memory handling transaction in queue") << std::endl;
+		}
+		catch (const std::exception& err)
+		{
+			const char* errmsg = m_errorhnd->fetchError();
+			if (errmsg)
+			{
+				std::cerr << _TXT("error handling transaction in queue: ") << err.what() << "; " << errmsg << std::endl;
+			}
+			else
+			{
+				std::cerr << _TXT("error handling transaction in queue: ") << err.what() << std::endl;
+			}
+		}
 	}
 }
 

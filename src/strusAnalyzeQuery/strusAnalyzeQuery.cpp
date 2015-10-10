@@ -27,6 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/error.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/rpcClientInterface.hpp"
@@ -42,14 +43,16 @@
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/documentClass.hpp"
-#include "strus/private/arithmeticVariantAsString.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "private/inputStream.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include <vector>
 #include <string>
 #include <map>
@@ -59,6 +62,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
+#include <algorithm>
 #include <iomanip>
 
 #undef STRUS_LOWLEVEL_DEBUG
@@ -67,14 +71,15 @@ class Query
 	:public strus::QueryInterface
 {
 public:
-	Query(){}
+	Query()
+		:m_maxNofRanks(20),m_minRank(0),m_evalset_defined(false){}
 
 	virtual ~Query(){}
 
 	virtual void pushTerm( const std::string& type_, const std::string& value_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "called pushTerm " << type_ << " '" << value_ << "'" << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called pushTerm %s '%s'"), type_.c_str(), value_.c_str()) << std::endl;
 		printState( std::cerr);
 #endif
 		m_stack.push_back( m_tree.size());
@@ -87,7 +92,7 @@ public:
 				std::size_t argc, int range)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "called pushExpression " << std::hex << "0x" << (uintptr_t)operation << std::dec << " args " << argc << " range " << range << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d"), (uintptr_t)operation, argc, range) << std::endl;
 		printState( std::cerr);
 #endif
 		int expridx = m_tree.size();
@@ -105,7 +110,7 @@ public:
 		}
 		if (argc > m_stack.size())
 		{
-			throw std::runtime_error("illegal expression (more arguments than on stack)");
+			throw strus::runtime_error( _TXT("illegal expression (more arguments than on stack)"));
 		}
 		std::size_t stkidx = m_stack.size() - argc;
 		for (;stkidx < m_stack.size(); ++stkidx)
@@ -113,7 +118,7 @@ public:
 			int node = m_stack[ stkidx];
 			if (m_tree[ node].left >= 0)
 			{
-				throw std::runtime_error( "corrupt tree data structure");
+				throw strus::runtime_error( _TXT("corrupt tree data structure"));
 			}
 			m_tree.push_back( m_tree[ node]);
 			if (stkidx+1 < m_stack.size())
@@ -128,32 +133,30 @@ public:
 	virtual void pushDuplicate()
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "called pushDuplicate" << std::endl;
+		std::cerr << _TXT("called pushDuplicate") << std::endl;
 		printState( std::cerr);
 #endif
-		if (m_stack.empty()) throw std::runtime_error( "illegal definition of duplicate without term or expression defined");
+		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of duplicate without term or expression defined"));
 		m_stack.push_back( m_stack.back());
 	}
 
 	virtual void attachVariable( const std::string& name_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "called attachVariable " << name_ << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called attachVariable %s"), name_.c_str()) << std::endl;
 		printState( std::cerr);
 #endif
-		if (m_stack.empty()) throw std::runtime_error( "illegal definition of variable assignment without term or expression defined");
+		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of variable assignment without term or expression defined"));
 		m_variables[ m_stack.back()] = name_;
 	}
 
 	virtual void defineFeature( const std::string& set_, float weight_=1.0)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::ostringstream ww;
-		ww << std::fixed << std::setw(6) << std::setprecision(4) << weight_;
-		std::cerr << "called defineFeature " << set_ << " " << ww.str() << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;
 		printState( std::cerr);
 #endif
-		if (m_stack.empty()) throw std::runtime_error( "illegal definition of feature without term or expression defined");
+		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of feature without term or expression defined"));
 		m_features.push_back( Feature( set_, weight_, m_stack.back()));
 		m_stack.pop_back();
 	}
@@ -163,17 +166,33 @@ public:
 			const strus::ArithmeticVariant& operand, bool newGroup=true)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
+		std::string operandstr = arithmeticVariantToString( operand);
+
 		const char* ng = newGroup?"new group":"";
-		std::cerr << "called defineMetaDataRestriction " << name << " " << Restriction::compareOperatorName(opr) << " " << operand << " " << ng << std::endl;
+		std::cerr
+			<< strus::utils::string_sprintf(_TXT("called defineMetaDataRestriction %s %s %s %s"), 
+					name.c_str(), Restriction::compareOperatorName(opr), operandstr.c_str(), ng)
+			<< std::endl;
 		printState( std::cerr);
 #endif
 		m_restrictions.push_back( Restriction( opr, name, operand, newGroup));
 	}
 
+	virtual void addDocumentEvaluationSet(
+			const std::vector<strus::Index>& docnolist_)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::utils::string_sprintf( _TXT("called addDocumentEvaluationSet %u"), docnolist_.size()) << std::endl;
+#endif
+		m_evalset_docnolist.insert( m_evalset_docnolist.end(), docnolist_.begin(), docnolist_.end());
+		std::sort( m_evalset_docnolist.begin(), m_evalset_docnolist.end());
+		m_evalset_defined = true;
+	}
+
 	virtual void setMaxNofRanks( std::size_t maxNofRanks_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "called setMaxNofRanks " << maxNofRanks_ << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called setMaxNofRanks %u"), maxNofRanks_) << std::endl;
 #endif
 		m_maxNofRanks = maxNofRanks_;
 	}
@@ -181,7 +200,7 @@ public:
 	virtual void setMinRank( std::size_t minRank_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "called setMinRank " << minRank_ << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT( "called setMinRank %u"), minRank_) << std::endl;
 #endif
 		m_minRank = minRank_;
 	}
@@ -189,7 +208,7 @@ public:
 	virtual void addUserName( const std::string& username_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << "called addUserName " << username_ << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT( "called addUserName %s"), username_.c_str()) << std::endl;
 #endif
 		m_users.push_back( username_);
 	}
@@ -203,7 +222,7 @@ public:
 	{
 		if (m_stack.size() > 0)
 		{
-			throw std::runtime_error("query definition not complete, stack not empty");
+			throw strus::runtime_error( _TXT("query definition not complete, stack not empty"));
 		}
 	}
 
@@ -212,48 +231,58 @@ public:
 		std::vector<Feature>::const_iterator fi = m_features.begin(), fe = m_features.end();
 		if (fi != fe)
 		{
-			out << "Features:" << std::endl;
+			out << _TXT("Features:") << std::endl;
 			for (; fi != fe; ++fi)
 			{
-				out << "feature '" << fi->set << "' weight=" << fi->weight << std::endl;
+				out << strus::utils::string_sprintf( _TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
 				print_expression( out, 1, fi->expression);
 			}
 		}
 		std::vector<Restriction>::const_iterator ri = m_restrictions.begin(), re = m_restrictions.end();
 		if (ri != re)
 		{
-			out << "Restrictions:" << std::endl;
+			out << _TXT("Restrictions:") << std::endl;
 			for (; ri != re; ++ri)
 			{
-				out << "restriction " << ri->name << " " << ri->oprname() << " '" << ri->operand << "'" << std::endl;
+				out << strus::utils::string_sprintf( _TXT("restriction %s %s '%s'"), ri->name.c_str(), ri->oprname(), ri->operand.tostring().c_str()) << std::endl;
 			}
 		}
 		std::vector<std::string>::const_iterator ui = m_users.begin(), ue = m_users.end();
 		if (ui != ue)
 		{
-			out << "Allowed:" << std::endl;
+			out << _TXT("Allowed:") << std::endl;
 			for (; ui != ue; ++ui)
 			{
-				out << "user '" << *ui << "'" << std::endl;
+				out << strus::utils::string_sprintf(_TXT("user '%s'"), ui->c_str()) << std::endl;
 			}
+		}
+		if (m_evalset_defined)
+		{
+			std::vector<strus::Index>::const_iterator vi = m_evalset_docnolist.begin(), ve = m_evalset_docnolist.end();
+			out << _TXT("Evalation document docno set:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				out << " " << *vi;
+			}
+			out << std::endl;
 		}
 	}
 
 #ifdef STRUS_LOWLEVEL_DEBUG
 	void printState( std::ostream& out) const
 	{
-		out << "Stack:" << std::endl;
+		out << _TXT("Stack:") << std::endl;
 		std::vector<int>::const_iterator si = m_stack.begin(), se = m_stack.end();
 		for (int sidx=0; si != se; ++si,++sidx)
 		{
-			out << "address [" << -(int)(m_stack.size() - sidx) << "]" << std::endl;
+			out << strus::utils::string_sprintf(_TXT("address [%d]"), -(int)(m_stack.size() - sidx)) << std::endl;
 			print_expression( out, 1, *si);
 		}
-		out << "Features:" << std::endl;
+		out << _TXT("Features:") << std::endl;
 		std::vector<Feature>::const_iterator fi = m_features.begin(), fe = m_features.end();
 		for (; fi != fe; ++fi)
 		{
-			out << "feature '" << fi->set << "' weight=" << fi->weight << std::endl;
+			out << strus::utils::string_sprintf(_TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
 			print_expression( out, 1, fi->expression);
 		}
 	}
@@ -368,12 +397,20 @@ private:
 	std::size_t m_maxNofRanks;
 	std::size_t m_minRank;
 	std::vector<std::string> m_users;
+	std::vector<strus::Index> m_evalset_docnolist;
+	bool m_evalset_defined;
 };
 
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	if (!errorBuffer.get())
+	{
+		std::cerr << _TXT("failed to create error buffer") << std::endl;
+		return -1;
+	}
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
@@ -385,29 +422,30 @@ int main( int argc, const char* argv[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() < 2)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
-			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options --moduledir and --rpc"));
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -418,34 +456,37 @@ int main( int argc, const char* argv[])
 		}
 		if (opt("module"))
 		{
-			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --module and --rpc");
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options --module and --rpc"));
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
 			{
-				moduleLoader->loadModule( *mi);
+				if (!moduleLoader->loadModule( *mi))
+				{
+					throw strus::runtime_error(_TXT("error failed to load module %s"), mi->c_str());
+				}
 			}
 		}
 
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusAnalyze [options] <program> <queryfile>" << std::endl;
-			std::cout << "<program>   = path of analyzer program" << std::endl;
-			std::cout << "<queryfile>  = path of query content to analyze ('-' for stdin)" << std::endl;
-			std::cout << "description: Analyzes a query and dumps the result to stdout." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusAnalyze [options] <program> <queryfile>" << std::endl;
+			std::cout << "<program>   = " << _TXT("path of analyzer program") << std::endl;
+			std::cout << "<queryfile> = " << _TXT("path of query content to analyze ('-' for stdin)") << std::endl;
+			std::cout << _TXT("description: Analyzes a query and dumps the result to stdout.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
-			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
-			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			return rt;
 		}
 		std::string analyzerprg = opt[0];
@@ -454,7 +495,7 @@ int main( int argc, const char* argv[])
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
-			if (opt("rpc")) throw std::runtime_error( "specified mutual exclusive options --resourcedir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--resourcedir", "--rpc");
 			std::vector<std::string> pathlist( opt.list("resourcedir"));
 			std::vector<std::string>::const_iterator
 				pi = pathlist.begin(), pe = pathlist.end();
@@ -463,7 +504,15 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
+		std::string resourcepath;
+		if (0!=strus::getParentPath( analyzerprg, resourcepath))
+		{
+			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
+		}
+		if (!resourcepath.empty())
+		{
+			moduleLoader->addResourcePath( resourcepath);
+		}
 
 		// Create objects for analyzer:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -473,19 +522,26 @@ int main( int argc, const char* argv[])
 
 		if (opt("rpc"))
 		{
-			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
-			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
+			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
+			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
 		std::auto_ptr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer"));
 
 		// Load analyzer program:
 		unsigned int ec;
@@ -493,13 +549,14 @@ int main( int argc, const char* argv[])
 		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec)
 		{
-			std::ostringstream msg;
-			std::cerr << "ERROR failed to load analyzer program " << analyzerprg << " (file system error " << ec << ")" << std::endl;
-			return 4;
+			strus::runtime_error( _TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
-
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer.get()))
+		{
+			throw strus::runtime_error( _TXT("failed to load query analyze program %s"), analyzerprg.c_str());
+		}
 		// Load the query source:
 		strus::InputStream input( querypath);
 		enum {AnalyzerBufSize=8192};
@@ -521,19 +578,39 @@ int main( int argc, const char* argv[])
 		// Load and print the query:
 		Query query;
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
-		strus::loadQuery( query, analyzer.get(), queryproc, querysource);
+		if (!queryproc) throw strus::runtime_error(_TXT("failed to get query processor"));
+		if (!strus::loadQuery( query, analyzer.get(), queryproc, querysource, errorBuffer.get()))
+		{
+			throw strus::runtime_error( _TXT("failed to load query %s"), querypath.c_str());
+		}
 
 		query.check();
 		query.print( std::cout);
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("error in analyze query"));
+		}
 		return 0;
+	}
+	catch (const std::bad_alloc&)
+	{
+		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cerr << "ERROR " << e.what() << std::endl;
+		const char* errormsg = errorBuffer->fetchError();
+		if (errormsg)
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << ": " << errormsg << std::endl;
+		}
+		else
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << std::endl;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "EXCEPTION " << e.what() << std::endl;
+		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
 	return -1;
 }

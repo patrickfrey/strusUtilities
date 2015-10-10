@@ -26,50 +26,29 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#include "private/utils.hpp"
-#include "analyzerMap.hpp"
-#include <string>
+#ifndef _STRUS_INTERNATIONALIZATION_HPP_INCLUDED
+#define _STRUS_INTERNATIONALIZATION_HPP_INCLUDED
+#include <libintl.h>
+#include <stdexcept>
 
-namespace strus {
+#define _TXT(STRING) gettext(STRING)
 
-/// \brief Forward declaration
-class StorageClientInterface;
-/// \brief Forward declaration
-class TextProcessorInterface;
-/// \brief Forward declaration
-class DocumentAnalyzerInterface;
-/// \brief Forward declaration
-class FileCrawlerInterface;
-/// \brief Forward declaration
-class ErrorBufferInterface;
-
-class CheckInsertProcessor
+namespace strus
 {
-public:
-	CheckInsertProcessor(
-			StorageClientInterface* storage_,
-			const TextProcessorInterface* textproc_,
-			const AnalyzerMap& analyzerMap_,
-			FileCrawlerInterface* crawler_,
-			const std::string& logfile_,
-			ErrorBufferInterface* errorhnd_);
 
-	~CheckInsertProcessor();
+/// \brief Substitute for std::runtime_error with arguments
+/// \param[in] msg c printf format string
+/// \param[in] nofargs number of arguments passed to be substituted in the format string
+std::runtime_error runtime_error( const char* format, ...);
 
-	void sigStop();
-	void run();
+/// \brief Substitute for std::logic_error with arguments
+/// \param[in] msg c printf format string
+/// \param[in] nofargs number of arguments passed to be substituted in the format string
+std::logic_error logic_error( const char* format, ...);
 
-private:
-	StorageClientInterface* m_storage;
-	const TextProcessorInterface* m_textproc;
-	AnalyzerMap m_analyzerMap;
-	FileCrawlerInterface* m_crawler;
-	utils::AtomicBool m_terminated;
-	std::string m_logfile;
-	ErrorBufferInterface* m_errorhnd;
-};
+/// \brief Declare the message domain used by this package for the exception constructors declared in this module for gettext
+void initMessageTextDomain();
 
 }//namespace
 #endif
+

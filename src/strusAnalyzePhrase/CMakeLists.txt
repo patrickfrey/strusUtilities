@@ -28,7 +28,7 @@ link_directories(
 # PROGRAMS
 # ------------------------------
 add_executable( strusAnalyzePhrase ${source_files} )
-target_link_libraries( strusAnalyzePhrase  strus_private_utils  strus_utils strus_module strus_rpc_client strus_rpc_client_socket strus_program )
+target_link_libraries( strusAnalyzePhrase  strus_private_utils  strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket strus_program )
 
 
 # ------------------------------

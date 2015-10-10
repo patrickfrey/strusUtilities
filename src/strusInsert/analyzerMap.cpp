@@ -31,6 +31,10 @@
 #include "strus/programLoader.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
+#include "strus/segmenterInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include <stdexcept>
 
 using namespace strus;
@@ -43,20 +47,19 @@ void AnalyzerMap::defineProgram(
 	unsigned int ec;
 	std::string programSource;
 	ec = strus::readFile( prgfile, programSource);
-	if (ec)
-	{
-		std::ostringstream msg;
-		msg << " (file system error " << ec << ")"; 
-		throw std::runtime_error( std::string( "failed to load program file ") + prgfile + msg.str());
-	}
-	if (strus::isAnalyzerMapSource( programSource))
+	if (ec) throw strus::runtime_error( _TXT( "failed to load program file '%s' (errno %u"), prgfile.c_str(), ec);
+
+	if (strus::isAnalyzerMapSource( programSource, m_errorhnd))
 	{
 		if (!scheme.empty())
 		{
-			throw std::runtime_error( "document scheme specification only allowed with an analyzer configuration specified");
+			throw strus::runtime_error( _TXT("document scheme specification only allowed with an analyzer configuration specified"));
 		}
 		std::vector<AnalyzerMapElement> mapdef;
-		strus::loadAnalyzerMap( mapdef, programSource);
+		if (!strus::loadAnalyzerMap( mapdef, programSource, m_errorhnd))
+		{
+			throw strus::runtime_error( _TXT( "error loading analyzer map"));
+		}
 		std::vector<AnalyzerMapElement>::iterator mi = mapdef.begin(), me = mapdef.end();
 		for (; mi != me; ++mi)
 		{
@@ -66,40 +69,47 @@ void AnalyzerMap::defineProgram(
 			}
 			programSource.clear();
 			ec = strus::readFile( mi->prgFilename, programSource);
-			if (ec)
-			{
-				std::ostringstream msg;
-				msg << " (file system error " << ec << ")"; 
-				throw std::runtime_error( std::string( "failed to load program file ") + mi->prgFilename + msg.str());
-			}
+			if (ec) throw strus::runtime_error( _TXT( "failed to load program file '%s' (errno %u)"), mi->prgFilename.c_str(), ec);
+
 			try
 			{
 				defineAnalyzerProgramSource( mi->scheme, mi->segmenter, programSource);
 			}
 			catch (const std::runtime_error& err)
 			{
-				throw std::runtime_error( std::string( "loading analyzer program file '") + mi->prgFilename + "': " + err.what());
+				throw strus::runtime_error( _TXT( "loading analyzer program file '%s': %s"), mi->prgFilename.c_str(), err.what());
 			}
 		}
 	}
 	else
 	{
+		if (m_errorhnd->hasError())
+		{
+			throw strus::runtime_error(_TXT("error detecting analyzer configuration file type"));
+		}
 		defineAnalyzerProgramSource( scheme, segmenter, programSource);
 	}
 }
 
 void AnalyzerMap::defineAnalyzerProgramSource(
 		const std::string& scheme,
-		const std::string& segmenter,
+		const std::string& segmentername,
 		const std::string& analyzerProgramSource)
 {
+	std::auto_ptr<strus::SegmenterInterface>
+		segmenter( m_builder->createSegmenter( segmentername));
+	if (!segmenter.get()) throw strus::runtime_error(_TXT("error creating segmenter"));
+
 	utils::SharedPtr<strus::DocumentAnalyzerInterface>
-		analyzer( m_builder->createDocumentAnalyzer( segmenter));
+		analyzer( m_builder->createDocumentAnalyzer( segmentername));
+	if (!analyzer.get()) throw strus::runtime_error(_TXT("error creating analyzer"));
 
-	std::string mimeType = analyzer->mimeType();
+	std::string mimeType = segmenter->mimeType();
 	const strus::TextProcessorInterface* textproc = m_builder->getTextProcessor();
-	strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource);
-
+	if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, m_errorhnd))
+	{
+		throw strus::runtime_error( _TXT("failed to load analyzer configuration program"));
+	}
 	if (!scheme.empty())
 	{
 		m_map[ mimeType + ":" + scheme] = analyzer;

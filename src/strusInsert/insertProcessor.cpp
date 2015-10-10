@@ -37,10 +37,13 @@
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/docnoRangeAllocatorInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/document.hpp"
-#include "strus/private/arithmeticVariantAsString.hpp"
 #include "strus/private/fileio.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include "private/inputStream.hpp"
+#include "private/utils.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "commitQueue.hpp"
 #include <memory>
@@ -55,7 +58,8 @@ InsertProcessor::InsertProcessor(
 		DocnoRangeAllocatorInterface* docnoAllocator_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
-		unsigned int transactionSize_)
+		unsigned int transactionSize_,
+		ErrorBufferInterface* errorhnd_)
 
 	:m_storage(storage_)
 	,m_textproc(textproc_)
@@ -65,6 +69,7 @@ InsertProcessor::InsertProcessor(
 	,m_crawler(crawler_)
 	,m_transactionSize(transactionSize_)
 	,m_terminated(false)
+	,m_errorhnd(errorhnd_)
 {}
 
 InsertProcessor::~InsertProcessor()
@@ -87,12 +92,14 @@ void InsertProcessor::run()
 	
 		std::auto_ptr<strus::MetaDataReaderInterface> metadata( 
 			m_storage->createMetaDataReader());
-	
+		if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
+
 		bool hasDoclenAttribute
 			= metadata->hasElement( strus::Constants::metadata_doclen());
 	
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
+		if (!transaction.get()) throw strus::runtime_error(_TXT("error creating storage transaction"));
 
 		while (m_crawler->fetch( files))
 		{
@@ -108,18 +115,19 @@ void InsertProcessor::run()
 					strus::DocumentClass dclass;
 					if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 					{
-						std::cerr << "failed to detect document class of file '" << *fitr << "'" << std::endl; 
+						std::cerr << utils::string_sprintf( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 						continue;
 					}
 					strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
 					if (!analyzer)
 					{
-						std::cerr << "no analyzer defined for document class with MIME type '" << dclass.mimeType() << "' scheme '" << dclass.scheme() << "'" << std::endl; 
+						std::cerr << utils::string_sprintf( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
 						continue;
 					}
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 						analyzerContext( analyzer->createContext( dclass));
-	
+					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
+
 					// Analyze the document (with subdocuments) and insert it:
 					enum {AnalyzerBufSize=8192};
 					char buf[ AnalyzerBufSize];
@@ -155,14 +163,15 @@ void InsertProcessor::run()
 								storagedoc.reset(
 									transaction->createDocument(
 										oi->value(), docno));
+								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document structure"));
 								docid = oi->value().c_str();
 								//... use the docid from the analyzer if defined there
 							}
 							else
 							{
 								storagedoc.reset(
-									transaction->createDocument(
-										*fitr, docno));
+									transaction->createDocument( *fitr, docno));
+								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document structure"));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();
@@ -259,7 +268,7 @@ void InsertProcessor::run()
 							// Issue warning for documents cut because they are too big to insert:
 							if (maxpos > Constants::storage_max_position_info())
 							{
-								std::cerr << "token positions of document '" << docid << "' are out or range (document too big, " << maxpos << " token positions assigned)" << std::endl;
+								std::cerr << utils::string_sprintf( _TXT( "token positions of document '%s' are out or range (document too big, %u token positions assigned)"), docid, maxpos) << std::endl;
 							}
 	
 							// Finish document completed:
@@ -270,6 +279,7 @@ void InsertProcessor::run()
 							{
 								m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCount);
 								transaction.reset( m_storage->createTransaction());
+								if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
 								docCount = 0;
 								docnoRangeStart = 0;
 							}
@@ -278,14 +288,26 @@ void InsertProcessor::run()
 				}
 				catch (const std::bad_alloc& err)
 				{
-					std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
+					std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
+					transaction.reset( m_storage->createTransaction());
+					if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
 					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 					docnoRangeStart = 0;
 					docCount = 0;
 				}
 				catch (const std::runtime_error& err)
 				{
-					std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+					const char* errmsg = m_errorhnd->fetchError();
+					if (errmsg)
+					{
+						std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': %s; %s"), fitr->c_str(), err.what(), errmsg) << std::endl;
+					}
+					else
+					{
+						std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
+					}
+					transaction.reset( m_storage->createTransaction());
+					if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
 					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 					docnoRangeStart = 0;
 					docCount = 0;
@@ -310,13 +332,21 @@ void InsertProcessor::run()
 	}
 	catch (const std::bad_alloc& err)
 	{
-		std::cerr << "failed to complete inserts due to a memory allocation error" << std::endl;
+		std::cerr << _TXT("failed to complete inserts due to a memory allocation error") << std::endl;
 		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 		docnoRangeStart = 0;
 	}
 	catch (const std::runtime_error& err)
 	{
-		std::cerr << "failed to complete inserts: " << err.what() << std::endl;
+		const char* errmsg = m_errorhnd->fetchError();
+		if (errmsg)
+		{
+			std::cerr << utils::string_sprintf( _TXT("failed to complete inserts: %s; %s"), err.what(), errmsg) << std::endl;
+		}
+		else
+		{
+			std::cerr << utils::string_sprintf( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
+		}
 		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
 		docnoRangeStart = 0;
 	}

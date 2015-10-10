@@ -26,50 +26,47 @@
 
 --------------------------------------------------------------------
 */
-#ifndef _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#include "private/utils.hpp"
-#include "analyzerMap.hpp"
-#include <string>
+/// \brief Macros, classes and functions supporting error handling
+/// \file errorUtils.hpp
+#ifndef _STRUS_STORAGE_ERROR_UTILITIES_HPP_INCLUDED
+#define _STRUS_STORAGE_ERROR_UTILITIES_HPP_INCLUDED
+#include <stdexcept>
+#include "private/internationalization.hpp"
 
-namespace strus {
-
-/// \brief Forward declaration
-class StorageClientInterface;
-/// \brief Forward declaration
-class TextProcessorInterface;
-/// \brief Forward declaration
-class DocumentAnalyzerInterface;
-/// \brief Forward declaration
-class FileCrawlerInterface;
-/// \brief Forward declaration
-class ErrorBufferInterface;
-
-class CheckInsertProcessor
+/// \brief strus toplevel namespace
+namespace strus
 {
-public:
-	CheckInsertProcessor(
-			StorageClientInterface* storage_,
-			const TextProcessorInterface* textproc_,
-			const AnalyzerMap& analyzerMap_,
-			FileCrawlerInterface* crawler_,
-			const std::string& logfile_,
-			ErrorBufferInterface* errorhnd_);
 
-	~CheckInsertProcessor();
+#define CATCH_ERROR_MAP( contextExplainText, errorBuffer)\
+	catch (const std::bad_alloc&)\
+	{\
+		(errorBuffer).report( _TXT("memory allocation error"));\
+	}\
+	catch (const std::runtime_error& err)\
+	{\
+		(errorBuffer).report( contextExplainText, err.what());\
+	}\
+	catch (const std::exception& err)\
+	{\
+		(errorBuffer).report( _TXT("uncaught exception: %s"), err.what());\
+	}
 
-	void sigStop();
-	void run();
-
-private:
-	StorageClientInterface* m_storage;
-	const TextProcessorInterface* m_textproc;
-	AnalyzerMap m_analyzerMap;
-	FileCrawlerInterface* m_crawler;
-	utils::AtomicBool m_terminated;
-	std::string m_logfile;
-	ErrorBufferInterface* m_errorhnd;
-};
+#define CATCH_ERROR_MAP_RETURN( contextExplainText, errorBuffer, errorReturnValue)\
+	catch (const std::bad_alloc&)\
+	{\
+		(errorBuffer).report( _TXT("memory allocation error"));\
+		return errorReturnValue;\
+	}\
+	catch (const std::runtime_error& err)\
+	{\
+		(errorBuffer).report( contextExplainText, err.what());\
+		return errorReturnValue;\
+	}\
+	catch (const std::exception& err)\
+	{\
+		(errorBuffer).report( _TXT("uncaught exception: %s"), err.what());\
+		return errorReturnValue;\
+	}
 
 }//namespace
 #endif

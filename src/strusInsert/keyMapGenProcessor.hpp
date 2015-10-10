@@ -42,6 +42,8 @@ class DocumentAnalyzerInterface;
 class TextProcessorInterface;
 /// \brief Forward declaration
 class FileCrawlerInterface;
+/// \brief Forward declaration
+class ErrorBufferInterface;
 
 class KeyOccurrence
 {
@@ -84,7 +86,8 @@ public:
 			const TextProcessorInterface* textproc_,
 			const AnalyzerMap& analyzerMap_,
 			KeyMapGenResultList* que_,
-			FileCrawlerInterface* crawler_);
+			FileCrawlerInterface* crawler_,
+			ErrorBufferInterface* errorhnd_);
 
 	~KeyMapGenProcessor();
 
@@ -97,6 +100,7 @@ private:
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
 	utils::AtomicBool m_terminated;
+	ErrorBufferInterface* m_errorhnd;
 };
 
 }//namespace

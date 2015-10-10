@@ -30,11 +30,13 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/private/fileio.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "private/utils.hpp"
 #include "private/inputStream.hpp"
+#include "private/internationalization.hpp"
 
 using namespace strus;
 
@@ -106,13 +108,15 @@ KeyMapGenProcessor::KeyMapGenProcessor(
 		const TextProcessorInterface* textproc_,
 		const AnalyzerMap& analyzerMap_,
 		KeyMapGenResultList* que_,
-		FileCrawlerInterface* crawler_)
+		FileCrawlerInterface* crawler_,
+		ErrorBufferInterface* errorhnd_)
 
 	:m_textproc(textproc_)
 	,m_analyzerMap(analyzerMap_)
 	,m_que(que_)
 	,m_crawler(crawler_)
 	,m_terminated(false)
+	,m_errorhnd(errorhnd_)
 {}
 
 KeyMapGenProcessor::~KeyMapGenProcessor()
@@ -149,7 +153,7 @@ void KeyMapGenProcessor::run()
 					strus::DocumentClass dclass;
 					if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 					{
-						std::cerr << "failed to detect document class of file '" << *fitr << "'" << std::endl; 
+						std::cerr << utils::string_sprintf(_TXT("failed to detect document class of file '%s'"), fitr->c_str()) << "'" << std::endl; 
 						continue;
 					}
 					strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
@@ -160,6 +164,7 @@ void KeyMapGenProcessor::run()
 					}
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 						analyzerContext( analyzer->createContext( dclass));
+					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
 	
 					// Analyze the document (with subdocuments) and update the key map:
 					enum {AnalyzerBufSize=8192};
@@ -202,11 +207,11 @@ void KeyMapGenProcessor::run()
 				}
 				catch (const std::bad_alloc& err)
 				{
-					std::cerr << "failed to process document '" << *fitr << "': memory allocation error" << std::endl;
+					std::cerr << utils::string_sprintf(_TXT("failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 				}
 				catch (const std::runtime_error& err)
 				{
-					std::cerr << "failed to process document '" << *fitr << "': " << err.what() << std::endl;
+					std::cerr << utils::string_sprintf(_TXT("failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
 				}
 			}
 			if (!m_terminated)
@@ -222,13 +227,21 @@ void KeyMapGenProcessor::run()
 				std::cerr << ".";
 			}
 		}
-		catch (const std::bad_alloc& err)
+		catch (const std::bad_alloc&)
 		{
-			std::cerr << "out of memory when processing chunk of " << files.size() << " documents: " << err.what() << std::endl;
+			std::cerr << utils::string_sprintf(_TXT("out of memory when processing chunk of %u"), files.size()) << std::endl;
 		}
 		catch (const std::runtime_error& err)
 		{
-			std::cerr << "failed to process chunk of " << files.size() << " documents: " << err.what() << std::endl;
+			const char* errmsg = m_errorhnd->fetchError();
+			if (errmsg)
+			{
+				std::cerr << utils::string_sprintf(_TXT("failed to process chunk of %u: %s; %s"), files.size(), err.what(), errmsg) << std::endl;
+			}
+			else
+			{
+				std::cerr << utils::string_sprintf(_TXT("failed to process chunk of %u: %s"), files.size(), err.what()) << std::endl;
+			}
 		}
 	}
 }

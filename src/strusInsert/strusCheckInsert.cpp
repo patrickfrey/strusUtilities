@@ -27,6 +27,7 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/error.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
@@ -43,6 +44,7 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
 #include "strus/private/configParser.hpp"
@@ -52,8 +54,9 @@
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "private/utils.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include "fileCrawler.hpp"
-#include "commitQueue.hpp"
 #include "checkInsertProcessor.hpp"
 #include "thread.hpp"
 #include <iostream>
@@ -61,26 +64,35 @@
 #include <cstring>
 #include <stdexcept>
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
 {
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
+	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
+	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient));
+					strus::DatabaseInterface::CmdCreateClient), errorhnd);
 	strus::printIndentMultilineString(
 				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient));
+					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
 
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	if (!errorBuffer.get())
+	{
+		std::cerr << _TXT("failed to create error buffer") << std::endl;
+		return -1;
+	}
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
@@ -91,33 +103,40 @@ int main( int argc_, const char* argv_[])
 				"n,notify:", "v,version", "R,resourcedir:",
 				"M,moduledir:", "m,module:", "x,extension:",
 				"r,rpc:", "g,segmenter:", "s,storage:");
+
+		unsigned int nofThreads = 0;
+		if (opt("threads"))
+		{
+			nofThreads = opt.asUint( "threads");
+		}
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus storage version " << STRUS_STORAGE_VERSION_STRING << std::endl;
-			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 2)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() < 2)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -128,53 +147,55 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt("module"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --module and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
 			{
-				moduleLoader->loadModule( *mi);
+				if (!moduleLoader->loadModule( *mi))
+				{
+					throw strus::runtime_error(_TXT("error failed to load module %s"), mi->c_str());
+				}
 			}
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusCheckInsert [options] <program> <docpath>" << std::endl;
-			std::cout << "<program> = path of analyzer program or analyzer map program" << std::endl;
-			std::cout << "<docpath> = path of document or directory to check" << std::endl;
-			std::cout << "description: Checks if a storage contains all data of a document set." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusCheckInsert [options] <program> <docpath>" << std::endl;
+			std::cout << "<program> = " << _TXT("path of analyzer program or analyzer map program") << std::endl;
+			std::cout << "<docpath> = " << _TXT("path of document or directory to check") << std::endl;
+			std::cout << _TXT("description: Checks if a storage contains all data of a document set.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
-			std::cout << "    Define the storage configuration string as <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			if (!opt("rpc"))
 			{
-				std::cout << "    <CONFIG> is a semicolon ';' separated list of assignments:" << std::endl;
-				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""));
+				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
-			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
-			std::cout << "    Execute the command on the RPC server specified by <ADDR>" << std::endl;
+			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
-			std::cout << "    Use the document segmenter with name <NAME> (default textwolf XML)" << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
-			std::cout << "    Grab only the files with extension <EXT> (default all files)" << std::endl;
+			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
-			std::cout << "    Set <N> as number of inserter threads to use"  << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of inserter threads to use") << std::endl;
 			std::cout << "-l|--logfile <FILE>" << std::endl;
-			std::cout << "    Set <FILE> as output file (default stdout)"  << std::endl;
+			std::cout << "    " << _TXT("Set <FILE> as output file (default stdout)") << std::endl;
 			std::cout << "-n|--notify <N>" << std::endl;
-			std::cout << "    Set <N> as notification interval (number of documents)" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as notification interval (number of documents)") << std::endl;
 			return rt;
 		}
-		unsigned int nofThreads = opt.asUint( "threads");
 		std::string logfile = "-";
 		std::string storagecfg;
 		if (opt("logfile"))
@@ -188,7 +209,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt("storage"))
 		{
-			if (opt("rpc")) throw std::runtime_error("specified mutual exclusive options --moduledir and --rpc");
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			storagecfg = opt["storage"];
 		}
 		std::string analyzerprg = opt[0];
@@ -218,7 +239,15 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		moduleLoader->addResourcePath( strus::getParentPath( analyzerprg));
+		std::string resourcepath;
+		if (0!=strus::getParentPath( analyzerprg, resourcepath))
+		{
+			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
+		}
+		if (!resourcepath.empty())
+		{
+			moduleLoader->addResourcePath( resourcepath);
+		}
 
 		// Create objects for insert checker:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -227,27 +256,36 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
-			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"]));
-			rpcClient.reset( strus::createRpcClient( messaging.get()));
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
+			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
+			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
 			(void)messaging.release();
-			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
 		strus::utils::ScopedPtr<strus::StorageClientInterface>
 			storage( storageBuilder->createStorageClient( storagecfg));
+		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
 
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get());
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
 		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
 		
 		strus::FileCrawler* fileCrawler
@@ -263,7 +301,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::CheckInsertProcessor checker(
-				storage.get(), textproc, analyzerMap, fileCrawler, logfile);
+				storage.get(), textproc, analyzerMap, fileCrawler, logfile, errorBuffer.get());
 			checker.run();
 		}
 		else
@@ -278,24 +316,39 @@ int main( int argc_, const char* argv_[])
 				checkInsertThreads->start(
 					new strus::CheckInsertProcessor(
 						storage.get(), textproc, analyzerMap,
-						fileCrawler, logfile));
+						fileCrawler, logfile, errorBuffer.get()));
 			}
 			checkInsertThreads->wait_termination();
 		}
 		fileCrawlerThread->wait_termination();
-		std::cerr << "done" << std::endl;
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("unhandled error in check insert"));
+		}
+		std::cerr << _TXT("done") << std::endl;
+		return 0;
+	}
+	catch (const std::bad_alloc&)
+	{
+		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cerr << "ERROR " << e.what() << std::endl;
-		return 6;
+		const char* errormsg = errorBuffer->fetchError();
+		if (errormsg)
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << ": " << errormsg << std::endl;
+		}
+		else
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << std::endl;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "EXCEPTION " << e.what() << std::endl;
-		return 7;
+		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	return 0;
+	return -1;
 }
 
 

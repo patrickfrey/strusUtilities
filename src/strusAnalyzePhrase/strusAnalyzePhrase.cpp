@@ -27,16 +27,21 @@
 --------------------------------------------------------------------
 */
 #include "strus/lib/module.hpp"
+#include "strus/lib/error.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/versionAnalyzer.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
+#include "strus/private/snprintf.h"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
+#include "private/errorUtils.hpp"
+#include "private/internationalization.hpp"
 #include "strus/programLoader.hpp"
 #include <iostream>
 #include <fstream>
@@ -62,6 +67,12 @@ struct TermOrder
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	if (!errorBuffer.get())
+	{
+		std::cerr << _TXT("failed to create error buffer") << std::endl;
+		return -1;
+	}
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
@@ -74,26 +85,28 @@ int main( int argc, const char* argv[])
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
-			std::cout << "Strus utilities version " << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << "Strus analyzer version " << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
 		{
 			if (opt.nofargs() > 1)
 			{
-				std::cerr << "ERROR too many arguments" << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
 			if (opt.nofargs() < 1)
 			{
-				std::cerr << "ERROR too few arguments" << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader());
+		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -110,34 +123,37 @@ int main( int argc, const char* argv[])
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
 			{
-				moduleLoader->loadModule( *mi);
+				if (!moduleLoader->loadModule( *mi))
+				{
+					throw strus::runtime_error(_TXT("error failed to load module %s"), mi->c_str());
+				}
 			}
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << "usage: strusAnalyze [options] <phrasepath>" << std::endl;
-			std::cout << "<phrasepath> = path to phrase to analyze ('-' for stdin)" << std::endl;
-			std::cout << "description: tokenizes and normalizes a text segment" << std::endl;
-			std::cout << "             and prints the result to stdout." << std::endl;
-			std::cout << "options:" << std::endl;
+			std::cout << _TXT("usage:") << " strusAnalyze [options] <phrasepath>" << std::endl;
+			std::cout << "<phrasepath> = " << _TXT("path to phrase to analyze ('-' for stdin)") << std::endl;
+			std::cout << "description: " << _TXT("tokenizes and normalizes a text segment") << std::endl;
+			std::cout << "             " << _TXT("and prints the result to stdout.") << std::endl;
+			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
-			std::cout << "   Print this usage and do nothing else" << std::endl;
+			std::cout << "   " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
-			std::cout << "    Print the program version and do nothing else" << std::endl;
+			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    Load components from module <MOD>" << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
-			std::cout << "    Search modules to load first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
-			std::cout << "    Search resource files for analyzer first in <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-t|--tokenizer <CALL>" << std::endl;
-			std::cout << "    Use the tokenizer <CALL> (default 'content')" << std::endl;
+			std::cout << "    " << _TXT("Use the tokenizer <CALL> (default 'content')") << std::endl;
 			std::cout << "-n|--normalizer <CALL>" << std::endl;
-			std::cout << "    Use the normalizer <CALL> (default 'orig')" << std::endl;
+			std::cout << "    " << _TXT("Use the normalizer <CALL> (default 'orig')") << std::endl;
 			std::cout << "-q|--quot <STR>" << std::endl;
-			std::cout << "    Use the string <STR> as quote for the result (default \"\'\")" << std::endl;
+			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default \"\'\")") << std::endl;
 			std::cout << "-p|--plain" << std::endl;
-			std::cout << "    Do not print position and define default quotes as empty" << std::endl;
+			std::cout << "    " << _TXT("Do not print position and define default quotes as empty") << std::endl;
 			return rt;
 		}
 		std::string resultQuot = "'";
@@ -177,36 +193,32 @@ int main( int argc, const char* argv[])
 		// Create objects for analyzer:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
 			builder( moduleLoader->createAnalyzerObjectBuilder());
+		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 		std::auto_ptr<strus::QueryAnalyzerInterface>
 			analyzer( builder->createQueryAnalyzer());
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create analyzer"));
 		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Create phrase type (tokenizer and normalizer):
 		std::string phraseType;
-		strus::loadQueryAnalyzerPhraseType(
-				*analyzer, textproc, phraseType, "", normalizer, tokenizer);
+		if (!strus::loadQueryAnalyzerPhraseType(
+				*analyzer, textproc, phraseType, "", normalizer, tokenizer, errorBuffer.get()))
+		{
+			throw strus::runtime_error(_TXT("failed to load analyze phrase type"));
+		}
 
 		// Load the phrase:
 		std::string phrase;
 		if (docpath == "-")
 		{
 			unsigned int ec = strus::readStdin( phrase);
-			if (ec)
-			{
-				std::ostringstream msg;
-				msg << "errno " << ec;
-				throw std::runtime_error( std::string( "error reading input from stdin: ") + msg.str() + "'");
-			}
+			if (ec) throw strus::runtime_error( _TXT( "error reading input from stdin (errno %u)"), ec);
 		}
 		else
 		{
 			unsigned int ec = strus::readFile( docpath, phrase);
-			if (ec)
-			{
-				std::ostringstream msg;
-				msg << "errno " << ec;
-				throw std::runtime_error( std::string( "error reading input file '") + docpath + "': " + msg.str() + "'");
-			}
+			if (ec) throw strus::runtime_error( _TXT( "error reading input file '%s' (errno %u)"), docpath.c_str(), ec);
 		}
 
 		// Analyze the phrase and print the result:
@@ -226,15 +238,31 @@ int main( int argc, const char* argv[])
 			}
 			std::cout << resultQuot << ti->value() << resultQuot << std::endl;
 		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("error in analyze phrase"));
+		}
 		return 0;
+	}
+	catch (const std::bad_alloc&)
+	{
+		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cerr << "ERROR " << e.what() << std::endl;
+		const char* errormsg = errorBuffer->fetchError();
+		if (errormsg)
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << ": " << errormsg << std::endl;
+		}
+		else
+		{
+			std::cerr << _TXT("ERROR ") << e.what() << std::endl;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << "EXCEPTION " << e.what() << std::endl;
+		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
 	return -1;
 }

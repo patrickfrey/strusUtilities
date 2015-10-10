@@ -93,6 +93,9 @@ public:
 
 typedef boost::thread_group ThreadGroup;
 
+std::string string_sprintf( const char* format, ...);
+
+
 }} //namespace
 #endif
 
