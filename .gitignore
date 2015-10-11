@@ -42,6 +42,8 @@ CPackConfig.cmake
 CPackConfig.cmake.user
 CPackSourceConfig.cmake
 CPackSourceConfig.cmake.user
+include/private/version.hpp
+src/utils/internationalization.cpp
 
 # Compiled Programs
 src/strusCreate/strusCreate
