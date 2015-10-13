@@ -49,6 +49,10 @@ static inline bool isOr( char ch)
 {
 	return (ch == '|');
 }
+static inline bool isExp( char ch)
+{
+	return (ch == '^');
+}
 static inline bool isMinus( char ch)
 {
 	return (ch == '-');

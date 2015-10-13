@@ -1224,16 +1224,17 @@ static std::string parseVariableRef( char const*& src)
 
 struct QueryStackElement
 {
-	QueryStackElement( const PostingJoinOperatorInterface* function_, int arg_, int range_, float weight_)
-		:function(function_),arg(arg_),range(range_),weight(weight_){}
+	QueryStackElement( const PostingJoinOperatorInterface* function_, int arg_, int range_, unsigned int cardinality_, float weight_)
+		:function(function_),arg(arg_),range(range_),cardinality(cardinality_),weight(weight_){}
 	QueryStackElement( const QueryStackElement& o)
-		:function(o.function),arg(o.arg),range(o.range),name(o.name),weight(o.weight){}
+		:function(o.function),arg(o.arg),range(o.range),cardinality(o.cardinality),name(o.name),weight(o.weight){}
 	QueryStackElement()
-		:function(0),arg(-1),range(0),weight(0.0f){}
+		:function(0),arg(-1),range(0),cardinality(0),weight(0.0f){}
 
 	const PostingJoinOperatorInterface* function;
 	int arg;
 	int range;
+	unsigned int cardinality;
 	std::string name;
 	float weight;
 };
@@ -1249,13 +1250,13 @@ struct QueryStack
 
 	void defineFeature( const std::string& featureSet, float weight)
 	{
-		ar.push_back( QueryStackElement( 0, -1/*arg*/, 0, weight));
+		ar.push_back( QueryStackElement( 0, -1/*arg*/, 0/*range*/, 0/*cardinality*/, weight));
 		ar.back().name = featureSet;
 	}
 
 	void pushPhrase( const std::string& phraseType, const std::string& phraseContent, const std::string& variableName)
 	{
-		ar.push_back( QueryStackElement( 0, phraseBulk.size(), 0, 0.0));
+		ar.push_back( QueryStackElement( 0, phraseBulk.size(), 0/*range*/, 0/*cardinality*/, 0.0/*weight*/));
 		phraseBulk.push_back( QueryAnalyzerInterface::Phrase( phraseType, phraseContent));
 		if (!variableName.empty())
 		{
@@ -1263,9 +1264,9 @@ struct QueryStack
 		}
 	}
 
-	void pushExpression( const PostingJoinOperatorInterface* function, int arg, int range, const std::string& variableName)
+	void pushExpression( const PostingJoinOperatorInterface* function, int arg, int range, unsigned int cardinality, const std::string& variableName)
 	{
-		ar.push_back( QueryStackElement( function, arg, range, 0.0));
+		ar.push_back( QueryStackElement( function, arg, range, cardinality, 0.0));
 		if (!variableName.empty())
 		{
 			ar.back().name = variableName;
@@ -1286,7 +1287,7 @@ static void translateQuery(
 		if (si->function)
 		{
 			// Expression function definition:
-			query.pushExpression( si->function, si->arg, si->range);
+			query.pushExpression( si->function, si->arg, si->range, si->cardinality);
 			if (!si->name.empty())
 			{
 				query.attachVariable( si->name);
@@ -1331,7 +1332,7 @@ static void translateQuery(
 							throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
 											Constants::operator_query_phrase_same_position());
 						}
-						query.pushExpression( join, join_argc, 0);
+						query.pushExpression( join, join_argc, 0, 0);
 					}
 				}
 			}
@@ -1345,7 +1346,7 @@ static void translateQuery(
 					throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
 									Constants::operator_query_phrase_sequence());
 				}
-				query.pushExpression( seq, seq_argc, pos);
+				query.pushExpression( seq, seq_argc, pos, 0);
 			}
 			if (!si->name.empty())
 			{
@@ -1383,10 +1384,22 @@ static void parseQueryExpression(
 				break;
 			}
 			int range = 0;
-			if (isOr( *src))
+			unsigned int cardinality = 0;
+			while (isOr( *src) || isExp( *src))
 			{
-				(void)parse_OPERATOR( src);
-				range = parse_INTEGER( src);
+				if (isOr( *src))
+				{
+					if (range != 0) throw strus::runtime_error( _TXT("range specified twice"));
+					(void)parse_OPERATOR( src);
+					range = parse_INTEGER( src);
+					if (range == 0) throw strus::runtime_error( _TXT("range should be a non null number"));
+				}
+				else
+				{
+					if (cardinality != 0) throw strus::runtime_error( _TXT("cardinality specified twice"));
+					(void)parse_OPERATOR( src);
+					cardinality = parse_UNSIGNED1( src);
+				}
 			}
 			if (!isCloseOvalBracket( *src))
 			{
@@ -1402,7 +1415,7 @@ static void parseQueryExpression(
 			}
 			std::string variableName = parseVariableRef( src);
 
-			querystack.pushExpression( function, argc, range, variableName);
+			querystack.pushExpression( function, argc, range, cardinality, variableName);
 			return;
 		}
 		else

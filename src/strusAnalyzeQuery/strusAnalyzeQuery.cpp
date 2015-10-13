@@ -89,10 +89,10 @@ public:
 
 	virtual void pushExpression(
 				const strus::PostingJoinOperatorInterface* operation,
-				std::size_t argc, int range)
+				std::size_t argc, int range, unsigned int cardinality)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d"), (uintptr_t)operation, argc, range) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, argc, range, cardinality) << std::endl;
 		printState( std::cerr);
 #endif
 		int expridx = m_tree.size();
