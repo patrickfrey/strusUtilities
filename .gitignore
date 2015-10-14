@@ -62,4 +62,5 @@ src/strusDumpStorage/strusDumpStorage
 src/strusInspect/strusInspect
 src/strusUpdateStorage/strusUpdateStorage
 src/strusSegment/strusSegment
+src/strusHelp/strusHelp
 
