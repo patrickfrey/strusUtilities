@@ -1278,9 +1278,14 @@ static void translateQuery(
 		QueryInterface& query,
 		const QueryAnalyzerInterface* analyzer,
 		const QueryProcessorInterface* queryproc,
-		const QueryStack& stk)
+		const QueryStack& stk,
+		ErrorBufferInterface* errorhnd)
 {
 	std::vector<analyzer::TermVector> analyzerResult = analyzer->analyzePhraseBulk( stk.phraseBulk);
+	if (errorhnd->hasError())
+	{
+		throw strus::runtime_error( _TXT("failed to analyze query: %s"), errorhnd->fetchError());
+	}
 	std::vector<QueryStackElement>::const_iterator si = stk.ar.begin(), se = stk.ar.end();
 	for (; si != se; ++si)
 	{
@@ -1699,7 +1704,7 @@ DLL_PUBLIC bool strus::loadQuery(
 				throw strus::runtime_error( _TXT("unknown query section identifier '%s'"),name.c_str());
 			}
 		}
-		translateQuery( query, analyzer, queryproc, querystack);
+		translateQuery( query, analyzer, queryproc, querystack, errorhnd);
 		return true;
 	}
 	catch (const std::bad_alloc&)
