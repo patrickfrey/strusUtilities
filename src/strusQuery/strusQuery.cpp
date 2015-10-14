@@ -110,7 +110,7 @@ int main( int argc_, const char* argv_[])
 		opt = strus::ProgramOptions(
 				argc_, argv_, 13,
 				"h,help", "Q,quiet", "u,user:", "n,nofranks:", "i,firstrank:",
-				"g,globalstats:", "t,time", "v,version", "m,module:",
+				"g,globalstats:", "T,time", "v,version", "m,module:",
 				"M,moduledir:", "R,resourcedir:", "s,storage:", "r,rpc:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
@@ -191,7 +191,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("No output of results") << std::endl;
 			std::cout << "-g|--globalstats <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Load global statistics of peers from file <FILE>") << std::endl;
-			std::cout << "-t|--time" << std::endl;
+			std::cout << "-T|--time" << std::endl;
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
