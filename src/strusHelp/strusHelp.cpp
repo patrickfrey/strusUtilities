@@ -76,10 +76,10 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 	fi = funcs.begin(), fe = funcs.end();
 	for (; fi != fe; ++fi)
 	{
-		std::cout << label << *fi << ":" << std::endl;
+		std::cout << label << "'" << *fi << "' :" << std::endl;
 		const char* descr = textproc->getDescription( type, *fi);
 		if (!descr || !*descr) throw strus::runtime_error( _TXT("%s '%s' not defined"), label, fi->c_str());
-		std::cout << "* " << descr << std::endl;
+		std::cout << "* " << descr << std::endl << std::endl;
 	}
 }
 
@@ -108,8 +108,8 @@ static void printQueryProcessorDescription( const strus::QueryProcessorInterface
 	{
 		const char* descr = queryproc->getDescription( type, *fi);
 		if (!descr || !*descr) throw strus::runtime_error( _TXT("%s '%s' not defined"), label, fi->c_str());
-		std::cout << label << *fi << ":" << std::endl;
-		std::cout << "* " << descr << std::endl;
+		std::cout << label << "'" << *fi << "' :" << std::endl;
+		std::cout << "* " << descr << std::endl << std::endl;
 	}
 }
 
