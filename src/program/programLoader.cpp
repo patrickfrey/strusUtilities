@@ -150,12 +150,17 @@ static ArithmeticVariant parseNumericValue( char const*& src)
 {
 	if (is_INTEGER(src))
 	{
-		if (isMinus(*src))
+		if (isMinus(*src) || isPlus(*src))
 		{
 			return ArithmeticVariant( parse_INTEGER( src));
 		}
 		else
 		{
+			if (isPlus(*src))
+			{
+				parse_OPERATOR( src);
+				if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
+			}
 			while (*src == '0') ++src;
 			if (*src >= '1' && *src <= '9')
 			{
@@ -227,7 +232,7 @@ static void parseWeightingConfig(
 			throw strus::runtime_error(_TXT( "assingment operator '=' expected after weighting function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
-		if (isDigit(*src) || isMinus(*src))
+		if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			if (isFeatureParam)
 			{
@@ -332,7 +337,7 @@ static void parseSummarizerConfig(
 			throw strus::runtime_error(_TXT( "assignment operator '=' expected after summarizer function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
-		if (isDigit(*src) || isMinus(*src))
+		if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			if (isFeatureParam)
 			{
@@ -510,7 +515,7 @@ static std::vector<std::string> parseArgumentList( char const*& src)
 		{
 			value = parse_IDENTIFIER( src);
 		}
-		else if (isDigit(*src) || isMinus(*src))
+		else if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			char const* src_bk = src;
 			if (isMinus(*src))
@@ -526,6 +531,11 @@ static std::vector<std::string> parseArgumentList( char const*& src)
 			}
 			else
 			{
+				if (isPlus(*src))
+				{
+					parse_OPERATOR( src);
+					if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
+				}
 				if (is_INTEGER( src))
 				{
 					(void)parse_UNSIGNED( src);
@@ -1394,7 +1404,15 @@ static void parseQueryExpression(
 				{
 					if (range != 0) throw strus::runtime_error( _TXT("range specified twice"));
 					(void)parse_OPERATOR( src);
-					range = parse_INTEGER( src);
+					if (isPlus(*src))
+					{
+						parse_OPERATOR(src);
+						range = parse_UNSIGNED( src);
+					}
+					else
+					{
+						range = parse_INTEGER( src);
+					}
 					if (range == 0) throw strus::runtime_error( _TXT("range should be a non null number"));
 				}
 				else
@@ -1463,6 +1481,11 @@ static ArithmeticVariant parseMetaDataOperand( char const*& src)
 			}
 			else
 			{
+				if (isPlus(*src))
+				{
+					parse_OPERATOR( src);
+					if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
+				}
 				rt = parse_UNSIGNED( src);
 			}
 		}
@@ -1598,7 +1621,7 @@ static void parseMetaDataRestriction(
 			query.defineMetaDataRestriction( cmpop, fieldname, *oi, false);
 		}
 	}
-	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src))
+	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src) || isPlus( *src))
 	{
 		std::vector<ArithmeticVariant>
 			operands = parseMetaDataOperands( src);

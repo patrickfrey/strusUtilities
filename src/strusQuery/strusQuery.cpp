@@ -380,7 +380,7 @@ int main( int argc_, const char* argv_[])
 				std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
 				for (; ai != ae; ++ai)
 				{
-					if (!quiet) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
+					if (!quiet) std::cout << "\t" << ai->name() << " (" << ai->value() << ") " << ai->weight() << std::endl;
 				}
 			}
 		}
