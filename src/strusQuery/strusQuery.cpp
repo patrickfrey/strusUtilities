@@ -109,7 +109,7 @@ int main( int argc_, const char* argv_[])
 	{
 		opt = strus::ProgramOptions(
 				argc_, argv_, 13,
-				"h,help", "Q,quiet", "u,user:", "n,nofranks:", "i,firstrank:",
+				"h,help", "Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
 				"g,globalstats:", "T,time", "v,version", "m,module:",
 				"M,moduledir:", "R,resourcedir:", "s,storage:", "r,rpc:");
 		if (opt( "help")) printUsageAndExit = true;
@@ -183,9 +183,9 @@ int main( int argc_, const char* argv_[])
 			}
 			std::cout << "-u|--user <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use user name <NAME> for the query") << std::endl;
-			std::cout << "-n|--nofranks <N>" << std::endl;
+			std::cout << "-N|--nofranks <N>" << std::endl;
 			std::cout << "    " << _TXT("Return maximum <N> ranks as query result") << std::endl;
-			std::cout << "-i|--firstrank <N>" << std::endl;
+			std::cout << "-I|--firstrank <N>" << std::endl;
 			std::cout << "    " << _TXT("Return the result starting with rank <N> as first rank") << std::endl;
 			std::cout << "-Q|--quiet" << std::endl;
 			std::cout << "    " << _TXT("No output of results") << std::endl;

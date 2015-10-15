@@ -1043,24 +1043,22 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			{
 				throw strus::runtime_error( _TXT("identifier (feature type name) expected after assign '=' in a query phrase type declaration"));
 			}
-			std::string featureType = parse_IDENTIFIER( src);
-			std::string phraseType = featureType;
-			if (isSlash( *src))
+			std::string phraseType = parse_IDENTIFIER( src);
+			std::string featureType;
+			if (isAssign( *src))
 			{
-				(void)parse_OPERATOR(src);
-
-				if (!isAlnum(*src))
-				{
-					throw strus::runtime_error( _TXT("alphanumeric identifier (phrase type) after feature type name and slash '/' "));
-				}
-				phraseType = parse_IDENTIFIER( src);
+				featureType = phraseType;
+			}
+			else if (isAlnum( *src))
+			{
+				featureType = parse_IDENTIFIER( src);
 			}
 			if (!isAssign( *src))
 			{
 				throw strus::runtime_error( _TXT("assignment operator '=' expected after feature type identifier in a query phrase type declaration"));
 			}
 			(void)parse_OPERATOR(src);
-	
+
 			std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
 			std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
 			std::vector<NormalizerFunctionInstanceInterface*> normalizer;
@@ -1439,6 +1437,12 @@ static void parseQueryExpression(
 		std::string variableName = parseVariableRef( src);
 
 		querystack.pushPhrase( phraseType, queryPhrase, variableName);
+	}
+	else if (isColon( *src))
+	{
+		std::string phraseType = parseQueryPhraseType( src);
+		std::string variableName = parseVariableRef( src);
+		querystack.pushPhrase( phraseType, std::string(), variableName);
 	}
 	else
 	{
