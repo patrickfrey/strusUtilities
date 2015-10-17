@@ -249,7 +249,7 @@ int main( int argc, const char* argv[])
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader(
 			strus::createModuleLoader( errorBuffer.get()));
-		if (moduleLoader.get()) throw strus::runtime_error(_TXT("error creating module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("error creating module loader"));
 
 		if (opt("moduledir"))
 		{
