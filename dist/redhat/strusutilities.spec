@@ -65,35 +65,23 @@
 %endif
 
 %define fedora 0
-%define fc20 0
 %define fc21 0
-%if 0%{?fedora_version} == 20
-%define dist fc20
-%define fc20 1
-%define fedora 1
-%endif
+%define fc22 0
 %if 0%{?fedora_version} == 21
 %define dist fc21
 %define fc21 1
 %define fedora 1
 %endif
+%if 0%{?fedora_version} == 22
+%define dist fc22
+%define fc22 1
+%define fedora 1
+%endif
 
 %define suse 0
-%define osu122 0
-%define osu123 0
 %define osu131 0
 %define osu132 0
 %define osufactory 0
-%if 0%{?suse_version} == 1220
-%define dist osu122
-%define osu122 1
-%define suse 1
-%endif
-%if 0%{?suse_version} == 1230
-%define dist osu123
-%define osu123 1
-%define suse 1
-%endif
 %if 0%{?suse_version} == 1310
 %define dist osu131
 %define osu131 1
@@ -124,14 +112,15 @@
 %define sles 1
 %endif
 
-Summary: Library implementing the document and query analysis for a text search engine
+Summary: Command line utilities for the strus text search engine
 Name: strusutilities
-Version: 0.0.1
+%define main_version 0.1.6
+Version: %{main_version}
 Release: 0.1
 License: GPLv3
 Group: Development/Libraries/C++
 
-Source: %{name}_%{version}.tar.gz
+Source: %{name}_%{main_version}.tar.gz
 
 URL: http://project-strus.net
 
@@ -145,32 +134,90 @@ BuildRequires: gcc
 BuildRequires: gcc-c++
 BuildRequires: cmake
 
-%if %{rhel} || %{centos} || %{scilin} || %{fedora}
-%if %{rhel5} || %{centos5}
-Requires: boost148 >= 1.48
-BuildRequires: boost148-devel >= 1.48
+# LinuxDistribution.cmake depends depends on the Linux release files in '/etc' or
+# LSB files
+%if %{rhel}
+BuildRequires: redhat-release
+%endif
+%if %{centos}
+BuildRequires: centos-release
+%endif
+%if %{scilin}
+BuildRequires: sl-release
+%endif
+%if %{fedora} && !0%{?opensuse_bs}
+BuildRequires: fedora-release
+%endif
+%if %{fedora} && 0%{?opensuse_bs}
+BuildRequires: generic-release
+%endif
+%if %{suse}
+BuildRequires: openSUSE-release
+%endif
+%if %{sles}
+%if %{sles12}
+#exists in sles12, missing on OBS!
+#BuildRequires: sles-release
 %else
-Requires: boost >= 1.48
-Requires: boost-thread >= 1.48
-Requires: boost-system >= 1.48
-Requires: boost-date_time >= 1.48
+BuildRequires: sles-release
+%endif
+%endif
+
+%if %{rhel} || %{centos} || %{scilin} || %{fedora}
+%if %{rhel5} || %{rhel6} || %{centos5} || %{centos6} || %{scilin5} || %{scilin6}
+Requires: boost153 >= 1.53.0
+BuildRequires: boost153-devel >= 1.53.0
+%else
+Requires: boost >= 1.53.0
+Requires: boost-thread >= 1.53.0
+Requires: boost-system >= 1.53.0
+Requires: boost-date-time >= 1.53.0
 BuildRequires: boost-devel
 %endif
 %endif
+
 %if %{suse} || %{sles}
-BuildRequires: boost-devel
-%if %{osu122} || %{osu123} || %{sles11} || %{sles12}
-Requires: libboost_thread1_49_0 >= 1.49.0
-Requires: libboost_system1_49_0 >= 1.49.0
-Requires: libboost_date_time1_49_0 >= 1.49.0
-Requires: libstrus_module_0_0 >= 0.0
+%if %{sles11}
+Requires: boost153 >= 1.53.0
+BuildRequires: boost153-devel >= 1.53.0
 %endif
 %if %{osu131}
 Requires: libboost_thread1_53_0 >= 1.53.0
+Requires: libboost_atomic1_53_0 >= 1.53.0
 Requires: libboost_system1_53_0 >= 1.53.0
 Requires: libboost_date_time1_53_0 >= 1.53.0
+BuildRequires: boost-devel
+# for some reason OBS doesn't pull in libboost_atomic1_53_0 automatically!?
+BuildRequires: libboost_atomic1_53_0 >= 1.53.0
+%endif
+%if %{osu132} || %{sles12}
+Requires: libboost_thread1_54_0 >= 1.54.0
+Requires: libboost_atomic1_54_0 >= 1.54.0
+Requires: libboost_system1_54_0 >= 1.54.0
+Requires: libboost_date_time1_54_0 >= 1.54.0
+BuildRequires: boost-devel
+%endif
+%if %{osufactory}
+Requires: libboost_thread1_58_0 >= 1.58.0
+Requires: libboost_atomic1_58_0 >= 1.58.0
+Requires: libboost_system1_58_0 >= 1.58.0
+Requires: libboost_date_time1_58_0 >= 1.58.0
+BuildRequires: boost-devel
 %endif
 %endif
+
+BuildRequires: strus-devel >= 0.1.6
+BuildRequires: strusanalyzer-devel >= 0.1.6
+BuildRequires: strusmodule-devel >= 0.1.5
+BuildRequires: strusrpc-devel >= 0.1.9
+BuildRequires: strus >= 0.1.6
+BuildRequires: strusanalyzer >= 0.1.6
+BuildRequires: strusmodule >= 0.1.5
+BuildRequires: strusrpc >= 0.1.9
+Requires: strus >= 0.1.6
+Requires: strusanalyzer >= 0.1.6
+Requires: strusmodule >= 0.1.5
+Requires: strusrpc >= 0.1.9
 
 # Check if 'Distribution' is really set by OBS (as mentioned in bacula)
 %if ! 0%{?opensuse_bs}
@@ -189,16 +236,16 @@ Group: Development/Libraries/C++
 %description devel
 The libraries and header files used for development with strusutilities.
 
-Requires: %{name} >= %{version}-%{release}
+Requires: %{name} >= %{main_version}-%{release}
 
 %prep
-%setup
+%setup -n %{name}-%{main_version}
 
 %build
 
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=%{_libdir} ..
+cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=%{_lib} ..
 make %{?_smp_mflags}
 
 %install
@@ -217,33 +264,39 @@ rm -rf $RPM_BUILD_ROOT
 cd build
 make test
 
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
 %files
 %defattr( -, root, root )
-%dir %{_libdir}/%{name}
-%{_libdir}/%{name}/libstrus_program.so.0.0
-%{_libdir}/%{name}/libstrus_program.so.0.0.1
-%{_bindir}/%{name}/strusDumpStorage
-%{_bindir}/%{name}/strusAnalyze
-%{_bindir}/%{name}/strusDestroy
-%{_bindir}/%{name}/strusDumpStatistics
-%{_bindir}/%{name}/strusQuery
-%{_bindir}/%{name}/strusCreate
-%{_bindir}/%{name}/strusCheckStorage
-%{_bindir}/%{name}/strusAnalyzePhrase
-%{_bindir}/%{name}/strusAlterMetaData
-%{_bindir}/%{name}/strusCheckInsert
-%{_bindir}/%{name}/strusGenerateKeyMap
-%{_bindir}/%{name}/strusInsert
-%{_bindir}/%{name}/strusInspect
-%{_bindir}/%{name}/strusSegment
+%dir %{_libdir}/strus
+%{_libdir}/strus/libstrus_program.so.0.1
+%{_libdir}/strus/libstrus_program.so.0.1.6
+%{_bindir}/strusDumpStorage
+%{_bindir}/strusAnalyzeQuery
+%{_bindir}/strusUpdateStorage
+%{_bindir}/strusDumpStatistics
+%{_bindir}/strusCreate
+%{_bindir}/strusAnalyze
+%{_bindir}/strusSegment
+%{_bindir}/strusDestroy
+%{_bindir}/strusCheckStorage
+%{_bindir}/strusCheckInsert
+%{_bindir}/strusGenerateKeyMap
+%{_bindir}/strusInsert
+%{_bindir}/strusAlterMetaData
+%{_bindir}/strusInspect
+%{_bindir}/strusQuery
+%{_bindir}/strusAnalyzePhrase
+%{_bindir}/strusHelp
 
 %files devel
-%{_libdir}/%{name}/libstrus_program.so
-%dir %{_includedir}/%{name}
-%{_includedir}/%{name}/*.hpp
-%dir %{_includedir}/%{name}/private
-%{_includedir}/%{name}/private/*.hpp
+%defattr( -, root, root )
+%{_libdir}/strus/libstrus_program.so
+%dir %{_includedir}/strus
+%{_includedir}/strus/*.hpp
 
 %changelog
-* Fri Mar 20 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.0.1-0.1
+* Fri Mar 20 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.1.6-0.1
 - preliminary release

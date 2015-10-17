@@ -2,28 +2,29 @@
 # Maintainer: Patrick Frey <patrickfrey@patrickpfrey@yahoo.com> 
 
 pkgname=strusutilities
-pkgver=0.0.1
+_mainpkgver=0.1.6
+pkgver=${_mainpkgver}
 pkgrel=1
-pkgdesc='Library implementing the document and query analysis for a text search engine.'
+pkgdesc='Command line utilities for the strus text search engine.'
 license=('GPL3')
 arch=('i686' 'x86_64')
-url="http://patrickpfrey@yahoo.com"
-depends=('boost>=1.48' 'boost-libs>=1.48')
+url="http://project-strus.net"
+depends=('boost>=1.53' 'boost-libs>=1.53' "strus>=0.1.6" "strusanalyzer>=0.1.6" "strusmodule>=0.1.5" "strusrpc>=0.1.9")
 makedepends=('cmake')
-source=("${pkgname}-${pkgver}.tar.gz")
+source=("${pkgname}-${_mainpkgver}.tar.gz")
 
 build() {
-  cd ${srcdir}/${pkgname}-${pkgver}
+  cd ${srcdir}/${pkgname}-${_mainpkgver}
 
   msg "Building..."
   mkdir build
   cd build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=%{_libdir} ..
+  cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=lib ..
   make
 }
 
 package() {
-  cd ${srcdir}/${pkgname}-${pkgver}
+  cd ${srcdir}/${pkgname}-${_mainpkgver}
 
   msg "Installing.."
   cd build
@@ -31,10 +32,9 @@ package() {
 }
 
 check() {
-  cd ${srcdir}/${pkgname}-${pkgver}
+  cd ${srcdir}/${pkgname}-${_mainpkgver}
 
   msg "Testing..."
   cd build
   make test
 }
-

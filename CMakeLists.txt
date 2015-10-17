@@ -13,9 +13,9 @@ set( STRUS_VERSION ${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}.${STRUS_PATCH_V
 include( cmake/dist.cmake )
 include( cmake/LinuxDistribution.cmake )
 include( cmake/build_rules.cmake )
+include( cmake/boost.cmake)
 include( cmake/find_strus_package.cmake )
 
-find_package( Boost 1.53.0 COMPONENTS thread system date_time )
 find_strus_package( core )
 find_strus_package( analyzer )
 find_strus_package( module )
