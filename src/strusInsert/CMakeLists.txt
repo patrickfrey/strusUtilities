@@ -36,13 +36,13 @@ link_directories(
 add_library( local_objs_static STATIC ${source_files})
 
 add_executable( strusInsert  strusInsert.cpp )
-target_link_libraries( strusInsert  strus_private_utils  local_objs_static strus_program strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket )
+target_link_libraries( strusInsert  strus_private_utils  local_objs_static strus_program strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} )
 
 add_executable( strusCheckInsert  strusCheckInsert.cpp )
-target_link_libraries( strusCheckInsert  strus_private_utils local_objs_static strus_program  strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket )
+target_link_libraries( strusCheckInsert  strus_private_utils local_objs_static strus_program  strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} )
 
 add_executable( strusGenerateKeyMap strusGenerateKeyMap.cpp )
-target_link_libraries( strusGenerateKeyMap  strus_private_utils local_objs_static  strus_program strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket )
+target_link_libraries( strusGenerateKeyMap  strus_private_utils local_objs_static  strus_program strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} )
 
 
 # ------------------------------
