@@ -168,6 +168,7 @@ static ArithmeticVariant parseNumericValue( char const*& src)
 			}
 			else
 			{
+				skipSpaces(src);
 				return ArithmeticVariant( 0);
 			}
 		}
