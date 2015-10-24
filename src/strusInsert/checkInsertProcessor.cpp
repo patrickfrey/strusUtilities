@@ -108,9 +108,6 @@ void CheckInsertProcessor::run()
 		m_storage->createMetaDataReader());
 	if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
 
-	bool hasDoclenAttribute
-		= metadata->hasElement( strus::Constants::metadata_doclen());
-
 	unsigned int filesChecked = 0;
 	while (m_crawler->fetch( files))
 	{
@@ -191,16 +188,6 @@ void CheckInsertProcessor::run()
 						storagedoc->setAttribute(
 							strus::Constants::attribute_docid(), *fitr);
 				
-						// Define hardcoded document metadata, if known:
-						if (hasDoclenAttribute)
-						{
-							strus::Index lastPos = (doc.searchIndexTerms().empty())
-									?0:doc.searchIndexTerms()[
-										doc.searchIndexTerms().size()-1].pos();
-							storagedoc->setMetaData(
-								strus::Constants::metadata_doclen(),
-								strus::ArithmeticVariant( lastPos));
-						}
 						unsigned int maxpos = 0;
 	
 						// Define all search index term occurrencies:

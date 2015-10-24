@@ -94,9 +94,6 @@ void InsertProcessor::run()
 			m_storage->createMetaDataReader());
 		if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
 
-		bool hasDoclenAttribute
-			= metadata->hasElement( strus::Constants::metadata_doclen());
-	
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
 		if (!transaction.get()) throw strus::runtime_error(_TXT("error creating storage transaction"));
@@ -177,17 +174,7 @@ void InsertProcessor::run()
 								docid = fitr->c_str();
 								//... define file path as hardcoded docid attribute
 							}
-	
-							// Define hardcoded document metadata, if known:
-							if (hasDoclenAttribute)
-							{
-								strus::Index lastPos = (doc.searchIndexTerms().empty())
-										?0:doc.searchIndexTerms()[ 
-											doc.searchIndexTerms().size()-1].pos();
-								storagedoc->setMetaData(
-									strus::Constants::metadata_doclen(),
-									strus::ArithmeticVariant( lastPos));
-							}
+
 							unsigned int maxpos = 0;
 							// Define all search index term occurrencies:
 							std::vector<strus::analyzer::Term>::const_iterator
