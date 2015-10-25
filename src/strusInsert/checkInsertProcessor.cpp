@@ -55,7 +55,6 @@
 
 using namespace strus;
 
-
 CheckInsertProcessor::CheckInsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
