@@ -329,7 +329,9 @@ void CheckInsertProcessor::run()
 			}
 		}
 		filesChecked += files.size();
-		std::cerr << utils::string_sprintf( _TXT( "\rchecked %u documents"), filesChecked) << std::endl;
+		std::cerr << utils::string_sprintf( (filesChecked == 1)
+				?_TXT( "\rchecked %u file"):_TXT( "\rchecked %u files"),
+				filesChecked) << std::endl;
 	}
 }
 
