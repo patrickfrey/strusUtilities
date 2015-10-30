@@ -130,14 +130,18 @@ public:
 		m_stack.push_back( expridx);
 	}
 
-	virtual void pushDuplicate()
+	virtual void pushDuplicate( std::size_t argc)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cerr << _TXT("called pushDuplicate") << std::endl;
 		printState( std::cerr);
 #endif
 		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of duplicate without term or expression defined"));
-		m_stack.push_back( m_stack.back());
+		std::size_t idx = m_stack.size() - argc;
+		while (argc--)
+		{
+			m_stack.push_back( m_stack[ idx]);
+		}
 	}
 
 	virtual void attachVariable( const std::string& name_)
