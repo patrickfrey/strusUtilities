@@ -133,7 +133,7 @@ public:
 	virtual void pushDuplicate( std::size_t argc)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << _TXT("called pushDuplicate") << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called pushDuplicate %u"), argc) << std::endl;
 		printState( std::cerr);
 #endif
 		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of duplicate without term or expression defined"));
