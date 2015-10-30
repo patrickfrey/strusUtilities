@@ -144,6 +144,21 @@ public:
 		}
 	}
 
+	virtual void swapElements( std::size_t idx)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::utils::string_sprintf( _TXT("called swapElements %u"), idx) << std::endl;
+		printState( std::cerr);
+#endif
+		if (m_stack.size() <= idx)
+		{
+			throw strus::runtime_error( _TXT( "cannot swap elements (query stack too small)"));
+		}
+		if (!idx) return;
+		std::size_t i1 = m_stack.size() - idx - 1, i2 = m_stack.size() - 1;
+		std::swap( m_stack[ i1], m_stack[ i2]);
+	}
+
 	virtual void attachVariable( const std::string& name_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
