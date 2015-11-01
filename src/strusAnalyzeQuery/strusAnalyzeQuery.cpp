@@ -92,7 +92,7 @@ public:
 				std::size_t argc, int range, unsigned int cardinality)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, argc, range, cardinality) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, (unsigned int)argc, range, cardinality) << std::endl;
 		printState( std::cerr);
 #endif
 		int expridx = m_tree.size();
@@ -133,21 +133,21 @@ public:
 	virtual void pushDuplicate( std::size_t argc)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called pushDuplicate %u"), argc) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called pushDuplicate %u"), (unsigned int)argc) << std::endl;
 		printState( std::cerr);
 #endif
 		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of duplicate without term or expression defined"));
 		std::size_t idx = m_stack.size() - argc;
 		while (argc--)
 		{
-			m_stack.push_back( m_stack[ idx]);
+			m_stack.push_back( m_stack[ idx++]);
 		}
 	}
 
 	virtual void swapElements( std::size_t idx)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called swapElements %u"), idx) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called swapElements %u"), (unsigned int)idx) << std::endl;
 		printState( std::cerr);
 #endif
 		if (m_stack.size() <= idx)
@@ -157,6 +157,27 @@ public:
 		if (!idx) return;
 		std::size_t i1 = m_stack.size() - idx - 1, i2 = m_stack.size() - 1;
 		std::swap( m_stack[ i1], m_stack[ i2]);
+	}
+
+	virtual void moveElement( std::size_t idx)
+	{
+	#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::utils::string_sprintf( _TXT("called moveElement %u"), (unsigned int)idx) << std::endl;
+		printState( std::cerr);
+	#endif
+		if (m_stack.size() <= idx)
+		{
+			throw strus::runtime_error( _TXT( "cannot swap elements (query stack too small; size=%u, index=%u)"), (unsigned int)m_stack.size(), (unsigned int)idx);
+		}
+		if (!idx) return;
+		std::vector<int>::iterator si = m_stack.begin() + (m_stack.size() - idx - 1), se = m_stack.end() - 1;
+		std::vector<int>::iterator sb = si;
+		int top = m_stack.back();
+		for (; si < se; ++si)
+		{
+			*(si+1) = *si;
+		}
+		*sb = top;
 	}
 
 	virtual void attachVariable( const std::string& name_)
@@ -201,7 +222,7 @@ public:
 			const std::vector<strus::Index>& docnolist_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called addDocumentEvaluationSet %u"), docnolist_.size()) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called addDocumentEvaluationSet %u"), (unsigned int)docnolist_.size()) << std::endl;
 #endif
 		m_evalset_docnolist.insert( m_evalset_docnolist.end(), docnolist_.begin(), docnolist_.end());
 		std::sort( m_evalset_docnolist.begin(), m_evalset_docnolist.end());
@@ -211,7 +232,7 @@ public:
 	virtual void setMaxNofRanks( std::size_t maxNofRanks_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called setMaxNofRanks %u"), maxNofRanks_) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called setMaxNofRanks %u"), (unsigned int)maxNofRanks_) << std::endl;
 #endif
 		m_maxNofRanks = maxNofRanks_;
 	}
@@ -219,7 +240,7 @@ public:
 	virtual void setMinRank( std::size_t minRank_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT( "called setMinRank %u"), minRank_) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT( "called setMinRank %u"), (unsigned int)minRank_) << std::endl;
 #endif
 		m_minRank = minRank_;
 	}
