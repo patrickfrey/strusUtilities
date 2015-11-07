@@ -171,13 +171,12 @@ public:
 		}
 		if (!idx) return;
 		std::vector<int>::iterator si = m_stack.begin() + (m_stack.size() - idx - 1), se = m_stack.end() - 1;
-		std::vector<int>::iterator sb = si;
 		int top = m_stack.back();
-		for (; si < se; ++si)
+		for (; se > si; --se)
 		{
-			*(si+1) = *si;
+			*(se) = *(se-1);
 		}
-		*sb = top;
+		*si = top;
 	}
 
 	virtual void attachVariable( const std::string& name_)
