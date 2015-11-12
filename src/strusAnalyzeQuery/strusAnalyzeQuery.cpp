@@ -89,10 +89,10 @@ public:
 
 	virtual void pushExpression(
 				const strus::PostingJoinOperatorInterface* operation,
-				std::size_t argc, int range)
+				std::size_t argc, int range, unsigned int cardinality)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d"), (uintptr_t)operation, argc, range) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, (unsigned int)argc, range, cardinality) << std::endl;
 		printState( std::cerr);
 #endif
 		int expridx = m_tree.size();
@@ -128,16 +128,6 @@ public:
 		}
 		m_stack.resize( m_stack.size() - stkidx);
 		m_stack.push_back( expridx);
-	}
-
-	virtual void pushDuplicate()
-	{
-#ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << _TXT("called pushDuplicate") << std::endl;
-		printState( std::cerr);
-#endif
-		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of duplicate without term or expression defined"));
-		m_stack.push_back( m_stack.back());
 	}
 
 	virtual void attachVariable( const std::string& name_)
@@ -182,7 +172,7 @@ public:
 			const std::vector<strus::Index>& docnolist_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called addDocumentEvaluationSet %u"), docnolist_.size()) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called addDocumentEvaluationSet %u"), (unsigned int)docnolist_.size()) << std::endl;
 #endif
 		m_evalset_docnolist.insert( m_evalset_docnolist.end(), docnolist_.begin(), docnolist_.end());
 		std::sort( m_evalset_docnolist.begin(), m_evalset_docnolist.end());
@@ -192,7 +182,7 @@ public:
 	virtual void setMaxNofRanks( std::size_t maxNofRanks_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called setMaxNofRanks %u"), maxNofRanks_) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("called setMaxNofRanks %u"), (unsigned int)maxNofRanks_) << std::endl;
 #endif
 		m_maxNofRanks = maxNofRanks_;
 	}
@@ -200,7 +190,7 @@ public:
 	virtual void setMinRank( std::size_t minRank_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT( "called setMinRank %u"), minRank_) << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT( "called setMinRank %u"), (unsigned int)minRank_) << std::endl;
 #endif
 		m_minRank = minRank_;
 	}

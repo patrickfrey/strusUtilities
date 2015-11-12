@@ -98,11 +98,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 12,
-				"h,help", "t,threads:", "l,logfile:",
-				"n,notify:", "v,version", "R,resourcedir:",
-				"M,moduledir:", "m,module:", "x,extension:",
-				"r,rpc:", "g,segmenter:", "s,storage:");
+				argc_, argv_, 13,
+				"h,help", "t,threads:", "l,logfile:", "n,notify:",
+				"v,version", "R,resourcedir:", "M,moduledir:", "m,module:", 
+				"x,extension:", "r,rpc:", "g,segmenter:", "s,storage:",
+				"S,configfile:");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -158,6 +158,25 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
+		std::string storagecfg;
+		if (opt("configfile"))
+		{
+			if (opt("storage")) throw strus::runtime_error(_TXT("conflicting configuration options specified: '%s' and '%s'"), "--storage", "--configfile");
+			std::string configfile = opt[ "configfile"];
+			int ec = strus::readFile( configfile, storagecfg);
+			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u)"), configfile.c_str(), ec);
+
+			std::string::iterator di = storagecfg.begin(), de = storagecfg.end();
+			for (; di != de; ++di)
+			{
+				if ((unsigned char)*di < 32) *di = ' ';
+			}
+		}
+		if (opt("storage"))
+		{
+			if (opt("configfile")) throw strus::runtime_error(_TXT("conflicting configuration options specified: '%s' and '%s'"), "--storage", "--configfile");
+			storagecfg = opt[ "storage"];
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusCheckInsert [options] <program> <docpath>" << std::endl;
@@ -174,8 +193,11 @@ int main( int argc_, const char* argv_[])
 			if (!opt("rpc"))
 			{
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
+				printStorageConfigOptions( std::cout, moduleLoader.get(), storagecfg, errorBuffer.get());
 			}
+			std::cout << "-S|--configfile <FILENAME>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
+			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -197,7 +219,6 @@ int main( int argc_, const char* argv_[])
 			return rt;
 		}
 		std::string logfile = "-";
-		std::string storagecfg;
 		if (opt("logfile"))
 		{
 			logfile = opt[ "logfile"];
@@ -206,11 +227,6 @@ int main( int argc_, const char* argv_[])
 		if (opt("notify"))
 		{
 			notificationInterval = opt.asUint( "notify");
-		}
-		if (opt("storage"))
-		{
-			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
-			storagecfg = opt["storage"];
 		}
 		std::string analyzerprg = opt[0];
 		std::string datapath = opt[1];
@@ -256,6 +272,8 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
+			if (opt("storage")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
+			if (opt("configfile")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--configfile", "--rpc");
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
 			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));

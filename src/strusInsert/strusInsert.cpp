@@ -102,11 +102,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 14,
+				argc_, argv_, 15,
 				"h,help", "t,threads:", "c,commit:", "f,fetch:",
 				"n,new", "v,version", "g,segmenter:", "m,module:",
 				"M,moduledir:", "R,resourcedir:", "r,rpc:", "L,logerror:",
-				"x,extension:", "s,storage:");
+				"x,extension:", "s,storage:", "S,configfile:");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -167,7 +167,25 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
+		std::string storagecfg;
+		if (opt("configfile"))
+		{
+			if (opt("storage")) throw strus::runtime_error(_TXT("conflicting configuration options specified: '%s' and '%s'"), "--storage", "--configfile");
+			std::string configfile = opt[ "configfile"];
+			int ec = strus::readFile( configfile, storagecfg);
+			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u)"), configfile.c_str(), ec);
 
+			std::string::iterator di = storagecfg.begin(), de = storagecfg.end();
+			for (; di != de; ++di)
+			{
+				if ((unsigned char)*di < 32) *di = ' ';
+			}
+		}
+		if (opt("storage"))
+		{
+			if (opt("configfile")) throw strus::runtime_error(_TXT("conflicting configuration options specified: '%s' and '%s'"), "--storage", "--configfile");
+			storagecfg = opt[ "storage"];
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusInsert [options] <program> <docpath>" << std::endl;
@@ -184,8 +202,11 @@ int main( int argc_, const char* argv_[])
 			if (!opt("rpc"))
 			{
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
+				printStorageConfigOptions( std::cout, moduleLoader.get(), storagecfg, errorBuffer.get());
 			}
+			std::cout << "-S|--configfile <FILENAME>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
+			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -212,7 +233,6 @@ int main( int argc_, const char* argv_[])
 			return rt;
 		}
 		bool allInsertsNew = opt( "new");
-		std::string storagecfg;
 		unsigned int transactionSize = 1000;
 		if (opt("logerror"))
 		{
@@ -229,11 +249,6 @@ int main( int argc_, const char* argv_[])
 		if (opt("fetch"))
 		{
 			fetchSize = opt.asUint( "fetch");
-		}
-		if (opt("storage"))
-		{
-			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
-			storagecfg = opt["storage"];
 		}
 		std::string analyzerprg = opt[0];
 		std::string datapath = opt[1];

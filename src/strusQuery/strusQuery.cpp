@@ -109,8 +109,8 @@ int main( int argc_, const char* argv_[])
 	{
 		opt = strus::ProgramOptions(
 				argc_, argv_, 13,
-				"h,help", "Q,quiet", "u,user:", "n,nofranks:", "i,firstrank:",
-				"g,globalstats:", "t,time", "v,version", "m,module:",
+				"h,help", "Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
+				"g,globalstats:", "T,time", "v,version", "m,module:",
 				"M,moduledir:", "R,resourcedir:", "s,storage:", "r,rpc:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
@@ -183,15 +183,15 @@ int main( int argc_, const char* argv_[])
 			}
 			std::cout << "-u|--user <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use user name <NAME> for the query") << std::endl;
-			std::cout << "-n|--nofranks <N>" << std::endl;
+			std::cout << "-N|--nofranks <N>" << std::endl;
 			std::cout << "    " << _TXT("Return maximum <N> ranks as query result") << std::endl;
-			std::cout << "-i|--firstrank <N>" << std::endl;
+			std::cout << "-I|--firstrank <N>" << std::endl;
 			std::cout << "    " << _TXT("Return the result starting with rank <N> as first rank") << std::endl;
 			std::cout << "-Q|--quiet" << std::endl;
 			std::cout << "    " << _TXT("No output of results") << std::endl;
 			std::cout << "-g|--globalstats <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Load global statistics of peers from file <FILE>") << std::endl;
-			std::cout << "-t|--time" << std::endl;
+			std::cout << "-T|--time" << std::endl;
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
@@ -380,7 +380,7 @@ int main( int argc_, const char* argv_[])
 				std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
 				for (; ai != ae; ++ai)
 				{
-					if (!quiet) std::cout << "\t" << ai->name() << " (" << ai->value() << ")" << std::endl;
+					if (!quiet) std::cout << "\t" << ai->name() << " (" << ai->value() << ") " << ai->weight() << std::endl;
 				}
 			}
 		}

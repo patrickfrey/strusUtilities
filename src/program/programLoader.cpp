@@ -150,12 +150,17 @@ static ArithmeticVariant parseNumericValue( char const*& src)
 {
 	if (is_INTEGER(src))
 	{
-		if (isMinus(*src))
+		if (isMinus(*src) || isPlus(*src))
 		{
 			return ArithmeticVariant( parse_INTEGER( src));
 		}
 		else
 		{
+			if (isPlus(*src))
+			{
+				parse_OPERATOR( src);
+				if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
+			}
 			while (*src == '0') ++src;
 			if (*src >= '1' && *src <= '9')
 			{
@@ -163,6 +168,7 @@ static ArithmeticVariant parseNumericValue( char const*& src)
 			}
 			else
 			{
+				skipSpaces(src);
 				return ArithmeticVariant( 0);
 			}
 		}
@@ -227,7 +233,7 @@ static void parseWeightingConfig(
 			throw strus::runtime_error(_TXT( "assingment operator '=' expected after weighting function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
-		if (isDigit(*src) || isMinus(*src))
+		if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			if (isFeatureParam)
 			{
@@ -332,7 +338,7 @@ static void parseSummarizerConfig(
 			throw strus::runtime_error(_TXT( "assignment operator '=' expected after summarizer function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
-		if (isDigit(*src) || isMinus(*src))
+		if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			if (isFeatureParam)
 			{
@@ -510,7 +516,7 @@ static std::vector<std::string> parseArgumentList( char const*& src)
 		{
 			value = parse_IDENTIFIER( src);
 		}
-		else if (isDigit(*src) || isMinus(*src))
+		else if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			char const* src_bk = src;
 			if (isMinus(*src))
@@ -526,6 +532,11 @@ static std::vector<std::string> parseArgumentList( char const*& src)
 			}
 			else
 			{
+				if (isPlus(*src))
+				{
+					parse_OPERATOR( src);
+					if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
+				}
 				if (is_INTEGER( src))
 				{
 					(void)parse_UNSIGNED( src);
@@ -1043,24 +1054,22 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			{
 				throw strus::runtime_error( _TXT("identifier (feature type name) expected after assign '=' in a query phrase type declaration"));
 			}
-			std::string featureType = parse_IDENTIFIER( src);
-			std::string phraseType = featureType;
-			if (isSlash( *src))
+			std::string phraseType = parse_IDENTIFIER( src);
+			std::string featureType;
+			if (isAssign( *src))
 			{
-				(void)parse_OPERATOR(src);
-
-				if (!isAlnum(*src))
-				{
-					throw strus::runtime_error( _TXT("alphanumeric identifier (phrase type) after feature type name and slash '/' "));
-				}
-				phraseType = parse_IDENTIFIER( src);
+				featureType = phraseType;
+			}
+			else if (isAlnum( *src))
+			{
+				featureType = parse_IDENTIFIER( src);
 			}
 			if (!isAssign( *src))
 			{
 				throw strus::runtime_error( _TXT("assignment operator '=' expected after feature type identifier in a query phrase type declaration"));
 			}
 			(void)parse_OPERATOR(src);
-	
+
 			std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
 			std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
 			std::vector<NormalizerFunctionInstanceInterface*> normalizer;
@@ -1224,16 +1233,17 @@ static std::string parseVariableRef( char const*& src)
 
 struct QueryStackElement
 {
-	QueryStackElement( const PostingJoinOperatorInterface* function_, int arg_, int range_, float weight_)
-		:function(function_),arg(arg_),range(range_),weight(weight_){}
+	QueryStackElement( const PostingJoinOperatorInterface* function_, int arg_, int range_, unsigned int cardinality_, float weight_)
+		:function(function_),arg(arg_),range(range_),cardinality(cardinality_),weight(weight_){}
 	QueryStackElement( const QueryStackElement& o)
-		:function(o.function),arg(o.arg),range(o.range),name(o.name),weight(o.weight){}
+		:function(o.function),arg(o.arg),range(o.range),cardinality(o.cardinality),name(o.name),weight(o.weight){}
 	QueryStackElement()
-		:function(0),arg(-1),range(0),weight(0.0f){}
+		:function(0),arg(-1),range(0),cardinality(0),weight(0.0f){}
 
 	const PostingJoinOperatorInterface* function;
 	int arg;
 	int range;
+	unsigned int cardinality;
 	std::string name;
 	float weight;
 };
@@ -1249,13 +1259,13 @@ struct QueryStack
 
 	void defineFeature( const std::string& featureSet, float weight)
 	{
-		ar.push_back( QueryStackElement( 0, -1/*arg*/, 0, weight));
+		ar.push_back( QueryStackElement( 0, -1/*arg*/, 0/*range*/, 0/*cardinality*/, weight));
 		ar.back().name = featureSet;
 	}
 
 	void pushPhrase( const std::string& phraseType, const std::string& phraseContent, const std::string& variableName)
 	{
-		ar.push_back( QueryStackElement( 0, phraseBulk.size(), 0, 0.0));
+		ar.push_back( QueryStackElement( 0, phraseBulk.size(), 0/*range*/, 0/*cardinality*/, 0.0/*weight*/));
 		phraseBulk.push_back( QueryAnalyzerInterface::Phrase( phraseType, phraseContent));
 		if (!variableName.empty())
 		{
@@ -1263,9 +1273,9 @@ struct QueryStack
 		}
 	}
 
-	void pushExpression( const PostingJoinOperatorInterface* function, int arg, int range, const std::string& variableName)
+	void pushExpression( const PostingJoinOperatorInterface* function, int arg, int range, unsigned int cardinality, const std::string& variableName)
 	{
-		ar.push_back( QueryStackElement( function, arg, range, 0.0));
+		ar.push_back( QueryStackElement( function, arg, range, cardinality, 0.0));
 		if (!variableName.empty())
 		{
 			ar.back().name = variableName;
@@ -1277,16 +1287,21 @@ static void translateQuery(
 		QueryInterface& query,
 		const QueryAnalyzerInterface* analyzer,
 		const QueryProcessorInterface* queryproc,
-		const QueryStack& stk)
+		const QueryStack& stk,
+		ErrorBufferInterface* errorhnd)
 {
 	std::vector<analyzer::TermVector> analyzerResult = analyzer->analyzePhraseBulk( stk.phraseBulk);
+	if (errorhnd->hasError())
+	{
+		throw strus::runtime_error( _TXT("failed to analyze query: %s"), errorhnd->fetchError());
+	}
 	std::vector<QueryStackElement>::const_iterator si = stk.ar.begin(), se = stk.ar.end();
 	for (; si != se; ++si)
 	{
 		if (si->function)
 		{
 			// Expression function definition:
-			query.pushExpression( si->function, si->arg, si->range);
+			query.pushExpression( si->function, si->arg, si->range, si->cardinality);
 			if (!si->name.empty())
 			{
 				query.attachVariable( si->name);
@@ -1331,7 +1346,7 @@ static void translateQuery(
 							throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
 											Constants::operator_query_phrase_same_position());
 						}
-						query.pushExpression( join, join_argc, 0);
+						query.pushExpression( join, join_argc, 0, 0);
 					}
 				}
 			}
@@ -1345,7 +1360,7 @@ static void translateQuery(
 					throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
 									Constants::operator_query_phrase_sequence());
 				}
-				query.pushExpression( seq, seq_argc, pos);
+				query.pushExpression( seq, seq_argc, pos, 0);
 			}
 			if (!si->name.empty())
 			{
@@ -1383,10 +1398,30 @@ static void parseQueryExpression(
 				break;
 			}
 			int range = 0;
-			if (isOr( *src))
+			unsigned int cardinality = 0;
+			while (isOr( *src) || isExp( *src))
 			{
-				(void)parse_OPERATOR( src);
-				range = parse_INTEGER( src);
+				if (isOr( *src))
+				{
+					if (range != 0) throw strus::runtime_error( _TXT("range specified twice"));
+					(void)parse_OPERATOR( src);
+					if (isPlus(*src))
+					{
+						parse_OPERATOR(src);
+						range = parse_UNSIGNED( src);
+					}
+					else
+					{
+						range = parse_INTEGER( src);
+					}
+					if (range == 0) throw strus::runtime_error( _TXT("range should be a non null number"));
+				}
+				else
+				{
+					if (cardinality != 0) throw strus::runtime_error( _TXT("cardinality specified twice"));
+					(void)parse_OPERATOR( src);
+					cardinality = parse_UNSIGNED1( src);
+				}
 			}
 			if (!isCloseOvalBracket( *src))
 			{
@@ -1402,7 +1437,7 @@ static void parseQueryExpression(
 			}
 			std::string variableName = parseVariableRef( src);
 
-			querystack.pushExpression( function, argc, range, variableName);
+			querystack.pushExpression( function, argc, range, cardinality, variableName);
 			return;
 		}
 		else
@@ -1421,6 +1456,12 @@ static void parseQueryExpression(
 		std::string variableName = parseVariableRef( src);
 
 		querystack.pushPhrase( phraseType, queryPhrase, variableName);
+	}
+	else if (isColon( *src))
+	{
+		std::string phraseType = parseQueryPhraseType( src);
+		std::string variableName = parseVariableRef( src);
+		querystack.pushPhrase( phraseType, std::string(), variableName);
 	}
 	else
 	{
@@ -1441,6 +1482,11 @@ static ArithmeticVariant parseMetaDataOperand( char const*& src)
 			}
 			else
 			{
+				if (isPlus(*src))
+				{
+					parse_OPERATOR( src);
+					if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
+				}
 				rt = parse_UNSIGNED( src);
 			}
 		}
@@ -1576,7 +1622,7 @@ static void parseMetaDataRestriction(
 			query.defineMetaDataRestriction( cmpop, fieldname, *oi, false);
 		}
 	}
-	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src))
+	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src) || isPlus( *src))
 	{
 		std::vector<ArithmeticVariant>
 			operands = parseMetaDataOperands( src);
@@ -1686,7 +1732,7 @@ DLL_PUBLIC bool strus::loadQuery(
 				throw strus::runtime_error( _TXT("unknown query section identifier '%s'"),name.c_str());
 			}
 		}
-		translateQuery( query, analyzer, queryproc, querystack);
+		translateQuery( query, analyzer, queryproc, querystack, errorhnd);
 		return true;
 	}
 	catch (const std::bad_alloc&)

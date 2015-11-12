@@ -55,7 +55,6 @@
 
 using namespace strus;
 
-
 CheckInsertProcessor::CheckInsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
@@ -108,8 +107,29 @@ void CheckInsertProcessor::run()
 		m_storage->createMetaDataReader());
 	if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
 
-	bool hasDoclenAttribute
-		= metadata->hasElement( strus::Constants::metadata_doclen());
+	// Evaluate the expected types of the meta data elements to make them comparable
+	std::vector<strus::ArithmeticVariant::Type> metadatatype;
+	strus::Index mi=0, me=metadata->nofElements();
+	for (; mi != me; ++mi)
+	{
+		const char* tp = metadata->getType( mi);
+		if ((tp[0]|32) == 'i')
+		{
+			metadatatype.push_back( strus::ArithmeticVariant::Int);
+		}
+		else if ((tp[0]|32) == 'u')
+		{
+			metadatatype.push_back( strus::ArithmeticVariant::UInt);
+		}
+		else if ((tp[0]|32) == 'f')
+		{
+			metadatatype.push_back( strus::ArithmeticVariant::Float);
+		}
+		else
+		{
+			metadatatype.push_back( strus::ArithmeticVariant::Null);
+		}
+	}
 
 	unsigned int filesChecked = 0;
 	while (m_crawler->fetch( files))
@@ -191,16 +211,6 @@ void CheckInsertProcessor::run()
 						storagedoc->setAttribute(
 							strus::Constants::attribute_docid(), *fitr);
 				
-						// Define hardcoded document metadata, if known:
-						if (hasDoclenAttribute)
-						{
-							strus::Index lastPos = (doc.searchIndexTerms().empty())
-									?0:doc.searchIndexTerms()[
-										doc.searchIndexTerms().size()-1].pos();
-							storagedoc->setMetaData(
-								strus::Constants::metadata_doclen(),
-								strus::ArithmeticVariant( lastPos));
-						}
 						unsigned int maxpos = 0;
 	
 						// Define all search index term occurrencies:
@@ -260,25 +270,38 @@ void CheckInsertProcessor::run()
 						for (; mi != me; ++mi)
 						{
 							double val = mi->value();
-							if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
+							Index midx = metadata->elementHandle( mi->name());
+							switch (metadatatype[midx])
 							{
-								if (val < 0.0)
-								{
-									strus::ArithmeticVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-									storagedoc->setMetaData( mi->name(), av);
-								}
-								else
-								{
-									strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-									storagedoc->setMetaData( mi->name(), av);
-								}
-							}
-							else
-							{
-								storagedoc->setMetaData( mi->name(), (float) val);
+								case strus::ArithmeticVariant::Int:
+									if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
+									{
+										strus::ArithmeticVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+										storagedoc->setMetaData( mi->name(), av);
+									}
+									else
+									{
+										std::cerr << utils::string_sprintf( _TXT( "meta data assignment is not convertible to the type expected: (%s) %.4f"), "int", val) << std::endl;
+									}
+									break;
+								case strus::ArithmeticVariant::UInt:
+									if (val - std::floor( val) < std::numeric_limits<float>::epsilon()
+									|| (val + std::numeric_limits<float>::epsilon()) < 0.0)
+									{
+										strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+										storagedoc->setMetaData( mi->name(), av);
+									}
+									else
+									{
+										std::cerr << utils::string_sprintf( _TXT( "meta data assignment is not convertible to the type expected: (%s) %.4f"), "unsigned int", val) << std::endl;
+									}
+									break;
+								case strus::ArithmeticVariant::Float:
+								case strus::ArithmeticVariant::Null:
+									storagedoc->setMetaData( mi->name(), (float) val);
+									break;
 							}
 						}
-	
 						// Issue warning for documents cut because they are too big to insert:
 						if (maxpos > Constants::storage_max_position_info())
 						{
@@ -306,7 +329,9 @@ void CheckInsertProcessor::run()
 			}
 		}
 		filesChecked += files.size();
-		std::cerr << utils::string_sprintf( _TXT( "\rchecked %u documents"), filesChecked) << std::endl;
+		std::cerr << utils::string_sprintf( (filesChecked == 1)
+				?_TXT( "\rchecked %u file"):_TXT( "\rchecked %u files"),
+				filesChecked) << std::endl;
 	}
 }
 
