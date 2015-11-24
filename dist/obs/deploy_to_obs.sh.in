@@ -1,8 +1,8 @@
 #!/bin/sh
 
 PACKAGE_NAME=strusutilities
-PACKAGE_VERSION=0.1.6
-OSC_HOME=$HOME/home:andreas_baumann/$PACKAGE_NAME
+PACKAGE_VERSION=@STRUS_VERSION@
+OSC_HOME=$HOME/home:PatrickFrey/$PACKAGE_NAME
 
 rm -f ${PACKAGE_NAME}-${PACKAGE_VERSION}.tar.gz
 cmake .
