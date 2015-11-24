@@ -128,16 +128,23 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		strus::Index docno = isIndex(key[2])
 				?stringToIndex( key[2])
 				:storage.documentNumber( key[2]);
-		if (docno == itr->skipDoc( docno))
+		if (docno)
 		{
-			strus::Index pos=0;
-			int cnt = 0;
-			while (0!=(pos=itr->skipPos(pos+1)))
+			if (docno == itr->skipDoc( docno))
 			{
-				if (cnt++ != 0) std::cout << " ";
-				std::cout << pos;
+				strus::Index pos=0;
+				int cnt = 0;
+				while (0!=(pos=itr->skipPos(pos+1)))
+				{
+					if (cnt++ != 0) std::cout << " ";
+					std::cout << pos;
+				}
+				std::cout << std::endl;
 			}
-			std::cout << std::endl;
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT("unknown document"));
 		}
 	}
 }
@@ -173,7 +180,14 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 		strus::Index docno = isIndex( key[1])
 				?stringToIndex( key[1])
 				:storage.documentNumber( key[1]);
-		std::cout << storage.documentStatistics( docno, stat, key[0]) << std::endl;
+		if (docno)
+		{
+			std::cout << storage.documentStatistics( docno, stat, key[0]) << std::endl;
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT("unknown document"));
+		}
 	}
 }
 
@@ -204,13 +218,20 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 		strus::Index docno = isIndex( key[2])
 				?stringToIndex( key[2])
 				:storage.documentNumber( key[2]);
-		if (docno == itr->skipDoc( docno))
+		if (docno)
 		{
-			std::cout << (*itr).frequency() << std::endl;
+			if (docno == itr->skipDoc( docno))
+			{
+				std::cout << (*itr).frequency() << std::endl;
+			}
+			else
+			{
+				std::cout << '0' << std::endl;
+			}
 		}
 		else
 		{
-			std::cout << '0' << std::endl;
+			throw strus::runtime_error( _TXT("unknown document"));
 		}
 	}
 }
@@ -257,9 +278,16 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 				?stringToIndex( key[1])
 				:storage.documentNumber( key[1]);
 
-		attreader->skipDoc( docno);
-		std::string value = attreader->getValue( hnd);
-		std::cout << value << std::endl;
+		if (docno)
+		{
+			attreader->skipDoc( docno);
+			std::string value = attreader->getValue( hnd);
+			std::cout << value << std::endl;
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT("unknown document"));
+		}
 	}
 }
 
@@ -308,15 +336,22 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 				?stringToIndex( key[1])
 				:storage.documentNumber( key[1]);
 
-		metadata->skipDoc( docno);
-		strus::ArithmeticVariant value = metadata->getValue( hnd);
-		if (value.defined())
+		if (docno)
 		{
-			std::cout << value.tostring().c_str() << std::endl;
+			metadata->skipDoc( docno);
+			strus::ArithmeticVariant value = metadata->getValue( hnd);
+			if (value.defined())
+			{
+				std::cout << value.tostring().c_str() << std::endl;
+			}
+			else
+			{
+				std::cout << "NULL" << std::endl;
+			}
 		}
 		else
 		{
-			std::cout << "NULL" << std::endl;
+			throw strus::runtime_error( _TXT("unknown document"));
 		}
 	}
 }
@@ -367,14 +402,21 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 		strus::Index docno = isIndex(key[1])
 				?stringToIndex( key[1])
 				:storage.documentNumber( key[1]);
-		viewer->skipDoc( docno);
-		strus::Index pos=0;
-		for (int idx=0; 0!=(pos=viewer->skipPos(pos+1)); ++idx)
+		if (docno)
 		{
-			if (idx) std::cout << ' ';
-			std::cout << viewer->fetch();
+			viewer->skipDoc( docno);
+			strus::Index pos=0;
+			for (int idx=0; 0!=(pos=viewer->skipPos(pos+1)); ++idx)
+			{
+				if (idx) std::cout << ' ';
+				std::cout << viewer->fetch();
+			}
+			std::cout << std::endl;
 		}
-		std::cout << std::endl;
+		else
+		{
+			throw strus::runtime_error( _TXT("unknown document"));
+		}
 	}
 }
 
@@ -415,8 +457,14 @@ static void inspectForwardIndexStats( strus::StorageClientInterface& storage, co
 		strus::Index docno = isIndex(key[1])
 				?stringToIndex( key[1])
 				:storage.documentNumber( key[1]);
-	
-		fillForwardIndexStats( storage, viewer, statmap, docno);
+		if (docno)
+		{
+			fillForwardIndexStats( storage, viewer, statmap, docno);
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT("unknown document"));
+		}
 	}
 	std::map<std::string,unsigned int>::const_iterator si = statmap.begin(), se = statmap.end();
 	for (; si != se; ++si)
@@ -434,13 +482,20 @@ static void inspectToken( strus::StorageClientInterface& storage, const char** k
 			?stringToIndex( key[1])
 			:storage.documentNumber( key[1]);
 
-	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	if (!viewer.get()) throw strus::runtime_error(_TXT("failed to create forward index iterator"));
-	viewer->skipDoc( docno);
-	strus::Index pos=0;
-	while (0!=(pos=viewer->skipPos(pos+1)))
+	if (docno)
 	{
-		std::cout << "[" << pos << "] " << viewer->fetch() << std::endl;
+		strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
+		if (!viewer.get()) throw strus::runtime_error(_TXT("failed to create forward index iterator"));
+		viewer->skipDoc( docno);
+		strus::Index pos=0;
+		while (0!=(pos=viewer->skipPos(pos+1)))
+		{
+			std::cout << "[" << pos << "] " << viewer->fetch() << std::endl;
+		}
+	}
+	else
+	{
+		throw strus::runtime_error( _TXT("unknown document"));
 	}
 }
 
