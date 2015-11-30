@@ -38,8 +38,7 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/peerMessageProcessorInterface.hpp"
-#include "strus/peerMessageBuilderInterface.hpp"
+#include "strus/peerMessageQueueInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
@@ -146,11 +145,11 @@ int main( int argc, const char* argv[])
 		{
 			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--peermsgproc", "--rpc");
 			std::string peermsgproc( opt["peermsgproc"]);
-			moduleLoader->enablePeerMessageProcessor( peermsgproc);
+			moduleLoader->definePeerMessageProcessor( peermsgproc);
 		}
 		else
 		{
-			moduleLoader->enablePeerMessageProcessor( "");
+			moduleLoader->definePeerMessageProcessor( "");
 		}
 
 		if (printUsageAndExit)
@@ -211,11 +210,12 @@ int main( int argc, const char* argv[])
 			storage( storageBuilder->createStorageClient( storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
-		storage->startPeerInit();
+		std::auto_ptr<strus::PeerMessageQueueInterface>
+			peermsgqueue( storage->createPeerMessageQueue());
 		const char* msg;
 		std::size_t msgsize;
 		std::string output;
-		while (storage->fetchPeerMessage( msg, msgsize))
+		while (peermsgqueue->fetch( msg, msgsize))
 		{
 			output.append( msg, msgsize);
 		}
