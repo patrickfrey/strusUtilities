@@ -299,6 +299,9 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Mon Nov 30 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.5-0.1
+- adapted interface changes in core: changed interface for peer message processing
+
 * Thu Nov 26 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.4-0.1
 - incremented version to 0.2.4 to resolve OBS trouble with dependencies
 

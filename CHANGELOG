@@ -1,3 +1,12 @@
+strusutilities (0.2.5)
+  * adapted interface changes in core: changed interface for peer message processing
+ -- patrickfrey <patrickpfrey@yahoo.com>  Mon, 30 Nov 2015 13:46:10 +0100
+
+strusutilities (0.2.4)
+  * incremented version to 0.2.4 to resolve OBS trouble with dependencies
+  * define dependency from other strus packages by minor version instead of patch version
+ -- patrickfrey <patrickpfrey@yahoo.com>  Thu, 26 Nov 2015 09:09:08 +0100
+
 strusUtilities (0.2.3)
   * adapted strus core interface changes: StorageClient::documentNumber( const std::string&) returns 0, if document does not exist
  -- patrickfrey <patrickpfrey@yahoo.com>  Tue, 24 Nov 2015 19:49:41 +0100
