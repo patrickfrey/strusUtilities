@@ -1,3 +1,7 @@
+strusutilities (0.2.6-1) unstable; urgency=low
+  * adapted interface changes in core: added interfaces for introspection (user names, docids, term types, term values)
+ -- patrickfrey <patrickpfrey@yahoo.com>  Tue, 1 Dec 2015 20:54:00 +0100
+
 strusutilities (0.2.5-1) unstable; urgency=low
   * adapted interface changes in core: changed interface for peer message processing
  -- patrickfrey <patrickpfrey@yahoo.com>  Mon, 30 Nov 2015 13:46:10 +0100

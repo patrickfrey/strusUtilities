@@ -299,6 +299,9 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Tue Dec 1 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.6-0.1
+- adapted interface changes in core: added interfaces for introspection (user names, docids, term types, term values)
+
 * Mon Nov 30 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.5-0.1
 - adapted interface changes in core: changed interface for peer message processing
 
