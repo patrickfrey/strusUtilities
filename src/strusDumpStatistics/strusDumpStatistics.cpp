@@ -92,7 +92,7 @@ int main( int argc, const char* argv[])
 		opt = strus::ProgramOptions(
 				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "p,peermsgproc");
+				"r,rpc:", "s,storage:", "P,peermsgproc");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -175,7 +175,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
-			std::cout << "-p|--peermsgproc <NAME>" << std::endl;
+			std::cout << "-P|--peermsgproc <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use peer message processor with name <NAME>") << std::endl;
 			return rt;
 		}

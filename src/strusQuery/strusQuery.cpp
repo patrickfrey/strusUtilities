@@ -112,7 +112,7 @@ int main( int argc_, const char* argv_[])
 				argc_, argv_, 14,
 				"h,help", "Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
 				"g,globalstats:", "T,time", "v,version", "m,module:", "M,moduledir:",
-				"R,resourcedir:", "s,storage:", "r,rpc:", "p,peermsgproc");
+				"R,resourcedir:", "s,storage:", "r,rpc:", "P,peermsgproc");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -192,7 +192,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("No output of results") << std::endl;
 			std::cout << "-g|--globalstats <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Load global statistics of peers from file <FILE>") << std::endl;
-			std::cout << "-p|--peermsgproc <NAME>" << std::endl;
+			std::cout << "-P|--peermsgproc <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use peer message processor <NAME> for global statistics") << std::endl;
 			std::cout << "-T|--time" << std::endl;
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
