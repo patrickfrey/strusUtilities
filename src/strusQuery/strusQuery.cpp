@@ -44,7 +44,7 @@
 #include "strus/queryEvalInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/queryInterface.hpp"
-#include "strus/peerMessageQueueInterface.hpp"
+#include "strus/peerStorageTransactionInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -335,10 +335,11 @@ int main( int argc_, const char* argv_[])
 				std::string content;
 				unsigned int ec = strus::readFile( filename, content);
 				if (ec) throw strus::runtime_error(_TXT("error reading global statistics file %s (errno %u)"), filename.c_str(), ec);
-				std::auto_ptr<strus::PeerMessageQueueInterface> que( storage->createPeerMessageQueue());
+				std::auto_ptr<strus::PeerStorageTransactionInterface> transaction( storage->createPeerStorageTransaction());
 				const char* outmsg;
 				std::size_t outmsgsize;
-				que->push( content.c_str(), content.size(), outmsg, outmsgsize);
+				transaction->push( content.c_str(), content.size());
+				transaction->commit( outmsg, outmsgsize);
 			}
 			catch (const std::runtime_error& err)
 			{

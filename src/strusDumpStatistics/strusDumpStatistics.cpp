@@ -38,7 +38,7 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/peerMessageQueueInterface.hpp"
+#include "strus/peerMessageIteratorInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
@@ -210,22 +210,23 @@ int main( int argc, const char* argv[])
 			storage( storageBuilder->createStorageClient( storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
-		std::auto_ptr<strus::PeerMessageQueueInterface>
-			peermsgqueue( storage->createPeerMessageQueue());
+		std::auto_ptr<strus::PeerMessageIteratorInterface>
+			peermsgqueue( storage->createInitPeerMessageIterator( true));
 		const char* msg;
 		std::size_t msgsize;
 		std::string output;
-		while (peermsgqueue->fetch( msg, msgsize))
+
+		while (peermsgqueue->getNext( msg, msgsize))
 		{
 			output.append( msg, msgsize);
 		}
 		unsigned int ec = strus::writeFile( outputfile, output);
 		// .... yes, it's idiodoc to buffer the whole content in memory (to be solved later)
-		if (!ec) throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), ec);
+		if (ec) throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), ec);
 
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in dump statistics"));
+			throw strus::runtime_error(_TXT( "unhandled error in dump statistics"));
 		}
 		return 0;
 	}
