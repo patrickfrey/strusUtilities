@@ -211,7 +211,7 @@ int main( int argc, const char* argv[])
 		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
 		std::auto_ptr<strus::PeerMessageIteratorInterface>
-			peermsgqueue( storage->createInitPeerMessageIterator( true));
+			peermsgqueue( storage->createInitPeerMessageIterator());
 		const char* msg;
 		std::size_t msgsize;
 		std::string output;

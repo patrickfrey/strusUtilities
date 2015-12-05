@@ -292,12 +292,16 @@ public:
 				out << strus::utils::string_sprintf( _TXT("stats %s '%s' = %s"), ti->first.type.c_str(), ti->first.value.c_str(), valbuf) << std::endl;
 			}
 		}
-		if (m_globstats.defined())
+		if (m_globstats.nofDocumentsInserted() >= 0)
 		{
 			out << _TXT("Global statistics:") << std::endl;
-			char valbuf[ 64];
-			::snprintf( valbuf, sizeof(valbuf), "%" PRId64, m_globstats.nofDocumentsInserted());
-			out << strus::utils::string_sprintf( _TXT("nof documents inserted: %s"), valbuf) << std::endl;
+			if (m_globstats.nofDocumentsInserted() >= 0)
+			{
+				out << _TXT("Global statistics:") << std::endl;
+				char valbuf[ 64];
+				::snprintf( valbuf, sizeof(valbuf), "%" PRId64, m_globstats.nofDocumentsInserted());
+				out << strus::utils::string_sprintf( _TXT("nof documents inserted: %s"), valbuf) << std::endl;
+			}
 		}
 	}
 
