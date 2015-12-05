@@ -64,6 +64,7 @@
 #include <memory>
 #include <algorithm>
 #include <iomanip>
+#include <inttypes.h>
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -179,6 +180,30 @@ public:
 		m_evalset_defined = true;
 	}
 
+	virtual void defineTermStatistics(
+			const std::string& type,
+			const std::string& value,
+			const strus::TermStatistics& stats_)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		char valbuf[ 64];
+		::snprintf( valbuf, sizeof(valbuf), "%" PRId64, stats_.documentFrequency());
+		std::cerr << strus::utils::string_sprintf( _TXT("called defineTermStatistics %s '%s' = %s"), type.c_str(), value.c_str(), valbuf) << std::endl;
+#endif
+		m_termstats[ Term( type, value)] = stats_;
+	}
+
+	virtual void defineGlobalStatistics(
+			const strus::GlobalStatistics& stats_)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		char valbuf[ 64];
+		::snprintf( valbuf, sizeof(valbuf), "%" PRId64, stats_.nofDocumentsInserted());
+		std::cerr << strus::utils::string_sprintf( _TXT("called defineGlobalStatistics %s"), valbuf) << std::endl;
+#endif
+		m_globstats = stats_;
+	}
+
 	virtual void setMaxNofRanks( std::size_t maxNofRanks_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -256,6 +281,28 @@ public:
 			}
 			out << std::endl;
 		}
+		std::map<Term,strus::TermStatistics>::const_iterator ti=m_termstats.begin(), te=m_termstats.end();
+		if (ti != te)
+		{
+			out << _TXT("Term statistics:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				char valbuf[ 64];
+				::snprintf( valbuf, sizeof(valbuf), "%" PRId64, ti->second.documentFrequency());
+				out << strus::utils::string_sprintf( _TXT("stats %s '%s' = %s"), ti->first.type.c_str(), ti->first.value.c_str(), valbuf) << std::endl;
+			}
+		}
+		if (m_globstats.nofDocumentsInserted() >= 0)
+		{
+			out << _TXT("Global statistics:") << std::endl;
+			if (m_globstats.nofDocumentsInserted() >= 0)
+			{
+				out << _TXT("Global statistics:") << std::endl;
+				char valbuf[ 64];
+				::snprintf( valbuf, sizeof(valbuf), "%" PRId64, m_globstats.nofDocumentsInserted());
+				out << strus::utils::string_sprintf( _TXT("nof documents inserted: %s"), valbuf) << std::endl;
+			}
+		}
 	}
 
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -315,6 +362,16 @@ private:
 			:type(type_),value(value_){}
 		Term( const Term& o)
 			:type(o.type),value(o.value){}
+
+		bool operator<( const Term& o) const
+		{
+			int cmpres;
+			if (type.size() != o.type.size()) return type.size() < o.type.size();
+			if ((cmpres = std::strcmp( type.c_str(), o.type.c_str())) < 0) return cmpres;
+			if (value.size() != o.value.size()) return value.size() < o.value.size();
+			if ((cmpres = std::strcmp( value.c_str(), o.value.c_str())) < 0) return cmpres;
+			return 0;
+		}
 
 	public:
 		std::string type;
@@ -388,6 +445,8 @@ private:
 	std::size_t m_minRank;
 	std::vector<std::string> m_users;
 	std::vector<strus::Index> m_evalset_docnolist;
+	strus::GlobalStatistics m_globstats;
+	std::map<Term,strus::TermStatistics> m_termstats;
 	bool m_evalset_defined;
 };
 

@@ -1,5 +1,85 @@
+strusutilities (0.2.6-1) unstable; urgency=low
+  * adapted interface changes in core: added interfaces for introspection (user names, docids, term types, term values)
+ -- patrickfrey <patrickpfrey@yahoo.com>  Tue, 1 Dec 2015 20:54:00 +0100
+
+strusutilities (0.2.5-1) unstable; urgency=low
+  * adapted interface changes in core: changed interface for peer message processing
+ -- patrickfrey <patrickpfrey@yahoo.com>  Mon, 30 Nov 2015 13:46:10 +0100
+
+strusutilities (0.2.4-1) unstable; urgency=low
+  * incremented version to 0.2.4 to resolve OBS trouble with dependencies
+  * define dependency from other strus packages by minor version instead of patch version
+ -- patrickfrey <patrickpfrey@yahoo.com>  Thu, 26 Nov 2015 09:09:08 +0100
+
+strusutilities (0.2.3-1) unstable; urgency=low
+  * adapted strus core interface changes: StorageClient::documentNumber( const std::string&) returns 0, if document does not exist
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Tue, 24 Nov 2015 19:49:41 +0100
+
+strusutilities (0.2.2-1) unstable; urgency=low
+  * propagate version number of cmake files to packaging
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Tue, 24 Nov 2015 14:38:56 +0100
+
+strusutilities (0.2.0-1) unstable; urgency=low
+  * adapted changes in query interface
+  * adapted changes from strus core (Query::pushDuplicate has optional argument now)
+  * better final message for strusCheckInsert
+  * fix bug in check insert processor: convert the meta data to check to the correct type before comparison. Use the meta data description as hint rather than to use funny heuristics
+  * removed hardcoded 'doclen' metadata element
+  * add possibility to specify configuration in strusCheckInsert
+  * add option --configfile / -S to strusInsert as in strusCreate
+  * fixed bug in loading meta data from file: Assignements to 0 were not parsed correctly
+  * added missing boost libraries to insert tools
+  * updated OBS package build support
+  * fixed typo in latest changes
+  * allow '+' as prefix operator of numbers (e.g. ranges)
+  * improver query analyzer program language. Change option naming in strusQuery (-N instead of -n, -I instead of -i)
+  * new program strusHelp to display description of loaded functions
+  * change option short name for --time from -t (reserved for --threads) to -T
+  * fixed bug in error of analyze query in query loader (came in with exception free interfacese)
+  * adapted interface changes (new expression parameter cardinality)
+  * do not checkin cmake generated files
+  * fixed segfault because of wrong order of destructors called
+  * adapt changes module loader: return boolean (success/failure) in loadModule method
+  * adapting interface changes in strus utils library
+  * build with visibility hidden
+  * check all sources and fix missing handling of return values and errors that are now populated via the ErrorBufferInterface
+  * correctly handle return values that came in with exception safe interface
+  * make error messages translatable
+  * work on exception safe interfaces
+  * (origin/interface_exceptions, interface_exceptions) added possibility to define query on a subset of documents defined as set
+  * rollback transaction on one wrong insert. make all symbols visible (temporaryliy till interfaces exception safe)
+  * first version of unreliable malloc for testing (with hooks)
+  * program loader for analyzer program: feature options before selection expression in grammar
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Wed, 11 Nov 2015 02:49:41 +0100
+
 strusutilities (0.1.6-1) unstable; urgency=low
+  * put common CMAKE stuff of all strus relaed projects into includes
+  * adapted interface changes in strus storage peer interfaces
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sun, 16 Aug 2015 17:12:17 +0200
 
-  * Initial Release.
+strusutilities (0.1.5-1) unstable; urgency=low
+  * added RPC proxying also for analyzer programs. Added new program strusAnalyzeQuery. Changed query analyzer to use bulk analyzer interface. Incremented version to v0.1.5
+  * rename option --silent to --quiet
+  * measure query time more precise (option -t strusQuery)
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sun, 2 Aug 2015 12:06:22 +0200
 
- -- Patrick Frey <patrickpfrey@yahoo.com>  Thu, 19 Feb 2015 09:48:41 +0100
+strusutilities (0.1.4-1) unstable; urgency=low
+  * reenable deprecated way of passing storage argument for strusCreate and strusDestroy (tutorial is based on it)
+  * no default file extension .xml
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Fri, 24 Jul 2015 19:37:13 +0200
+
+strusutilities (0.1.3-1) unstable; urgency=low
+  * added possibility to load multiple analyzer configurations in inserter passed as analyzer map file instead of analyzer configuration. Incremented version number to v0.1.3
+  * updated insert,checkInsert and generateKeyMap programs to support multiple analyzer configurations
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Tue, 14 Jul 2015 14:26:39 +0200
+
+strusutilities (0.1.2-1) unstable; urgency=low
+  * added exist database check option to strusCheckStorage
+  * updated documentation
+  * replaced content of README with a link to the strus utilities documentation
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Thu, 9 Jul 2015 15:34:57 +0200
+
+strusutilities (0.1.1-1) unstable; urgency=low
+  * Initial revision
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Fri, 3 Jul 2015 15:22:26 +0200
+

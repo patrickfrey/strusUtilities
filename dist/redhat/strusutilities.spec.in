@@ -114,9 +114,10 @@
 
 Summary: Command line utilities for the strus text search engine
 Name: strusutilities
-%define main_version 0.1.6
+%define main_version @STRUS_VERSION@
+%define dep_version @STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
 Version: %{main_version}
-Release: 0.1
+Release: @STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
 License: GPLv3
 Group: Development/Libraries/C++
 
@@ -206,18 +207,18 @@ BuildRequires: boost-devel
 %endif
 %endif
 
-BuildRequires: strus-devel >= 0.1.6
-BuildRequires: strusanalyzer-devel >= 0.1.6
-BuildRequires: strusmodule-devel >= 0.1.5
-BuildRequires: strusrpc-devel >= 0.1.9
-BuildRequires: strus >= 0.1.6
-BuildRequires: strusanalyzer >= 0.1.6
-BuildRequires: strusmodule >= 0.1.5
-BuildRequires: strusrpc >= 0.1.9
-Requires: strus >= 0.1.6
-Requires: strusanalyzer >= 0.1.6
-Requires: strusmodule >= 0.1.5
-Requires: strusrpc >= 0.1.9
+BuildRequires: strus-devel >= %{dep_version}
+BuildRequires: strusanalyzer-devel >= %{dep_version}
+BuildRequires: strusmodule-devel >= %{dep_version}
+BuildRequires: strusrpc-devel >= %{dep_version}
+BuildRequires: strus >= %{dep_version}
+BuildRequires: strusanalyzer >= %{dep_version}
+BuildRequires: strusmodule >= %{dep_version}
+BuildRequires: strusrpc >= %{dep_version}
+Requires: strus >= %{dep_version}
+Requires: strusanalyzer >= %{dep_version}
+Requires: strusmodule >= %{dep_version}
+Requires: strusrpc >= %{dep_version}
 
 # Check if 'Distribution' is really set by OBS (as mentioned in bacula)
 %if ! 0%{?opensuse_bs}
@@ -271,8 +272,8 @@ make test
 %files
 %defattr( -, root, root )
 %dir %{_libdir}/strus
-%{_libdir}/strus/libstrus_program.so.0.1
-%{_libdir}/strus/libstrus_program.so.0.1.6
+%{_libdir}/strus/libstrus_program.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
+%{_libdir}/strus/libstrus_program.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@.@STRUS_PATCH_VERSION@
 %{_bindir}/strusDumpStorage
 %{_bindir}/strusAnalyzeQuery
 %{_bindir}/strusUpdateStorage
@@ -298,5 +299,76 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
-* Fri Mar 20 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.1.6-0.1
-- preliminary release
+* Tue Dec 1 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.6-0.1
+- adapted interface changes in core: added interfaces for introspection (user names, docids, term types, term values)
+
+* Mon Nov 30 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.5-0.1
+- adapted interface changes in core: changed interface for peer message processing
+
+* Thu Nov 26 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.4-0.1
+- incremented version to 0.2.4 to resolve OBS trouble with dependencies
+
+* Tue Nov 24 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.3-0.1
+- synchronize version number with strus core
+- adapted strus core interface changes: StorageClient::documentNumber( const std::string&) returns 0, if document does not exist
+- define package dependency to strus* not to patch version but to minor version
+
+* Tue Nov 24 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.2-0.1
+- propagate version number of cmake files to packaging
+
+* Wed Nov 11 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.2.0-0.1
+- adapted changes in query interface
+- adapted changes from strus core (QueryInterface::pushDuplicate removed)
+- better final message for strusCheckInsert
+- fix bug in check insert processor: convert the meta data to check to the correct type before comparison. Use the meta data description as hint rather than to use funny heuristics
+- removed hardcoded 'doclen' metadata element (has now to be defined with an aggregator definition)
+- add possibility to specify configuration in strusCheckInsert
+- add option --configfile / -S to strusInsert,strusCreate,strusCheckInsert
+- fixed bug in loading meta data from file: Assignements to 0 were not parsed correctly
+- added missing boost libraries to insert tools
+- updated OBS package build support
+- fixed typo in latest changes
+- allow '+' as prefix operator of numbers (e.g. ranges)
+- improver query analyzer program language. Change option naming in strusQuery (-N instead of -n, -I instead of -i)
+- new program strusHelp to display description of loaded functions
+- change option short name for --time from -t (reserved for --threads) to -T
+- fixed bug in error of analyze query in query loader (came in with exception free interfacese)
+- adapted interface changes (new expression parameter cardinality)
+- do not checkin cmake generated files
+- fixed segfault because of wrong order of destructors called
+- adapt changes module loader: return boolean (success/failure) in loadModule method
+- adapting interface changes in strus utils library
+- build with visibility hidden
+- check all sources and fix missing handling of return values and errors that are now populated via the ErrorBufferInterface
+- correctly handle return values that came in with exception safe interface
+- make error messages translatable
+- exception safe interfaces
+- added possibility to define query on a subset of documents defined as set
+- rollback transaction on one wrong insert. make all symbols visible (temporaryliy till interfaces exception safe)
+- first version of unreliable malloc for testing (with hooks)
+- program loader for analyzer program: feature options before selection expression in grammar
+
+* Sun Aug 16 2015 Patrick Frey <patrickpfrey@yahoo.com> v0.1.6-0.1
+- put common CMAKE stuff of all strus relaed projects into includes
+- adapted interface changes in strus storage peer interfaces
+
+* Sun Aug 2 2015 Patrick Frey <patrickpfrey@yahoo.com> v0.1.5-0.1
+- added RPC proxying also for analyzer programs. Added new program strusAnalyzeQuery. Changed query analyzer to use bulk analyzer interface. Incremented version to v0.1.5
+- rename option --silent to --quiet
+- measure query time more precise (option -t strusQuery)
+
+* Fri Jul 24 2015 Patrick Frey <patrickpfrey@yahoo.com> v0.1.4-0.1
+- reenable deprecated way of passing storage argument for strusCreate and strusDestroy (tutorial is based on it)
+- no default file extension .xml
+
+* Tue Jul 14 2015 Patrick Frey <patrickpfrey@yahoo.com> v0.1.3-0.1
+- added possibility to load multiple analyzer configurations in inserter passed as analyzer map file instead of analyzer configuration. Incremented version number to v0.1.3
+- updated insert,checkInsert and generateKeyMap programs to support multiple analyzer configurations
+
+* Thu Jul 9 2015 Patrick Frey <patrickpfrey@yahoo.com> v0.1.2-0.1
+- added exist database check option to strusCheckStorage
+- updated documentation
+- replaced content of README with a link to the strus utilities documentation
+
+* Fri Jul 3 2015 Patrick Frey <patrickpfrey@yahoo.com> v0.1.1-0.1
+- Initial revision

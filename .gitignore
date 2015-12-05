@@ -42,8 +42,15 @@ CPackConfig.cmake
 CPackConfig.cmake.user
 CPackSourceConfig.cmake
 CPackSourceConfig.cmake.user
+cmake/build_rules.cmake.user
 include/private/version.hpp
 src/utils/internationalization.cpp
+dist/obs/deploy_to_obs.sh
+dist/archlinux/PKGBUILD
+dist/obs/strusutilities.dsc
+dist/obs/strusutilities-Debian_7.0.dsc
+dist/obs/strusutilities-xUbuntu_12.04.dsc
+dist/redhat/strusutilities.spec
 
 # Compiled Programs
 src/strusCreate/strusCreate

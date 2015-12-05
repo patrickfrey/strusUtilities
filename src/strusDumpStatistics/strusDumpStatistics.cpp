@@ -38,8 +38,7 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/peerMessageProcessorInterface.hpp"
-#include "strus/peerMessageBuilderInterface.hpp"
+#include "strus/peerMessageIteratorInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
@@ -93,7 +92,7 @@ int main( int argc, const char* argv[])
 		opt = strus::ProgramOptions(
 				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "p,peermsgproc");
+				"r,rpc:", "s,storage:", "P,peermsgproc");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -146,11 +145,11 @@ int main( int argc, const char* argv[])
 		{
 			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--peermsgproc", "--rpc");
 			std::string peermsgproc( opt["peermsgproc"]);
-			moduleLoader->enablePeerMessageProcessor( peermsgproc);
+			moduleLoader->definePeerMessageProcessor( peermsgproc);
 		}
 		else
 		{
-			moduleLoader->enablePeerMessageProcessor( "");
+			moduleLoader->definePeerMessageProcessor( "");
 		}
 
 		if (printUsageAndExit)
@@ -176,7 +175,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
-			std::cout << "-p|--peermsgproc <NAME>" << std::endl;
+			std::cout << "-P|--peermsgproc <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use peer message processor with name <NAME>") << std::endl;
 			return rt;
 		}
@@ -211,21 +210,23 @@ int main( int argc, const char* argv[])
 			storage( storageBuilder->createStorageClient( storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
-		storage->startPeerInit();
+		std::auto_ptr<strus::PeerMessageIteratorInterface>
+			peermsgqueue( storage->createInitPeerMessageIterator());
 		const char* msg;
 		std::size_t msgsize;
 		std::string output;
-		while (storage->fetchPeerMessage( msg, msgsize))
+
+		while (peermsgqueue->getNext( msg, msgsize))
 		{
 			output.append( msg, msgsize);
 		}
 		unsigned int ec = strus::writeFile( outputfile, output);
 		// .... yes, it's idiodoc to buffer the whole content in memory (to be solved later)
-		if (!ec) throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), ec);
+		if (ec) throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), ec);
 
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in dump statistics"));
+			throw strus::runtime_error(_TXT( "unhandled error in dump statistics"));
 		}
 		return 0;
 	}
