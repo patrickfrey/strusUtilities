@@ -44,7 +44,6 @@
 #include "strus/queryEvalInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/queryInterface.hpp"
-#include "strus/peerStorageTransactionInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -109,10 +108,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 14,
+				argc_, argv_, 12,
 				"h,help", "Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
-				"g,globalstats:", "T,time", "v,version", "m,module:", "M,moduledir:",
-				"R,resourcedir:", "s,storage:", "r,rpc:", "P,peermsgproc");
+				"T,time", "v,version", "m,module:", "M,moduledir:", "R,resourcedir:",
+				"s,storage:", "r,rpc:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -190,10 +189,6 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Return the result starting with rank <N> as first rank") << std::endl;
 			std::cout << "-Q|--quiet" << std::endl;
 			std::cout << "    " << _TXT("No output of results") << std::endl;
-			std::cout << "-g|--globalstats <FILE>" << std::endl;
-			std::cout << "    " << _TXT("Load global statistics of peers from file <FILE>") << std::endl;
-			std::cout << "-P|--peermsgproc <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use peer message processor <NAME> for global statistics") << std::endl;
 			std::cout << "-T|--time" << std::endl;
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
@@ -252,16 +247,6 @@ int main( int argc_, const char* argv_[])
 		if (!resourcepath.empty())
 		{
 			moduleLoader->addResourcePath( resourcepath);
-		}
-		if (opt("peermsgproc"))
-		{
-			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--peermsgproc", "--rpc");
-			moduleLoader->definePeerMessageProcessor( opt["peermsgproc"]);
-		}
-		else if (opt("globalstats"))
-		{
-			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--globalstats", "--rpc");
-			moduleLoader->definePeerMessageProcessor( "");
 		}
 
 		// Create objects for query evaluation:
@@ -323,28 +308,6 @@ int main( int argc_, const char* argv_[])
 		if (!strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query evaluation program"));
-		}
-
-		// Load global statistics from file if specified:
-		if (opt("globalstats"))
-		{
-			std::vector<std::string> pathlist( opt.list("globalstats"));
-			std::string filename = opt[ "globalstats"];
-			try 
-			{
-				std::string content;
-				unsigned int ec = strus::readFile( filename, content);
-				if (ec) throw strus::runtime_error(_TXT("error reading global statistics file %s (errno %u)"), filename.c_str(), ec);
-				std::auto_ptr<strus::PeerStorageTransactionInterface> transaction( storage->createPeerStorageTransaction());
-				const char* outmsg;
-				std::size_t outmsgsize;
-				transaction->push( content.c_str(), content.size());
-				transaction->commit( outmsg, outmsgsize);
-			}
-			catch (const std::runtime_error& err)
-			{
-				throw strus::runtime_error(_TXT("failed to read global statistics file %s: %s"), filename.c_str(), err.what());
-			}
 		}
 
 		// Load query:

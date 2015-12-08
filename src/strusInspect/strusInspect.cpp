@@ -239,7 +239,7 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 static void inspectNofDocuments( const strus::StorageClientInterface& storage, const char**, int size)
 {
 	if (size > 0) throw strus::runtime_error( _TXT("too many arguments"));
-	std::cout << storage.localNofDocumentsInserted() << std::endl;
+	std::cout << storage.nofDocumentsInserted() << std::endl;
 }
 
 static void inspectMaxDocumentNumber( const strus::StorageClientInterface& storage, const char**, int size)
@@ -590,9 +590,9 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Get the term type count (distinct) in a document") << std::endl;
 			std::cout << "                 " << _TXT("If doc is not specified then dump value for all docs.") << std::endl;
 			std::cout << "            \"nofdocs\"" << std::endl;
-			std::cout << "               = " << _TXT("Get the local number of documents in the storage") << std::endl;
+			std::cout << "               = " << _TXT("Get the number of documents in the storage") << std::endl;
 			std::cout << "            \"maxdocno\"" << std::endl;
-			std::cout << "               = " << _TXT("Get the maximum document number allocated in the local storage") << std::endl;
+			std::cout << "               = " << _TXT("Get the maximum document number allocated in the storage") << std::endl;
 			std::cout << "            \"metadata\" <name> [<doc-id/no>]" << std::endl;
 			std::cout << "               = " << _TXT("Get the value of a meta data element") << std::endl;
 			std::cout << "                 " << _TXT("If doc is not specified then dump value for all docs.") << std::endl;
@@ -612,7 +612,7 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"token\" <type> <doc-id/no>" << std::endl;
 			std::cout << "               = " << _TXT("Get the list of terms in the forward index for a type") << std::endl;
 			std::cout << "            \"docno\" <docid>" << std::endl;
-			std::cout << "               = " << _TXT("Get the internal local document number for a document id") << std::endl;
+			std::cout << "               = " << _TXT("Get the internal document number for a document id") << std::endl;
 			std::cout << _TXT("description: Inspect some data in the storage.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;

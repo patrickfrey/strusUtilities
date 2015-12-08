@@ -83,7 +83,7 @@ void CommitQueue::handleWaitingTransactions()
 			{
 				throw strus::runtime_error(_TXT("transaction commit failed"));
 			}
-			Index totalNofDocuments = m_storage->localNofDocumentsInserted();
+			Index totalNofDocuments = m_storage->nofDocumentsInserted();
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
 			::printf( "\rinserted %u documents (total %u), %u transactions open     ",
 					nofDocsInserted, totalNofDocuments, nofOpenTransactions);

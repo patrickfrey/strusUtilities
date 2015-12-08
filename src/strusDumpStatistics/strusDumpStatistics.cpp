@@ -38,7 +38,7 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/peerMessageIteratorInterface.hpp"
+#include "strus/statisticsIteratorInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
@@ -92,7 +92,7 @@ int main( int argc, const char* argv[])
 		opt = strus::ProgramOptions(
 				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "P,peermsgproc");
+				"r,rpc:", "s,storage:", "P,statsproc");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -141,15 +141,15 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		if (opt("peermsgproc"))
+		if (opt("statsproc"))
 		{
-			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--peermsgproc", "--rpc");
-			std::string peermsgproc( opt["peermsgproc"]);
-			moduleLoader->definePeerMessageProcessor( peermsgproc);
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--statuproc", "--rpc");
+			std::string statsproc( opt["statsproc"]);
+			moduleLoader->defineStatisticsProcessor( statsproc);
 		}
 		else
 		{
-			moduleLoader->definePeerMessageProcessor( "");
+			moduleLoader->defineStatisticsProcessor( "");
 		}
 
 		if (printUsageAndExit)
@@ -175,8 +175,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
-			std::cout << "-P|--peermsgproc <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use peer message processor with name <NAME>") << std::endl;
+			std::cout << "-P|--statsproc <NAME>" << std::endl;
+			std::cout << "    " << _TXT("Use statistics processor with name <NAME>") << std::endl;
 			return rt;
 		}
 		std::string storagecfg;
@@ -210,13 +210,13 @@ int main( int argc, const char* argv[])
 			storage( storageBuilder->createStorageClient( storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
-		std::auto_ptr<strus::PeerMessageIteratorInterface>
-			peermsgqueue( storage->createInitPeerMessageIterator());
+		std::auto_ptr<strus::StatisticsIteratorInterface>
+			statsqueue( storage->createInitStatisticsIterator());
 		const char* msg;
 		std::size_t msgsize;
 		std::string output;
 
-		while (peermsgqueue->getNext( msg, msgsize))
+		while (statsqueue->getNext( msg, msgsize))
 		{
 			output.append( msg, msgsize);
 		}

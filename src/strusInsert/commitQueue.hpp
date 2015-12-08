@@ -50,7 +50,7 @@ public:
 			ErrorBufferInterface* errorhnd_)
 		:m_storage(storage_),m_nofDocuments(0),m_nofOpenTransactions(0),m_errorhnd(errorhnd_)
 	{
-		m_nofDocuments = m_storage->localNofDocumentsInserted();
+		m_nofDocuments = m_storage->nofDocumentsInserted();
 	}
 
 	void pushTransaction(
