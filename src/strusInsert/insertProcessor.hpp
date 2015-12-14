@@ -44,8 +44,6 @@ class CommitQueue;
 /// \brief Forward declaration
 class FileCrawlerInterface;
 /// \brief Forward declaration
-class DocnoRangeAllocatorInterface;
-/// \brief Forward declaration
 class ErrorBufferInterface;
 
 
@@ -56,7 +54,6 @@ public:
 			StorageClientInterface* storage_,
 			const TextProcessorInterface* textproc_,
 			const AnalyzerMap& analyzerMap_,
-			DocnoRangeAllocatorInterface* docnoAllocator_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
 			unsigned int transactionSize_,
@@ -71,7 +68,6 @@ private:
 	StorageClientInterface* m_storage;
 	const TextProcessorInterface* m_textproc;
 	AnalyzerMap m_analyzerMap;
-	DocnoRangeAllocatorInterface* m_docnoAllocator;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
 	unsigned int m_transactionSize;

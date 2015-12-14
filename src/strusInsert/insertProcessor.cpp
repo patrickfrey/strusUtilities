@@ -36,7 +36,6 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
-#include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/private/fileio.hpp"
@@ -55,16 +54,13 @@ InsertProcessor::InsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
 		const AnalyzerMap& analyzerMap_,
-		DocnoRangeAllocatorInterface* docnoAllocator_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
 		unsigned int transactionSize_,
 		ErrorBufferInterface* errorhnd_)
-
 	:m_storage(storage_)
 	,m_textproc(textproc_)
 	,m_analyzerMap(analyzerMap_)
-	,m_docnoAllocator(docnoAllocator_)
 	,m_commitque(commitque_)
 	,m_crawler(crawler_)
 	,m_transactionSize(transactionSize_)
@@ -83,7 +79,6 @@ void InsertProcessor::sigStop()
 
 void InsertProcessor::run()
 {
-	Index docnoRangeStart = 0;
 	unsigned int docCount = 0;
 	try
 	{
@@ -149,32 +144,22 @@ void InsertProcessor::run()
 								++oi){}
 							const char* docid = 0;
 							std::auto_ptr<strus::StorageDocumentInterface> storagedoc;
-							if (m_docnoAllocator && !docnoRangeStart)
-							{
-								docnoRangeStart = m_docnoAllocator->allocDocnoRange( m_transactionSize);
-								m_commitque->pushTransactionPromise( docnoRangeStart);
-							}
-							Index docno = (docnoRangeStart)?(docnoRangeStart + docCount):0;
 							if (oi != oe)
 							{
-								storagedoc.reset(
-									transaction->createDocument(
-										oi->value(), docno));
+								storagedoc.reset( transaction->createDocument( oi->value()));
 								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document structure"));
 								docid = oi->value().c_str();
 								//... use the docid from the analyzer if defined there
 							}
 							else
 							{
-								storagedoc.reset(
-									transaction->createDocument( *fitr, docno));
+								storagedoc.reset( transaction->createDocument( *fitr));
 								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document structure"));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();
 								//... define file path as hardcoded docid attribute
 							}
-
 							unsigned int maxpos = 0;
 							// Define all search index term occurrencies:
 							std::vector<strus::analyzer::Term>::const_iterator
@@ -264,11 +249,11 @@ void InsertProcessor::run()
 	
 							if (docCount == m_transactionSize && docCount && !m_terminated)
 							{
-								m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCount);
+								m_commitque->pushTransaction( transaction.get());
+								transaction.release();
 								transaction.reset( m_storage->createTransaction());
 								if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
 								docCount = 0;
-								docnoRangeStart = 0;
 							}
 						}
 					}
@@ -278,8 +263,6 @@ void InsertProcessor::run()
 					std::cerr << utils::string_sprintf( _TXT( "failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 					transaction.reset( m_storage->createTransaction());
 					if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
-					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
-					docnoRangeStart = 0;
 					docCount = 0;
 				}
 				catch (const std::runtime_error& err)
@@ -295,33 +278,20 @@ void InsertProcessor::run()
 					}
 					transaction.reset( m_storage->createTransaction());
 					if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
-					if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
-					docnoRangeStart = 0;
 					docCount = 0;
 				}
 			}
 		}
 		if (!m_terminated && docCount)
 		{
-			Index docCountAllocated = m_transactionSize;
-			if (docnoRangeStart && docCount < m_transactionSize && m_docnoAllocator)
-			{
-				if (m_docnoAllocator->deallocDocnoRange(
-					docnoRangeStart + docCount, m_transactionSize - docCount))
-				{
-					docCountAllocated -= (m_transactionSize - docCount);
-				}
-			}
-			m_commitque->pushTransaction( transaction.release(), docnoRangeStart, docCount, docCountAllocated);
+			m_commitque->pushTransaction( transaction.get());
+			transaction.release();
 			docCount = 0;
-			docnoRangeStart = 0;
 		}
 	}
 	catch (const std::bad_alloc& err)
 	{
 		std::cerr << _TXT("failed to complete inserts due to a memory allocation error") << std::endl;
-		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
-		docnoRangeStart = 0;
 	}
 	catch (const std::runtime_error& err)
 	{
@@ -334,8 +304,6 @@ void InsertProcessor::run()
 		{
 			std::cerr << utils::string_sprintf( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
 		}
-		if (docnoRangeStart) m_commitque->breachTransactionPromise( docnoRangeStart);
-		docnoRangeStart = 0;
 	}
 }
 

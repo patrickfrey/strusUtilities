@@ -44,7 +44,6 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageDocumentInterface.hpp"
-#include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/private/fileio.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -102,11 +101,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 15,
+				argc_, argv_, 14,
 				"h,help", "t,threads:", "c,commit:", "f,fetch:",
-				"n,new", "v,version", "g,segmenter:", "m,module:",
-				"M,moduledir:", "R,resourcedir:", "r,rpc:", "L,logerror:",
-				"x,extension:", "s,storage:", "S,configfile:");
+				"v,version", "g,segmenter:", "m,module:", "L,logerror:",
+				"M,moduledir:", "R,resourcedir:", "r,rpc:", "x,extension:",
+				"s,storage:", "S,configfile:");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -226,13 +225,10 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-f|--fetch <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as number of files fetched in each inserter iteration") << std::endl;
 			std::cout << "    " << _TXT("Default is the value of option '--commit' (one document/file)") << std::endl;
-			std::cout << "-n|--new" << std::endl;
-			std::cout << "    " << _TXT("All inserts are new; use preallocated document numbers") << std::endl;
 			std::cout << "-L|--logerror <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Write the last error occurred to <FILE> in case of an exception")  << std::endl;
 			return rt;
 		}
-		bool allInsertsNew = opt( "new");
 		unsigned int transactionSize = 1000;
 		if (opt("logerror"))
 		{
@@ -331,12 +327,6 @@ int main( int argc_, const char* argv_[])
 		strus::utils::ScopedPtr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get(), errorBuffer.get()));
 
-		strus::utils::ScopedPtr<strus::DocnoRangeAllocatorInterface> docnoAllocator;
-		if (allInsertsNew)
-		{
-			docnoAllocator.reset( storage->createDocnoRangeAllocator());
-			if (!docnoAllocator.get()) throw strus::runtime_error(_TXT("failed to create docno range allocator"));
-		}
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
 
@@ -350,8 +340,8 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
-				storage.get(), textproc, analyzerMap, docnoAllocator.get(),
-				commitQue.get(), fileCrawler, transactionSize, errorBuffer.get());
+				storage.get(), textproc, analyzerMap, commitQue.get(),
+				fileCrawler, transactionSize, errorBuffer.get());
 			inserter.run();
 		}
 		else
@@ -364,8 +354,8 @@ int main( int argc_, const char* argv_[])
 			{
 				inserterThreads->start(
 					new strus::InsertProcessor(
-						storage.get(), textproc, analyzerMap, docnoAllocator.get(),
-						commitQue.get(), fileCrawler, transactionSize, errorBuffer.get()));
+						storage.get(), textproc, analyzerMap, commitQue.get(),
+						fileCrawler, transactionSize, errorBuffer.get()));
 			}
 			inserterThreads->wait_termination();
 		}
