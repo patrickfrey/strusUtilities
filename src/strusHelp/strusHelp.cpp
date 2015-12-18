@@ -37,6 +37,9 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/textProcessorInterface.hpp"
+#include "strus/tokenizerFunctionInterface.hpp"
+#include "strus/normalizerFunctionInterface.hpp"
+#include "strus/aggregatorFunctionInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/private/cmdLineOpt.hpp"
@@ -77,22 +80,59 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 	for (; fi != fe; ++fi)
 	{
 		std::cout << label << "'" << *fi << "' :" << std::endl;
-		const char* descr = textproc->getDescription( type, *fi);
+		const char* descr = 0;
+		switch (type)
+		{
+			case strus::TextProcessorInterface::TokenizerFunction:
+			{
+				const strus::TokenizerFunctionInterface* func = textproc->getTokenizer( *fi);
+				descr = func->getDescription();
+			}
+			case strus::TextProcessorInterface::NormalizerFunction:
+			{
+				const strus::NormalizerFunctionInterface* func = textproc->getNormalizer( *fi);
+				descr = func->getDescription();
+			}
+			case strus::TextProcessorInterface::AggregatorFunction:
+			{
+				const strus::AggregatorFunctionInterface* func = textproc->getAggregator( *fi);
+				descr = func->getDescription();
+			}
+		};
 		if (!descr || !*descr) throw strus::runtime_error( _TXT("%s '%s' not defined"), label, fi->c_str());
 		std::cout << "* " << descr << std::endl << std::endl;
 	}
 }
 
+template <class Description>
+static void printFunctionDescription( std::ostream& out, const Description& descr)
+{
+	typedef typename Description::Param Param;
+	out << "* " << descr.text() << std::endl;
+	typename std::vector<Param>::const_iterator pi = descr.param().begin(), pe = descr.param().end();
+	for (; pi != pe; ++pi)
+	{
+		const char* paramtypestr = "unknown";
+		switch (pi->type())
+		{
+			case Param::Feature: paramtypestr = "feature"; break;
+			case Param::Numeric: paramtypestr = "numeric"; break;
+			case Param::String: paramtypestr = "string"; break;
+		}
+		out << "\t" << pi->name() << " [" << paramtypestr << "] " << pi->text() << std::endl;
+	}
+	out << std::endl;
+}
 
 static void printQueryProcessorDescription( const strus::QueryProcessorInterface* queryproc, strus::QueryProcessorInterface::FunctionType type, const char* name)
 {
 	const char* label = "";
 	switch (type)
 	{
-		case strus::QueryProcessorInterface::PostingJoinOperator: label = _TXT("Posting join operator "); break;
-		case strus::QueryProcessorInterface::WeightingFunction: label = _TXT("Weighting function "); break;
-		case strus::QueryProcessorInterface::SummarizerFunction: label = _TXT("Summarizer "); break;
-	};
+		case strus::QueryProcessorInterface::PostingJoinOperator: label = _TXT("Posting join operator"); break;
+		case strus::QueryProcessorInterface::WeightingFunction: label = _TXT("Weighting function"); break;
+		case strus::QueryProcessorInterface::SummarizerFunction: label = _TXT("Summarizer"); break;
+	}
 	std::vector<std::string> funcs;
 	std::vector<std::string>::const_iterator fi,fe;
 	if (name)
@@ -106,10 +146,25 @@ static void printQueryProcessorDescription( const strus::QueryProcessorInterface
 	fi = funcs.begin(), fe = funcs.end();
 	for (; fi != fe; ++fi)
 	{
-		const char* descr = queryproc->getDescription( type, *fi);
-		if (!descr || !*descr) throw strus::runtime_error( _TXT("%s '%s' not defined"), label, fi->c_str());
-		std::cout << label << "'" << *fi << "' :" << std::endl;
-		std::cout << "* " << descr << std::endl << std::endl;
+		std::cout << label << " '" << *fi << "' :" << std::endl;
+		switch (type)
+		{
+			case strus::QueryProcessorInterface::PostingJoinOperator:
+			{
+				const strus::PostingJoinOperatorInterface* opr = queryproc->getPostingJoinOperator( *fi);
+				std::cout << "* " << opr->getDescription().text() << std::endl;
+			}
+			case strus::QueryProcessorInterface::WeightingFunction: 
+			{
+				const strus::WeightingFunctionInterface* func = queryproc->getWeightingFunction( *fi);
+				printFunctionDescription( std::cout, func->getDescription());
+			}
+			case strus::QueryProcessorInterface::SummarizerFunction:
+			{
+				const strus::SummarizerFunctionInterface* func = queryproc->getSummarizerFunction( *fi);
+				printFunctionDescription( std::cout, func->getDescription());
+			}
+		};
 	}
 }
 
