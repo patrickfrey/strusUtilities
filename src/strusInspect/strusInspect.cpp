@@ -435,6 +435,34 @@ static void fillForwardIndexStats(
 	}
 }
 
+static std::string mapForwardIndexToken( const std::string& tok)
+{
+	const char* cntrl = "\a\b\t\n\v\f\r";
+	const char* csubs = "abtnvfr";
+
+	std::string val;
+	std::string::const_iterator vi = tok.begin(), ve = tok.end();
+	for (; vi != ve; ++vi)
+	{
+		char const* cp;
+		if (*vi == '\'' || *vi == '\\')
+		{
+			val.push_back( '\\');
+			val.push_back( *vi);
+		}
+		else if (0 != (cp = std::strchr( cntrl, *vi)))
+		{
+			val.push_back( '\\');
+			val.push_back( csubs[ cp - cntrl]);
+		}
+		else
+		{
+			val.push_back( *vi);
+		}
+	}
+	return val;
+}
+
 static void inspectForwardIndexStats( strus::StorageClientInterface& storage, const char** key, int size)
 {
 	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
@@ -469,7 +497,7 @@ static void inspectForwardIndexStats( strus::StorageClientInterface& storage, co
 	std::map<std::string,unsigned int>::const_iterator si = statmap.begin(), se = statmap.end();
 	for (; si != se; ++si)
 	{
-		std::cout << "'" << si->first << "' " << si->second << std::endl;
+		std::cout << "'" << mapForwardIndexToken( si->first) << "' " << si->second << std::endl;
 	}
 }
 
@@ -490,7 +518,7 @@ static void inspectToken( strus::StorageClientInterface& storage, const char** k
 		strus::Index pos=0;
 		while (0!=(pos=viewer->skipPos(pos+1)))
 		{
-			std::cout << "[" << pos << "] " << viewer->fetch() << std::endl;
+			std::cout << "[" << pos << "] " << mapForwardIndexToken( viewer->fetch()) << std::endl;
 		}
 	}
 	else
