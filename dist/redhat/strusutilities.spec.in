@@ -299,8 +299,11 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Wed Dec 23 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.3.2-0.1
+- escape control characters when printing forward index tokens in a formatted output (single tokens with info not content)
+
 * Mon Dec 21 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.3.1-0.1
-- fixing versioning problems of the Open Suse build cluster 
+- fixing versioning problems on the Open Suse build cluster 
 
 * Fri Dec 18 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.3.0-0.1
 - adapted core interface changes: better introspection for functions
