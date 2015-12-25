@@ -30,13 +30,12 @@
 #define _STRUS_INSERTER_COMMIT_QUEUE_HPP_INCLUDED
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
-#include "strus/docnoRangeAllocatorInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/reference.hpp"
 #include "private/utils.hpp"
 #include <vector>
 #include <string>
-#include <set>
+#include <queue>
 
 namespace strus {
 /// \brief Forward declaration
@@ -50,76 +49,23 @@ public:
 			ErrorBufferInterface* errorhnd_)
 		:m_storage(storage_),m_nofDocuments(0),m_nofOpenTransactions(0),m_errorhnd(errorhnd_)
 	{
-		m_nofDocuments = m_storage->localNofDocumentsInserted();
+		m_nofDocuments = m_storage->nofDocumentsInserted();
 	}
 
-	void pushTransaction(
-		StorageTransactionInterface* transaction,
-		const Index& minDocno,
-		const Index& nofDocuments,
-		const Index& nofDocumentsAllocated);
-
-	void pushTransactionPromise( const Index& mindocno);
-	void breachTransactionPromise( const Index& mindocno);
+	void pushTransaction( StorageTransactionInterface* transaction);
 
 private:
-	class OpenTransaction
-	{
-	public:
-		OpenTransaction( StorageTransactionInterface* t, Index d, Index n, Index a)
-			:m_transaction(t),m_minDocno(d),m_nofDocuments(n),m_nofDocumentsAllocated(a){}
-		OpenTransaction( const OpenTransaction& o)
-			:m_transaction(o.m_transaction)
-			,m_minDocno(o.m_minDocno)
-			,m_nofDocuments(o.m_nofDocuments)
-			,m_nofDocumentsAllocated(o.m_nofDocumentsAllocated){}
-
-		Reference<StorageTransactionInterface> transaction() const
-		{
-			return m_transaction;
-		}
-
-		Index minDocno() const
-		{
-			return m_minDocno;
-		}
-
-		Index nofDocuments() const
-		{
-			return m_nofDocuments;
-		}
-
-		Index nofDocumentsAllocated() const
-		{
-			return m_nofDocumentsAllocated;
-		}
-
-		bool operator<( const OpenTransaction& o) const
-		{
-			return m_minDocno < o.m_minDocno;
-		}
-
-	private:
-		Reference<StorageTransactionInterface> m_transaction;
-		Index m_minDocno;
-		Index m_nofDocuments;
-		Index m_nofDocumentsAllocated;
-	};
+	typedef Reference<StorageTransactionInterface> StorageTransactionReference;
 
 	void handleWaitingTransactions();
-	Reference<StorageTransactionInterface>
-		getNextTransaction(
-			Index& nofDocs, Index& nofDocsAllocated, unsigned int& nofOpenTransactions_);
-	bool testAndGetFirstPromise( const Index& mindocno);
+	Reference<StorageTransactionInterface> getNextTransaction();
 
 private:
 	StorageClientInterface* m_storage;
 	Index m_nofDocuments;
 	unsigned int m_nofOpenTransactions;
-	std::set<OpenTransaction> m_openTransactions;
+	std::queue<StorageTransactionReference> m_openTransactions;
 	utils::Mutex m_mutex_openTransactions;
-	std::set<Index> m_promisedTransactions;
-	utils::Mutex m_mutex_promisedTransactions;
 	ErrorBufferInterface* m_errorhnd;
 };
 

@@ -1,15 +1,28 @@
+strusutilities (0.3.2-1) unstable; urgency=low
+  * escape control characters when printing forward index tokens in a formatted output (single tokens with info not content)
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Wed, 23 Dec 2015 10:55:00 +0100
+
+strusutilities (0.3.1-1) unstable; urgency=low
+  * fixing versioning problems of the Open Suse build cluster 
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Mon, 21 Dec 2015 09:38:00 +0100
+
+strusutilities (0.3.0-1) unstable; urgency=low
+  * adapted core interface changes: better introspection for functions
+  * adapted core interface changes: removed docno allocator interface and fdatasync on every new document insert when not using the docno allocator
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Fri, 18 Dec 2015 15:00:00 +0100
+
 strusutilities (0.2.6-1) unstable; urgency=low
   * adapted interface changes in core: added interfaces for introspection (user names, docids, term types, term values)
- -- patrickfrey <patrickpfrey@yahoo.com>  Tue, 1 Dec 2015 20:54:00 +0100
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Tue, 1 Dec 2015 20:54:00 +0100
 
 strusutilities (0.2.5-1) unstable; urgency=low
   * adapted interface changes in core: changed interface for peer message processing
- -- patrickfrey <patrickpfrey@yahoo.com>  Mon, 30 Nov 2015 13:46:10 +0100
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Mon, 30 Nov 2015 13:46:10 +0100
 
 strusutilities (0.2.4-1) unstable; urgency=low
   * incremented version to 0.2.4 to resolve OBS trouble with dependencies
   * define dependency from other strus packages by minor version instead of patch version
- -- patrickfrey <patrickpfrey@yahoo.com>  Thu, 26 Nov 2015 09:09:08 +0100
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Thu, 26 Nov 2015 09:09:08 +0100
 
 strusutilities (0.2.3-1) unstable; urgency=low
   * adapted strus core interface changes: StorageClient::documentNumber( const std::string&) returns 0, if document does not exist

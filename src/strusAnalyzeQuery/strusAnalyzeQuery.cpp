@@ -66,6 +66,27 @@
 #include <iomanip>
 #include <inttypes.h>
 
+static void print_number( char* buf, unsigned int bufsize, strus::GlobalCounter num)
+{
+	unsigned int bi = 0, be = bufsize;
+	if (num == 0)
+	{
+		buf[++bi] = '0';
+	}
+	else for (; bi != be && num > 0; ++bi)
+	{
+		buf[bi] = (num % 10) + '0';
+		num /= 10;
+	}
+	buf[ bi] = '\0';
+	for (bi=be/2; bi > 0; --bi)
+	{
+		char tmp = buf[bi-1];
+		buf[bi-1] = buf[be-bi-1];
+		buf[be-bi-1] = tmp;
+	}
+}
+
 #undef STRUS_LOWLEVEL_DEBUG
 
 class Query
@@ -187,7 +208,7 @@ public:
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		char valbuf[ 64];
-		::snprintf( valbuf, sizeof(valbuf), "%" PRId64, stats_.documentFrequency());
+		print_number( valbuf, sizeof(valbuf), stats_.documentFrequency());
 		std::cerr << strus::utils::string_sprintf( _TXT("called defineTermStatistics %s '%s' = %s"), type.c_str(), value.c_str(), valbuf) << std::endl;
 #endif
 		m_termstats[ Term( type, value)] = stats_;
@@ -198,7 +219,7 @@ public:
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		char valbuf[ 64];
-		::snprintf( valbuf, sizeof(valbuf), "%" PRId64, stats_.nofDocumentsInserted());
+		print_number( valbuf, sizeof(valbuf), stats_.nofDocumentsInserted());
 		std::cerr << strus::utils::string_sprintf( _TXT("called defineGlobalStatistics %s"), valbuf) << std::endl;
 #endif
 		m_globstats = stats_;
@@ -288,7 +309,7 @@ public:
 			for (; ti != te; ++ti)
 			{
 				char valbuf[ 64];
-				::snprintf( valbuf, sizeof(valbuf), "%" PRId64, ti->second.documentFrequency());
+				print_number( valbuf, sizeof(valbuf), ti->second.documentFrequency());
 				out << strus::utils::string_sprintf( _TXT("stats %s '%s' = %s"), ti->first.type.c_str(), ti->first.value.c_str(), valbuf) << std::endl;
 			}
 		}
@@ -299,7 +320,7 @@ public:
 			{
 				out << _TXT("Global statistics:") << std::endl;
 				char valbuf[ 64];
-				::snprintf( valbuf, sizeof(valbuf), "%" PRId64, m_globstats.nofDocumentsInserted());
+				print_number( valbuf, sizeof(valbuf), m_globstats.nofDocumentsInserted());
 				out << strus::utils::string_sprintf( _TXT("nof documents inserted: %s"), valbuf) << std::endl;
 			}
 		}
