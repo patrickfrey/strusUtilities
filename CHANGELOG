@@ -1,4 +1,12 @@
-strusutilities (0.3.2)
+strusUtilities (0.4.0)
+  * adapt minor version number to strus core
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sat, 2 Jan 2016 17:00:00 +0100
+
+strusUtilities (0.3.2)
+  * escape control characters when printing forward index tokens in a formatted output (single tokens with info not content)
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Wed, 23 Dec 2015 10:55:00 +0100
+
+strusUtilities (0.3.2)
   * escape control characters when printing forward index tokens in a formatted output (single tokens with info not content)
  -- Patrick Frey <patrickpfrey@yahoo.com>  Wed, 23 Dec 2015 10:55:00 +0100
 
