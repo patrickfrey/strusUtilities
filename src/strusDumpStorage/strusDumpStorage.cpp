@@ -36,6 +36,8 @@
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
+#include "strus/databaseCursorInterface.hpp"
+#include "strus/databaseOptions.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageDumpInterface.hpp"
@@ -73,6 +75,24 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
+static std::string asciiString( const char* key, std::size_t keysize)
+{
+	std::string rt;
+	char const* ki = key;
+	char const* ke = key+keysize;
+	for (; ki != ke; ++ki)
+	{
+		if (*ki >= 32 && *ki <= 127)
+		{
+			rt.push_back( *ki);
+		}
+		else
+		{
+			rt.push_back( '.');
+		}
+	}
+	return rt;
+}
 
 int main( int argc, const char* argv[])
 {
@@ -88,9 +108,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 6,
+				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:");
+				"r,rpc:", "s,storage:", "B,blocksizes");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -156,8 +176,11 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
+			std::cout << "-B|--blocksizes" << std::endl;
+			std::cout << "    " << _TXT("Dump only block sizes") << std::endl;
 			return rt;
 		}
+		bool dumpOnlyBlockSizes = opt("blocksizes");
 		std::string storagecfg;
 		if (opt("storage"))
 		{
@@ -184,17 +207,32 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
-		std::auto_ptr<strus::StorageClientInterface>
-			storage( storageBuilder->createStorageClient( storagecfg));
-		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
-
-		std::auto_ptr<strus::StorageDumpInterface> dump( storage->createDump());
-		if (!dump.get()) throw strus::runtime_error(_TXT("could not create storage dump interface"));
-		const char* buf;
-		std::size_t bufsize;
-		while (dump->nextChunk( buf, bufsize))
+		if (dumpOnlyBlockSizes)
 		{
-			std::cout << std::string( buf, bufsize);
+			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);
+			std::auto_ptr<strus::DatabaseClientInterface> dbc( dbi->createClient( storagecfg));
+			std::auto_ptr<strus::DatabaseCursorInterface> cursor( dbc->createCursor( strus::DatabaseOptions()));
+			strus::DatabaseCursorInterface::Slice key = cursor->seekFirst( "", 0);
+			for (;key.defined(); key = cursor->seekNext())
+			{
+				std::cout << asciiString( key.ptr(), key.size()) << " " << cursor->value().size() << std::endl;
+			}
+		}
+		else
+		{
+			std::auto_ptr<strus::StorageClientInterface>
+				storage( storageBuilder->createStorageClient( storagecfg));
+			if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
+
+			std::auto_ptr<strus::StorageDumpInterface> dump( storage->createDump());
+			if (!dump.get()) throw strus::runtime_error(_TXT("could not create storage dump interface"));
+
+			const char* buf;
+			std::size_t bufsize;
+			while (dump->nextChunk( buf, bufsize))
+			{
+				std::cout << std::string( buf, bufsize);
+			}
 		}
 		if (errorBuffer->hasError())
 		{
