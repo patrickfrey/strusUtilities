@@ -1,3 +1,7 @@
+strusutilities (0.4.1-1) unstable; urgency=low
+  * fix typos in src license reference
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sun, 17 Jan 2016 12:00:00 +0100
+
 strusutilities (0.4.0-1) unstable; urgency=low
   * adapt minor version number to strus core
  -- Patrick Frey <patrickpfrey@yahoo.com>  Sat, 2 Jan 2016 17:00:00 +0100
