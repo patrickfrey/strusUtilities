@@ -71,6 +71,7 @@ std::size_t InputStream::read( char* buf, std::size_t bufsize)
 		if (m_bufferidx == m_buffer.size())
 		{
 			m_buffer.clear();
+			m_bufferidx = 0;
 		}
 		idx = nn;
 	}
