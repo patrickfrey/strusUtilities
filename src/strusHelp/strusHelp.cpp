@@ -112,14 +112,12 @@ static void printFunctionDescription( std::ostream& out, const Description& desc
 	typename std::vector<Param>::const_iterator pi = descr.param().begin(), pe = descr.param().end();
 	for (; pi != pe; ++pi)
 	{
-		const char* paramtypestr = "unknown";
-		switch (pi->type())
+		out << "\t" << pi->name() << " [" << pi->typeName();
+		if (!pi->domain().empty())
 		{
-			case Param::Feature: paramtypestr = "feature"; break;
-			case Param::Numeric: paramtypestr = "numeric"; break;
-			case Param::String: paramtypestr = "string"; break;
+			out << " (" << pi->domain() << ")";
 		}
-		out << "\t" << pi->name() << " [" << paramtypestr << "] " << pi->text() << std::endl;
+		out << "] " << pi->text() << std::endl;
 	}
 	out << std::endl;
 }
