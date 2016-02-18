@@ -111,7 +111,10 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			if (docno == itr->skipDoc( docno))
+			strus::Index next_docno = itr->skipDoc( docno);
+			if (!next_docno) break;
+
+			if (docno == next_docno)
 			{
 				std::cout << docno << ':';
 				strus::Index pos=0;
@@ -207,7 +210,9 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			if (docno == itr->skipDoc( docno))
+			strus::Index next_docno = itr->skipDoc( docno);
+			if (!next_docno) break;
+			if (docno == next_docno)
 			{
 				std::cout << docno << ' ' << (*itr).frequency() << std::endl;
 			}
