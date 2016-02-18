@@ -48,8 +48,8 @@ void CommitQueue::handleWaitingTransactions()
 			}
 			Index totalNofDocuments = m_storage->nofDocumentsInserted();
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
-			::printf( "\rinserted %u documents (total %u), %u transactions open     ",
-					nofDocsInserted, totalNofDocuments, m_nofOpenTransactions);
+			::printf( "\rinserted %u documents (total %u)          ",
+					nofDocsInserted, totalNofDocuments);
 			::fflush(stdout);
 		}
 		catch (const std::bad_alloc&)
