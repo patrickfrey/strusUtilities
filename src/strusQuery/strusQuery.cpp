@@ -349,10 +349,14 @@ int main( int argc_, const char* argv_[])
 			{
 				query->addUserName( username);
 			}
-			std::vector<strus::ResultDocument> ranklist = query->evaluate();
+			strus::QueryResult result = query->evaluate();
 
-			if (!quiet) std::cout << strus::utils::string_sprintf( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
-			std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
+			if (!quiet)
+			{
+				std::cout << strus::utils::string_sprintf( _TXT("evaluated till pass %u, got %u ranks (%u without restrictions applied):"), result.evaluationPass(), result.nofDocumentsRanked(), result.nofDocumentsVisited()) << std::endl;
+				std::cout << strus::utils::string_sprintf( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
+			}
+			std::vector<strus::ResultDocument>::const_iterator wi = result.ranks().begin(), we = result.ranks().end();
 			for (int widx=1; wi != we; ++wi,++widx)
 			{
 				if (!quiet) std::cout << strus::utils::string_sprintf( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;

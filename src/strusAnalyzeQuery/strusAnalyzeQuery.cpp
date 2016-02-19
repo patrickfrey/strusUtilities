@@ -249,9 +249,9 @@ public:
 		m_users.push_back( username_);
 	}
 
-	virtual std::vector<strus::ResultDocument> evaluate()
+	virtual strus::QueryResult evaluate()
 	{
-		return std::vector<strus::ResultDocument>();
+		return strus::QueryResult();
 	}
 
 	void check() const
