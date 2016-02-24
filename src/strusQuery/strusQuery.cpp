@@ -360,10 +360,19 @@ int main( int argc_, const char* argv_[])
 			for (int widx=1; wi != we; ++wi,++widx)
 			{
 				if (!quiet) std::cout << strus::utils::string_sprintf( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
-				std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
+				std::vector<strus::SummaryElement>::const_iterator ai = wi->summaryElements().begin(), ae = wi->summaryElements().end();
 				for (; ai != ae; ++ai)
 				{
-					if (!quiet) std::cout << "\t" << ai->name() << " (" << ai->value() << ") " << ai->weight() << std::endl;
+					if (!quiet)
+					{
+						std::cout << "\t" << ai->name();
+						if (ai->index() >= 0)
+						{
+							std::cout << "[" << ai->index() << "]";
+						}
+						std::cout << " = '" << ai->value() << "'";
+						std::cout << " " << ai->weight() << std::endl;
+					}
 				}
 			}
 		}

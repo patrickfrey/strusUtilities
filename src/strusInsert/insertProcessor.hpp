@@ -57,6 +57,7 @@ public:
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
 			unsigned int transactionSize_,
+			bool verbose_,
 			ErrorBufferInterface* errorhnd_);
 
 	~InsertProcessor();
@@ -71,6 +72,7 @@ private:
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
 	unsigned int m_transactionSize;
+	bool m_verbose;
 	utils::AtomicBool m_terminated;
 	ErrorBufferInterface* m_errorhnd;
 };

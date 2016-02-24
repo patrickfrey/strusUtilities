@@ -46,8 +46,9 @@ class CommitQueue
 public:
 	CommitQueue(
 			StorageClientInterface* storage_,
+			bool verbose_,
 			ErrorBufferInterface* errorhnd_)
-		:m_storage(storage_),m_nofDocuments(0),m_nofOpenTransactions(0),m_errorhnd(errorhnd_)
+		:m_storage(storage_),m_nofDocuments(0),m_nofOpenTransactions(0),m_verbose(verbose_),m_errorhnd(errorhnd_)
 	{
 		m_nofDocuments = m_storage->nofDocumentsInserted();
 	}
@@ -66,6 +67,7 @@ private:
 	unsigned int m_nofOpenTransactions;
 	std::queue<StorageTransactionReference> m_openTransactions;
 	utils::Mutex m_mutex_openTransactions;
+	bool m_verbose;
 	ErrorBufferInterface* m_errorhnd;
 };
 

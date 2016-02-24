@@ -288,23 +288,12 @@ static void parseSummarizerConfig(
 		char const*& src)
 {
 	std::string functionName;
-	std::string resultAttribute;
 	typedef QueryEvalInterface::FeatureParameter FeatureParameter;
 	std::vector<FeatureParameter> featureParameters;
 
 	if (!isAlpha( *src))
 	{
-		throw strus::runtime_error(_TXT( "name of result attribute expected after SUMMARIZE"));
-	}
-	resultAttribute = parse_IDENTIFIER( src);
-	if (!isAssign(*src))
-	{
-		throw strus::runtime_error(_TXT( "assignment operator '=' expected after the name of result attribute in summarizer definition"));
-	}
-	(void)parse_OPERATOR( src);
-	if (!isAlpha( *src))
-	{
-		throw strus::runtime_error(_TXT( "name of summarizer function expected after assignment in summarizer definition"));
+		throw strus::runtime_error(_TXT( "name of summarizer function expected at start of summarizer definition"));
 	}
 	functionName = utils::tolower( parse_IDENTIFIER( src));
 
@@ -382,7 +371,7 @@ static void parseSummarizerConfig(
 		throw strus::runtime_error(_TXT( "close oval bracket ')' expected at end of summarizer function parameter list"));
 	}
 	(void)parse_OPERATOR(src);
-	qeval.addSummarizerFunction( functionName, function.get(), featureParameters, resultAttribute);
+	qeval.addSummarizerFunction( functionName, function.get(), featureParameters);
 	(void)function.release();
 }
 

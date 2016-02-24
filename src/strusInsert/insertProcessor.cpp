@@ -57,6 +57,7 @@ InsertProcessor::InsertProcessor(
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
 		unsigned int transactionSize_,
+		bool verbose_,
 		ErrorBufferInterface* errorhnd_)
 	:m_storage(storage_)
 	,m_textproc(textproc_)
@@ -64,6 +65,7 @@ InsertProcessor::InsertProcessor(
 	,m_commitque(commitque_)
 	,m_crawler(crawler_)
 	,m_transactionSize(transactionSize_)
+	,m_verbose(verbose_)
 	,m_terminated(false)
 	,m_errorhnd(errorhnd_)
 {}
@@ -256,6 +258,10 @@ void InsertProcessor::run()
 								docCount = 0;
 							}
 						}
+					}
+					if (m_verbose)
+					{
+						std::cerr << "processed file '" << *fitr << "' (" << docCount << ")" << std::endl;
 					}
 				}
 				catch (const std::bad_alloc& err)
