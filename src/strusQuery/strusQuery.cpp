@@ -357,13 +357,15 @@ int main( int argc_, const char* argv_[])
 				std::cout << strus::utils::string_sprintf( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
 			}
 			std::vector<strus::ResultDocument>::const_iterator wi = result.ranks().begin(), we = result.ranks().end();
-			for (int widx=1; wi != we; ++wi,++widx)
+			if (!quiet)
 			{
-				if (!quiet) std::cout << strus::utils::string_sprintf( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
-				std::vector<strus::SummaryElement>::const_iterator ai = wi->summaryElements().begin(), ae = wi->summaryElements().end();
-				for (; ai != ae; ++ai)
+				for (int widx=1; wi != we; ++wi,++widx)
 				{
-					if (!quiet)
+					std::cout << strus::utils::string_sprintf( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
+					std::vector<strus::SummaryElement>::const_iterator
+						ai = wi->summaryElements().begin(),
+						ae = wi->summaryElements().end();
+					for (; ai != ae; ++ai)
 					{
 						std::cout << "\t" << ai->name();
 						if (ai->index() >= 0)
@@ -373,6 +375,19 @@ int main( int argc_, const char* argv_[])
 						std::cout << " = '" << ai->value() << "'";
 						std::cout << " " << ai->weight() << std::endl;
 					}
+				}
+				std::vector<strus::SummaryElement>::const_iterator
+					ai = result.summaryElements().begin(),
+					ae = result.summaryElements().end();
+				for (; ai != ae; ++ai)
+				{
+					std::cout << "\t" << ai->name();
+					if (ai->index() >= 0)
+					{
+						std::cout << "[" << ai->index() << "]";
+					}
+					std::cout << " = '" << ai->value() << "'";
+					std::cout << " " << ai->weight() << std::endl;
 				}
 			}
 		}
