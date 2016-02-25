@@ -376,19 +376,6 @@ int main( int argc_, const char* argv_[])
 						std::cout << " " << ai->weight() << std::endl;
 					}
 				}
-				std::vector<strus::SummaryElement>::const_iterator
-					ai = result.summaryElements().begin(),
-					ae = result.summaryElements().end();
-				for (; ai != ae; ++ai)
-				{
-					std::cout << "\t" << ai->name();
-					if (ai->index() >= 0)
-					{
-						std::cout << "[" << ai->index() << "]";
-					}
-					std::cout << " = '" << ai->value() << "'";
-					std::cout << " " << ai->weight() << std::endl;
-				}
 			}
 		}
 		if (measureDuration)

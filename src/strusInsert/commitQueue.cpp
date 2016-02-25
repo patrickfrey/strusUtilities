@@ -63,18 +63,21 @@ void CommitQueue::handleWaitingTransactions()
 		}
 		catch (const std::bad_alloc&)
 		{
-			std::cerr << _TXT("out of memory handling transaction in queue") << std::endl;
+			m_errorhnd->report( _TXT("out of memory handling transaction in queue"));
+			fprintf( stderr, _TXT("out of memory handling transaction in queue\n"));
 		}
 		catch (const std::exception& err)
 		{
 			const char* errmsg = m_errorhnd->fetchError();
 			if (errmsg)
 			{
-				std::cerr << _TXT("error handling transaction in queue: ") << err.what() << "; " << errmsg << std::endl;
+				m_errorhnd->report( _TXT("error handling transaction in queue: %s, %s"), err.what(), errmsg);
+				fprintf( stderr, _TXT("error handling transaction in queue: %s, %s\n"), err.what(), errmsg);
 			}
 			else
 			{
-				std::cerr << _TXT("error handling transaction in queue: ") << err.what() << std::endl;
+				m_errorhnd->report( _TXT("error handling transaction in queue: %s"), err.what());
+				fprintf( stderr, _TXT("error handling transaction in queue: %s\n"), err.what());
 			}
 		}
 	}
