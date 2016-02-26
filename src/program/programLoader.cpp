@@ -44,6 +44,7 @@
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryEvalInterface.hpp"
 #include "strus/queryInterface.hpp"
+#include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/storageClientInterface.hpp"
@@ -1516,27 +1517,28 @@ static std::vector<ArithmeticVariant> parseMetaDataOperands( char const*& src)
 	return rt;
 }
 
-static QueryInterface::CompareOperator invertedOperator( QueryInterface::CompareOperator op)
+static MetaDataRestrictionInterface::CompareOperator
+		invertedOperator( MetaDataRestrictionInterface::CompareOperator op)
 {
 	switch (op)
 	{
-		case QueryInterface::CompareLess: return QueryInterface::CompareGreaterEqual;
-		case QueryInterface::CompareLessEqual: return QueryInterface::CompareGreater;
-		case QueryInterface::CompareEqual: return QueryInterface::CompareNotEqual;
-		case QueryInterface::CompareNotEqual: return QueryInterface::CompareEqual;
-		case QueryInterface::CompareGreater: return QueryInterface::CompareLessEqual;
-		case QueryInterface::CompareGreaterEqual: return QueryInterface::CompareLess;
+		case MetaDataRestrictionInterface::CompareLess: return MetaDataRestrictionInterface::CompareGreaterEqual;
+		case MetaDataRestrictionInterface::CompareLessEqual: return MetaDataRestrictionInterface::CompareGreater;
+		case MetaDataRestrictionInterface::CompareEqual: return MetaDataRestrictionInterface::CompareNotEqual;
+		case MetaDataRestrictionInterface::CompareNotEqual: return MetaDataRestrictionInterface::CompareEqual;
+		case MetaDataRestrictionInterface::CompareGreater: return MetaDataRestrictionInterface::CompareLessEqual;
+		case MetaDataRestrictionInterface::CompareGreaterEqual: return MetaDataRestrictionInterface::CompareLess;
 	}
 	throw strus::runtime_error( _TXT("bad query meta data operator"));
 }
 
-static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char const*& src)
+static MetaDataRestrictionInterface::CompareOperator parseMetaDataComparionsOperator( char const*& src)
 {
-	QueryInterface::CompareOperator rt;
+	MetaDataRestrictionInterface::CompareOperator rt;
 	if (*src == '=')
 	{
 		parse_OPERATOR( src);
-		rt = QueryInterface::CompareEqual;
+		rt = MetaDataRestrictionInterface::CompareEqual;
 	}
 	else if (*src == '>')
 	{
@@ -1544,11 +1546,11 @@ static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char con
 		if (*src == '=')
 		{
 			++src;
-			rt = QueryInterface::CompareGreaterEqual;
+			rt = MetaDataRestrictionInterface::CompareGreaterEqual;
 		}
 		else
 		{
-			rt = QueryInterface::CompareGreater;
+			rt = MetaDataRestrictionInterface::CompareGreater;
 		}
 	}
 	else if (*src == '<')
@@ -1557,11 +1559,11 @@ static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char con
 		if (*src == '=')
 		{
 			++src;
-			rt = QueryInterface::CompareLessEqual;
+			rt = MetaDataRestrictionInterface::CompareLessEqual;
 		}
 		else
 		{
-			rt = QueryInterface::CompareLess;
+			rt = MetaDataRestrictionInterface::CompareLess;
 		}
 	}
 	else if (*src == '!')
@@ -1569,7 +1571,7 @@ static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char con
 		if (*src == '=')
 		{
 			++src;
-			rt = QueryInterface::CompareNotEqual;
+			rt = MetaDataRestrictionInterface::CompareNotEqual;
 		}
 		else
 		{
@@ -1597,7 +1599,7 @@ static void parseMetaDataRestriction(
 	{
 		std::string fieldname = parse_IDENTIFIER( src);
 
-		QueryInterface::CompareOperator
+		MetaDataRestrictionInterface::CompareOperator
 			cmpop = parseMetaDataComparionsOperator( src);
 
 		std::vector<ArithmeticVariant>
@@ -1616,7 +1618,7 @@ static void parseMetaDataRestriction(
 		std::vector<ArithmeticVariant>
 			operands = parseMetaDataOperands( src);
 
-		QueryInterface::CompareOperator
+		MetaDataRestrictionInterface::CompareOperator
 			cmpop = invertedOperator( parseMetaDataComparionsOperator( src));
 
 		if (!isAlpha( *src))

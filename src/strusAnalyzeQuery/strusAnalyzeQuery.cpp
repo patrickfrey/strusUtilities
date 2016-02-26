@@ -40,6 +40,7 @@
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/queryInterface.hpp"
+#include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
@@ -174,7 +175,7 @@ public:
 	}
 
 	virtual void defineMetaDataRestriction(
-			CompareOperator opr, const std::string& name,
+			strus::MetaDataRestrictionInterface::CompareOperator opr, const std::string& name,
 			const strus::ArithmeticVariant& operand, bool newGroup=true)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -435,6 +436,7 @@ private:
 	class Restriction
 	{
 	public:
+		typedef strus::MetaDataRestrictionInterface::CompareOperator CompareOperator;
 		Restriction( CompareOperator opr_, const std::string& name_, strus::ArithmeticVariant operand_, bool newGroup_)
 			:opr(opr_),name(name_),operand(operand_),newGroup(newGroup_){}
 		Restriction( const Restriction& o)
