@@ -1607,10 +1607,10 @@ static void parseMetaDataRestriction(
 
 		std::vector<ArithmeticVariant>::const_iterator
 			oi = operands.begin(), oe = operands.end();
-		query.defineMetaDataRestriction( cmpop, fieldname, *oi, true);
+		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
 		for (++oi; oi != oe; ++oi)
 		{
-			query.defineMetaDataRestriction( cmpop, fieldname, *oi, false);
+			query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, false);
 		}
 	}
 	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src) || isPlus( *src))
@@ -1629,10 +1629,10 @@ static void parseMetaDataRestriction(
 
 		std::vector<ArithmeticVariant>::const_iterator
 			oi = operands.begin(), oe = operands.end();
-		query.defineMetaDataRestriction( cmpop, fieldname, *oi, true);
+		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
 		for (++oi; oi != oe; ++oi)
 		{
-			query.defineMetaDataRestriction( cmpop, fieldname, *oi, false);
+			query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, false);
 		}
 	}
 }

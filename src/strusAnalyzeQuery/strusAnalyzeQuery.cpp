@@ -174,7 +174,7 @@ public:
 		m_stack.pop_back();
 	}
 
-	virtual void defineMetaDataRestriction(
+	virtual void addMetaDataRestrictionCondition(
 			strus::MetaDataRestrictionInterface::CompareOperator opr, const std::string& name,
 			const strus::ArithmeticVariant& operand, bool newGroup=true)
 	{
@@ -183,7 +183,7 @@ public:
 
 		const char* ng = newGroup?"new group":"";
 		std::cerr
-			<< strus::utils::string_sprintf(_TXT("called defineMetaDataRestriction %s %s %s %s"), 
+			<< strus::utils::string_sprintf(_TXT("called addMetaDataRestrictionCondition %s %s %s %s"), 
 					name.c_str(), Restriction::compareOperatorName(opr), operandstr.c_str(), ng)
 			<< std::endl;
 		printState( std::cerr);
