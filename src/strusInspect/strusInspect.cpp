@@ -184,7 +184,7 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 				:storage.documentNumber( key[1]);
 		if (docno)
 		{
-			if (docno == itr->skipDoc( docno))
+			if (itr->skipDoc( docno))
 			{
 				strus::DocumentTermIteratorInterface::Term term;
 				while (itr->nextTerm( term))
