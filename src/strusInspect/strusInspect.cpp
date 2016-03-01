@@ -40,6 +40,7 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/postingIteratorInterface.hpp"
 #include "strus/forwardIteratorInterface.hpp"
+#include "strus/documentTermIteratorInterface.hpp"
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/index.hpp"
@@ -80,6 +81,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 namespace strus
 {
 	typedef strus::utils::ScopedPtr<PostingIteratorInterface> PostingIteratorReference;
+	typedef strus::utils::ScopedPtr<DocumentTermIteratorInterface> DocumentTermIteratorReference;
 	typedef strus::utils::ScopedPtr<ForwardIteratorInterface> ForwardIteratorReference;
 	typedef strus::utils::ScopedPtr<MetaDataReaderInterface> MetaDataReaderReference;
 }
@@ -111,19 +113,16 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			strus::Index next_docno = itr->skipDoc( docno);
-			if (!next_docno) break;
+			docno = itr->skipDoc( docno);
+			if (!docno) break;
 
-			if (docno == next_docno)
+			std::cout << docno << ':';
+			strus::Index pos=0;
+			while (0!=(pos=itr->skipPos(pos+1)))
 			{
-				std::cout << docno << ':';
-				strus::Index pos=0;
-				while (0!=(pos=itr->skipPos(pos+1)))
-				{
-					std::cout << ' ' << pos;
-				}
-				std::cout << std::endl;
+				std::cout << ' ' << pos;
 			}
+			std::cout << std::endl;
 		}
 	}
 	else
@@ -143,6 +142,56 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 					std::cout << pos;
 				}
 				std::cout << std::endl;
+			}
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT("unknown document"));
+		}
+	}
+}
+
+static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, const char** key, int size)
+{
+	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+
+	strus::DocumentTermIteratorReference itr(
+		storage.createDocumentTermIterator( std::string(key[0])));
+	if (!itr.get()) throw strus::runtime_error(_TXT("failed to create document term iterator"));
+
+	if (size == 1)
+	{
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 1;
+		for (; docno <= maxDocno; ++docno)
+		{
+			if (!itr->skipDoc( docno)) continue;
+
+			std::cout << docno << ':' << std::endl;
+			strus::DocumentTermIteratorInterface::Term term;
+			while (itr->nextTerm( term))
+			{
+				std::string termstr = itr->termValue( term.termno);
+				std::cout << "\t" << term.firstpos << ' ' << term.tf << ' ' << termstr << std::endl;
+			}
+		}
+	}
+	else
+	{
+		strus::Index docno = isIndex(key[1])
+				?stringToIndex( key[1])
+				:storage.documentNumber( key[1]);
+		if (docno)
+		{
+			if (docno == itr->skipDoc( docno))
+			{
+				strus::DocumentTermIteratorInterface::Term term;
+				while (itr->nextTerm( term))
+				{
+					std::string termstr = itr->termValue( term.termno);
+					std::cout << term.firstpos << ' ' << term.tf << ' ' << termstr << std::endl;
+				}
 			}
 		}
 		else
@@ -210,12 +259,9 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			strus::Index next_docno = itr->skipDoc( docno);
-			if (!next_docno) break;
-			if (docno == next_docno)
-			{
-				std::cout << docno << ' ' << (*itr).frequency() << std::endl;
-			}
+			docno = itr->skipDoc( docno);
+			if (!docno) break;
+			std::cout << docno << ' ' << (*itr).frequency() << std::endl;
 		}
 	}
 	else
@@ -609,7 +655,7 @@ int main( int argc, const char* argv[])
 			std::cout << _TXT("usage:") << " strusInspect [options] <what...>" << std::endl;
 			std::cout << "<what>    : " << _TXT("what to inspect:") << std::endl;
 			std::cout << "            \"pos\" <type> <value> [<doc-id/no>]" << std::endl;
-			std::cout << "               = " << _TXT("Get the list of positions for a search index feature.") << std::endl;
+			std::cout << "               = " << _TXT("Get the list of positions for a search index term.") << std::endl;
 			std::cout << "                 " << _TXT("If doc is not specified then dump value for all docs.") << std::endl;
 			std::cout << "            \"ff\" <type> <value> [<doc-id/no>]" << std::endl;
 			std::cout << "               = " << _TXT("Get the feature frequency for a search index feature") << std::endl;
@@ -621,6 +667,10 @@ int main( int argc, const char* argv[])
 			std::cout << "                 " << _TXT("If doc is not specified then dump value for all docs.") << std::endl;
 			std::cout << "            \"ttc\" <type> [<doc-id/no>]" << std::endl;
 			std::cout << "               = " << _TXT("Get the term type count (distinct) in a document") << std::endl;
+			std::cout << "                 " << _TXT("If doc is not specified then dump value for all docs.") << std::endl;
+			std::cout << "            \"indexterms\" <type> [<doc-id/no>]" << std::endl;
+			std::cout << "               = " << _TXT("Get the list of tuples of term value, first position and ff ") << std::endl;
+			std::cout << "                 " << _TXT("for a search index term type.") << std::endl;
 			std::cout << "                 " << _TXT("If doc is not specified then dump value for all docs.") << std::endl;
 			std::cout << "            \"nofdocs\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of documents in the storage") << std::endl;
@@ -721,6 +771,10 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "ttc"))
 		{
 			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTerms, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "indexterms"))
+		{
+			inspectDocumentIndexTerms( *storage, inpectarg, inpectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nofdocs"))
 		{
