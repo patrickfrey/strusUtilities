@@ -299,6 +299,10 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Sun Mar 6 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.5.0-0.1
+- adapted core interface changes
+- added new strusInspect command 'indexterms' to browse through inverted index features
+
 * Sun Jan 17 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.4.1-0.1
 - fix typos in src license reference
 

@@ -1,3 +1,8 @@
+strusUtilities (0.5.0)
+  * adapted core interface changes
+  * added new strusInspect command 'indexterms' to browse through inverted index features
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sun, 6 Mar 2016 19:00:00 +0100
+
 strusUtilities (0.4.1)
   * fix typos in src license reference
  -- Patrick Frey <patrickpfrey@yahoo.com>  Sun, 17 Jan 2016 12:00:00 +0100
