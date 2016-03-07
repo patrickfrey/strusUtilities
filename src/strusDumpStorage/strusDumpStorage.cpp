@@ -108,9 +108,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 7,
+				argc, argv, 8,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "B,blocksizes");
+				"r,rpc:", "s,storage:", "B,blocksizes", "P,prefix:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -178,6 +178,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-B|--blocksizes" << std::endl;
 			std::cout << "    " << _TXT("Dump only block sizes") << std::endl;
+			std::cout << "-P|--prefix <KEY>" << std::endl;
+			std::cout << "    " << _TXT("Dump only the blocks of a certain type with prefix <KEY>") << std::endl;
 			return rt;
 		}
 		bool dumpOnlyBlockSizes = opt("blocksizes");
@@ -187,7 +189,11 @@ int main( int argc, const char* argv[])
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
 			storagecfg = opt["storage"];
 		}
-
+		std::string keyprefix;
+		if (opt("prefix"))
+		{
+			keyprefix = opt["prefix"];
+		}
 		// Dump the storage:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;
@@ -212,7 +218,7 @@ int main( int argc, const char* argv[])
 			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);
 			std::auto_ptr<strus::DatabaseClientInterface> dbc( dbi->createClient( storagecfg));
 			std::auto_ptr<strus::DatabaseCursorInterface> cursor( dbc->createCursor( strus::DatabaseOptions()));
-			strus::DatabaseCursorInterface::Slice key = cursor->seekFirst( "", 0);
+			strus::DatabaseCursorInterface::Slice key = cursor->seekFirst( keyprefix.c_str(), keyprefix.size());
 			for (;key.defined(); key = cursor->seekNext())
 			{
 				std::cout << asciiString( key.ptr(), key.size()) << " " << cursor->value().size() << std::endl;
@@ -224,7 +230,7 @@ int main( int argc, const char* argv[])
 				storage( storageBuilder->createStorageClient( storagecfg));
 			if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
-			std::auto_ptr<strus::StorageDumpInterface> dump( storage->createDump());
+			std::auto_ptr<strus::StorageDumpInterface> dump( storage->createDump( keyprefix));
 			if (!dump.get()) throw strus::runtime_error(_TXT("could not create storage dump interface"));
 
 			const char* buf;
