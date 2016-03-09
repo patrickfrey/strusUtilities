@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -44,6 +44,7 @@
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryEvalInterface.hpp"
 #include "strus/queryInterface.hpp"
+#include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/storageClientInterface.hpp"
@@ -288,23 +289,12 @@ static void parseSummarizerConfig(
 		char const*& src)
 {
 	std::string functionName;
-	std::string resultAttribute;
 	typedef QueryEvalInterface::FeatureParameter FeatureParameter;
 	std::vector<FeatureParameter> featureParameters;
 
 	if (!isAlpha( *src))
 	{
-		throw strus::runtime_error(_TXT( "name of result attribute expected after SUMMARIZE"));
-	}
-	resultAttribute = parse_IDENTIFIER( src);
-	if (!isAssign(*src))
-	{
-		throw strus::runtime_error(_TXT( "assignment operator '=' expected after the name of result attribute in summarizer definition"));
-	}
-	(void)parse_OPERATOR( src);
-	if (!isAlpha( *src))
-	{
-		throw strus::runtime_error(_TXT( "name of summarizer function expected after assignment in summarizer definition"));
+		throw strus::runtime_error(_TXT( "name of summarizer function expected at start of summarizer definition"));
 	}
 	functionName = utils::tolower( parse_IDENTIFIER( src));
 
@@ -382,7 +372,7 @@ static void parseSummarizerConfig(
 		throw strus::runtime_error(_TXT( "close oval bracket ')' expected at end of summarizer function parameter list"));
 	}
 	(void)parse_OPERATOR(src);
-	qeval.addSummarizerFunction( functionName, function.get(), featureParameters, resultAttribute);
+	qeval.addSummarizerFunction( functionName, function.get(), featureParameters);
 	(void)function.release();
 }
 
@@ -1527,27 +1517,28 @@ static std::vector<ArithmeticVariant> parseMetaDataOperands( char const*& src)
 	return rt;
 }
 
-static QueryInterface::CompareOperator invertedOperator( QueryInterface::CompareOperator op)
+static MetaDataRestrictionInterface::CompareOperator
+		invertedOperator( MetaDataRestrictionInterface::CompareOperator op)
 {
 	switch (op)
 	{
-		case QueryInterface::CompareLess: return QueryInterface::CompareGreaterEqual;
-		case QueryInterface::CompareLessEqual: return QueryInterface::CompareGreater;
-		case QueryInterface::CompareEqual: return QueryInterface::CompareNotEqual;
-		case QueryInterface::CompareNotEqual: return QueryInterface::CompareEqual;
-		case QueryInterface::CompareGreater: return QueryInterface::CompareLessEqual;
-		case QueryInterface::CompareGreaterEqual: return QueryInterface::CompareLess;
+		case MetaDataRestrictionInterface::CompareLess: return MetaDataRestrictionInterface::CompareGreaterEqual;
+		case MetaDataRestrictionInterface::CompareLessEqual: return MetaDataRestrictionInterface::CompareGreater;
+		case MetaDataRestrictionInterface::CompareEqual: return MetaDataRestrictionInterface::CompareNotEqual;
+		case MetaDataRestrictionInterface::CompareNotEqual: return MetaDataRestrictionInterface::CompareEqual;
+		case MetaDataRestrictionInterface::CompareGreater: return MetaDataRestrictionInterface::CompareLessEqual;
+		case MetaDataRestrictionInterface::CompareGreaterEqual: return MetaDataRestrictionInterface::CompareLess;
 	}
 	throw strus::runtime_error( _TXT("bad query meta data operator"));
 }
 
-static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char const*& src)
+static MetaDataRestrictionInterface::CompareOperator parseMetaDataComparionsOperator( char const*& src)
 {
-	QueryInterface::CompareOperator rt;
+	MetaDataRestrictionInterface::CompareOperator rt;
 	if (*src == '=')
 	{
 		parse_OPERATOR( src);
-		rt = QueryInterface::CompareEqual;
+		rt = MetaDataRestrictionInterface::CompareEqual;
 	}
 	else if (*src == '>')
 	{
@@ -1555,11 +1546,11 @@ static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char con
 		if (*src == '=')
 		{
 			++src;
-			rt = QueryInterface::CompareGreaterEqual;
+			rt = MetaDataRestrictionInterface::CompareGreaterEqual;
 		}
 		else
 		{
-			rt = QueryInterface::CompareGreater;
+			rt = MetaDataRestrictionInterface::CompareGreater;
 		}
 	}
 	else if (*src == '<')
@@ -1568,11 +1559,11 @@ static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char con
 		if (*src == '=')
 		{
 			++src;
-			rt = QueryInterface::CompareLessEqual;
+			rt = MetaDataRestrictionInterface::CompareLessEqual;
 		}
 		else
 		{
-			rt = QueryInterface::CompareLess;
+			rt = MetaDataRestrictionInterface::CompareLess;
 		}
 	}
 	else if (*src == '!')
@@ -1580,7 +1571,7 @@ static QueryInterface::CompareOperator parseMetaDataComparionsOperator( char con
 		if (*src == '=')
 		{
 			++src;
-			rt = QueryInterface::CompareNotEqual;
+			rt = MetaDataRestrictionInterface::CompareNotEqual;
 		}
 		else
 		{
@@ -1608,7 +1599,7 @@ static void parseMetaDataRestriction(
 	{
 		std::string fieldname = parse_IDENTIFIER( src);
 
-		QueryInterface::CompareOperator
+		MetaDataRestrictionInterface::CompareOperator
 			cmpop = parseMetaDataComparionsOperator( src);
 
 		std::vector<ArithmeticVariant>
@@ -1616,10 +1607,10 @@ static void parseMetaDataRestriction(
 
 		std::vector<ArithmeticVariant>::const_iterator
 			oi = operands.begin(), oe = operands.end();
-		query.defineMetaDataRestriction( cmpop, fieldname, *oi, true);
+		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
 		for (++oi; oi != oe; ++oi)
 		{
-			query.defineMetaDataRestriction( cmpop, fieldname, *oi, false);
+			query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, false);
 		}
 	}
 	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src) || isPlus( *src))
@@ -1627,7 +1618,7 @@ static void parseMetaDataRestriction(
 		std::vector<ArithmeticVariant>
 			operands = parseMetaDataOperands( src);
 
-		QueryInterface::CompareOperator
+		MetaDataRestrictionInterface::CompareOperator
 			cmpop = invertedOperator( parseMetaDataComparionsOperator( src));
 
 		if (!isAlpha( *src))
@@ -1638,10 +1629,10 @@ static void parseMetaDataRestriction(
 
 		std::vector<ArithmeticVariant>::const_iterator
 			oi = operands.begin(), oe = operands.end();
-		query.defineMetaDataRestriction( cmpop, fieldname, *oi, true);
+		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
 		for (++oi; oi != oe; ++oi)
 		{
-			query.defineMetaDataRestriction( cmpop, fieldname, *oi, false);
+			query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, false);
 		}
 	}
 }

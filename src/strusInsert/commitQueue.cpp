@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -48,24 +48,36 @@ void CommitQueue::handleWaitingTransactions()
 			}
 			Index totalNofDocuments = m_storage->nofDocumentsInserted();
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
-			::printf( "\rinserted %u documents (total %u), %u transactions open     ",
-					nofDocsInserted, totalNofDocuments, m_nofOpenTransactions);
-			::fflush(stdout);
+			if (m_verbose)
+			{
+				::printf( _TXT("inserted %u documents (total %u)\n"),
+						nofDocsInserted, totalNofDocuments);
+				::fflush(stdout);
+			}
+			else
+			{
+				::printf( _TXT("\rinserted %u documents (total %u)          "),
+						nofDocsInserted, totalNofDocuments);
+				::fflush(stdout);
+			}
 		}
 		catch (const std::bad_alloc&)
 		{
-			std::cerr << _TXT("out of memory handling transaction in queue") << std::endl;
+			m_errorhnd->report( _TXT("out of memory handling transaction in queue"));
+			fprintf( stderr, _TXT("out of memory handling transaction in queue\n"));
 		}
 		catch (const std::exception& err)
 		{
 			const char* errmsg = m_errorhnd->fetchError();
 			if (errmsg)
 			{
-				std::cerr << _TXT("error handling transaction in queue: ") << err.what() << "; " << errmsg << std::endl;
+				m_errorhnd->report( _TXT("error handling transaction in queue: %s, %s"), err.what(), errmsg);
+				fprintf( stderr, _TXT("error handling transaction in queue: %s, %s\n"), err.what(), errmsg);
 			}
 			else
 			{
-				std::cerr << _TXT("error handling transaction in queue: ") << err.what() << std::endl;
+				m_errorhnd->report( _TXT("error handling transaction in queue: %s"), err.what());
+				fprintf( stderr, _TXT("error handling transaction in queue: %s\n"), err.what());
 			}
 		}
 	}

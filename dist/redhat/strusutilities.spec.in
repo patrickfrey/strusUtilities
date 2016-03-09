@@ -299,6 +299,16 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Sun Mar 6 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.5.0-0.1
+- adapted core interface changes
+- added new strusInspect command 'indexterms' to browse through inverted index features
+
+* Sun Jan 17 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.4.1-0.1
+- fix typos in src license reference
+
+* Sat Jan 2 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.4.0-0.1
+- adapt minor version number to strus core
+
 * Wed Dec 23 2015 Patrick Frey <patrickpfrey@yahoo.com> 0.3.2-0.1
 - escape control characters when printing forward index tokens in a formatted output (single tokens with info not content)
 

@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -349,17 +349,32 @@ int main( int argc_, const char* argv_[])
 			{
 				query->addUserName( username);
 			}
-			std::vector<strus::ResultDocument> ranklist = query->evaluate();
+			strus::QueryResult result = query->evaluate();
 
-			if (!quiet) std::cout << strus::utils::string_sprintf( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
-			std::vector<strus::ResultDocument>::const_iterator wi = ranklist.begin(), we = ranklist.end();
-			for (int widx=1; wi != we; ++wi,++widx)
+			if (!quiet)
 			{
-				if (!quiet) std::cout << strus::utils::string_sprintf( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
-				std::vector<strus::ResultDocument::Attribute>::const_iterator ai = wi->attributes().begin(), ae = wi->attributes().end();
-				for (; ai != ae; ++ai)
+				std::cout << strus::utils::string_sprintf( _TXT("evaluated till pass %u, got %u ranks (%u without restrictions applied):"), result.evaluationPass(), result.nofDocumentsRanked(), result.nofDocumentsVisited()) << std::endl;
+				std::cout << strus::utils::string_sprintf( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
+			}
+			std::vector<strus::ResultDocument>::const_iterator wi = result.ranks().begin(), we = result.ranks().end();
+			if (!quiet)
+			{
+				for (int widx=1; wi != we; ++wi,++widx)
 				{
-					if (!quiet) std::cout << "\t" << ai->name() << " (" << ai->value() << ") " << ai->weight() << std::endl;
+					std::cout << strus::utils::string_sprintf( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
+					std::vector<strus::SummaryElement>::const_iterator
+						ai = wi->summaryElements().begin(),
+						ae = wi->summaryElements().end();
+					for (; ai != ae; ++ai)
+					{
+						std::cout << "\t" << ai->name();
+						if (ai->index() >= 0)
+						{
+							std::cout << "[" << ai->index() << "]";
+						}
+						std::cout << " = '" << ai->value() << "'";
+						std::cout << " " << ai->weight() << std::endl;
+					}
 				}
 			}
 		}

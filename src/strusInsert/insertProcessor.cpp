@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -57,6 +57,7 @@ InsertProcessor::InsertProcessor(
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
 		unsigned int transactionSize_,
+		bool verbose_,
 		ErrorBufferInterface* errorhnd_)
 	:m_storage(storage_)
 	,m_textproc(textproc_)
@@ -64,6 +65,7 @@ InsertProcessor::InsertProcessor(
 	,m_commitque(commitque_)
 	,m_crawler(crawler_)
 	,m_transactionSize(transactionSize_)
+	,m_verbose(verbose_)
 	,m_terminated(false)
 	,m_errorhnd(errorhnd_)
 {}
@@ -256,6 +258,10 @@ void InsertProcessor::run()
 								docCount = 0;
 							}
 						}
+					}
+					if (m_verbose)
+					{
+						std::cerr << "processed file '" << *fitr << "' (" << docCount << ")" << std::endl;
 					}
 				}
 				catch (const std::bad_alloc& err)

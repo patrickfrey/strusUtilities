@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -52,6 +52,8 @@
 #include "private/internationalization.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <memory>
 
@@ -155,8 +157,8 @@ int main( int argc, const char* argv[])
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusDumpStatistics [options] <filename>" << std::endl;
-			std::cout << _TXT("description: Dumps the statisics that would be populated to") << std::endl;
-			std::cout << _TXT("other peer storages in case of a distributed index to a file.") << std::endl;
+			std::cout << _TXT("description: Dumps the statisics that would be populated ") << std::endl;
+			std::cout << _TXT("in case of a distributed index to a file.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -216,14 +218,18 @@ int main( int argc, const char* argv[])
 		std::size_t msgsize;
 		std::string output;
 
+		FILE* outfile = ::fopen( outputfile.c_str(), "ab");
+		if (!outfile) throw strus::runtime_error( _TXT( "error opening file '%s' for writing (errno %u)"), outputfile.c_str(), errno);
+
 		while (statsqueue->getNext( msg, msgsize))
 		{
-			output.append( msg, msgsize);
+			std::size_t written = ::fwrite( msg, 1, msgsize, outfile);
+			if (written != msgsize)
+			{
+				throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+			}
 		}
-		unsigned int ec = strus::writeFile( outputfile, output);
-		// .... yes, it's idiodoc to buffer the whole content in memory (to be solved later)
-		if (ec) throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), ec);
-
+		::fclose( outfile);
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT( "unhandled error in dump statistics"));

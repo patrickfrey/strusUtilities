@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -40,6 +40,7 @@
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
 #include "strus/queryInterface.hpp"
+#include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
@@ -173,8 +174,8 @@ public:
 		m_stack.pop_back();
 	}
 
-	virtual void defineMetaDataRestriction(
-			CompareOperator opr, const std::string& name,
+	virtual void addMetaDataRestrictionCondition(
+			strus::MetaDataRestrictionInterface::CompareOperator opr, const std::string& name,
 			const strus::ArithmeticVariant& operand, bool newGroup=true)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -182,7 +183,7 @@ public:
 
 		const char* ng = newGroup?"new group":"";
 		std::cerr
-			<< strus::utils::string_sprintf(_TXT("called defineMetaDataRestriction %s %s %s %s"), 
+			<< strus::utils::string_sprintf(_TXT("called addMetaDataRestrictionCondition %s %s %s %s"), 
 					name.c_str(), Restriction::compareOperatorName(opr), operandstr.c_str(), ng)
 			<< std::endl;
 		printState( std::cerr);
@@ -249,9 +250,9 @@ public:
 		m_users.push_back( username_);
 	}
 
-	virtual std::vector<strus::ResultDocument> evaluate()
+	virtual strus::QueryResult evaluate()
 	{
-		return std::vector<strus::ResultDocument>();
+		return strus::QueryResult();
 	}
 
 	void check() const
@@ -435,6 +436,7 @@ private:
 	class Restriction
 	{
 	public:
+		typedef strus::MetaDataRestrictionInterface::CompareOperator CompareOperator;
 		Restriction( CompareOperator opr_, const std::string& name_, strus::ArithmeticVariant operand_, bool newGroup_)
 			:opr(opr_),name(name_),operand(operand_),newGroup(newGroup_){}
 		Restriction( const Restriction& o)

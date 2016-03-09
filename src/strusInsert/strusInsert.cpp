@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -101,11 +101,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 14,
+				argc_, argv_, 15,
 				"h,help", "t,threads:", "c,commit:", "f,fetch:",
 				"v,version", "g,segmenter:", "m,module:", "L,logerror:",
 				"M,moduledir:", "R,resourcedir:", "r,rpc:", "x,extension:",
-				"s,storage:", "S,configfile:");
+				"s,storage:", "S,configfile:", "V,verbose");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -227,6 +227,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Default is the value of option '--commit' (one document/file)") << std::endl;
 			std::cout << "-L|--logerror <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Write the last error occurred to <FILE> in case of an exception")  << std::endl;
+			std::cout << "-V|--verbose" << std::endl;
+			std::cout << "    " << _TXT("verbose output") << std::endl;
 			return rt;
 		}
 		unsigned int transactionSize = 1000;
@@ -250,6 +252,8 @@ int main( int argc_, const char* argv_[])
 		std::string datapath = opt[1];
 		std::string fileext = "";
 		std::string segmenter;
+		bool verbose = opt( "verbose");
+
 		if (opt( "segmenter"))
 		{
 			segmenter = opt[ "segmenter"];
@@ -325,7 +329,7 @@ int main( int argc_, const char* argv_[])
 
 		// Start inserter process:
 		strus::utils::ScopedPtr<strus::CommitQueue>
-			commitQue( new strus::CommitQueue( storage.get(), errorBuffer.get()));
+			commitQue( new strus::CommitQueue( storage.get(), verbose, errorBuffer.get()));
 
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
@@ -341,7 +345,7 @@ int main( int argc_, const char* argv_[])
 		{
 			strus::InsertProcessor inserter(
 				storage.get(), textproc, analyzerMap, commitQue.get(),
-				fileCrawler, transactionSize, errorBuffer.get());
+				fileCrawler, transactionSize, verbose, errorBuffer.get());
 			inserter.run();
 		}
 		else
@@ -355,7 +359,7 @@ int main( int argc_, const char* argv_[])
 				inserterThreads->start(
 					new strus::InsertProcessor(
 						storage.get(), textproc, analyzerMap, commitQue.get(),
-						fileCrawler, transactionSize, errorBuffer.get()));
+						fileCrawler, transactionSize, verbose, errorBuffer.get()));
 			}
 			inserterThreads->wait_termination();
 		}

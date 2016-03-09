@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -68,6 +68,26 @@ struct TermOrder
 	}
 };
 
+std::string escapeEndOfLine( const std::string& str)
+{
+	std::string rt;
+	std::string::const_iterator si = str.begin(), se = str.end();
+	for (;si != se; ++si)
+	{
+		if (*si == '\r')
+		{}
+		else if (*si == '\n')
+		{
+			rt.push_back( ' ');
+		}
+		else
+		{
+			rt.push_back( *si);
+		}
+	}
+	return rt;
+}
+
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -82,10 +102,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 11,
 				"h,help", "v,version", "s,segmenter:", "e,expression:",
-				"m,module:", "M,moduledir:",
-				"i,index", "p,position", "q,quot:");
+				"m,module:", "M,moduledir:", "P,prefix:",
+				"i,index", "p,position", "q,quot:", "E,esceol");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -157,13 +177,23 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the positions of the expressions matching as prefix") << std::endl;
 			std::cout << "-q|--quot <STR>" << std::endl;
 			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default \"\'\")") << std::endl;
+			std::cout << "-P|--prefix <STR>" << std::endl;
+			std::cout << "    " << _TXT("Use the string <STR> as prefix for the result") << std::endl;
+			std::cout << "-E|--esceol" << std::endl;
+			std::cout << "    " << _TXT("Escape end of line with space") << std::endl;
 			return rt;
 		}
 		std::string docpath = opt[0];
 		std::string segmenterName;
+		std::string resultPrefix;
+		std::string resultQuot;
 		bool printIndices = opt( "index");
 		bool printPositions = opt( "position");
-		std::string resultQuot = "'";
+		bool doEscapeEndOfLine = opt( "esceol");
+		if (opt( "prefix"))
+		{
+			resultPrefix = opt[ "prefix"];
+		}
 		if (opt( "quot"))
 		{
 			resultQuot = opt[ "quot"];
@@ -235,6 +265,10 @@ int main( int argc, const char* argv[])
 			std::size_t segsize;
 			while (segmenterContext->getNext( segid, segpos, segdata, segsize))
 			{
+				if (!resultPrefix.empty())
+				{
+					std::cout << resultPrefix;
+				}
 				if (printIndices)
 				{
 					std::cout << segid << ": ";
@@ -243,8 +277,16 @@ int main( int argc, const char* argv[])
 				{
 					std::cout << segpos << " ";
 				}
-				std::cout << resultQuot << std::string(segdata,segsize)
+				if (doEscapeEndOfLine)
+				{
+					std::cout << resultQuot << escapeEndOfLine( std::string(segdata,segsize))
 						<< resultQuot << std::endl;
+				}
+				else
+				{
+					std::cout << resultQuot << std::string(segdata,segsize)
+						<< resultQuot << std::endl;
+				}
 			}
 		}
 		if (errorBuffer->hasError())

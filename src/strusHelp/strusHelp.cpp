@@ -3,19 +3,19 @@
     The C++ library strus implements basic operations to build
     a search engine for structured search on unstructured data.
 
-    Copyright (C) 2013,2014 Patrick Frey
+    Copyright (C) 2015 Patrick Frey
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
+    modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
+    You should have received a copy of the GNU General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
@@ -112,14 +112,12 @@ static void printFunctionDescription( std::ostream& out, const Description& desc
 	typename std::vector<Param>::const_iterator pi = descr.param().begin(), pe = descr.param().end();
 	for (; pi != pe; ++pi)
 	{
-		const char* paramtypestr = "unknown";
-		switch (pi->type())
+		out << "\t" << pi->name() << " [" << pi->typeName();
+		if (!pi->domain().empty())
 		{
-			case Param::Feature: paramtypestr = "feature"; break;
-			case Param::Numeric: paramtypestr = "numeric"; break;
-			case Param::String: paramtypestr = "string"; break;
+			out << " (" << pi->domain() << ")";
 		}
-		out << "\t" << pi->name() << " [" << paramtypestr << "] " << pi->text() << std::endl;
+		out << "] " << pi->text() << std::endl;
 	}
 	out << std::endl;
 }
