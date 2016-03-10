@@ -86,21 +86,29 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 			case strus::TextProcessorInterface::TokenizerFunction:
 			{
 				const strus::TokenizerFunctionInterface* func = textproc->getTokenizer( *fi);
+				if (!func) break;
 				descr = func->getDescription();
+				break;
 			}
 			case strus::TextProcessorInterface::NormalizerFunction:
 			{
 				const strus::NormalizerFunctionInterface* func = textproc->getNormalizer( *fi);
+				if (!func) break;
 				descr = func->getDescription();
+				break;
 			}
 			case strus::TextProcessorInterface::AggregatorFunction:
 			{
 				const strus::AggregatorFunctionInterface* func = textproc->getAggregator( *fi);
+				if (!func) break;
 				descr = func->getDescription();
+				break;
 			}
 		};
-		if (!descr || !*descr) throw strus::runtime_error( _TXT("%s '%s' not defined"), label, fi->c_str());
-		std::cout << "* " << descr << std::endl << std::endl;
+		if (descr && *descr)
+		{
+			std::cout << "* " << descr << std::endl << std::endl;
+		}
 	}
 }
 
@@ -150,17 +158,20 @@ static void printQueryProcessorDescription( const strus::QueryProcessorInterface
 			case strus::QueryProcessorInterface::PostingJoinOperator:
 			{
 				const strus::PostingJoinOperatorInterface* opr = queryproc->getPostingJoinOperator( *fi);
-				std::cout << "* " << opr->getDescription().text() << std::endl;
+				if (opr) std::cout << "* " << opr->getDescription().text() << std::endl;
+				break;
 			}
 			case strus::QueryProcessorInterface::WeightingFunction: 
 			{
 				const strus::WeightingFunctionInterface* func = queryproc->getWeightingFunction( *fi);
-				printFunctionDescription( std::cout, func->getDescription());
+				if (func) printFunctionDescription( std::cout, func->getDescription());
+				break;
 			}
 			case strus::QueryProcessorInterface::SummarizerFunction:
 			{
 				const strus::SummarizerFunctionInterface* func = queryproc->getSummarizerFunction( *fi);
-				printFunctionDescription( std::cout, func->getDescription());
+				if (func) printFunctionDescription( std::cout, func->getDescription());
+				break;
 			}
 		};
 	}
@@ -348,7 +359,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error"));
+			throw strus::runtime_error( errorBuffer->fetchError());
 		}
 		return 0;
 	}
