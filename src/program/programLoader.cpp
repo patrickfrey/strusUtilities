@@ -8,7 +8,7 @@
 #include "strus/programLoader.hpp"
 #include "lexems.hpp"
 #include "strus/constants.hpp"
-#include "strus/arithmeticVariant.hpp"
+#include "strus/numericVariant.hpp"
 #include "strus/weightingFunctionInterface.hpp"
 #include "strus/weightingFunctionInstanceInterface.hpp"
 #include "strus/summarizerFunctionInterface.hpp"
@@ -126,13 +126,13 @@ static void parseTermConfig(
 	}
 }
 
-static ArithmeticVariant parseNumericValue( char const*& src)
+static NumericVariant parseNumericValue( char const*& src)
 {
 	if (is_INTEGER(src))
 	{
 		if (isMinus(*src) || isPlus(*src))
 		{
-			return ArithmeticVariant( parse_INTEGER( src));
+			return NumericVariant( parse_INTEGER( src));
 		}
 		else
 		{
@@ -144,18 +144,18 @@ static ArithmeticVariant parseNumericValue( char const*& src)
 			while (*src == '0') ++src;
 			if (*src >= '1' && *src <= '9')
 			{
-				return ArithmeticVariant( parse_UNSIGNED( src));
+				return NumericVariant( parse_UNSIGNED( src));
 			}
 			else
 			{
 				skipSpaces(src);
-				return ArithmeticVariant( 0);
+				return NumericVariant( 0);
 			}
 		}
 	}
 	else
 	{
-		return ArithmeticVariant( parse_FLOAT( src));
+		return NumericVariant( parse_FLOAT( src));
 	}
 }
 
@@ -219,7 +219,7 @@ static void parseWeightingConfig(
 			{
 				throw strus::runtime_error(_TXT( "feature parameter argument must be an identifier or string and not a number"));
 			}
-			ArithmeticVariant parameterValue = parseNumericValue( src);
+			NumericVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
 		}
 		else if (isStringQuote(*src))
@@ -313,7 +313,7 @@ static void parseSummarizerConfig(
 			{
 				throw strus::runtime_error(_TXT( "feature parameter argument must be an identifier or string and not a number"));
 			}
-			ArithmeticVariant parameterValue = parseNumericValue( src);
+			NumericVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
 		}
 		else if (isStringQuote(*src))
@@ -1438,11 +1438,11 @@ static void parseQueryExpression(
 	}
 }
 
-static ArithmeticVariant parseMetaDataOperand( char const*& src)
+static NumericVariant parseMetaDataOperand( char const*& src)
 {
 	try
 	{
-		ArithmeticVariant rt;
+		NumericVariant rt;
 		if (is_INTEGER( src))
 		{
 			if (isMinus(*src))
@@ -1471,9 +1471,9 @@ static ArithmeticVariant parseMetaDataOperand( char const*& src)
 	}
 }
 
-static std::vector<ArithmeticVariant> parseMetaDataOperands( char const*& src)
+static std::vector<NumericVariant> parseMetaDataOperands( char const*& src)
 {
-	std::vector<ArithmeticVariant> rt;
+	std::vector<NumericVariant> rt;
 	for (;;)
 	{
 		if (isStringQuote( *src))
@@ -1581,10 +1581,10 @@ static void parseMetaDataRestriction(
 		MetaDataRestrictionInterface::CompareOperator
 			cmpop = parseMetaDataComparionsOperator( src);
 
-		std::vector<ArithmeticVariant>
+		std::vector<NumericVariant>
 			operands = parseMetaDataOperands( src);
 
-		std::vector<ArithmeticVariant>::const_iterator
+		std::vector<NumericVariant>::const_iterator
 			oi = operands.begin(), oe = operands.end();
 		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
 		for (++oi; oi != oe; ++oi)
@@ -1594,7 +1594,7 @@ static void parseMetaDataRestriction(
 	}
 	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src) || isPlus( *src))
 	{
-		std::vector<ArithmeticVariant>
+		std::vector<NumericVariant>
 			operands = parseMetaDataOperands( src);
 
 		MetaDataRestrictionInterface::CompareOperator
@@ -1606,7 +1606,7 @@ static void parseMetaDataRestriction(
 		}
 		std::string fieldname = parse_IDENTIFIER( src);
 
-		std::vector<ArithmeticVariant>::const_iterator
+		std::vector<NumericVariant>::const_iterator
 			oi = operands.begin(), oe = operands.end();
 		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
 		for (++oi; oi != oe; ++oi)
@@ -1789,7 +1789,7 @@ static Index parseDocno( StorageClientInterface& storage, char const*& itr)
 	}
 }
 
-static void storeMetaDataValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const ArithmeticVariant& val)
+static void storeMetaDataValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const NumericVariant& val)
 {
 	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
 	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
@@ -1893,7 +1893,7 @@ static unsigned int loadStorageValues(
 			{
 				case StorageValueMetaData:
 				{
-					ArithmeticVariant val( parseNumericValue( itr));
+					NumericVariant val( parseNumericValue( itr));
 					storeMetaDataValue( *transaction, docno, elementName, val);
 					rt += 1;
 					break;

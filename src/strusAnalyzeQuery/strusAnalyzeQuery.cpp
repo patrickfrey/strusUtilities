@@ -155,10 +155,10 @@ public:
 
 	virtual void addMetaDataRestrictionCondition(
 			strus::MetaDataRestrictionInterface::CompareOperator opr, const std::string& name,
-			const strus::ArithmeticVariant& operand, bool newGroup=true)
+			const strus::NumericVariant& operand, bool newGroup=true)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::string operandstr = arithmeticVariantToString( operand);
+		std::string operandstr = numericVariantToString( operand);
 
 		const char* ng = newGroup?"new group":"";
 		std::cerr
@@ -416,7 +416,7 @@ private:
 	{
 	public:
 		typedef strus::MetaDataRestrictionInterface::CompareOperator CompareOperator;
-		Restriction( CompareOperator opr_, const std::string& name_, strus::ArithmeticVariant operand_, bool newGroup_)
+		Restriction( CompareOperator opr_, const std::string& name_, strus::NumericVariant operand_, bool newGroup_)
 			:opr(opr_),name(name_),operand(operand_),newGroup(newGroup_){}
 		Restriction( const Restriction& o)
 			:opr(o.opr),name(o.name),operand(o.operand),newGroup(o.newGroup){}
@@ -433,7 +433,7 @@ private:
 
 		CompareOperator opr;
 		std::string name;
-		strus::ArithmeticVariant operand;
+		strus::NumericVariant operand;
 		bool newGroup;
 	};
 

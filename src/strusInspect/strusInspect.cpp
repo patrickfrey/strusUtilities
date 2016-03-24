@@ -26,7 +26,7 @@
 #include "strus/errorBufferInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/private/cmdLineOpt.hpp"
-#include "strus/arithmeticVariant.hpp"
+#include "strus/numericVariant.hpp"
 #include "strus/private/configParser.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
@@ -353,7 +353,7 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 		for (; docno <= maxDocno; ++docno)
 		{
 			metadata->skipDoc( docno);
-			strus::ArithmeticVariant value = metadata->getValue( hnd);
+			strus::NumericVariant value = metadata->getValue( hnd);
 			if (value.defined())
 			{
 				std::cout << docno << ' ' << value.tostring().c_str() << std::endl;
@@ -369,7 +369,7 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 		if (docno)
 		{
 			metadata->skipDoc( docno);
-			strus::ArithmeticVariant value = metadata->getValue( hnd);
+			strus::NumericVariant value = metadata->getValue( hnd);
 			if (value.defined())
 			{
 				std::cout << value.tostring().c_str() << std::endl;

@@ -8,7 +8,7 @@
 #include "checkInsertProcessor.hpp"
 #include "strus/constants.hpp"
 #include "strus/index.hpp"
-#include "strus/arithmeticVariant.hpp"
+#include "strus/numericVariant.hpp"
 #include "strus/documentClass.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
@@ -86,26 +86,26 @@ void CheckInsertProcessor::run()
 	if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
 
 	// Evaluate the expected types of the meta data elements to make them comparable
-	std::vector<strus::ArithmeticVariant::Type> metadatatype;
+	std::vector<strus::NumericVariant::Type> metadatatype;
 	strus::Index mi=0, me=metadata->nofElements();
 	for (; mi != me; ++mi)
 	{
 		const char* tp = metadata->getType( mi);
 		if ((tp[0]|32) == 'i')
 		{
-			metadatatype.push_back( strus::ArithmeticVariant::Int);
+			metadatatype.push_back( strus::NumericVariant::Int);
 		}
 		else if ((tp[0]|32) == 'u')
 		{
-			metadatatype.push_back( strus::ArithmeticVariant::UInt);
+			metadatatype.push_back( strus::NumericVariant::UInt);
 		}
 		else if ((tp[0]|32) == 'f')
 		{
-			metadatatype.push_back( strus::ArithmeticVariant::Float);
+			metadatatype.push_back( strus::NumericVariant::Float);
 		}
 		else
 		{
-			metadatatype.push_back( strus::ArithmeticVariant::Null);
+			metadatatype.push_back( strus::NumericVariant::Null);
 		}
 	}
 
@@ -251,10 +251,10 @@ void CheckInsertProcessor::run()
 							Index midx = metadata->elementHandle( mi->name());
 							switch (metadatatype[midx])
 							{
-								case strus::ArithmeticVariant::Int:
+								case strus::NumericVariant::Int:
 									if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
 									{
-										strus::ArithmeticVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+										strus::NumericVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
 										storagedoc->setMetaData( mi->name(), av);
 									}
 									else
@@ -262,11 +262,11 @@ void CheckInsertProcessor::run()
 										std::cerr << utils::string_sprintf( _TXT( "meta data assignment is not convertible to the type expected: (%s) %.4f"), "int", val) << std::endl;
 									}
 									break;
-								case strus::ArithmeticVariant::UInt:
+								case strus::NumericVariant::UInt:
 									if (val - std::floor( val) < std::numeric_limits<float>::epsilon()
 									|| (val + std::numeric_limits<float>::epsilon()) < 0.0)
 									{
-										strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+										strus::NumericVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
 										storagedoc->setMetaData( mi->name(), av);
 									}
 									else
@@ -274,8 +274,8 @@ void CheckInsertProcessor::run()
 										std::cerr << utils::string_sprintf( _TXT( "meta data assignment is not convertible to the type expected: (%s) %.4f"), "unsigned int", val) << std::endl;
 									}
 									break;
-								case strus::ArithmeticVariant::Float:
-								case strus::ArithmeticVariant::Null:
+								case strus::NumericVariant::Float:
+								case strus::NumericVariant::Null:
 									storagedoc->setMetaData( mi->name(), (float) val);
 									break;
 							}

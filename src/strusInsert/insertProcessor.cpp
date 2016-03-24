@@ -8,7 +8,7 @@
 #include "insertProcessor.hpp"
 #include "strus/constants.hpp"
 #include "strus/index.hpp"
-#include "strus/arithmeticVariant.hpp"
+#include "strus/numericVariant.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
@@ -203,12 +203,12 @@ void InsertProcessor::run()
 								{
 									if (val < 0.0)
 									{
-										strus::ArithmeticVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+										strus::NumericVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
 										storagedoc->setMetaData( mi->name(), av);
 									}
 									else
 									{
-										strus::ArithmeticVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+										strus::NumericVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
 										storagedoc->setMetaData( mi->name(), av);
 									}
 								}
