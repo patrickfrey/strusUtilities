@@ -229,6 +229,13 @@ public:
 		m_users.push_back( username_);
 	}
 
+	virtual void setWeightingFormulaVariableValue( const std::string& name, double value)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::utils::string_sprintf( _TXT( "called setWeightingFormulaVariableValue %s %g"), name.c_str(), value) << std::endl;
+#endif
+	}
+
 	virtual strus::QueryResult evaluate()
 	{
 		return strus::QueryResult();

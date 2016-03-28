@@ -159,21 +159,36 @@ static NumericVariant parseNumericValue( char const*& src)
 	}
 }
 
+static void parseWeightingFormula(
+		QueryEvalInterface& qeval,
+		const QueryProcessorInterface* queryproc,
+		char const*& src)
+{
+	std::string langName;
+	if (isAlpha( *src))
+	{
+		langName = parse_IDENTIFIER( src);
+	}
+	if (!isStringQuote( *src))
+	{
+		throw strus::runtime_error(_TXT( "weighting formula string expected"));
+	}
+	std::string funcsrc = parse_STRING( src);
+	const ScalarFunctionParserInterface* scalarfuncparser = queryproc->getScalarFunctionParser(langName);
+	std::auto_ptr<ScalarFunctionInterface> scalarfunc( scalarfuncparser->createFunction( funcsrc));
+	if (!scalarfunc.get())
+	{
+		throw strus::runtime_error(_TXT( "failed to create scalar function (weighting formula) from source"));
+	}
+	qeval.defineWeightingFormula( scalarfunc.get());
+	scalarfunc.release();
+}
+
 static void parseWeightingConfig(
 		QueryEvalInterface& qeval,
 		const QueryProcessorInterface* queryproc,
 		char const*& src)
 {
-	float weight = 1.0;
-	if (is_FLOAT( src))
-	{
-		weight = parse_FLOAT( src);
-		if (!isAsterisk(*src))
-		{
-			throw strus::runtime_error(_TXT( "multiplication operator '*' expected after EVAL followed by a floating point number (weight)"));
-		}
-		(void)parse_OPERATOR(src);
-	}
 	if (!isAlpha( *src))
 	{
 		throw strus::runtime_error(_TXT( "weighting function identifier expected"));
@@ -257,7 +272,7 @@ static void parseWeightingConfig(
 		throw strus::runtime_error(_TXT( "close oval bracket ')' expected at end of weighting function parameter list"));
 	}
 	(void)parse_OPERATOR(src);
-	qeval.addWeightingFunction( functionName, function.get(), featureParameters, weight); 
+	qeval.addWeightingFunction( functionName, function.get(), featureParameters); 
 	(void)function.release();
 }
 
@@ -363,7 +378,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
-	enum StatementKeyword {e_EVAL, e_SELECTION, e_RESTRICTION, e_TERM, e_SUMMARIZE};
+	enum StatementKeyword {e_FORMULA, e_EVAL, e_SELECTION, e_RESTRICTION, e_TERM, e_SUMMARIZE};
 	std::string id;
 
 	skipSpaces( src);
@@ -371,7 +386,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 	{
 		while (*src)
 		{
-			switch ((StatementKeyword)parse_KEYWORD( src, 5, "EVAL", "SELECT", "RESTRICT", "TERM", "SUMMARIZE"))
+			switch ((StatementKeyword)parse_KEYWORD( src, 6, "FORMULA", "EVAL", "SELECT", "RESTRICT", "TERM", "SUMMARIZE"))
 			{
 				case e_TERM:
 					parseTermConfig( qeval, src);
@@ -406,6 +421,9 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 					break;
 				case e_EVAL:
 					parseWeightingConfig( qeval, queryproc, src);
+					break;
+				case e_FORMULA:
+					parseWeightingFormula( qeval, queryproc, src);
 					break;
 				case e_SUMMARIZE:
 					parseSummarizerConfig( qeval, queryproc, src);
