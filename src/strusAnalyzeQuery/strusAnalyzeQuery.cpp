@@ -1,31 +1,10 @@
 /*
----------------------------------------------------------------------
-    The C++ library strus implements basic operations to build
-    a search engine for structured search on unstructured data.
-
-    Copyright (C) 2015 Patrick Frey
-
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public
-    License as published by the Free Software Foundation; either
-    version 3 of the License, or (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    General Public License for more details.
-
-    You should have received a copy of the GNU General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
---------------------------------------------------------------------
-
-	The latest version of strus can be found at 'http://github.com/patrickfrey/strus'
-	For documentation see 'http://patrickfrey.github.com/strus'
-
---------------------------------------------------------------------
-*/
+ * Copyright (c) 2014 Patrick P. Frey
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/lib/rpc_client.hpp"
@@ -176,10 +155,10 @@ public:
 
 	virtual void addMetaDataRestrictionCondition(
 			strus::MetaDataRestrictionInterface::CompareOperator opr, const std::string& name,
-			const strus::ArithmeticVariant& operand, bool newGroup=true)
+			const strus::NumericVariant& operand, bool newGroup=true)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::string operandstr = arithmeticVariantToString( operand);
+		std::string operandstr = numericVariantToString( operand);
 
 		const char* ng = newGroup?"new group":"";
 		std::cerr
@@ -248,6 +227,13 @@ public:
 		std::cerr << strus::utils::string_sprintf( _TXT( "called addUserName %s"), username_.c_str()) << std::endl;
 #endif
 		m_users.push_back( username_);
+	}
+
+	virtual void setWeightingVariableValue( const std::string& name, double value)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::utils::string_sprintf( _TXT( "called setWeightingFormulaVariableValue %s %g"), name.c_str(), value) << std::endl;
+#endif
 	}
 
 	virtual strus::QueryResult evaluate()
@@ -437,7 +423,7 @@ private:
 	{
 	public:
 		typedef strus::MetaDataRestrictionInterface::CompareOperator CompareOperator;
-		Restriction( CompareOperator opr_, const std::string& name_, strus::ArithmeticVariant operand_, bool newGroup_)
+		Restriction( CompareOperator opr_, const std::string& name_, strus::NumericVariant operand_, bool newGroup_)
 			:opr(opr_),name(name_),operand(operand_),newGroup(newGroup_){}
 		Restriction( const Restriction& o)
 			:opr(o.opr),name(o.name),operand(o.operand),newGroup(o.newGroup){}
@@ -454,7 +440,7 @@ private:
 
 		CompareOperator opr;
 		std::string name;
-		strus::ArithmeticVariant operand;
+		strus::NumericVariant operand;
 		bool newGroup;
 	};
 

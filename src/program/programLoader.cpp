@@ -1,35 +1,14 @@
 /*
----------------------------------------------------------------------
-    The C++ library strus implements basic operations to build
-    a search engine for structured search on unstructured data.
-
-    Copyright (C) 2015 Patrick Frey
-
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public
-    License as published by the Free Software Foundation; either
-    version 3 of the License, or (at your option) any later version.
-
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    General Public License for more details.
-
-    You should have received a copy of the GNU General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
---------------------------------------------------------------------
-
-	The latest version of strus can be found at 'http://github.com/patrickfrey/strus'
-	For documentation see 'http://patrickfrey.github.com/strus'
-
---------------------------------------------------------------------
-*/
+ * Copyright (c) 2014 Patrick P. Frey
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 #include "strus/programLoader.hpp"
 #include "lexems.hpp"
 #include "strus/constants.hpp"
-#include "strus/arithmeticVariant.hpp"
+#include "strus/numericVariant.hpp"
 #include "strus/weightingFunctionInterface.hpp"
 #include "strus/weightingFunctionInstanceInterface.hpp"
 #include "strus/summarizerFunctionInterface.hpp"
@@ -147,13 +126,13 @@ static void parseTermConfig(
 	}
 }
 
-static ArithmeticVariant parseNumericValue( char const*& src)
+static NumericVariant parseNumericValue( char const*& src)
 {
 	if (is_INTEGER(src))
 	{
 		if (isMinus(*src) || isPlus(*src))
 		{
-			return ArithmeticVariant( parse_INTEGER( src));
+			return NumericVariant( parse_INTEGER( src));
 		}
 		else
 		{
@@ -165,19 +144,44 @@ static ArithmeticVariant parseNumericValue( char const*& src)
 			while (*src == '0') ++src;
 			if (*src >= '1' && *src <= '9')
 			{
-				return ArithmeticVariant( parse_UNSIGNED( src));
+				return NumericVariant( parse_UNSIGNED( src));
 			}
 			else
 			{
 				skipSpaces(src);
-				return ArithmeticVariant( 0);
+				return NumericVariant( 0);
 			}
 		}
 	}
 	else
 	{
-		return ArithmeticVariant( parse_FLOAT( src));
+		return NumericVariant( parse_FLOAT( src));
 	}
+}
+
+static void parseWeightingFormula(
+		QueryEvalInterface& qeval,
+		const QueryProcessorInterface* queryproc,
+		char const*& src)
+{
+	std::string langName;
+	if (isAlpha( *src))
+	{
+		langName = parse_IDENTIFIER( src);
+	}
+	if (!isStringQuote( *src))
+	{
+		throw strus::runtime_error(_TXT( "weighting formula string expected"));
+	}
+	std::string funcsrc = parse_STRING( src);
+	const ScalarFunctionParserInterface* scalarfuncparser = queryproc->getScalarFunctionParser(langName);
+	std::auto_ptr<ScalarFunctionInterface> scalarfunc( scalarfuncparser->createFunction( funcsrc));
+	if (!scalarfunc.get())
+	{
+		throw strus::runtime_error(_TXT( "failed to create scalar function (weighting formula) from source"));
+	}
+	qeval.defineWeightingFormula( scalarfunc.get());
+	scalarfunc.release();
 }
 
 static void parseWeightingConfig(
@@ -185,16 +189,6 @@ static void parseWeightingConfig(
 		const QueryProcessorInterface* queryproc,
 		char const*& src)
 {
-	float weight = 1.0;
-	if (is_FLOAT( src))
-	{
-		weight = parse_FLOAT( src);
-		if (!isAsterisk(*src))
-		{
-			throw strus::runtime_error(_TXT( "multiplication operator '*' expected after EVAL followed by a floating point number (weight)"));
-		}
-		(void)parse_OPERATOR(src);
-	}
 	if (!isAlpha( *src))
 	{
 		throw strus::runtime_error(_TXT( "weighting function identifier expected"));
@@ -240,7 +234,7 @@ static void parseWeightingConfig(
 			{
 				throw strus::runtime_error(_TXT( "feature parameter argument must be an identifier or string and not a number"));
 			}
-			ArithmeticVariant parameterValue = parseNumericValue( src);
+			NumericVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
 		}
 		else if (isStringQuote(*src))
@@ -278,7 +272,7 @@ static void parseWeightingConfig(
 		throw strus::runtime_error(_TXT( "close oval bracket ')' expected at end of weighting function parameter list"));
 	}
 	(void)parse_OPERATOR(src);
-	qeval.addWeightingFunction( functionName, function.get(), featureParameters, weight); 
+	qeval.addWeightingFunction( functionName, function.get(), featureParameters); 
 	(void)function.release();
 }
 
@@ -334,7 +328,7 @@ static void parseSummarizerConfig(
 			{
 				throw strus::runtime_error(_TXT( "feature parameter argument must be an identifier or string and not a number"));
 			}
-			ArithmeticVariant parameterValue = parseNumericValue( src);
+			NumericVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
 		}
 		else if (isStringQuote(*src))
@@ -384,7 +378,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
-	enum StatementKeyword {e_EVAL, e_SELECTION, e_RESTRICTION, e_TERM, e_SUMMARIZE};
+	enum StatementKeyword {e_FORMULA, e_EVAL, e_SELECTION, e_RESTRICTION, e_TERM, e_SUMMARIZE};
 	std::string id;
 
 	skipSpaces( src);
@@ -392,7 +386,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 	{
 		while (*src)
 		{
-			switch ((StatementKeyword)parse_KEYWORD( src, 5, "EVAL", "SELECT", "RESTRICT", "TERM", "SUMMARIZE"))
+			switch ((StatementKeyword)parse_KEYWORD( src, 6, "FORMULA", "EVAL", "SELECT", "RESTRICT", "TERM", "SUMMARIZE"))
 			{
 				case e_TERM:
 					parseTermConfig( qeval, src);
@@ -427,6 +421,9 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 					break;
 				case e_EVAL:
 					parseWeightingConfig( qeval, queryproc, src);
+					break;
+				case e_FORMULA:
+					parseWeightingFormula( qeval, queryproc, src);
 					break;
 				case e_SUMMARIZE:
 					parseSummarizerConfig( qeval, queryproc, src);
@@ -1459,11 +1456,11 @@ static void parseQueryExpression(
 	}
 }
 
-static ArithmeticVariant parseMetaDataOperand( char const*& src)
+static NumericVariant parseMetaDataOperand( char const*& src)
 {
 	try
 	{
-		ArithmeticVariant rt;
+		NumericVariant rt;
 		if (is_INTEGER( src))
 		{
 			if (isMinus(*src))
@@ -1492,9 +1489,9 @@ static ArithmeticVariant parseMetaDataOperand( char const*& src)
 	}
 }
 
-static std::vector<ArithmeticVariant> parseMetaDataOperands( char const*& src)
+static std::vector<NumericVariant> parseMetaDataOperands( char const*& src)
 {
-	std::vector<ArithmeticVariant> rt;
+	std::vector<NumericVariant> rt;
 	for (;;)
 	{
 		if (isStringQuote( *src))
@@ -1602,10 +1599,10 @@ static void parseMetaDataRestriction(
 		MetaDataRestrictionInterface::CompareOperator
 			cmpop = parseMetaDataComparionsOperator( src);
 
-		std::vector<ArithmeticVariant>
+		std::vector<NumericVariant>
 			operands = parseMetaDataOperands( src);
 
-		std::vector<ArithmeticVariant>::const_iterator
+		std::vector<NumericVariant>::const_iterator
 			oi = operands.begin(), oe = operands.end();
 		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
 		for (++oi; oi != oe; ++oi)
@@ -1615,7 +1612,7 @@ static void parseMetaDataRestriction(
 	}
 	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src) || isPlus( *src))
 	{
-		std::vector<ArithmeticVariant>
+		std::vector<NumericVariant>
 			operands = parseMetaDataOperands( src);
 
 		MetaDataRestrictionInterface::CompareOperator
@@ -1627,7 +1624,7 @@ static void parseMetaDataRestriction(
 		}
 		std::string fieldname = parse_IDENTIFIER( src);
 
-		std::vector<ArithmeticVariant>::const_iterator
+		std::vector<NumericVariant>::const_iterator
 			oi = operands.begin(), oe = operands.end();
 		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
 		for (++oi; oi != oe; ++oi)
@@ -1810,7 +1807,7 @@ static Index parseDocno( StorageClientInterface& storage, char const*& itr)
 	}
 }
 
-static void storeMetaDataValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const ArithmeticVariant& val)
+static void storeMetaDataValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const NumericVariant& val)
 {
 	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
 	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
@@ -1914,7 +1911,7 @@ static unsigned int loadStorageValues(
 			{
 				case StorageValueMetaData:
 				{
-					ArithmeticVariant val( parseNumericValue( itr));
+					NumericVariant val( parseNumericValue( itr));
 					storeMetaDataValue( *transaction, docno, elementName, val);
 					rt += 1;
 					break;
