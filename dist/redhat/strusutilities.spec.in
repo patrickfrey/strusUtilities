@@ -299,6 +299,9 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Wed Mar 30 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.7.0-0.1
+- adapted interface changes from strus core: introducing scalar function objects used for combining ranking functions or to pass functions to weighting functions or summarizers
+
 * Mon Mar 21 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.6.0-0.1
 - changed license from GPLv3 to MPLv2 (Mozilla Public License, Version 2)
 
