@@ -94,9 +94,9 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 template <class Description>
 static void printFunctionDescription( std::ostream& out, const Description& descr)
 {
-	typedef typename Description::Param Param;
+	typedef typename Description::Parameter Param;
 	out << "* " << descr.text() << std::endl;
-	typename std::vector<Param>::const_iterator pi = descr.param().begin(), pe = descr.param().end();
+	typename std::vector<Param>::const_iterator pi = descr.parameter().begin(), pe = descr.parameter().end();
 	for (; pi != pe; ++pi)
 	{
 		out << "\t" << pi->name() << " [" << pi->typeName();
