@@ -198,7 +198,7 @@ static void parseWeightingConfig(
 	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
 	if (!wf) throw strus::runtime_error(_TXT( "weighting function '%s' not defined"), functionName.c_str());
 
-	std::auto_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance());
+	std::auto_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance( queryproc));
 	if (!function.get()) throw strus::runtime_error(_TXT( "failed to create weighting function '%s'"), functionName.c_str());
 
 	typedef QueryEvalInterface::FeatureParameter FeatureParameter;
