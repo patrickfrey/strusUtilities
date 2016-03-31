@@ -175,7 +175,7 @@ static void parseWeightingFormula(
 	}
 	std::string funcsrc = parse_STRING( src);
 	const ScalarFunctionParserInterface* scalarfuncparser = queryproc->getScalarFunctionParser(langName);
-	std::auto_ptr<ScalarFunctionInterface> scalarfunc( scalarfuncparser->createFunction( funcsrc));
+	std::auto_ptr<ScalarFunctionInterface> scalarfunc( scalarfuncparser->createFunction( funcsrc, std::vector<std::string>()));
 	if (!scalarfunc.get())
 	{
 		throw strus::runtime_error(_TXT( "failed to create scalar function (weighting formula) from source"));
