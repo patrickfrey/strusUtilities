@@ -14,6 +14,7 @@ include( cmake/dist.cmake )
 include( cmake/LinuxDistribution.cmake )
 include( cmake/build_rules.cmake )
 include( cmake/boost.cmake)
+include( cmake/intl.cmake )
 include( cmake/find_strus_package.cmake )
 
 find_strus_package( core )
