@@ -8,6 +8,7 @@ set(source_files
 )
 
 include_directories(
+		"${Intl_INCLUDE_DIRS}"
             "${Boost_INCLUDE_DIRS}"
 	    "${PROJECT_SOURCE_DIR}/include"
 	    "${strus_INCLUDE_DIRS}"
@@ -28,8 +29,13 @@ link_directories(
 # PROGRAMS
 # ------------------------------
 add_executable( strusAnalyze ${source_files} )
-target_link_libraries( strusAnalyze  strus_private_utils  ${strusmodule_LIBRARIES} strus_program strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket )
+target_link_libraries( strusAnalyze  strus_private_utils  ${strusmodule_LIBRARIES} strus_program strus_utils strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
 
+# FreeBSD needs kernel data access library for libuv (-libkvm)
+find_library( LIBKVM_LIBRARIES kvm )
+if(LIBKVM_LIBRARIES)
+	target_link_libraries( strusAnalyze ${LIBKVM_LIBRARIES} )
+endif()
 
 # ------------------------------
 # INSTALLATION
