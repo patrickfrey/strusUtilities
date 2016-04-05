@@ -25,6 +25,7 @@
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/functionDescription.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
@@ -91,15 +92,20 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 	}
 }
 
-template <class Description>
-static void printFunctionDescription( std::ostream& out, const Description& descr)
+static const char* functionDescriptionParameterTypeName( strus::FunctionDescription::Parameter::Type type_)
 {
-	typedef typename Description::Parameter Param;
+	static const char* ar[] = {"Feature","Attribute","Metadata","Numeric","String"};
+	return ar[ (unsigned int)type_];
+}
+
+static void printFunctionDescription( std::ostream& out, const strus::FunctionDescription& descr)
+{
+	typedef strus::FunctionDescription::Parameter Param;
 	out << "* " << descr.text() << std::endl;
 	typename std::vector<Param>::const_iterator pi = descr.parameter().begin(), pe = descr.parameter().end();
 	for (; pi != pe; ++pi)
 	{
-		out << "\t" << pi->name() << " [" << pi->typeName();
+		out << "\t" << pi->name() << " [" << functionDescriptionParameterTypeName( pi->type());
 		if (!pi->domain().empty())
 		{
 			out << " (" << pi->domain() << ")";
