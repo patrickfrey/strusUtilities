@@ -102,7 +102,7 @@ static void printFunctionDescription( std::ostream& out, const strus::FunctionDe
 {
 	typedef strus::FunctionDescription::Parameter Param;
 	out << "* " << descr.text() << std::endl;
-	typename std::vector<Param>::const_iterator pi = descr.parameter().begin(), pe = descr.parameter().end();
+	std::vector<Param>::const_iterator pi = descr.parameter().begin(), pe = descr.parameter().end();
 	for (; pi != pe; ++pi)
 	{
 		out << "\t" << pi->name() << " [" << functionDescriptionParameterTypeName( pi->type());
