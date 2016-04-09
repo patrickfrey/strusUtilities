@@ -142,7 +142,7 @@ public:
 		m_variables[ m_stack.back()] = name_;
 	}
 
-	virtual void defineFeature( const std::string& set_, float weight_=1.0)
+	virtual void defineFeature( const std::string& set_, double weight_=1.0)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cerr << strus::utils::string_sprintf( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;
