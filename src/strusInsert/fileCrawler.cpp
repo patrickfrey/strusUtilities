@@ -8,7 +8,7 @@
 #include "fileCrawler.hpp"
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
-#include "strus/private/fileio.hpp"
+#include "strus/base/fileio.hpp"
 
 using namespace strus;
 

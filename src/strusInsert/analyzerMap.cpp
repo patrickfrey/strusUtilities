@@ -8,7 +8,7 @@
 #include "analyzerMap.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/programLoader.hpp"
-#include "strus/private/fileio.hpp"
+#include "strus/base/fileio.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/errorBufferInterface.hpp"

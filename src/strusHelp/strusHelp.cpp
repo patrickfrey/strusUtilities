@@ -21,7 +21,7 @@
 #include "strus/aggregatorFunctionInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/private/cmdLineOpt.hpp"
+#include "strus/base/cmdLineOpt.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"

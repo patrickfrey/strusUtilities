@@ -32,7 +32,7 @@
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/reference.hpp"
-#include "strus/private/snprintf.h"
+#include "strus/base/snprintf.h"
 #include "private/inputStream.hpp"
 #include "private/utils.hpp"
 #include "private/dll_tags.hpp"

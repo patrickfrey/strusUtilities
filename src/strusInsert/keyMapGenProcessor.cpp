@@ -11,7 +11,7 @@
 #include "strus/textProcessorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
-#include "strus/private/fileio.hpp"
+#include "strus/base/fileio.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "private/utils.hpp"
 #include "private/inputStream.hpp"
