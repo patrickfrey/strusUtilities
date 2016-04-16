@@ -20,9 +20,9 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
-#include "strus/private/cmdLineOpt.hpp"
-#include "strus/private/cmdLineOpt.hpp"
-#include "strus/private/configParser.hpp"
+#include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/configParser.hpp"
 #include "private/version.hpp"
 #include <iostream>
 #include <cstring>

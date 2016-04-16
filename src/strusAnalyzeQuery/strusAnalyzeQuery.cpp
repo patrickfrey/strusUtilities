@@ -25,8 +25,8 @@
 #include "strus/versionAnalyzer.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
-#include "strus/private/fileio.hpp"
-#include "strus/private/cmdLineOpt.hpp"
+#include "strus/base/fileio.hpp"
+#include "strus/base/cmdLineOpt.hpp"
 #include "strus/documentClass.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
@@ -142,7 +142,7 @@ public:
 		m_variables[ m_stack.back()] = name_;
 	}
 
-	virtual void defineFeature( const std::string& set_, float weight_=1.0)
+	virtual void defineFeature( const std::string& set_, double weight_=1.0)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cerr << strus::utils::string_sprintf( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;

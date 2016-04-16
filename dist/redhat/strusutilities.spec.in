@@ -67,6 +67,7 @@
 %define fedora 0
 %define fc21 0
 %define fc22 0
+%define fc23 0
 %if 0%{?fedora_version} == 21
 %define dist fc21
 %define fc21 1
@@ -75,6 +76,11 @@
 %if 0%{?fedora_version} == 22
 %define dist fc22
 %define fc22 1
+%define fedora 1
+%endif
+%if 0%{?fedora_version} == 23
+%define dist fc23
+%define fc23 1
 %define fedora 1
 %endif
 
@@ -207,14 +213,17 @@ BuildRequires: boost-devel
 %endif
 %endif
 
+BuildRequires: strusbase-devel >= %{dep_version}
 BuildRequires: strus-devel >= %{dep_version}
 BuildRequires: strusanalyzer-devel >= %{dep_version}
 BuildRequires: strusmodule-devel >= %{dep_version}
 BuildRequires: strusrpc-devel >= %{dep_version}
+BuildRequires: strusbase >= %{dep_version}
 BuildRequires: strus >= %{dep_version}
 BuildRequires: strusanalyzer >= %{dep_version}
 BuildRequires: strusmodule >= %{dep_version}
 BuildRequires: strusrpc >= %{dep_version}
+Requires: strusbase >= %{dep_version}
 Requires: strus >= %{dep_version}
 Requires: strusanalyzer >= %{dep_version}
 Requires: strusmodule >= %{dep_version}
@@ -299,6 +308,12 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Wed Apr 13 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.8.0-0.1
+- adapted interface changes from strus core
+
+* Sun Apr 3 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.7.1-0.1
+- adapted interface changes from strus core
+
 * Wed Mar 30 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.7.0-0.1
 - adapted interface changes from strus core: introducing scalar function objects used for combining ranking functions or to pass functions to weighting functions or summarizers
 

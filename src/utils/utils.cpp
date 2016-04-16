@@ -7,7 +7,7 @@
  */
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
-#include "strus/private/snprintf.h"
+#include "strus/base/snprintf.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 

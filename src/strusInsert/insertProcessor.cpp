@@ -17,7 +17,7 @@
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/document.hpp"
-#include "strus/private/fileio.hpp"
+#include "strus/base/fileio.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/inputStream.hpp"
