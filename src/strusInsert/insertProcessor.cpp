@@ -198,26 +198,9 @@ void InsertProcessor::run()
 								mi = doc.metadata().begin(), me = doc.metadata().end();
 							for (; mi != me; ++mi)
 							{
-								double val = mi->value();
-								if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
-								{
-									if (val < 0.0)
-									{
-										strus::NumericVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-										storagedoc->setMetaData( mi->name(), av);
-									}
-									else
-									{
-										strus::NumericVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-										storagedoc->setMetaData( mi->name(), av);
-									}
-								}
-								else
-								{
-									storagedoc->setMetaData( mi->name(), (float) val);
-								}
+								NumericVariant val = mi->value();
+								storagedoc->setMetaData( mi->name(), val);
 							}
-	
 							// Issue warning for documents cut because they are too big to insert:
 							if (maxpos > Constants::storage_max_position_info())
 							{

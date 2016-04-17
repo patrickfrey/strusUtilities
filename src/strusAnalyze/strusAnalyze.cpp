@@ -284,7 +284,7 @@ int main( int argc, const char* argv[])
 				for (; mi != me; ++mi)
 				{
 					std::cout << mi->name()
-						  << " '" << mi->value() << "'"
+						  << " '" << mi->value().tostring().c_str() << "'"
 						  << std::endl;
 				}
 	
