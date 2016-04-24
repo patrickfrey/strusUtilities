@@ -1,3 +1,7 @@
+strusUtilities (0.8.1)
+  * adapted analyzer interface changes: analyzer metadata values are numeric variants and not doubles
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sun, 24 Apr 2016 18:30:00 +0100
+
 strusUtilities (0.8.0)
   * adapt interface changes from strus core
  -- Patrick Frey <patrickpfrey@yahoo.com>  Wed, 13 Apr 2016 20:30:00 +0100
