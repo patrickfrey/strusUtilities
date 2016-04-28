@@ -1,3 +1,7 @@
+strusutilities (0.9.0-1) unstable; urgency=low
+  * changes in the object builder interfaces
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Thu, 28 Apr 2016 16:00:00 +0100
+
 strusutilities (0.8.1-1) unstable; urgency=low
   * adapted analyzer interface changes: analyzer metadata values are numeric variants and not doubles
  -- Patrick Frey <patrickpfrey@yahoo.com>  Sun, 24 Apr 2016 18:30:00 +0100
