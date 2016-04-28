@@ -7,9 +7,10 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
-#include "strus/moduleLoaderInterface.hpp"
+#include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
@@ -71,9 +72,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 7,
+				argc, argv, 6,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "P,statsproc");
+				"r,rpc:", "s,storage:" );
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -122,17 +123,6 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		if (opt("statsproc"))
-		{
-			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--statuproc", "--rpc");
-			std::string statsproc( opt["statsproc"]);
-			moduleLoader->defineStatisticsProcessor( statsproc);
-		}
-		else
-		{
-			moduleLoader->defineStatisticsProcessor( "");
-		}
-
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusDumpStatistics [options] <filename>" << std::endl;
@@ -156,8 +146,6 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
-			std::cout << "-P|--statsproc <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use statistics processor with name <NAME>") << std::endl;
 			return rt;
 		}
 		std::string storagecfg;
@@ -188,7 +176,7 @@ int main( int argc, const char* argv[])
 			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
 		std::auto_ptr<strus::StorageClientInterface>
-			storage( storageBuilder->createStorageClient( storagecfg));
+			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
 		std::auto_ptr<strus::StatisticsIteratorInterface>

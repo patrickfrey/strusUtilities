@@ -7,9 +7,10 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
-#include "strus/moduleLoaderInterface.hpp"
+#include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
@@ -251,8 +252,8 @@ int main( int argc_, const char* argv_[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
-		strus::utils::ScopedPtr<strus::StorageClientInterface>
-			storage( storageBuilder->createStorageClient( storagecfg));
+		std::auto_ptr<strus::StorageClientInterface>
+			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 
 		strus::utils::ScopedPtr<strus::QueryAnalyzerInterface>

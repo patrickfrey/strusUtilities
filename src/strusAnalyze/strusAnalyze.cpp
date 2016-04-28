@@ -145,10 +145,10 @@ int main( int argc, const char* argv[])
 		}
 		std::string analyzerprg = opt[0];
 		std::string docpath = opt[1];
-		std::string segmenter;
+		std::string segmentername;
 		if (opt( "segmenter"))
 		{
-			segmenter = opt[ "segmenter"];
+			segmentername = opt[ "segmenter"];
 		}
 
 		// Set paths for locating resources:
@@ -193,6 +193,8 @@ int main( int argc, const char* argv[])
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
 			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 		}
+		const strus::SegmenterInterface* segmenter = analyzerBuilder->getSegmenter( segmentername);
+		if (!segmenter) throw strus::runtime_error(_TXT("failed to find specified document segmenter"));
 		std::auto_ptr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));

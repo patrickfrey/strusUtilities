@@ -7,9 +7,10 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
-#include "strus/moduleLoaderInterface.hpp"
+#include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
@@ -206,8 +207,8 @@ int main( int argc, const char* argv[])
 		else
 		{
 			std::auto_ptr<strus::StorageClientInterface>
-				storage( storageBuilder->createStorageClient( storagecfg));
-			if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
+				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
+			if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 
 			std::auto_ptr<strus::StorageDumpInterface> dump( storage->createDump( keyprefix));
 			if (!dump.get()) throw strus::runtime_error(_TXT("could not create storage dump interface"));

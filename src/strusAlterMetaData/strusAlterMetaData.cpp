@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/storage_objbuild.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
@@ -304,7 +305,7 @@ int main( int argc, const char* argv[])
 		builder.reset( moduleLoader->createStorageObjectBuilder());
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
-		md.reset( builder->createAlterMetaDataTable( storagecfg));
+		md.reset( strus::createAlterMetaDataTable( builder.get(), errorBuffer.get(), storagecfg));
 		if (!md.get()) throw strus::runtime_error(_TXT("failed to create storage alter metadata table structure"));
 
 		// Execute alter meta data table commands:

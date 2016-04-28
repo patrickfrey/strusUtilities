@@ -185,9 +185,9 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
 		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
-		std::auto_ptr<strus::SegmenterInterface>
-			segmentertype( analyzerBuilder->createSegmenter( segmenterName));
-		if (!segmentertype.get()) throw strus::runtime_error(_TXT("failed to segmenter interface"));
+		const strus::SegmenterInterface*
+			segmentertype = analyzerBuilder->getSegmenter( segmenterName);
+		if (!segmentertype) throw strus::runtime_error(_TXT("failed to get segmenter interface by name"));
 		std::auto_ptr<strus::SegmenterInstanceInterface>
 			segmenter( segmentertype->createInstance());
 		if (!segmenter.get()) throw strus::runtime_error(_TXT("failed to segmenter instance"));

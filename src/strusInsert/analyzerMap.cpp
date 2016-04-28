@@ -75,12 +75,11 @@ void AnalyzerMap::defineAnalyzerProgramSource(
 		const std::string& segmentername,
 		const std::string& analyzerProgramSource)
 {
-	std::auto_ptr<strus::SegmenterInterface>
-		segmenter( m_builder->createSegmenter( segmentername));
-	if (!segmenter.get()) throw strus::runtime_error(_TXT("error creating segmenter"));
+	const strus::SegmenterInterface* segmenter = m_builder->getSegmenter( segmentername);
+	if (!segmenter) throw strus::runtime_error(_TXT("error getting segmenter by name"));
 
 	utils::SharedPtr<strus::DocumentAnalyzerInterface>
-		analyzer( m_builder->createDocumentAnalyzer( segmentername));
+		analyzer( m_builder->createDocumentAnalyzer( segmenter));
 	if (!analyzer.get()) throw strus::runtime_error(_TXT("error creating analyzer"));
 
 	std::string mimeType = segmenter->mimeType();

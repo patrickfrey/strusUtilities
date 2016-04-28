@@ -144,10 +144,10 @@ int main( int argc_, const char* argv_[])
 		}
 		unsigned int nofResults = opt.asUint( "results");
 		std::string fileext = "";
-		std::string segmenter;
+		std::string segmentername;
 		if (opt( "segmenter"))
 		{
-			segmenter = opt[ "segmenter"];
+			segmentername = opt[ "segmenter"];
 		}
 		if (opt( "extension"))
 		{
@@ -185,6 +185,9 @@ int main( int argc_, const char* argv_[])
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
 		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+		const strus::SegmenterInterface*
+			segmenter = analyzerBuilder->getSegmenter( segmentername);
+		if (!segmenter) throw strus::runtime_error(_TXT("failed to get document segmenter by name"));
 		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
@@ -193,7 +196,7 @@ int main( int argc_, const char* argv_[])
 
 		// [2] Load analyzer program(s):
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
-		analyzerMap.defineProgram( ""/*scheme*/, segmenter, analyzerprg);
+		analyzerMap.defineProgram( ""/*scheme*/, segmentername, analyzerprg);
 
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler* fileCrawler
