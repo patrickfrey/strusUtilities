@@ -10,6 +10,7 @@
 #include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
@@ -34,6 +35,7 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -645,9 +647,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 6,
+				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:");
+				"r,rpc:", "s,storage:", "T,trace:");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
@@ -757,6 +759,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			if (!opt("rpc"))
 			{
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
@@ -764,7 +768,7 @@ int main( int argc, const char* argv[])
 			}
 			return rt;
 		}
-
+		// Parse arguments:
 		std::string storagecfg;
 		if (opt("storage"))
 		{
@@ -774,6 +778,19 @@ int main( int argc, const char* argv[])
 		std::string what = opt[0];
 		const char** inpectarg = opt.argv() + 1;
 		std::size_t inpectargsize = opt.nofargs() - 1;
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
 
 		// Create objects for inspecting storage:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -794,11 +811,21 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+			storageBuilder.release();
+			storageBuilder.reset( sproxy);
+		}
+
+		// Do inspect what is requested:
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 
-		// Do inspect what is requested:
 		if (strus::utils::caseInsensitiveEquals( what, "pos"))
 		{
 			inspectPositions( *storage, inpectarg, inpectargsize);

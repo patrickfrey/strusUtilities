@@ -17,6 +17,7 @@
 #include "strus/storageAlterMetaDataTableInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/errorBufferInterface.hpp"
+#include "strus/reference.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
@@ -25,6 +26,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "private/version.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -200,8 +202,8 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 4,
-				"h,help", "v,version", "m,module:", "M,moduledir:");
+				argc, argv, 5,
+				"h,help", "v,version", "m,module:", "M,moduledir:", "T,trace:");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
@@ -293,10 +295,26 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Parse arguments:
 		std::string storagecfg = opt[0];
 		std::vector<AlterMetaDataCommand> cmds = parseCommands( opt[1]);
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
 
 		// Create objects for altering the meta data table:
 		std::auto_ptr<strus::StorageObjectBuilderInterface> builder;
@@ -304,6 +322,15 @@ int main( int argc, const char* argv[])
 
 		builder.reset( moduleLoader->createStorageObjectBuilder());
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::StorageObjectBuilderInterface* builderproxy = (*ti)->createProxy( builder.get());
+			builder.release();
+			builder.reset( builderproxy);
+		}
 
 		md.reset( strus::createAlterMetaDataTable( builder.get(), errorBuffer.get(), storagecfg));
 		if (!md.get()) throw strus::runtime_error(_TXT("failed to create storage alter metadata table structure"));

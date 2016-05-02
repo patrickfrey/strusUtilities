@@ -11,6 +11,7 @@
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/moduleLoaderInterface.hpp"
+#include "strus/reference.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
@@ -30,6 +31,7 @@
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -88,9 +90,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 8,
+				argc, argv, 9,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "B,blocksizes", "P,prefix:");
+				"r,rpc:", "s,storage:", "B,blocksizes", "P,prefix:",
+				"T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -160,8 +163,11 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Dump only block sizes") << std::endl;
 			std::cout << "-P|--prefix <KEY>" << std::endl;
 			std::cout << "    " << _TXT("Dump only the blocks of a certain type with prefix <KEY>") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Parse arguments:
 		bool dumpOnlyBlockSizes = opt("blocksizes");
 		std::string storagecfg;
 		if (opt("storage"))
@@ -174,7 +180,21 @@ int main( int argc, const char* argv[])
 		{
 			keyprefix = opt["prefix"];
 		}
-		// Dump the storage:
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+
+		// Create the root objects:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;
 		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
@@ -193,6 +213,17 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+			storageBuilder.release();
+			storageBuilder.reset( sproxy);
+		}
+
+		// Dump the storage:
 		if (dumpOnlyBlockSizes)
 		{
 			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);

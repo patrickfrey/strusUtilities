@@ -10,6 +10,7 @@
 #include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
@@ -30,6 +31,7 @@
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -69,10 +71,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 10,
+				argc, argv, 11,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "c,commit:",
-				"a,attribute:","m,metadata:","u,useraccess");
+				"r,rpc:", "s,storage:", "c,commit:", "a,attribute:",
+				"m,metadata:","u,useraccess", "T,trace:");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
@@ -159,8 +161,24 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("If <N> is set to 0 then only one commit is done at the end") << std::endl;
 			std::cout << "-L|--logerror <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Write the last error occurred to <FILE> in case of an exception")  << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+
+		// Set logger:
 		if (opt("logerror"))
 		{
 			std::string filename( opt["logerror"]);
@@ -168,6 +186,7 @@ int main( int argc, const char* argv[])
 			if (!logfile) throw strus::runtime_error(_TXT("error loading log file '%s' for appending (errno %u)"), filename.c_str(), errno);
 			errorBuffer->setLogFile( logfile);
 		}
+		// Parse arguments:
 		std::string storagecfg;
 		if (opt("storage"))
 		{

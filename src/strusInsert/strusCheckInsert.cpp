@@ -11,6 +11,7 @@
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/moduleLoaderInterface.hpp"
+#include "strus/reference.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
@@ -36,6 +37,7 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include "fileCrawler.hpp"
 #include "checkInsertProcessor.hpp"
 #include "thread.hpp"
@@ -78,11 +80,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 13,
+				argc_, argv_, 14,
 				"h,help", "t,threads:", "l,logfile:", "n,notify:",
 				"v,version", "R,resourcedir:", "M,moduledir:", "m,module:", 
 				"x,extension:", "r,rpc:", "g,segmenter:", "s,storage:",
-				"S,configfile:");
+				"S,configfile:", "T,trace:");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -196,8 +198,24 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Set <FILE> as output file (default stdout)") << std::endl;
 			std::cout << "-n|--notify <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as notification interval (number of documents)") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+
+		// Parse arguments:
 		std::string logfile = "-";
 		if (opt("logfile"))
 		{
@@ -245,7 +263,7 @@ int main( int argc_, const char* argv_[])
 			moduleLoader->addResourcePath( resourcepath);
 		}
 
-		// Create objects for insert checker:
+		// Create root objects:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
@@ -271,6 +289,19 @@ int main( int argc_, const char* argv_[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
+			analyzerBuilder.release();
+			analyzerBuilder.reset( aproxy);
+			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+			storageBuilder.release();
+			storageBuilder.reset( sproxy);
+		}
+
+		// Create objects:
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));

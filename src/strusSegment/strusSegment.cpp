@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/reference.hpp"
 #include "strus/documentClass.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
@@ -17,7 +18,6 @@
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/reference.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
@@ -26,6 +26,7 @@
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -81,10 +82,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 11,
+				argc, argv, 12,
 				"h,help", "v,version", "s,segmenter:", "e,expression:",
-				"m,module:", "M,moduledir:", "P,prefix:",
-				"i,index", "p,position", "q,quot:", "E,esceol");
+				"m,module:", "M,moduledir:", "P,prefix:", "i,index",
+				"p,position", "q,quot:", "E,esceol", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -160,8 +161,11 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Use the string <STR> as prefix for the result") << std::endl;
 			std::cout << "-E|--esceol" << std::endl;
 			std::cout << "    " << _TXT("Escape end of line with space") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Parse arguments:
 		std::string docpath = opt[0];
 		std::string segmenterName;
 		std::string resultPrefix;
@@ -181,10 +185,34 @@ int main( int argc, const char* argv[])
 		{
 			segmenterName = opt[ "segmenter"];
 		}
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+
 		// Create objects for segmenter:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
 		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
+			analyzerBuilder.release();
+			analyzerBuilder.reset( aproxy);
+		}
+
 		const strus::SegmenterInterface*
 			segmentertype = analyzerBuilder->getSegmenter( segmenterName);
 		if (!segmentertype) throw strus::runtime_error(_TXT("failed to get segmenter interface by name"));

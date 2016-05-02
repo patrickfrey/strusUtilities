@@ -10,6 +10,7 @@
 #include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
@@ -36,6 +37,7 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "insertProcessor.hpp"
@@ -81,11 +83,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 15,
+				argc_, argv_, 16,
 				"h,help", "t,threads:", "c,commit:", "f,fetch:",
 				"v,version", "g,segmenter:", "m,module:", "L,logerror:",
 				"M,moduledir:", "R,resourcedir:", "r,rpc:", "x,extension:",
-				"s,storage:", "S,configfile:", "V,verbose");
+				"s,storage:", "S,configfile:", "V,verbose", "T,trace:");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -209,8 +211,23 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Write the last error occurred to <FILE> in case of an exception")  << std::endl;
 			std::cout << "-V|--verbose" << std::endl;
 			std::cout << "    " << _TXT("verbose output") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+
 		unsigned int transactionSize = 1000;
 		if (opt("logerror"))
 		{
@@ -292,6 +309,19 @@ int main( int argc_, const char* argv_[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
+			analyzerBuilder.release();
+			analyzerBuilder.reset( aproxy);
+			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+			storageBuilder.release();
+			storageBuilder.reset( sproxy);
+		}
+
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));

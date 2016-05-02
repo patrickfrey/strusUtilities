@@ -10,6 +10,7 @@
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
+#include "strus/reference.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
@@ -23,6 +24,7 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include "fileCrawler.hpp"
 #include "keyMapGenProcessor.hpp"
 #include "thread.hpp"
@@ -47,10 +49,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 10,
+				argc_, argv_, 11,
 				"h,help", "t,threads:", "u,unit:",
 				"n,results:", "v,version", "m,module:", "x,extension:",
-				"s,segmenter:", "M,moduledir:", "R,resourcedir:");
+				"s,segmenter:", "M,moduledir:", "R,resourcedir:",
+				"T,trace:");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -133,7 +136,22 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Set <N> as number of files processed per iteration (default 1000)") << std::endl;
 			std::cout << "-n|--results <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as number of elements in the key map generated") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
+		}
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
 		}
 
 		// [1] Build objects:
@@ -181,10 +199,21 @@ int main( int argc_, const char* argv_[])
 			moduleLoader->addResourcePath( resourcepath);
 		}
 
-		// Create objects for keymap generation:
+		// Create root objects:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
 		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
+			analyzerBuilder.release();
+			analyzerBuilder.reset( aproxy);
+		}
+		
+		// Create objects for keymap generation:
 		const strus::SegmenterInterface*
 			segmenter = analyzerBuilder->getSegmenter( segmentername);
 		if (!segmenter) throw strus::runtime_error(_TXT("failed to get document segmenter by name"));

@@ -21,6 +21,7 @@
 #include "private/version.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include "strus/programLoader.hpp"
 #include <iostream>
 #include <fstream>
@@ -57,10 +58,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 10,
 				"h,help", "v,version", "t,tokenizer:", "n,normalizer:",
 				"m,module:", "M,moduledir:", "q,quot:", "p,plain",
-				"R,resourcedir:");
+				"R,resourcedir:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
@@ -133,8 +134,23 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default \"\'\")") << std::endl;
 			std::cout << "-p|--plain" << std::endl;
 			std::cout << "    " << _TXT("Do not print position and define default quotes as empty") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+
 		std::string resultQuot = "'";
 		bool resultPlain = false;
 		if (opt( "plain"))
@@ -169,14 +185,26 @@ int main( int argc, const char* argv[])
 			}
 		}
 
-		// Create objects for analyzer:
+		// Create root object for analyzer:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			builder( moduleLoader->createAnalyzerObjectBuilder());
-		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
+		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+
+		// Create proxy objects if tracing enabled:
+		{
+			std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+			for (; ti != te; ++ti)
+			{
+				strus::AnalyzerObjectBuilderInterface* proxy = (*ti)->createProxy( analyzerBuilder.get());
+				analyzerBuilder.release();
+				analyzerBuilder.reset( proxy);
+			}
+		}
+		// Create objects for analyzer:
 		std::auto_ptr<strus::QueryAnalyzerInterface>
-			analyzer( builder->createQueryAnalyzer());
+			analyzer( analyzerBuilder->createQueryAnalyzer());
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create analyzer"));
-		const strus::TextProcessorInterface* textproc = builder->getTextProcessor();
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Create phrase type (tokenizer and normalizer):

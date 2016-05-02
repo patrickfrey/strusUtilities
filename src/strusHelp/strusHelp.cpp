@@ -10,6 +10,7 @@
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/reference.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
@@ -31,6 +32,7 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <sstream>
 #include <memory>
@@ -176,9 +178,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 6,
+				argc_, argv_, 7,
 				"h,help", "v,version", "m,module:",
-				"M,moduledir:", "R,resourcedir:", "r,rpc:");
+				"M,moduledir:", "R,resourcedir:", "r,rpc:",
+				"T,trace:");
 
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
@@ -249,8 +252,11 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Parse arguments:
 		std::string what;
 		std::string item;
 		if (opt.nofargs() > 0)
@@ -263,6 +269,20 @@ int main( int argc_, const char* argv_[])
 			item = opt[1];
 			if (item.empty()) throw strus::runtime_error(_TXT("illegal empty item value as program argument"));
 		}
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -275,7 +295,7 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		// Create objects:
+		// Create root objects:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
@@ -299,6 +319,20 @@ int main( int argc_, const char* argv_[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 		}
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
+			analyzerBuilder.release();
+			analyzerBuilder.reset( aproxy);
+			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+			storageBuilder.release();
+			storageBuilder.reset( sproxy);
+		}
+
+		// Print help:
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
