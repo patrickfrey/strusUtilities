@@ -209,6 +209,10 @@ int main( int argc, const char* argv[])
 
 		std::auto_ptr<strus::StatisticsIteratorInterface>
 			statsqueue( storage->createInitStatisticsIterator());
+		if (!statsqueue.get())
+		{
+			throw strus::runtime_error( _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
+		}
 		const char* msg;
 		std::size_t msgsize;
 		std::string output;
