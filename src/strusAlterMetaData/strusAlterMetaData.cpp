@@ -16,6 +16,7 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/versionBase.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "private/programOptions.hpp"
@@ -212,6 +213,7 @@ int main( int argc, const char* argv[])
 		{
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)

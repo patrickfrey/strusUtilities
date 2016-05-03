@@ -32,6 +32,7 @@
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/versionBase.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
@@ -91,7 +92,7 @@ int main( int argc_, const char* argv_[])
 		opt = strus::ProgramOptions(
 				argc_, argv_, 13,
 				"h,help", "Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
-				"T,time", "v,version", "m,module:", "M,moduledir:", "R,resourcedir:",
+				"D,time", "v,version", "m,module:", "M,moduledir:", "R,resourcedir:",
 				"s,storage:", "r,rpc:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
@@ -99,6 +100,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
@@ -170,7 +172,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Return the result starting with rank <N> as first rank") << std::endl;
 			std::cout << "-Q|--quiet" << std::endl;
 			std::cout << "    " << _TXT("No output of results") << std::endl;
-			std::cout << "-T|--time" << std::endl;
+			std::cout << "-D|--time" << std::endl;
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
