@@ -24,6 +24,7 @@
 #include "strus/documentTermIteratorInterface.hpp"
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
+#include "strus/valueIteratorInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/versionStorage.hpp"
@@ -131,6 +132,20 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		{
 			throw strus::runtime_error( _TXT("unknown document"));
 		}
+	}
+}
+
+static void inspectDocumentIndexFeatureTypes( strus::StorageClientInterface& storage)
+{
+	std::auto_ptr<strus::ValueIteratorInterface> valItr( storage.createTermTypeIterator());
+
+	// KLUDGE: This is bad, but the storage cannot tell us how far we should
+	// iterate, does it?
+	enum { MAX_NOF_FEATURES = 100 };
+	
+	std::vector<std::string> termTypes = valItr->fetchValues( MAX_NOF_FEATURES);
+	for (std::vector<std::string>::const_iterator it = termTypes.begin(); it != termTypes.end(); it++) {
+		std::cout << *it << std::endl;
 	}
 }
 
@@ -716,6 +731,8 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"ttc\" <type> [<doc-id/no>]" << std::endl;
 			std::cout << "               = " << _TXT("Get the term type count (distinct) in a document") << std::endl;
 			std::cout << "                 " << _TXT("If document is not specified then dump value for all docs.") << std::endl;
+			std::cout << "            \"featuretypes\"" << std::endl;
+			std::cout << "               = " << _TXT("Get list of feature types in the index") << std::endl;
 			std::cout << "            \"indexterms\" <type> [<doc-id/no>]" << std::endl;
 			std::cout << "               = " << _TXT("Get the list of tuples of term value, first position and ff ") << std::endl;
 			std::cout << "                 " << _TXT("for a search index term type.") << std::endl;
@@ -847,6 +864,10 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "ttc"))
 		{
 			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTerms, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "featuretypes"))
+		{
+			inspectDocumentIndexFeatureTypes( *storage);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "indexterms"))
 		{
