@@ -761,13 +761,13 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
-			std::cout << "-T|--trace <CONFIG>" << std::endl;
-			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			if (!opt("rpc"))
 			{
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
