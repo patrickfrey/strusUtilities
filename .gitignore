@@ -70,4 +70,5 @@ src/strusInspect/strusInspect
 src/strusUpdateStorage/strusUpdateStorage
 src/strusSegment/strusSegment
 src/strusHelp/strusHelp
+src/strusDeleteDocument/strusDeleteDocument
 
