@@ -66,10 +66,6 @@ void InsertProcessor::run()
 		std::vector<std::string> files;
 		std::vector<std::string>::const_iterator fitr;
 	
-		std::auto_ptr<strus::MetaDataReaderInterface> metadata( 
-			m_storage->createMetaDataReader());
-		if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
-
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
 		if (!transaction.get()) throw strus::runtime_error(_TXT("error creating storage transaction"));
