@@ -72,3 +72,4 @@ src/strusSegment/strusSegment
 src/strusHelp/strusHelp
 src/strusDeleteDocument/strusDeleteDocument
 
+.travis.yml
