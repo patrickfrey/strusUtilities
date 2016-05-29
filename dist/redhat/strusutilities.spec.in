@@ -292,6 +292,7 @@ make test
 %{_bindir}/strusCheckInsert
 %{_bindir}/strusGenerateKeyMap
 %{_bindir}/strusInsert
+%{_bindir}/strusDeleteDocument
 %{_bindir}/strusAlterMetaData
 %{_bindir}/strusInspect
 %{_bindir}/strusQuery
