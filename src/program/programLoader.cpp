@@ -562,15 +562,21 @@ static void parseFunctionDef( const char* functype, std::string& name, std::vect
 		if (isOpenOvalBracket( *src))
 		{
 			(void)parse_OPERATOR(src);
-
-			arg = parseArgumentList( src);
 			if (isCloseOvalBracket( *src))
 			{
 				(void)parse_OPERATOR( src);
 			}
 			else
 			{
-				throw strus::runtime_error( _TXT("comma ',' as argument separator or close oval brakcet ')' expected at end of %s argument list"), functype);
+				arg = parseArgumentList( src);
+				if (isCloseOvalBracket( *src))
+				{
+					(void)parse_OPERATOR( src);
+				}
+				else
+				{
+					throw strus::runtime_error( _TXT("comma ',' as argument separator or close oval brakcet ')' expected at end of %s argument list"), functype);
+				}
 			}
 		}
 		else
