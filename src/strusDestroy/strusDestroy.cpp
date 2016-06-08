@@ -194,6 +194,7 @@ int main( int argc, const char* argv[])
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( databasecfg);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
+		// Do the delete:
 		if (!dbi->destroyDatabase( databasecfg))
 		{
 			throw strus::runtime_error(_TXT("error destroying database"));
