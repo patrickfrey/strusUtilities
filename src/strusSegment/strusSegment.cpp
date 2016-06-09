@@ -17,13 +17,17 @@
 #include "strus/segmenterContextInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
+#include "strus/versionModule.hpp"
+#include "strus/versionRpc.hpp"
+#include "strus/versionTrace.hpp"
+#include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
+#include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "private/programOptions.hpp"
-#include "private/version.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -91,6 +95,9 @@ int main( int argc, const char* argv[])
 		if (opt( "version"))
 		{
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;

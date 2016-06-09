@@ -15,8 +15,12 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageAlterMetaDataTableInterface.hpp"
-#include "strus/versionStorage.hpp"
 #include "strus/versionBase.hpp"
+#include "strus/versionStorage.hpp"
+#include "strus/versionModule.hpp"
+#include "strus/versionRpc.hpp"
+#include "strus/versionTrace.hpp"
+#include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "private/programOptions.hpp"
@@ -26,7 +30,6 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
-#include "private/version.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
@@ -213,6 +216,9 @@ int main( int argc, const char* argv[])
 		{
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
