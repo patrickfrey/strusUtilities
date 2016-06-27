@@ -34,15 +34,12 @@ cmake_install.cmake
 install_manifest.txt
 CTestTestfile.cmake
 CMakeLists.txt.user
-CTestTestfile.cmake.user
 cmake/uninstall.cmake
 DartConfiguration.tcl
 Testing/
 CPackConfig.cmake
-CPackConfig.cmake.user
 CPackSourceConfig.cmake
-CPackSourceConfig.cmake.user
-cmake/build_rules.cmake.user
+*.cmake.user
 include/private/version.hpp
 src/utils/internationalization.cpp
 dist/obs/deploy_to_obs.sh
