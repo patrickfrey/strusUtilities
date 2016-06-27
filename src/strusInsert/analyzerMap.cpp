@@ -18,8 +18,9 @@
 
 using namespace strus;
 
-AnalyzerMap::AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const std::string& defaultSegmenter_, ErrorBufferInterface* errorhnd_)
-	:m_map(),m_defaultAnalyzerProgramSource(),m_defaultSegmenter(defaultSegmenter_)
+AnalyzerMap::AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const std::string& defaultSegmenterName_, ErrorBufferInterface* errorhnd_)
+	:m_map(),m_defaultAnalyzerProgramSource(),m_defaultSegmenterName(defaultSegmenterName_)
+	,m_defaultSegmenter(defaultSegmenterName_.empty()?0:builder_->getSegmenter( defaultSegmenterName_))
 	,m_builder(builder_),m_errorhnd(errorhnd_)
 {
 	defineDefaultProgram( prgfile_);
@@ -66,7 +67,7 @@ void AnalyzerMap::defineDefaultProgram(
 		{
 			if (mi->segmenter.empty())
 			{
-				mi->segmenter = m_defaultSegmenter;
+				mi->segmenter = m_defaultSegmenterName;
 			}
 			programSource.clear();
 			ec = strus::readFile( mi->prgFilename, programSource);
@@ -89,7 +90,7 @@ void AnalyzerMap::defineDefaultProgram(
 			throw strus::runtime_error(_TXT("error detecting analyzer configuration file type"));
 		}
 		m_defaultAnalyzerProgramSource = programSource;
-		if (!m_defaultSegmenter.empty())
+		if (m_defaultSegmenter)
 		{
 			defineAnalyzerProgramSource( 0/*scheme*/, m_defaultSegmenter, m_defaultAnalyzerProgramSource);
 		}
@@ -148,10 +149,14 @@ DocumentAnalyzerInterface* AnalyzerMap::get( const DocumentClass& dclass)
 	}
 	if (!rt && !m_defaultAnalyzerProgramSource.empty())
 	{
-		const SegmenterInterface* segmenter = m_builder->findMimeTypeSegmenter( dclass.mimeType());
-		if (!segmenter && !m_defaultSegmenter.empty())
+		const SegmenterInterface* segmenter;
+		if (m_defaultSegmenter && 0==std::strcmp( m_defaultSegmenter->mimeType(), dclass.mimeType().c_str()))
 		{
-			segmenter = m_builder->getSegmenter( m_defaultSegmenter);
+			segmenter = m_defaultSegmenter;
+		}
+		else
+		{
+			segmenter = m_builder->findMimeTypeSegmenter( dclass.mimeType());
 		}
 		if (segmenter)
 		{
