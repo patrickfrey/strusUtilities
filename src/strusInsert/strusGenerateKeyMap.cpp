@@ -222,18 +222,11 @@ int main( int argc_, const char* argv_[])
 		}
 		
 		// Create objects for keymap generation:
-		const strus::SegmenterInterface*
-			segmenter = analyzerBuilder->getSegmenter( segmentername);
-		if (!segmenter) throw strus::runtime_error(_TXT("failed to get document segmenter by name"));
-		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
-			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// [2] Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
-		analyzerMap.defineProgram( ""/*scheme*/, segmentername, analyzerprg);
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, segmentername, errorBuffer.get());
 
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler* fileCrawler

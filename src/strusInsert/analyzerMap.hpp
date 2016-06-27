@@ -19,31 +19,41 @@ class DocumentClass;
 /// \brief Forward declaration
 class AnalyzerObjectBuilderInterface;
 /// \brief Forward declaration
+class SegmenterInterface;
+/// \brief Forward declaration
 class ErrorBufferInterface;
 
 class AnalyzerMap
 {
 public:
-	AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, ErrorBufferInterface* errorhnd_)
-		:m_builder(builder_),m_errorhnd(errorhnd_){}
+	AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const std::string& defaultSegmenter_, ErrorBufferInterface* errorhnd_);
 	AnalyzerMap( const AnalyzerMap& o)
-		:m_map(o.m_map),m_builder(o.m_builder),m_errorhnd(o.m_errorhnd){}
+		:m_map(o.m_map),m_defaultAnalyzerProgramSource(o.m_defaultAnalyzerProgramSource)
+		,m_defaultSegmenter(o.m_defaultSegmenter),m_builder(o.m_builder),m_errorhnd(o.m_errorhnd){}
 
 	void defineProgram(
 			const std::string& scheme,
 			const std::string& segmenter,
 			const std::string& prgfile);
 
-	DocumentAnalyzerInterface* get( const DocumentClass& dclass) const;
+	DocumentAnalyzerInterface* get( const DocumentClass& dclass);
 
 private:
+	void defineDefaultProgram(
+			const std::string& prgfile);
 	void defineAnalyzerProgramSource(
 			const std::string& scheme,
 			const std::string& segmenter,
 			const std::string& analyzerProgramSource);
+	void defineAnalyzerProgramSource(
+			const std::string& scheme,
+			const strus::SegmenterInterface* segmenter,
+			const std::string& analyzerProgramSource);
 
 	typedef std::map<std::string,utils::SharedPtr<DocumentAnalyzerInterface> > Map;
 	Map m_map;
+	std::string m_defaultAnalyzerProgramSource;
+	std::string m_defaultSegmenter;
 	const strus::AnalyzerObjectBuilderInterface* m_builder;
 	ErrorBufferInterface* m_errorhnd;
 };

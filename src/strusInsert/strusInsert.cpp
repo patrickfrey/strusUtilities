@@ -334,20 +334,11 @@ int main( int argc_, const char* argv_[])
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 
-		const strus::SegmenterInterface*
-			segmenter = analyzerBuilder->getSegmenter( segmentername);
-		if (!segmenter) throw strus::runtime_error(_TXT("failed to get document segmenter by name"));
-
-		strus::utils::ScopedPtr<strus::DocumentAnalyzerInterface>
-			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
-
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
-		analyzerMap.defineProgram( ""/*scheme*/, segmentername, analyzerprg);
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, segmentername, errorBuffer.get());
 
 		// Start inserter process:
 		strus::utils::ScopedPtr<strus::CommitQueue>
