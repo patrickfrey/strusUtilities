@@ -85,11 +85,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 14,
+				argc_, argv_, 15,
 				"h,help", "t,threads:", "l,logfile:", "n,notify:",
 				"v,version", "R,resourcedir:", "M,moduledir:", "m,module:", 
-				"x,extension:", "r,rpc:", "g,segmenter:", "s,storage:",
-				"S,configfile:", "T,trace:");
+				"D,contenttype:", "x,extension:", "r,rpc:", "g,segmenter:",
+				"s,storage:", "S,configfile:", "T,trace:");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -199,6 +199,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
+			std::cout << "-D|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of all documents inserted.") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
 			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
@@ -239,6 +241,12 @@ int main( int argc_, const char* argv_[])
 		std::string datapath = opt[1];
 		std::string fileext;
 		std::string segmentername;
+		std::string contenttype;
+
+		if (opt( "contenttype"))
+		{
+			contenttype = opt[ "contenttype"];
+		}
 		if (opt( "segmenter"))
 		{
 			segmentername = opt[ "segmenter"];
@@ -319,7 +327,12 @@ int main( int argc_, const char* argv_[])
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, segmentername, errorBuffer.get());
+		strus::DocumentClass documentClass;
+		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+		{
+			throw strus::runtime_error(_TXT("failed to parse document class"));
+		}
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
 		
 		strus::FileCrawler* fileCrawler
 			= new strus::FileCrawler(

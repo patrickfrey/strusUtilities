@@ -26,6 +26,8 @@ class QueryInterface;
 /// \brief Forward declaration
 class DocumentAnalyzerInterface;
 /// \brief Forward declaration
+class DocumentClass;
+/// \brief Forward declaration
 class QueryAnalyzerInterface;
 /// \brief Forward declaration
 class StorageClientInterface;
@@ -190,6 +192,15 @@ unsigned int loadDocumentUserRightsAssignments(
 		StorageClientInterface& storage,
 		const std::string& file,
 		unsigned int commitsize,
+		ErrorBufferInterface* errorhnd);
+
+/// \brief Parses a document class from a declaration like 'content="application/xml"; charset=UTF-8"'
+/// \param[out] result returned document class
+/// \param[in] source content type declaration
+/// \return true on success
+bool parseDocumentClass(
+		DocumentClass& result,
+		const std::string& source,
 		ErrorBufferInterface* errorhnd);
 
 }//namespace

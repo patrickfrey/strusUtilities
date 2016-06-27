@@ -18,8 +18,8 @@
 
 using namespace strus;
 
-AnalyzerMap::AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const std::string& defaultSegmenterName_, ErrorBufferInterface* errorhnd_)
-	:m_map(),m_defaultAnalyzerProgramSource(),m_defaultSegmenterName(defaultSegmenterName_)
+AnalyzerMap::AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const DocumentClass& documentClass_, const std::string& defaultSegmenterName_, ErrorBufferInterface* errorhnd_)
+	:m_map(),m_documentClass(documentClass_),m_defaultAnalyzerProgramSource(),m_defaultSegmenterName(defaultSegmenterName_)
 	,m_defaultSegmenter(defaultSegmenterName_.empty()?0:builder_->getSegmenter( defaultSegmenterName_))
 	,m_builder(builder_),m_errorhnd(errorhnd_)
 {
@@ -129,9 +129,9 @@ void AnalyzerMap::defineAnalyzerProgramSource(
 	defineAnalyzerProgramSource( scheme, segmenter, analyzerProgramSource);
 }
 
-DocumentAnalyzerInterface* AnalyzerMap::get( const DocumentClass& dclass)
+const DocumentAnalyzerInterface* AnalyzerMap::get( const DocumentClass& dclass)
 {
-	DocumentAnalyzerInterface* rt = 0;
+	const DocumentAnalyzerInterface* rt = 0;
 	if (dclass.scheme().empty())
 	{
 		std::string key( dclass.mimeType());

@@ -53,10 +53,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 11,
+				argc_, argv_, 12,
 				"h,help", "t,threads:", "u,unit:",
 				"n,results:", "v,version", "m,module:", "x,extension:",
-				"s,segmenter:", "M,moduledir:", "R,resourcedir:",
+				"s,segmenter:", "D,contenttype:", "M,moduledir:", "R,resourcedir:",
 				"T,trace:");
 
 		unsigned int nofThreads = 0;
@@ -136,6 +136,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-s|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
+			std::cout << "-D|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of all documents inserted.") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
 			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
@@ -171,6 +173,12 @@ int main( int argc_, const char* argv_[])
 		unsigned int nofResults = opt.asUint( "results");
 		std::string fileext = "";
 		std::string segmentername;
+		std::string contenttype;
+
+		if (opt( "contenttype"))
+		{
+			contenttype = opt[ "contenttype"];
+		}
 		if (opt( "segmenter"))
 		{
 			segmentername = opt[ "segmenter"];
@@ -226,7 +234,12 @@ int main( int argc_, const char* argv_[])
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// [2] Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, segmentername, errorBuffer.get());
+		strus::DocumentClass documentClass;
+		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+		{
+			throw strus::runtime_error(_TXT("failed to parse document class"));
+		}
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
 
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler* fileCrawler

@@ -31,6 +31,7 @@
 #include "strus/storageDocumentUpdateInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
+#include "strus/documentClass.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/snprintf.h"
 #include "strus/base/dll_tags.hpp"
@@ -2055,5 +2056,97 @@ DLL_PUBLIC unsigned int strus::loadDocumentUserRightsAssignments(
 	}
 }
 
+
+DLL_PUBLIC bool strus::parseDocumentClass(
+		DocumentClass& result,
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
+{
+	try
+	{
+		std::string mimeType;
+		std::string encoding;
+
+		char const* si = source.c_str();
+		char const* start = si;
+		skipSpaces( si);
+		if (isAlpha(*si))
+		{
+			std::string value = parse_PATH( si);
+			if (!*si)
+			{
+				mimeType = value;
+				encoding = "UTF-8";
+			}
+			else
+			{
+				si = start;
+			}
+		}
+		if (!mimeType.empty())
+		while (isAlpha(*si))
+		{
+			std::string id( parse_IDENTIFIER( si));
+			std::string value;
+			if (!isAssign(*si))
+			{
+				throw strus::runtime_error( _TXT("expected assignment operator '=' after identifier"));
+			}
+			(void)parse_OPERATOR( si);
+			if (isStringQuote(*si))
+			{
+				value = parse_STRING( si);
+			}
+			else if (isAlpha(*si))
+			{
+				value = parse_PATH( si);
+			}
+			else
+			{
+				throw strus::runtime_error( _TXT("expected string or content type or encoding as value"));
+			}
+			if (isEqual( id, "content"))
+			{
+				mimeType = value;
+			}
+			else if (isEqual( id, "charset") || isEqual( id, "encoding"))
+			{
+				encoding = value;
+			}
+			else
+			{
+				throw strus::runtime_error( _TXT("unknown identifier in document class declaration: %s"), id.c_str());
+			}
+			if (isSemiColon(*si))
+			{
+				parse_OPERATOR(si);
+			}
+		}
+		if (isEqual( mimeType,"xml") || isEqual( mimeType,"text/xml"))
+		{
+			mimeType = "application/xml";
+		}
+		else if (isEqual( mimeType,"json"))
+		{
+			mimeType = "application/json";
+		}
+		else if (isEqual( mimeType,"tsv"))
+		{
+			mimeType = "text/tab-separated-values";
+		}
+		result = DocumentClass( mimeType, encoding);
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report( _TXT("out of memory parsing document class"));
+		return false;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report( _TXT("error parsing document class: %s"), e.what());
+		return false;
+	}
+}
 
 
