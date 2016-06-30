@@ -92,7 +92,7 @@ void AnalyzerMap::defineDefaultProgram(
 		m_defaultAnalyzerProgramSource = programSource;
 		if (m_defaultSegmenter)
 		{
-			defineAnalyzerProgramSource( 0/*scheme*/, m_defaultSegmenter, m_defaultAnalyzerProgramSource);
+			defineAnalyzerProgramSource( ""/*scheme*/, m_defaultSegmenter, m_defaultAnalyzerProgramSource);
 		}
 	}
 }
