@@ -197,6 +197,7 @@ unsigned int loadDocumentUserRightsAssignments(
 /// \brief Parses a document class from a declaration like 'content="application/xml"; charset=UTF-8"'
 /// \param[out] result returned document class
 /// \param[in] source content type declaration
+/// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success
 bool parseDocumentClass(
 		DocumentClass& result,

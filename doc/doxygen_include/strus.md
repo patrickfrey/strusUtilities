@@ -30,7 +30,6 @@ Scan a source file containing a list multiple programs:
 
 Loading storage contents from file:
 -----------------------------------
-* [Load global statistics from file](@ref strus::loadGlobalStatistics)
 * [Load meta data assignments from file](@ref strus::loadDocumentMetaDataAssignments)
 * [Load document attribute assignments from file](@ref strus::loadDocumentAttributeAssignments)
 * [Load user right assignments from file](@ref strus::loadDocumentUserRightsAssignments)
