@@ -71,6 +71,7 @@
           <LI><OBJECT type="text/sitemap"><param name="Name" value="loadQueryAnalyzerPhraseType"><param name="Local" value="programLoader_8hpp.html#a2b3cdb850c577e94e935c468d38afc01"><param name="ImageNumber" value="11"></OBJECT>
           <LI><OBJECT type="text/sitemap"><param name="Name" value="loadQueryAnalyzerProgram"><param name="Local" value="programLoader_8hpp.html#a257998f8c792b16e3ba7747fe11c5aa0"><param name="ImageNumber" value="11"></OBJECT>
           <LI><OBJECT type="text/sitemap"><param name="Name" value="loadQueryEvalProgram"><param name="Local" value="programLoader_8hpp.html#a94c408e2a3a2997f1557a19489368050"><param name="ImageNumber" value="11"></OBJECT>
+          <LI><OBJECT type="text/sitemap"><param name="Name" value="parseDocumentClass"><param name="Local" value="programLoader_8hpp.html#a8713be5d9c9f03b539ee4055573a0270"><param name="ImageNumber" value="11"></OBJECT>
           <LI><OBJECT type="text/sitemap"><param name="Name" value="scanNextProgram"><param name="Local" value="programLoader_8hpp.html#a4176074a811b447a92cf49bcb9e71e4b"><param name="ImageNumber" value="11"></OBJECT>
           </UL>
         </UL>
