@@ -7,9 +7,11 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
-#include "strus/moduleLoaderInterface.hpp"
+#include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/reference.hpp"
+#include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
@@ -19,6 +21,10 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/statisticsIteratorInterface.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/versionModule.hpp"
+#include "strus/versionRpc.hpp"
+#include "strus/versionTrace.hpp"
+#include "strus/versionBase.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/base/cmdLineOpt.hpp"
@@ -29,6 +35,7 @@
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
 #include <cerrno>
@@ -73,12 +80,16 @@ int main( int argc, const char* argv[])
 		opt = strus::ProgramOptions(
 				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "P,statsproc");
+				"r,rpc:", "s,storage:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
@@ -122,17 +133,6 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		if (opt("statsproc"))
-		{
-			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--statuproc", "--rpc");
-			std::string statsproc( opt["statsproc"]);
-			moduleLoader->defineStatisticsProcessor( statsproc);
-		}
-		else
-		{
-			moduleLoader->defineStatisticsProcessor( "");
-		}
-
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusDumpStatistics [options] <filename>" << std::endl;
@@ -156,10 +156,11 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
-			std::cout << "-P|--statsproc <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use statistics processor with name <NAME>") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Parse arguments:
 		std::string storagecfg;
 		if (opt("storage"))
 		{
@@ -167,6 +168,19 @@ int main( int argc, const char* argv[])
 			storagecfg = opt["storage"];
 		}
 		std::string outputfile( opt[0]);
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
 
 		// Create objects for dump:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -187,12 +201,26 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+			storageBuilder.release();
+			storageBuilder.reset( sproxy);
+		}
+
 		std::auto_ptr<strus::StorageClientInterface>
-			storage( storageBuilder->createStorageClient( storagecfg));
+			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
 		std::auto_ptr<strus::StatisticsIteratorInterface>
 			statsqueue( storage->createInitStatisticsIterator());
+		if (!statsqueue.get())
+		{
+			throw strus::runtime_error( _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
+		}
 		const char* msg;
 		std::size_t msgsize;
 		std::string output;

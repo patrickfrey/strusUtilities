@@ -18,6 +18,14 @@
 
 using namespace strus;
 
+AnalyzerMap::AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const DocumentClass& documentClass_, const std::string& defaultSegmenterName_, ErrorBufferInterface* errorhnd_)
+	:m_map(),m_documentClass(documentClass_),m_defaultAnalyzerProgramSource(),m_defaultSegmenterName(defaultSegmenterName_)
+	,m_defaultSegmenter(defaultSegmenterName_.empty()?0:builder_->getSegmenter( defaultSegmenterName_))
+	,m_builder(builder_),m_errorhnd(errorhnd_)
+{
+	defineDefaultProgram( prgfile_);
+}
+
 void AnalyzerMap::defineProgram(
 		const std::string& scheme,
 		const std::string& segmenter,
@@ -30,10 +38,25 @@ void AnalyzerMap::defineProgram(
 
 	if (strus::isAnalyzerMapSource( programSource, m_errorhnd))
 	{
-		if (!scheme.empty())
-		{
-			throw strus::runtime_error( _TXT("document scheme specification only allowed with an analyzer configuration specified"));
-		}
+			throw strus::runtime_error( _TXT("analyzer map loaded instead of analyzer program"));
+	}
+	if (m_errorhnd->hasError())
+	{
+		throw strus::runtime_error(_TXT("error detecting analyzer configuration file type"));
+	}
+	defineAnalyzerProgramSource( scheme, segmenter, programSource);
+}
+
+void AnalyzerMap::defineDefaultProgram(
+		const std::string& prgfile)
+{
+	unsigned int ec;
+	std::string programSource;
+	ec = strus::readFile( prgfile, programSource);
+	if (ec) throw strus::runtime_error( _TXT( "failed to load program file '%s' (errno %u"), prgfile.c_str(), ec);
+
+	if (strus::isAnalyzerMapSource( programSource, m_errorhnd))
+	{
 		std::vector<AnalyzerMapElement> mapdef;
 		if (!strus::loadAnalyzerMap( mapdef, programSource, m_errorhnd))
 		{
@@ -44,7 +67,7 @@ void AnalyzerMap::defineProgram(
 		{
 			if (mi->segmenter.empty())
 			{
-				mi->segmenter = segmenter;
+				mi->segmenter = m_defaultSegmenterName;
 			}
 			programSource.clear();
 			ec = strus::readFile( mi->prgFilename, programSource);
@@ -66,21 +89,21 @@ void AnalyzerMap::defineProgram(
 		{
 			throw strus::runtime_error(_TXT("error detecting analyzer configuration file type"));
 		}
-		defineAnalyzerProgramSource( scheme, segmenter, programSource);
+		m_defaultAnalyzerProgramSource = programSource;
+		if (m_defaultSegmenter)
+		{
+			defineAnalyzerProgramSource( ""/*scheme*/, m_defaultSegmenter, m_defaultAnalyzerProgramSource);
+		}
 	}
 }
 
 void AnalyzerMap::defineAnalyzerProgramSource(
 		const std::string& scheme,
-		const std::string& segmentername,
+		const strus::SegmenterInterface* segmenter,
 		const std::string& analyzerProgramSource)
 {
-	std::auto_ptr<strus::SegmenterInterface>
-		segmenter( m_builder->createSegmenter( segmentername));
-	if (!segmenter.get()) throw strus::runtime_error(_TXT("error creating segmenter"));
-
 	utils::SharedPtr<strus::DocumentAnalyzerInterface>
-		analyzer( m_builder->createDocumentAnalyzer( segmentername));
+		analyzer( m_builder->createDocumentAnalyzer( segmenter));
 	if (!analyzer.get()) throw strus::runtime_error(_TXT("error creating analyzer"));
 
 	std::string mimeType = segmenter->mimeType();
@@ -96,13 +119,24 @@ void AnalyzerMap::defineAnalyzerProgramSource(
 	m_map[ mimeType] = analyzer;
 }
 
-DocumentAnalyzerInterface* AnalyzerMap::get( const DocumentClass& dclass) const
+void AnalyzerMap::defineAnalyzerProgramSource(
+		const std::string& scheme,
+		const std::string& segmentername,
+		const std::string& analyzerProgramSource)
 {
+	const strus::SegmenterInterface* segmenter = m_builder->getSegmenter( segmentername);
+	if (!segmenter) throw strus::runtime_error(_TXT("error getting segmenter by name"));
+	defineAnalyzerProgramSource( scheme, segmenter, analyzerProgramSource);
+}
+
+const DocumentAnalyzerInterface* AnalyzerMap::get( const DocumentClass& dclass)
+{
+	const DocumentAnalyzerInterface* rt = 0;
 	if (dclass.scheme().empty())
 	{
 		std::string key( dclass.mimeType());
 		Map::const_iterator di = m_map.find( key);
-		if (di != m_map.end()) return di->second.get();
+		if (di != m_map.end()) rt = di->second.get();
 	}
 	else
 	{
@@ -111,8 +145,28 @@ DocumentAnalyzerInterface* AnalyzerMap::get( const DocumentClass& dclass) const
 		if (di != m_map.end()) return di->second.get();
 		std::string altkey( dclass.mimeType());
 		di = m_map.find( altkey);
-		if (di != m_map.end()) return di->second.get();
+		if (di != m_map.end()) rt = di->second.get();
 	}
-	return 0;
+	if (!rt && !m_defaultAnalyzerProgramSource.empty())
+	{
+		const SegmenterInterface* segmenter;
+		if (m_defaultSegmenter && 0==std::strcmp( m_defaultSegmenter->mimeType(), dclass.mimeType().c_str()))
+		{
+			segmenter = m_defaultSegmenter;
+		}
+		else
+		{
+			segmenter = m_builder->findMimeTypeSegmenter( dclass.mimeType());
+		}
+		if (segmenter)
+		{
+			defineAnalyzerProgramSource( ""/*scheme*/, segmenter, m_defaultAnalyzerProgramSource);
+			std::string key( dclass.mimeType());
+			Map::const_iterator di = m_map.find( key);
+			if (di == m_map.end()) throw strus::runtime_error(_TXT("failed to declare default analyzer program source on demand"));
+			rt = di->second.get();
+		}
+	}
+	return rt;
 }
 

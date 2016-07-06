@@ -7,9 +7,11 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
-#include "strus/moduleLoaderInterface.hpp"
+#include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/reference.hpp"
+#include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
@@ -22,9 +24,14 @@
 #include "strus/documentTermIteratorInterface.hpp"
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
+#include "strus/valueIteratorInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/versionModule.hpp"
+#include "strus/versionRpc.hpp"
+#include "strus/versionTrace.hpp"
+#include "strus/versionBase.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/base/configParser.hpp"
@@ -33,6 +40,7 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -127,6 +135,20 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		{
 			throw strus::runtime_error( _TXT("unknown document"));
 		}
+	}
+}
+
+static void inspectDocumentIndexFeatureTypes( strus::StorageClientInterface& storage)
+{
+	std::auto_ptr<strus::ValueIteratorInterface> valItr( storage.createTermTypeIterator());
+
+	// KLUDGE: This is bad, but the storage cannot tell us how far we should
+	// iterate, does it?
+	enum { MAX_NOF_FEATURES = 100 };
+	
+	std::vector<std::string> termTypes = valItr->fetchValues( MAX_NOF_FEATURES);
+	for (std::vector<std::string>::const_iterator it = termTypes.begin(); it != termTypes.end(); it++) {
+		std::cout << *it << std::endl;
 	}
 }
 
@@ -644,9 +666,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 6,
+				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:");
+				"r,rpc:", "s,storage:", "T,trace:");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
@@ -654,7 +676,11 @@ int main( int argc, const char* argv[])
 		if (opt( "version"))
 		{
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
@@ -711,6 +737,8 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"ttc\" <type> [<doc-id/no>]" << std::endl;
 			std::cout << "               = " << _TXT("Get the term type count (distinct) in a document") << std::endl;
 			std::cout << "                 " << _TXT("If document is not specified then dump value for all docs.") << std::endl;
+			std::cout << "            \"featuretypes\"" << std::endl;
+			std::cout << "               = " << _TXT("Get list of feature types in the index") << std::endl;
 			std::cout << "            \"indexterms\" <type> [<doc-id/no>]" << std::endl;
 			std::cout << "               = " << _TXT("Get the list of tuples of term value, first position and ff ") << std::endl;
 			std::cout << "                 " << _TXT("for a search index term type.") << std::endl;
@@ -761,9 +789,11 @@ int main( int argc, const char* argv[])
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
-
+		// Parse arguments:
 		std::string storagecfg;
 		if (opt("storage"))
 		{
@@ -773,6 +803,19 @@ int main( int argc, const char* argv[])
 		std::string what = opt[0];
 		const char** inpectarg = opt.argv() + 1;
 		std::size_t inpectargsize = opt.nofargs() - 1;
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
 
 		// Create objects for inspecting storage:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -793,11 +836,21 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
-		strus::utils::ScopedPtr<strus::StorageClientInterface>
-			storage( storageBuilder->createStorageClient( storagecfg));
-		if (!storage.get()) throw strus::runtime_error( _TXT("error creating storage client"));
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+			storageBuilder.release();
+			storageBuilder.reset( sproxy);
+		}
 
 		// Do inspect what is requested:
+		std::auto_ptr<strus::StorageClientInterface>
+			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
+		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
+
 		if (strus::utils::caseInsensitiveEquals( what, "pos"))
 		{
 			inspectPositions( *storage, inpectarg, inpectargsize);
@@ -817,6 +870,10 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "ttc"))
 		{
 			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTerms, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "featuretypes"))
+		{
+			inspectDocumentIndexFeatureTypes( *storage);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "indexterms"))
 		{

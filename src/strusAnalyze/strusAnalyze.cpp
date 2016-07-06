@@ -18,7 +18,12 @@
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
+#include "strus/versionModule.hpp"
+#include "strus/versionRpc.hpp"
+#include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
+#include "strus/versionBase.hpp"
+#include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/documentClass.hpp"
 #include "strus/reference.hpp"
@@ -28,8 +33,8 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
-#include "private/version.hpp"
 #include "private/inputStream.hpp"
+#include "private/traceUtils.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -66,14 +71,18 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 7,
+				argc, argv, 8,
 				"h,help", "v,version", "m,module:", "r,rpc:",
-				"g,segmenter:", "M,moduledir:", "R,resourcedir:");
+				"g,segmenter:", "M,moduledir:", "R,resourcedir:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
@@ -141,14 +150,30 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Parse arguments:
 		std::string analyzerprg = opt[0];
 		std::string docpath = opt[1];
-		std::string segmenter;
+		std::string segmentername;
 		if (opt( "segmenter"))
 		{
-			segmenter = opt[ "segmenter"];
+			segmentername = opt[ "segmenter"];
+		}
+
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
 		}
 
 		// Set paths for locating resources:
@@ -193,6 +218,18 @@ int main( int argc, const char* argv[])
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
 			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 		}
+
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::AnalyzerObjectBuilderInterface* proxy = (*ti)->createProxy( analyzerBuilder.get());
+			analyzerBuilder.release();
+			analyzerBuilder.reset( proxy);
+		}
+
+		const strus::SegmenterInterface* segmenter = analyzerBuilder->getSegmenter( segmentername);
+		if (!segmenter) throw strus::runtime_error(_TXT("failed to find specified document segmenter"));
 		std::auto_ptr<strus::DocumentAnalyzerInterface>
 			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
@@ -284,7 +321,7 @@ int main( int argc, const char* argv[])
 				for (; mi != me; ++mi)
 				{
 					std::cout << mi->name()
-						  << " '" << mi->value() << "'"
+						  << " '" << mi->value().tostring().c_str() << "'"
 						  << std::endl;
 				}
 	

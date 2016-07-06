@@ -66,10 +66,6 @@ void InsertProcessor::run()
 		std::vector<std::string> files;
 		std::vector<std::string>::const_iterator fitr;
 	
-		std::auto_ptr<strus::MetaDataReaderInterface> metadata( 
-			m_storage->createMetaDataReader());
-		if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
-
 		std::auto_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
 		if (!transaction.get()) throw strus::runtime_error(_TXT("error creating storage transaction"));
@@ -81,24 +77,38 @@ void InsertProcessor::run()
 			{
 				try
 				{
-					// Read the input file to analyze and detect its document type:
 					strus::InputStream input( *fitr);
-					char hdrbuf[ 1024];
-					std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
-					strus::DocumentClass dclass;
-					if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
+					if (m_analyzerMap.documentClass().mimeType().empty())
 					{
-						std::cerr << utils::string_sprintf( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
-						continue;
+						// Read the input file to analyze and detect its document type:
+						char hdrbuf[ 1024];
+						std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+
+						strus::DocumentClass dclass;
+						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+						{
+							std::cerr << utils::string_sprintf( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
+							continue;
+						}
+						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
+						if (!analyzer)
+						{
+							std::cerr << utils::string_sprintf( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
+							continue;
+						}
+						analyzerContext.reset( analyzer->createContext( dclass));
 					}
-					strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
-					if (!analyzer)
+					else
 					{
-						std::cerr << utils::string_sprintf( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
-						continue;
+						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( m_analyzerMap.documentClass());
+						if (!analyzer)
+						{
+							std::cerr << utils::string_sprintf( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), m_analyzerMap.documentClass().mimeType().c_str(), m_analyzerMap.documentClass().scheme().c_str()) << std::endl; 
+							continue;
+						}
+						analyzerContext.reset( analyzer->createContext( m_analyzerMap.documentClass()));
 					}
-					std::auto_ptr<strus::DocumentAnalyzerContextInterface>
-						analyzerContext( analyzer->createContext( dclass));
 					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
 
 					// Analyze the document (with subdocuments) and insert it:
@@ -198,26 +208,9 @@ void InsertProcessor::run()
 								mi = doc.metadata().begin(), me = doc.metadata().end();
 							for (; mi != me; ++mi)
 							{
-								double val = mi->value();
-								if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
-								{
-									if (val < 0.0)
-									{
-										strus::NumericVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-										storagedoc->setMetaData( mi->name(), av);
-									}
-									else
-									{
-										strus::NumericVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-										storagedoc->setMetaData( mi->name(), av);
-									}
-								}
-								else
-								{
-									storagedoc->setMetaData( mi->name(), (float) val);
-								}
+								NumericVariant val = mi->value();
+								storagedoc->setMetaData( mi->name(), val);
 							}
-	
 							// Issue warning for documents cut because they are too big to insert:
 							if (maxpos > Constants::storage_max_position_info())
 							{

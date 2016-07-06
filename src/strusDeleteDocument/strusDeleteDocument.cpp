@@ -7,28 +7,39 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/storage_objbuild.hpp"
+#include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
 #include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
+#include "strus/rpcClientInterface.hpp"
+#include "strus/rpcClientMessagingInterface.hpp"
+#include "strus/programLoader.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
-#include "strus/base/cmdLineOpt.hpp"
-#include "strus/base/fileio.hpp"
+#include "strus/storageInterface.hpp"
+#include "strus/storageClientInterface.hpp"
+#include "strus/storageTransactionInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
-#include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
+#include "private/utils.hpp"
+#include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/configParser.hpp"
 #include "private/version.hpp"
+#include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
-
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
 {
@@ -38,10 +49,26 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
 	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	const strus::StorageInterface* sti = storageBuilder->getStorage();
+	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
 					strus::DatabaseInterface::CmdCreateClient), errorhnd);
+	strus::printIndentMultilineString(
+				out, 12, sti->getConfigDescription(
+					strus::StorageInterface::CmdCreateClient), errorhnd);
+}
+
+static void deleteDocuments( strus::StorageClientInterface* storage, int nofargs, const char** argv)
+{
+	std::auto_ptr<strus::StorageTransactionInterface> transaction( storage->createTransaction());
+	int ai=0, ae=nofargs;
+	for (; ai != ae; ++ai)
+	{
+		transaction->deleteDocument( argv[ai]);
+	}
+	transaction->commit();
 }
 
 
@@ -61,8 +88,11 @@ int main( int argc, const char* argv[])
 		opt = strus::ProgramOptions(
 				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"s,storage:", "S,configfile:", "T,trace:");
-		if (opt( "help")) printUsageAndExit = true;
+				"r,rpc:", "s,storage:", "T,trace:");
+		if (opt( "help"))
+		{
+			printUsageAndExit = true;
+		}
 		if (opt( "version"))
 		{
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
@@ -75,9 +105,9 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 1)
+			if (opt.nofargs() < 1)
 			{
-				std::cerr << _TXT("too many arguments") << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
@@ -106,49 +136,11 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		std::string databasecfg;
-		int nof_databasecfg = 0;
-		if (opt("configfile"))
-		{
-			nof_databasecfg += 1;
-			std::string configfile = opt[ "configfile"];
-			int ec = strus::readFile( configfile, databasecfg);
-			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u)"), configfile.c_str(), ec);
-
-			std::string::iterator di = databasecfg.begin(), de = databasecfg.end();
-			for (; di != de; ++di)
-			{
-				if ((unsigned char)*di < 32) *di = ' ';
-			}
-		}
-		if (opt.nofargs() == 1)
-		{
-			std::cerr << _TXT("warning: passing storage as first parameter instead of option -s (deprecated)") << std::endl;
-			nof_databasecfg += 1;
-			databasecfg = opt[0];
-		}
-		if (opt("storage"))
-		{
-			nof_databasecfg += 1;
-			databasecfg = opt[ "storage"];
-		}
-		if (nof_databasecfg > 1)
-		{
-			std::cerr << _TXT("conflicting configuration options specified: --storage and --configfile") << std::endl;
-			rt = 10003;
-			printUsageAndExit = true;
-		}
-		else if (!printUsageAndExit && nof_databasecfg == 0)
-		{
-			std::cerr << _TXT("missing configuration option: --storage or --configfile has to be defined") << std::endl;
-			rt = 10004;
-			printUsageAndExit = true;
-		}
-
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusDestroy [options]" << std::endl;
-			std::cout << _TXT("description: Removes an existing storage database.") << std::endl;
+			std::cout << _TXT("usage:") << " strusDeleteDocument [options] <docid>" << std::endl;
+			std::cout << "<docid>  = " << _TXT("docid of the document to delete") << std::endl;
+			std::cout << _TXT("description: Deletes a document in the storage.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -158,13 +150,15 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
+			std::cout << "-r|--rpc <ADDR>" << std::endl;
+			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
-			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg, errorBuffer.get());
-			std::cout << "-S|--configfile <FILENAME>" << std::endl;
-			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
-			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
+			if (!opt("rpc"))
+			{
+				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
+				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
+			}
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
@@ -182,34 +176,43 @@ int main( int argc, const char* argv[])
 			}
 		}
 
-		// Create root object:
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
-			storageBuilder( moduleLoader->createStorageObjectBuilder());
-		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
-
-		// Create proxy objects if tracing enabled:
-		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
-		for (; ti != te; ++ti)
+		// Parse arguments:
+		std::string storagecfg;
+		if (opt("storage"))
 		{
-			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
-			storageBuilder.release();
-			storageBuilder.reset( sproxy);
+			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
+			storagecfg = opt["storage"];
 		}
-
-		// Create objects:
-		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( databasecfg);
-		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
-
-		// Do the delete:
-		if (!dbi->destroyDatabase( databasecfg))
+		
+		// Create objects for storage document update:
+		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
+		std::auto_ptr<strus::RpcClientInterface> rpcClient;
+		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		if (opt("rpc"))
 		{
-			throw strus::runtime_error(_TXT("error destroying database"));
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
+			if (!messaging.get()) throw strus::runtime_error( _TXT("error creating rpc client messaging"));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
+			if (!rpcClient.get()) throw strus::runtime_error( _TXT("error creating rpc client"));
+			(void)messaging.release();
+			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating rpc storage object builder"));
 		}
+		else
+		{
+			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
+			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
+		}
+		std::auto_ptr<strus::StorageClientInterface>
+			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
+		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
+
+		deleteDocuments( storage.get(), opt.nofargs(), opt.argv());
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in destroy storage"));
+			throw strus::runtime_error(_TXT("failed to delete documents"));
 		}
-		std::cerr << _TXT("storage successfully destroyed.") << std::endl;
+		std::cerr << strus::utils::string_sprintf( _TXT("done %u documents deleted"), (unsigned int)opt.nofargs()) << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

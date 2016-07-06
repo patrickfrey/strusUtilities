@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
@@ -14,12 +15,18 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/versionStorage.hpp"
+#include "strus/versionModule.hpp"
+#include "strus/versionRpc.hpp"
+#include "strus/versionTrace.hpp"
+#include "strus/versionAnalyzer.hpp"
+#include "strus/versionBase.hpp"
+#include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
-#include "private/version.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
+#include "private/traceUtils.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/cmdLineOpt.hpp"
@@ -62,14 +69,18 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 6,
+				argc, argv, 7,
 				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"s,storage:", "S,configfile:");
+				"s,storage:", "S,configfile:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "version"))
 		{
 			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
 			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		else if (!printUsageAndExit)
@@ -163,12 +174,38 @@ int main( int argc, const char* argv[])
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
+			std::cout << "-T|--trace <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			return rt;
 		}
+		// Declare trace proxy objects:
+		typedef strus::Reference<strus::TraceProxy> TraceReference;
+		std::vector<TraceReference> trace;
+		if (opt("trace"))
+		{
+			std::vector<std::string> tracecfglist( opt.list("trace"));
+			std::vector<std::string>::const_iterator ti = tracecfglist.begin(), te = tracecfglist.end();
+			for (; ti != te; ++ti)
+			{
+				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+
+		// Create root object:
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
 		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
+		// Create proxy objects if tracing enabled:
+		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+		for (; ti != te; ++ti)
+		{
+			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+			storageBuilder.release();
+			storageBuilder.reset( sproxy);
+		}
+
+		// Create objects:
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( databasecfg);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 		const strus::StorageInterface* sti = storageBuilder->getStorage();

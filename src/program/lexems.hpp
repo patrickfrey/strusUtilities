@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-#ifndef _STRUS_QUERY_PARSER_LEXEMS_HPP_INCLUDED
-#define _STRUS_QUERY_PARSER_LEXEMS_HPP_INCLUDED
+#ifndef _STRUS_PROGRAM_LEXEMS_HPP_INCLUDED
+#define _STRUS_PROGRAM_LEXEMS_HPP_INCLUDED
 #include <string>
 
 namespace strus {
@@ -142,6 +142,7 @@ bool isEqual( const std::string& id, const char* idstr);
 std::string parse_IDENTIFIER( char const*& src);
 std::string parse_TEXTWORD( char const*& src);
 std::string parse_STRING( char const*& src);
+std::string parse_PATH( char const*& src);
 unsigned int parse_UNSIGNED( char const*& src);
 unsigned int parse_UNSIGNED1( char const*& src);
 float parse_FLOAT( char const*& src);

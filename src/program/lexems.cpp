@@ -67,6 +67,14 @@ std::string parser::parse_TEXTWORD( char const*& src)
 	return rt;
 }
 
+std::string parser::parse_PATH( char const*& src)
+{
+	std::string rt;
+	while (isTextChar( *src) || *src == '/' || *src == '-') rt.push_back( *src++);
+	skipSpaces( src);
+	return rt;
+}
+
 std::string parser::parse_STRING( char const*& src)
 {
 	std::string rt;
