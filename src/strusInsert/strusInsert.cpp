@@ -395,7 +395,14 @@ int main( int argc_, const char* argv_[])
 		{
 			throw strus::runtime_error(_TXT("unhandled error in insert storage"));
 		}
-		std::cerr << std::endl << "done" << std::endl;
+		if (commitQue->errors().size() > 0)
+		{
+			std::cerr << std::endl << "finished, but with " << commitQue->errors().size() << " transactions failed." << std::endl;
+		}
+		else
+		{
+			std::cerr << std::endl << "done" << std::endl;
+		}
 		if (logfile) fclose( logfile);
 		return 0;
 	}

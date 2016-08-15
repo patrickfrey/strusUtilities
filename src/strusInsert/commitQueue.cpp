@@ -58,6 +58,8 @@ void CommitQueue::handleWaitingTransactions()
 				m_errorhnd->report( _TXT("error handling transaction in queue: %s"), err.what());
 				fprintf( stderr, _TXT("error handling transaction in queue: %s\n"), err.what());
 			}
+			utils::ScopedLock lock( m_mutex_errors);
+			m_errors.push_back( m_errorhnd->fetchError());
 		}
 	}
 }
