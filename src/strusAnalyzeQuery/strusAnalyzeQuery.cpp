@@ -247,6 +247,11 @@ public:
 		return strus::QueryResult();
 	}
 
+	virtual std::string tostring() const
+	{
+		return std::string();
+	}
+
 	void check() const
 	{
 		if (m_stack.size() > 0)
