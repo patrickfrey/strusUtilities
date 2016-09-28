@@ -20,6 +20,7 @@ include( cmake/find_strus_package.cmake )
 find_strus_package( base )
 find_strus_package( core )
 find_strus_package( analyzer )
+find_strus_package( trace )
 find_strus_package( module )
 find_strus_package( rpc )
 
