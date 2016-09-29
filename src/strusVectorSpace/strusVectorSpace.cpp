@@ -15,6 +15,7 @@
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
+#include "strus/programLoader.hpp"
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
@@ -53,8 +54,8 @@ static Command getCommand( const std::string& name)
 
 static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const strus::FeatureVectorDefFormat& fmt, const std::string& content, strus::ErrorBufferInterface* errorhnd)
 {
-	std::vector<FeatureVectorDef> samples;
-	if (!parseFeatureVectors( samples, fmt, content, errorhnd))
+	std::vector<strus::FeatureVectorDef> samples;
+	if (!strus::parseFeatureVectors( samples, fmt, content, errorhnd))
 	{
 		throw strus::runtime_error(_TXT("could not load training data"));
 	}
@@ -62,8 +63,8 @@ static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const 
 
 static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const strus::FeatureVectorDefFormat& fmt, const std::string& content, strus::ErrorBufferInterface* errorhnd)
 {
-	std::vector<FeatureVectorDef> samples;
-	if (!parseFeatureVectors( samples, fmt, content, errorhnd))
+	std::vector<strus::FeatureVectorDef> samples;
+	if (!strus::parseFeatureVectors( samples, fmt, content, errorhnd))
 	{
 		throw strus::runtime_error(_TXT("could not load features to map"));
 	}
@@ -231,12 +232,12 @@ int main( int argc, const char* argv[])
 		const strus::VectorSpaceModelInterface* vsi = storageBuilder->getVectorSpaceModel( modelname);
 		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
 
-		strus::FeatureVectorDefFormat format = strus::FeatureVectorDefTextSsv;
+		strus::FeatureVectorDefFormat format = strus::FeatureVectorDefTextssv;
 		if (opt("format"))
 		{
-			if (!parseFeatureVectorDefFormat( format, opt["format"], errorBuffer.get()))
+			if (!strus::parseFeatureVectorDefFormat( format, opt["format"], errorBuffer.get()))
 			{
-				throw strus::runtime_error(_TXT("wrong format option: %s"), errorBuffer.fetchError());
+				throw strus::runtime_error(_TXT("wrong format option: %s"), errorBuffer->fetchError());
 			}
 		}
 		std::string inputstr;

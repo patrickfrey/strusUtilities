@@ -2188,7 +2188,7 @@ static void parseFeatureVectors_DefText(
 	}
 }
 
-bool strus::parseFeatureVectors(
+DLL_PUBLIC bool strus::parseFeatureVectors(
 		std::vector<FeatureVectorDef>& result,
 		const FeatureVectorDefFormat& sourceFormat,
 		const std::string& sourceString,
@@ -2219,7 +2219,7 @@ bool strus::parseFeatureVectors(
 	}
 }
 
-bool parseFeatureVectorDefFormat(
+DLL_PUBLIC bool strus::parseFeatureVectorDefFormat(
 		FeatureVectorDefFormat& result,
 		const std::string& source,
 		ErrorBufferInterface* errorhnd)
