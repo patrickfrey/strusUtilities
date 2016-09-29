@@ -115,25 +115,24 @@ unsigned int parser::parse_UNSIGNED1( char const*& src)
 	return rt;
 }
 
-float parser::parse_FLOAT( char const*& src)
+double parser::parse_FLOAT( char const*& src)
 {
-	unsigned int digitsAllowed = 9;
-	float rt = 0.0;
+	bool sign = false;
+	double rt = 0.0;
 	if (*src == '-')
 	{
 		++src;
-		rt = -1.0;
+		sign = true;
 	}
-	while (isDigit( *src) && digitsAllowed)
+	while (isDigit( *src))
 	{
 		rt = (rt * 10.0) + (*src - '0');
 		++src;
-		--digitsAllowed;
 	}
 	if (isDot( *src))
 	{
-		float div = 1.0;
 		++src;
+		double div = 1.0;
 		while (isDigit( *src))
 		{
 			div /= 10.0;
@@ -141,12 +140,8 @@ float parser::parse_FLOAT( char const*& src)
 			++src;
 		}
 	}
-	if (!digitsAllowed)
-	{
-		throw strus::runtime_error(_TXT("floating point number out of range"));
-	}
 	skipSpaces( src);
-	return rt;
+	return sign?-rt:rt;
 }
 
 char parser::parse_OPERATOR( char const*& src)

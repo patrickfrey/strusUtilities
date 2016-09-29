@@ -51,12 +51,22 @@ static Command getCommand( const std::string& name)
 	}
 }
 
-static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& inputfile)
+static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const strus::FeatureVectorDefFormat& fmt, const std::string& content, strus::ErrorBufferInterface* errorhnd)
 {
+	std::vector<FeatureVectorDef> samples;
+	if (!parseFeatureVectors( samples, fmt, content, errorhnd))
+	{
+		throw strus::runtime_error(_TXT("could not load training data"));
+	}
 }
 
-static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& inputfile)
+static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const strus::FeatureVectorDefFormat& fmt, const std::string& content, strus::ErrorBufferInterface* errorhnd)
 {
+	std::vector<FeatureVectorDef> samples;
+	if (!parseFeatureVectors( samples, fmt, content, errorhnd))
+	{
+		throw strus::runtime_error(_TXT("could not load features to map"));
+	}
 }
 
 
@@ -221,13 +231,22 @@ int main( int argc, const char* argv[])
 		const strus::VectorSpaceModelInterface* vsi = storageBuilder->getVectorSpaceModel( modelname);
 		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
 
+		strus::FeatureVectorDefFormat format = strus::FeatureVectorDefTextSsv;
+		if (opt("format"))
+		{
+			if (!parseFeatureVectorDefFormat( format, opt["format"], errorBuffer.get()))
+			{
+				throw strus::runtime_error(_TXT("wrong format option: %s"), errorBuffer.fetchError());
+			}
+		}
+		std::string inputstr;
 		switch (command)
 		{
 			case CmdLearnFeatures:
-				doLearnFeatures( vsi, inputfile);
+				doLearnFeatures( vsi, format, inputstr, errorBuffer.get());
 			break;
 			case CmdMapFeatures:
-				doMapFeatures( vsi, inputfile);
+				doMapFeatures( vsi, format, inputstr, errorBuffer.get());
 			break;
 		}
 		if (errorBuffer->hasError())

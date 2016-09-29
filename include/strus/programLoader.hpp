@@ -204,6 +204,50 @@ bool parseDocumentClass(
 		const std::string& source,
 		ErrorBufferInterface* errorhnd);
 
+/// \brief Structure for one feature vector definition
+struct FeatureVectorDef
+{
+	std::string term;		///< term of the feature
+	std::vector<double> vec;	///< vector assigned to this feature
+
+	/// \brief Default constructor
+	FeatureVectorDef()
+		:term(),vec(){}
+	/// \brief Constructor
+	FeatureVectorDef( const std::string& term_, const std::vector<double>& vec_)
+		:term(term_),vec(vec_){}
+	/// \brief Copy constructor
+	FeatureVectorDef( const FeatureVectorDef& o)
+		:term(o.term),vec(o.vec){}
+};
+
+/// \brief Source format variants for feature vector definitions
+enum FeatureVectorDefFormat {
+	FeatureVectorDefTextssv	///< text file with lines starting with the term, followed by the vector elements as double precision floating point numbers separated by spaces
+};
+
+/// \brief Parses a feature vector definition format identifier
+/// \param[out] result format id
+/// \param[in] source format identifier as string
+/// \param[in,out] errorhnd buffer for reporting errors (exceptions)
+/// \return true on success
+bool parseFeatureVectorDefFormat(
+		FeatureVectorDefFormat& result,
+		const std::string& source,
+		ErrorBufferInterface* errorhnd);
+
+/// \brief Parses a list of feature vector definitions for processing with a vector space model
+/// \param[out] result returned list of term to feature vector definition assignments
+/// \param[in] sourceFormat format of source to parse
+/// \param[in] sourceString source to parse
+/// \param[in,out] errorhnd buffer for reporting errors (exceptions)
+/// \return true on success
+bool parseFeatureVectors(
+		std::vector<FeatureVectorDef>& result,
+		const FeatureVectorDefFormat& sourceFormat,
+		const std::string& sourceString,
+		ErrorBufferInterface* errorhnd);
+
 }//namespace
 #endif
 

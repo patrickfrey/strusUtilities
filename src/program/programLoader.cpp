@@ -2149,4 +2149,108 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 	}
 }
 
+static void parseFeatureVectors_DefText(
+		std::vector<FeatureVectorDef>& result,
+		char const*& si)
+{
+	while (*si)
+	{
+		FeatureVectorDef elem;
+		skipSpaces( si);
+	AGAIN:
+		for (; *si && *si != ' ' && *si != '\t'; ++si)
+		{
+			elem.term.push_back( *si);
+		}
+		if (!*si)
+		{
+			throw strus::runtime_error(_TXT("unexpected end of file"));
+		}
+		++si;
+		if (!isMinus(*si) && !isDigit(*si))
+		{
+			elem.term.push_back( ' ');
+			goto AGAIN;
+		}
+		char const* eoln = si;
+		skipToEoln( eoln);
+		skipSpaces( si);
+		while (si < eoln && is_FLOAT(si))
+		{
+			elem.vec.push_back( parse_FLOAT( si));
+			skipSpaces( si);
+		}
+		if (si < eoln)
+		{
+			throw strus::runtime_error(_TXT("expected vector of double precision floating point numbers after term definition"));
+		}
+		result.push_back( elem);
+	}
+}
+
+bool strus::parseFeatureVectors(
+		std::vector<FeatureVectorDef>& result,
+		const FeatureVectorDefFormat& sourceFormat,
+		const std::string& sourceString,
+		ErrorBufferInterface* errorhnd)
+{
+	char const* si = sourceString.c_str();
+	try
+	{
+		switch (sourceFormat)
+		{
+			case FeatureVectorDefTextssv:
+				parseFeatureVectors_DefText( result, si);
+				break;
+		}
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		ErrorPosition pos( sourceString.c_str(), si);
+		errorhnd->report( _TXT("out of memory parsing feature vector definitions %s"), pos.c_str());
+		return false;
+	}
+	catch (const std::runtime_error& e)
+	{
+		ErrorPosition pos( sourceString.c_str(), si);
+		errorhnd->report( _TXT("error parsing feature vector definitions %s: %s"), pos.c_str(), e.what());
+		return false;
+	}
+}
+
+bool parseFeatureVectorDefFormat(
+		FeatureVectorDefFormat& result,
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
+{
+	char const* si = source.c_str();
+	try
+	{
+		skipSpaces(si);
+		if (!isAlpha(*si)) throw strus::runtime_error(_TXT("identifier expected for feature vector definition format"));
+		std::string name = utils::tolower( parse_IDENTIFIER( si));
+		if (name == "text_ssv")
+		{
+			result = FeatureVectorDefTextssv;
+		}
+		else
+		{
+			throw strus::runtime_error(_TXT("unknown feature vector definition format identifier '%s'"), name.c_str());
+		}
+		skipSpaces(si);
+		if (*si) throw strus::runtime_error(_TXT("unexpected token at end of feature vector definition format identifier"));
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report( _TXT("out of memory parsing feature vector definition format"));
+		return false;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report( _TXT("error parsing feature vector definition format: %s"), e.what());
+		return false;
+	}
+}
 
