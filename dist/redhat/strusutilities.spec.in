@@ -298,6 +298,7 @@ make test
 %{_bindir}/strusQuery
 %{_bindir}/strusAnalyzePhrase
 %{_bindir}/strusHelp
+%{_bindir}/strusVectorSpace
 
 %files devel
 %defattr( -, root, root )
