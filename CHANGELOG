@@ -1,3 +1,7 @@
+strusUtilities (0.12.0)
+  * adapt interface changes in strus analyzer
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sat, 1 Oct 2016 16:00:00 +0100
+
 strusUtilities (0.11.0)
   * adapt interface changes in strus core
   * add program strusVectorSpace to handle vector space models

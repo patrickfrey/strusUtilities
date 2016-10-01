@@ -1,3 +1,7 @@
+strusutilities (0.12.0-1) unstable; urgency=low
+  * adapt interface changes in strus analyzer
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Sat, 1 Oct 2016 16:00:00 +0100
+
 strusutilities (0.11.0-1) unstable; urgency=low
   * adapt interface changes in strus core
   * add program strusVectorSpace to handle vector space models
