@@ -8,7 +8,7 @@
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/reference.hpp"
-#include "strus/documentClass.hpp"
+#include "strus/analyzer/documentClass.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
@@ -250,7 +250,7 @@ int main( int argc, const char* argv[])
 		strus::InputStream input( docpath);
 		char hdrbuf[ 1024];
 		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
-		strus::DocumentClass dclass;
+		strus::analyzer::DocumentClass dclass;
 		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 		{
 			throw strus::runtime_error(_TXT("failed to detect document class")); 

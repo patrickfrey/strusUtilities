@@ -345,7 +345,7 @@ int main( int argc_, const char* argv_[])
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
-		strus::DocumentClass documentClass;
+		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));

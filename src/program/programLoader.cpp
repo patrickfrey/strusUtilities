@@ -31,7 +31,7 @@
 #include "strus/storageDocumentUpdateInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
-#include "strus/documentClass.hpp"
+#include "strus/analyzer/documentClass.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/snprintf.h"
 #include "strus/base/dll_tags.hpp"
@@ -678,11 +678,11 @@ static DocumentAnalyzerInterface::FeatureOptions
 				{
 					if (utils::caseInsensitiveEquals( optval, "succ"))
 					{
-						rt.definePositionBind( DocumentAnalyzerInterface::FeatureOptions::BindSuccessor);
+						rt.definePositionBind( analyzer::BindSuccessor);
 					}
 					else if (utils::caseInsensitiveEquals( optval, "pred"))
 					{
-						rt.definePositionBind( DocumentAnalyzerInterface::FeatureOptions::BindPredecessor);
+						rt.definePositionBind( analyzer::BindPredecessor);
 					}
 					else
 					{
@@ -2058,7 +2058,7 @@ DLL_PUBLIC unsigned int strus::loadDocumentUserRightsAssignments(
 
 
 DLL_PUBLIC bool strus::parseDocumentClass(
-		DocumentClass& result,
+		analyzer::DocumentClass& result,
 		const std::string& source,
 		ErrorBufferInterface* errorhnd)
 {
@@ -2134,7 +2134,7 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 		{
 			mimeType = "text/tab-separated-values";
 		}
-		result = DocumentClass( mimeType, encoding);
+		result = analyzer::DocumentClass( mimeType, encoding);
 		return true;
 	}
 	catch (const std::bad_alloc&)

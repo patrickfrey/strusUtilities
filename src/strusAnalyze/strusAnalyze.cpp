@@ -25,7 +25,7 @@
 #include "strus/versionBase.hpp"
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/documentClass.hpp"
+#include "strus/analyzer/documentClass.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
@@ -252,7 +252,7 @@ int main( int argc, const char* argv[])
 		strus::InputStream input( docpath);
 		char hdrbuf[ 1024];
 		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
-		strus::DocumentClass dclass;
+		strus::analyzer::DocumentClass dclass;
 		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 		{
 			throw strus::runtime_error( _TXT("failed to detect document class")); 

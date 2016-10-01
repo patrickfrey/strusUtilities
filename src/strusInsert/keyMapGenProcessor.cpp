@@ -133,7 +133,7 @@ void KeyMapGenProcessor::run()
 						char hdrbuf[ 1024];
 						std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
 
-						strus::DocumentClass dclass;
+						strus::analyzer::DocumentClass dclass;
 						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 						{
 							std::cerr << utils::string_sprintf( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 

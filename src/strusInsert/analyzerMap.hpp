@@ -7,15 +7,13 @@
  */
 #ifndef _STRUS_ANALYZER_MAP_HPP_INCLUDED
 #define _STRUS_ANALYZER_MAP_HPP_INCLUDED
-#include "strus/documentClass.hpp"
+#include "strus/analyzer/documentClass.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "private/utils.hpp"
 #include <string>
 
 namespace strus {
 
-/// \brief Forward declaration
-class DocumentClass;
 /// \brief Forward declaration
 class AnalyzerObjectBuilderInterface;
 /// \brief Forward declaration
@@ -26,7 +24,7 @@ class ErrorBufferInterface;
 class AnalyzerMap
 {
 public:
-	AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const DocumentClass& documentClass_, const std::string& defaultSegmenter_, ErrorBufferInterface* errorhnd_);
+	AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const analyzer::DocumentClass& documentClass_, const std::string& defaultSegmenter_, ErrorBufferInterface* errorhnd_);
 	AnalyzerMap( const AnalyzerMap& o)
 		:m_map(o.m_map),m_documentClass(o.m_documentClass),m_defaultAnalyzerProgramSource(o.m_defaultAnalyzerProgramSource)
 		,m_defaultSegmenterName(o.m_defaultSegmenterName),m_defaultSegmenter(o.m_defaultSegmenter)
@@ -37,12 +35,12 @@ public:
 			const std::string& segmenter,
 			const std::string& prgfile);
 
-	const strus::DocumentClass& documentClass() const
+	const strus::analyzer::DocumentClass& documentClass() const
 	{
 		return m_documentClass;
 	}
 
-	const DocumentAnalyzerInterface* get( const DocumentClass& dclass);
+	const DocumentAnalyzerInterface* get( const analyzer::DocumentClass& dclass);
 
 private:
 	void defineDefaultProgram(
@@ -58,7 +56,7 @@ private:
 
 	typedef std::map<std::string,utils::SharedPtr<DocumentAnalyzerInterface> > Map;
 	Map m_map;
-	DocumentClass m_documentClass;
+	analyzer::DocumentClass m_documentClass;
 	std::string m_defaultAnalyzerProgramSource;
 	std::string m_defaultSegmenterName;
 	const strus::SegmenterInterface* m_defaultSegmenter;

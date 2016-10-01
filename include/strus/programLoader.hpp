@@ -9,6 +9,7 @@
 /// \file programLoader.hpp
 #ifndef _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
+#include "strus/analyzer/documentClass.hpp"
 #include <string>
 #include <vector>
 
@@ -25,8 +26,6 @@ class QueryEvalInterface;
 class QueryInterface;
 /// \brief Forward declaration
 class DocumentAnalyzerInterface;
-/// \brief Forward declaration
-class DocumentClass;
 /// \brief Forward declaration
 class QueryAnalyzerInterface;
 /// \brief Forward declaration
@@ -200,7 +199,7 @@ unsigned int loadDocumentUserRightsAssignments(
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success
 bool parseDocumentClass(
-		DocumentClass& result,
+		analyzer::DocumentClass& result,
 		const std::string& source,
 		ErrorBufferInterface* errorhnd);
 

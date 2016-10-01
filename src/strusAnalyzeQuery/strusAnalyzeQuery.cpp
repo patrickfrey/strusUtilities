@@ -33,7 +33,6 @@
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
-#include "strus/documentClass.hpp"
 #include "private/programOptions.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
