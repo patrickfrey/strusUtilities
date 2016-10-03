@@ -17,17 +17,23 @@
 using namespace strus;
 using namespace strus::parser;
 
-bool parser::is_INTEGER( const char* src)
+bool parser::is_UNSIGNED( const char* src)
 {
 	char const* cc = src;
-	if (isMinus(*cc))
-	{
-		++cc;
-	}
 	if (!isDigit( *cc)) return false;
 	for (++cc; isDigit( *cc); ++cc){}
 	if (*cc == '.' || isAlnum(*cc)) return false;
 	return true;
+}
+
+bool parser::is_INTEGER( const char* src)
+{
+	char const* cc = src;
+	if (isDash(*cc))
+	{
+		++cc;
+	}
+	return is_UNSIGNED( cc);
 }
 
 bool parser::is_FLOAT( const char* src)
@@ -86,6 +92,25 @@ std::string parser::parse_STRING( char const*& src)
 		{
 			src++;
 			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
+		}
+		rt.push_back( *src++);
+	}
+	++src;
+	skipSpaces( src);
+	return rt;
+}
+
+std::string parser::parse_REGEX( char const*& src)
+{
+	std::string rt;
+	char eb = *src++;
+	while (*src != eb)
+	{
+		if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
+		if (*src == '\\')
+		{
+			rt.push_back( *src++);
+			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
 		}
 		rt.push_back( *src++);
 	}

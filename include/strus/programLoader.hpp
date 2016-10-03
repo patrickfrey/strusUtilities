@@ -10,6 +10,7 @@
 #ifndef _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #include "strus/analyzer/documentClass.hpp"
+#include "strus/base/stdint.h"
 #include <string>
 #include <vector>
 
@@ -30,6 +31,14 @@ class DocumentAnalyzerInterface;
 class QueryAnalyzerInterface;
 /// \brief Forward declaration
 class StorageClientInterface;
+/// \brief Forward declaration
+class PatternLexerInterface;
+/// \brief Forward declaration
+class PatternLexerInstanceInterface;
+/// \brief Forward declaration
+class PatternMatcherInterface;
+/// \brief Forward declaration
+class PatternMatcherInstanceInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
 
@@ -245,6 +254,49 @@ bool parseFeatureVectors(
 		std::vector<FeatureVectorDef>& result,
 		const FeatureVectorDefFormat& sourceFormat,
 		const std::string& sourceString,
+		ErrorBufferInterface* errorhnd);
+
+
+/// \brief Result of a loadPatternMatcherProgram call, all structures created and instrumented by the loader
+class PatternMatcherProgram
+{
+public:
+	PatternMatcherProgram()
+		:m_lexer(0),m_matcher(0){}
+	~PatternMatcherProgram();
+
+	void init( 
+		PatternLexerInstanceInterface* lexer_,
+		PatternMatcherInstanceInterface* matcher_,
+		const std::vector<std::size_t>& regexidmap_,
+		const std::string& regexnames_,
+		const std::vector<uint32_t>& symbolRegexIdList_);
+
+	PatternLexerInstanceInterface* fetchLexer();
+	PatternMatcherInstanceInterface* fetchMatcher();
+
+	const char* tokenName( unsigned int id) const;
+
+private:
+	PatternLexerInstanceInterface* m_lexer;
+	PatternMatcherInstanceInterface* m_matcher;
+	std::vector<std::size_t> m_regexidmap;
+	std::string m_regexnames;
+	std::vector<uint32_t> m_symbolRegexIdList;
+};
+
+/// \brief Loads and compiles a list of pattern matcher programs from source and instruments a lexer and a matcher instance with it
+/// \param[out] result returned structures instrumented
+/// \param[in] lexer lexer class
+/// \param[in] matcher matcher class
+/// \param[in] sourceString source to parse
+/// \param[in,out] errorhnd buffer for reporting errors (exceptions)
+/// \return true on success
+bool loadPatternMatcherProgram(
+		PatternMatcherProgram& result,
+		const PatternLexerInterface* lexer,
+		const PatternMatcherInterface* matcher,
+		const std::vector<std::pair<std::string,std::string> >& sources,
 		ErrorBufferInterface* errorhnd);
 
 }//namespace

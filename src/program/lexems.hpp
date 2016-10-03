@@ -52,6 +52,10 @@ static inline bool isAssign( char ch)
 {
 	return ch == '=';
 }
+static inline bool isDash( char ch)
+{
+	return ch == '-';
+}
 static inline bool isColon( char ch)
 {
 	return ch == ':';
@@ -100,6 +104,14 @@ static inline bool isCloseAngleBracket( char ch)
 {
 	return ch == '>';
 }
+static inline bool isLeftArrow( const char* si)
+{
+	return si[0] == '<' && si[1] == '-';
+}
+static inline bool isRightArrow( const char* si)
+{
+	return si[0] == '-' && si[1] == '>';
+}
 static inline bool isAsterisk( char ch)
 {
 	return ch == '*';
@@ -137,11 +149,14 @@ static inline void skipSpaces( char const*& src)
 	}
 }
 bool is_INTEGER( const char* src);
+bool is_UNSIGNED( const char* src);
 bool is_FLOAT( const char* src);
 bool isEqual( const std::string& id, const char* idstr);
 std::string parse_IDENTIFIER( char const*& src);
 std::string parse_TEXTWORD( char const*& src);
 std::string parse_STRING( char const*& src);
+std::string parse_STRING_nonesc( char const*& src);
+std::string parse_REGEX( char const*& src);
 std::string parse_PATH( char const*& src);
 unsigned int parse_UNSIGNED( char const*& src);
 unsigned int parse_UNSIGNED1( char const*& src);

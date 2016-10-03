@@ -93,37 +93,12 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 13,
-				"h,help", "Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
-				"D,time", "v,version", "m,module:", "M,moduledir:", "R,resourcedir:",
+				argc_, argv_, 14,
+				"h,help", "v,version", "license",
+				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
+				"D,time", "m,module:", "M,moduledir:", "R,resourcedir:",
 				"s,storage:", "r,rpc:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 3)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			if (opt.nofargs() < 3)
-			{
-				std::cerr << _TXT("too few arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
-		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -150,7 +125,51 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
-
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cerr << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() > 3)
+			{
+				std::cerr << _TXT("too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 3)
+			{
+				std::cerr << _TXT("too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusQuery [options] <anprg> <qeprg> <query>" << std::endl;
@@ -163,6 +182,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			if (!opt("rpc"))
