@@ -570,7 +570,7 @@ int main( int argc, const char* argv[])
 				"h,help", "v,version", "license",
 				"g,segmenter:", "x,extension:", "y,mimetype:", "C,encoding:",
 				"e,expression:", "K,tokens", "p,program:", "Z,marker:", "H,markup:",
-				"t,threads:", "o,output:", "X,lexer:", "Y,matcher:"
+				"t,threads:", "o,output:", "X,lexer:", "Y,matcher:",
 				"M,moduledir:", "m,module:", "r,rpc:", "R,resourcedir:", "T,trace:");
 
 		if (opt( "help")) printUsageAndExit = true;

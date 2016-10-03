@@ -1,0 +1,1 @@
+src/strusPatternMatcher -p program.rul input.xml 
