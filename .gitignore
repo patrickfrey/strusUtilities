@@ -71,3 +71,6 @@ src/strusDeleteDocument/strusDeleteDocument
 src/strusVectorSpace/strusVectorSpace
 src/strusPatternMatcher/strusPatternMatcher
 .travis.yml
+
+# Generated files for tests:
+tests/scripts/ENV

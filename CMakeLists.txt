@@ -36,11 +36,13 @@ configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities.dsc.in"  "${PROJE
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities-Debian_7.0.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities-Debian_7.0.dsc"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities-xUbuntu_12.04.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities-xUbuntu_12.04.dsc"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/redhat/strusutilities.spec.in"  "${PROJECT_SOURCE_DIR}/dist/redhat/strusutilities.spec"  @ONLY )
+configure_file( "${PROJECT_SOURCE_DIR}/tests/scripts/ENV.in"  "${PROJECT_SOURCE_DIR}/tests/scripts/ENV"  @ONLY )
 
 enable_testing()
 
 # Subdirectories:
 add_subdirectory( src )
+add_subdirectory( tests )
   
 include( cmake/report_build_settings.cmake )
 
