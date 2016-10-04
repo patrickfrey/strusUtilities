@@ -54,7 +54,7 @@
 #include <boost/thread/mutex.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE "modstrus_analyzer_stream"
+#define DEFAULT_LOAD_MODULE "modstrus_analyzer_pattern"
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
