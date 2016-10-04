@@ -147,7 +147,7 @@ public:
 		return m_encoding;
 	}
 
-	const std::vector<std::string> selectexpr() const
+	const std::vector<std::string>& selectexpr() const
 	{
 		return m_selectexpr;
 	}
@@ -432,7 +432,6 @@ public:
 		std::vector<strus::analyzer::PatternMatcherResult> results = mt->fetchResults();
 		if (m_globalContext->markups().empty())
 		{
-			(*m_output) << "# " << filename << ":" << std::endl;
 			printResults( *m_output, segmentposmap, results, source);
 		}
 		else

@@ -1,5 +1,4 @@
-input1.xml:
-# input1.xml:
+input.xml:
 Name [8, 68|40 .. 68|47]: surname [9, 68|45 .. 68|47] 'P.' firstname [8, 68|40 .. 68|44] 'John'
 ExplName [8, 68|40 .. 68|47]: surname [9, 68|45 .. 68|47] 'P.' firstname [8, 68|40 .. 68|44] 'John'
 Name [8, 68|40 .. 68|51]: surname [10, 68|48 .. 68|51] 'Doe' firstname [8, 68|40 .. 68|44] 'John' surname [9, 68|45 .. 68|47] 'P.'
