@@ -12,12 +12,17 @@ mkdir -p $EXECDIR
 
 # Run test and diff with expected output:
 cd $TESTDIR
-FILES=`ls [a-z]*`
+FILES=`ls | tr '\n' ' ' | tr '\r' ' '`
 cd -
-echo FILES=$FILES
 for ff in $FILES; do cp $TESTDIR/$ff $EXECDIR/; done;
 cd $EXECDIR
-. $TESTDIR/RUN | perl -pe "s@$PROJECT@/home/strus/@g" > OUT
+echo "#!/bin/bash" > RUN
+echo "" >> RUN
+echo ". $PROJECT/tests/scripts/ENV" >> RUN
+echo "" >> RUN
+cat $TESTDIR/RUN >> RUN
+chmod +x RUN
+./RUN | perl -pe "s@$PROJECT@/home/strus/@g" > OUT
 cd -
 diff $1/EXP $EXECDIR/OUT > $EXECDIR/DIFF
 ERR=`cat $EXECDIR/DIFF | wc -l`
@@ -26,10 +31,12 @@ if [[ "$ERR" -gt 0 ]]; then
 	exit 1
 fi
 # Cleanup:
-for ff in $FILES; do rm $EXECDIR/$ff || true; done;
+for ff in $FILES; do
+	rm $EXECDIR/$ff || true;
+done;
 rm $EXECDIR/OUT
 rm $EXECDIR/DIFF
 rmdir $EXECDIR
 rmdir $EXECROT || true
-echo "OK $1"
+echo "OK $1 [ $FILES]"
 

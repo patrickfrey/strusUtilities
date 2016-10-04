@@ -54,6 +54,7 @@
 #include <boost/thread/mutex.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
+#define DEFAULT_LOAD_MODULE "modstrus_analyzer_stream"
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
@@ -617,6 +618,10 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
+		if (!moduleLoader->loadModule( DEFAULT_LOAD_MODULE))
+		{
+			std::cerr << _TXT("failed to load module ") << "'" << DEFAULT_LOAD_MODULE << "': " << g_errorBuffer->fetchError() << std::endl;
+		}
 		if (opt("license"))
 		{
 			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
@@ -716,8 +721,8 @@ int main( int argc, const char* argv[])
 		std::string mimetype;
 		std::string encoding;
 		std::vector<std::string> expressions;
-		std::string matcher;
-		std::string lexer;
+		std::string matcher("stream");
+		std::string lexer("stream");
 		std::vector<std::string> programfiles;
 		bool printTokens = false;
 		std::map<std::string,int> markups;
