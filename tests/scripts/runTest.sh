@@ -4,10 +4,11 @@ set -e
 . `dirname $0`/ENV
 
 # Prepare test output:
-TESTROT=`pwd`"/"`dirname $1`
-TESTDIR="$TESTROT/"`basename $1`
+ARG=$1
+TESTROT=`pwd`"/"`dirname $ARG`
+TESTDIR="$TESTROT/"`basename $ARG`
 EXECROT="$PROJECT/tests/scripts/exec"
-EXECDIR="$EXECROT/$1"
+EXECDIR="$EXECROT/$ARG"
 mkdir -p $EXECDIR
 
 # Run test and diff with expected output:
@@ -24,10 +25,11 @@ cat $TESTDIR/RUN >> RUN
 chmod +x RUN
 ./RUN | perl -pe "s@$PROJECT@/home/strus/@g" > OUT
 cd -
-diff $1/EXP $EXECDIR/OUT > $EXECDIR/DIFF
-ERR=`cat $EXECDIR/DIFF | wc -l`
+diff $TESTDIR/EXP $EXECDIR/OUT > $EXECDIR/DIFF || true
+ERR=$(wc -l <"$EXECDIR/DIFF")
+echo "$ERR" > $EXECDIR/ERR
 if [[ "$ERR" -gt 0 ]]; then
-	echo "ERROR $1"
+	echo "ERROR $ERR $1"
 	exit 1
 fi
 # Cleanup:
@@ -36,7 +38,8 @@ for ff in $FILES; do
 done;
 rm $EXECDIR/OUT
 rm $EXECDIR/DIFF
+rm $EXECDIR/ERR
 rmdir $EXECDIR
-rmdir $EXECROT || true
+(rmdir $EXECROT || true) 2>/dev/null
 echo "OK $1 [ $FILES]"
 
