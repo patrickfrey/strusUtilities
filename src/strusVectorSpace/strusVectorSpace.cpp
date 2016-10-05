@@ -10,6 +10,9 @@
 #include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
+#include "strus/vectorSpaceModelInterface.hpp"
+#include "strus/vectorSpaceModelBuilderInterface.hpp"
+#include "strus/vectorSpaceModelInstanceInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -29,6 +32,12 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+
+#undef STRUS_LOWLEVEL_DEBUG
+#define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace"
+#define DEFAULT_VECTOR_MODEL  "vector_std"
+
+static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
 enum Command
 {
@@ -52,19 +61,45 @@ static Command getCommand( const std::string& name)
 	}
 }
 
-static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const strus::FeatureVectorDefFormat& fmt, const std::string& content, strus::ErrorBufferInterface* errorhnd)
+static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& content)
 {
 	std::vector<strus::FeatureVectorDef> samples;
-	if (!strus::parseFeatureVectors( samples, fmt, content, errorhnd))
+
+	if (!strus::parseFeatureVectors( samples, fmt, content, g_errorBuffer))
 	{
 		throw strus::runtime_error(_TXT("could not load training data"));
 	}
+	std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config));
+
+	std::vector<strus::FeatureVectorDef>::const_iterator si = samples.begin(), se = samples.end();
+	unsigned int sidx = 0;
+	for (; si != se; ++si,++sidx)
+	{
+		builder->addSampleVector( si->vec);
+		if ((sidx & 1023) == 0 && g_errorBuffer->hasError()) break;
+		fprintf( stderr, "\radded %u vectors    ", sidx);
+	}
+	fprintf( stderr, "\radded %u vectors  (done)\n", sidx);
+	if (g_errorBuffer->hasError())
+	{
+		throw strus::runtime_error(_TXT("error adding vector space model samples"));
+	}
+	std::cerr << "learning features from samples ..." << std::endl;
+	if (!builder->finalize())
+	{
+		throw strus::runtime_error(_TXT("error building vector space model"));
+	}
+	std::cerr << "storing model ..." << std::endl;
+	if (!builder->store())
+	{
+		throw strus::runtime_error(_TXT("error storing vector space model"));
+	}
 }
 
-static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const strus::FeatureVectorDefFormat& fmt, const std::string& content, strus::ErrorBufferInterface* errorhnd)
+static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& content)
 {
 	std::vector<strus::FeatureVectorDef> samples;
-	if (!strus::parseFeatureVectors( samples, fmt, content, errorhnd))
+	if (!strus::parseFeatureVectors( samples, fmt, content, g_errorBuffer))
 	{
 		throw strus::runtime_error(_TXT("could not load features to map"));
 	}
@@ -80,6 +115,8 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
+	g_errorBuffer = errorBuffer.get();
+
 	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
@@ -114,6 +151,10 @@ int main( int argc, const char* argv[])
 					throw strus::runtime_error(_TXT("error failed to load module %s"), mi->c_str());
 				}
 			}
+		}
+		if (!moduleLoader->loadModule( DEFAULT_LOAD_MODULE))
+		{
+			std::cerr << _TXT("failed to load module ") << "'" << DEFAULT_LOAD_MODULE << "': " << errorBuffer->fetchError() << std::endl;
 		}
 		if (opt("license"))
 		{
@@ -182,7 +223,7 @@ int main( int argc, const char* argv[])
 		if (nof_config > 1)
 		{
 			std::cerr << _TXT("conflicting configuration options specified: --config and --configfile") << std::endl;
-			rt = 10003;
+			rt = 3;
 			printUsageAndExit = true;
 		}
 		if (printUsageAndExit)
@@ -201,7 +242,8 @@ int main( int argc, const char* argv[])
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
-			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
+			std::cout << "    " << _TXT("Load components from module <MOD>.") << std::endl;
+			std::cout << "    " << _TXT("The module modstrus_storage_vectorspace is implicitely defined") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-s|--config <CONFIG>" << std::endl;
@@ -249,8 +291,11 @@ int main( int argc, const char* argv[])
 
 		// Create objects:
 		std::string modelname;
-		(void)strus::extractStringFromConfigString( modelname, config, "model", errorBuffer.get());
-
+		if (!strus::extractStringFromConfigString( modelname, config, "model", errorBuffer.get()))
+		{
+			modelname = DEFAULT_VECTOR_MODEL;
+			if (errorBuffer->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
+		}
 		const strus::VectorSpaceModelInterface* vsi = storageBuilder->getVectorSpaceModel( modelname);
 		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
 
@@ -266,10 +311,10 @@ int main( int argc, const char* argv[])
 		switch (command)
 		{
 			case CmdLearnFeatures:
-				doLearnFeatures( vsi, format, inputstr, errorBuffer.get());
+				doLearnFeatures( vsi, config, format, inputstr);
 			break;
 			case CmdMapFeatures:
-				doMapFeatures( vsi, format, inputstr, errorBuffer.get());
+				doMapFeatures( vsi, config, format, inputstr);
 			break;
 		}
 		if (errorBuffer->hasError())
