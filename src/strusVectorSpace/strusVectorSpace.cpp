@@ -42,7 +42,8 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;
 enum Command
 {
 	CmdLearnFeatures,
-	CmdMapFeatures
+	CmdMapFeatures,
+	CmdMapClasses
 };
 
 static Command getCommand( const std::string& name)
@@ -51,9 +52,13 @@ static Command getCommand( const std::string& name)
 	{
 		return CmdLearnFeatures;
 	}
-	else if (strus::utils::caseInsensitiveEquals( name, "map"))
+	else if (strus::utils::caseInsensitiveEquals( name, "features"))
 	{
 		return CmdMapFeatures;
+	}
+	else if (strus::utils::caseInsensitiveEquals( name, "classes"))
+	{
+		return CmdMapClasses;
 	}
 	else
 	{
@@ -70,7 +75,10 @@ static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const 
 		throw strus::runtime_error(_TXT("could not load training data"));
 	}
 	std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config));
-
+	if (!builder.get())
+	{
+		throw strus::runtime_error(_TXT("error initializing vector space model builder"));
+	}
 	std::vector<strus::FeatureVectorDef>::const_iterator si = samples.begin(), se = samples.end();
 	unsigned int sidx = 0;
 	for (; si != se; ++si,++sidx)
@@ -102,6 +110,78 @@ static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const st
 	if (!strus::parseFeatureVectors( samples, fmt, content, g_errorBuffer))
 	{
 		throw strus::runtime_error(_TXT("could not load features to map"));
+	}
+	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( config));
+	if (!instance.get())
+	{
+		throw strus::runtime_error(_TXT("error initializing vector space model instance"));
+	}
+	std::vector<strus::FeatureVectorDef>::const_iterator si = samples.begin(), se = samples.end();
+	unsigned int sidx = 0;
+	for (; si != se; ++si,++sidx)
+	{
+		std::vector<unsigned int> features( instance->mapVectorToFeatures( si->vec));
+		if (!features.empty())
+		{
+			std::cout << si->term;
+			std::vector<unsigned int>::const_iterator fi = features.begin(), fe = features.end();
+			for (unsigned int fidx=0; fi != fe; ++fi,++fidx)
+			{
+				std::cout << ' ' << *fi;
+			}
+			std::cout << std::endl;
+		}
+	}
+	if (g_errorBuffer->hasError())
+	{
+		throw strus::runtime_error(_TXT("error mapping vectors to features"));
+	}
+}
+
+static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& content)
+{
+	std::vector<strus::FeatureVectorDef> samples;
+	if (!strus::parseFeatureVectors( samples, fmt, content, g_errorBuffer))
+	{
+		throw strus::runtime_error(_TXT("could not load features to map"));
+	}
+	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( config));
+	if (!instance.get())
+	{
+		throw strus::runtime_error(_TXT("error initializing vector space model instance"));
+	}
+	typedef std::multimap<unsigned int,std::size_t> ClassesMap;
+	typedef std::pair<unsigned int,std::size_t> ClassesElem;
+	ClassesMap classesmap;
+
+	std::vector<strus::FeatureVectorDef>::const_iterator si = samples.begin(), se = samples.end();
+	unsigned int sidx = 0;
+	for (; si != se; ++si,++sidx)
+	{
+		std::vector<unsigned int> features( instance->mapVectorToFeatures( si->vec));
+		if (!features.empty())
+		{
+			std::vector<unsigned int>::const_iterator fi = features.begin(), fe = features.end();
+			for (unsigned int fidx=0; fi != fe; ++fi,++fidx)
+			{
+				classesmap.insert( ClassesElem( *fi, sidx));
+			}
+		}
+	}
+	ClassesMap::const_iterator ci = classesmap.begin(), ce = classesmap.end();
+	while (ci != ce)
+	{
+		unsigned int key = ci->first;
+		std::cout << key;
+		for (; ci != ce && ci->first == key; ++ci)
+		{
+			std::cout << ' ' << samples[ ci->second].term;
+		}
+		std::cout << std::endl;
+	}
+	if (g_errorBuffer->hasError())
+	{
+		throw strus::runtime_error(_TXT("error mapping vectors to classes"));
 	}
 }
 
@@ -315,6 +395,9 @@ int main( int argc, const char* argv[])
 			break;
 			case CmdMapFeatures:
 				doMapFeatures( vsi, config, format, inputstr);
+			break;
+			case CmdMapClasses:
+				doMapClasses( vsi, config, format, inputstr);
 			break;
 		}
 		if (errorBuffer->hasError())
