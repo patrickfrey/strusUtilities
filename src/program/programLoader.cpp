@@ -2191,8 +2191,11 @@ static void parseFeatureVectors_DefWord2VecBin(
 	skipSpaces( si);
 	if (!is_UNSIGNED(si)) throw strus::runtime_error("expected vector size as second element of the header line (word2vec binary file)");
 	unsigned int vecsize = parse_UNSIGNED1( si);
-	skipToEoln( si);
-	++si;
+	if (*(si-1) != '\n')
+	{
+		skipToEoln( si);
+		++si;
+	}
 	while (si < se)
 	{
 		FeatureVectorDef elem;
