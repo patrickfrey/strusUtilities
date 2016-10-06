@@ -1,0 +1,12 @@
+path=examples/vector/google/model.vs;
+dim=300;
+bit=64;
+var=32;
+simdist=340;
+raddist=240;
+eqdist=80;
+mutations=50;
+votes=5;
+descendants=5;
+maxage=30;
+iterations=20

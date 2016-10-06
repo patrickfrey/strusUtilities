@@ -239,7 +239,7 @@ int main( int argc, const char* argv[])
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:",
 				"s,config:", "S,configfile:", "T,trace:",
-				"f,format:");
+				"F,format:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -367,9 +367,11 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
-			std::cout << "-f|--format <INFMT>" << std::endl;
-			std::cout << "    " << _TXT("declare the input file format of the processed data to be <INFMT>") << std::endl;
-			std::cout << "    " << _TXT("  (default 'text' for text with and space delimited columns)") << std::endl;
+			std::cout << "-F|--format <INFMT>" << std::endl;
+			std::cout << "    " << _TXT("Declare the input file format of the processed data to be <INFMT>") << std::endl;
+			std::cout << "    " << _TXT("Possible formats:") << std::endl;
+			std::cout << "    " << _TXT("  'text_ssv'     (default) for text with and space delimited columns") << std::endl;
+			std::cout << "    " << _TXT("  'bin_word2vec' for the google word2vec binary format little endian") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
