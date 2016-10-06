@@ -2173,8 +2173,8 @@ float littleToBigEndian( const float& val)
 		float val;
 	} st;
 	st.val = val;
-	std::swap( ar[0], ar[3]);
-	std::swap( ar[1], ar[2]);
+	std::swap( st.ar[0], st.ar[3]);
+	std::swap( st.ar[1], st.ar[2]);
 	return st.val;
 }
 
@@ -2184,16 +2184,13 @@ static void parseFeatureVectors_DefWord2VecBin(
 		std::size_t size)
 {
 	bool littleEndian = isLittleEndian();
-	const char* start = si;
 	const char* se = si + size;
 	skipSpaces( si);
-	unsigned int collsize;
-	unsigned int vecsize;
 	if (!is_UNSIGNED(si)) throw strus::runtime_error("expected collection size as first element of the header line (word2vec binary file)");
-	collsize = parse_UNSIGNED1( si);
+	unsigned int collsize = parse_UNSIGNED1( si);
 	skipSpaces( si);
 	if (!is_UNSIGNED(si)) throw strus::runtime_error("expected vector size as second element of the header line (word2vec binary file)");
-	vecsize = parse_UNSIGNED1( si);
+	unsigned int vecsize = parse_UNSIGNED1( si);
 	skipToEoln( si);
 	++si;
 	while (si < se)
@@ -2235,9 +2232,13 @@ static void parseFeatureVectors_DefWord2VecBin(
 		}
 		result.push_back( elem);
 	}
-	while (si != se)
+	if (si != se)
 	{
 		throw strus::runtime_error( _TXT("trailing bytes at end of file"));
+	}
+	if (result.size() != collsize)
+	{
+		throw strus::runtime_error( _TXT("number of vectors and collection size specified in header do not match (%u != %u)"), result.size(), collsize);
 	}
 }
 
@@ -2336,7 +2337,7 @@ DLL_PUBLIC bool strus::parseFeatureVectorDefFormat(
 		}
 		else if (name == "bin_word2vec")
 		{
-			return = FeatureVectorDefWord2vecbin;
+			result = FeatureVectorDefWord2vecbin;
 		}
 		else
 		{
