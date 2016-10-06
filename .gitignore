@@ -75,3 +75,4 @@ src/strusPatternMatcher/strusPatternMatcher
 # Generated files for tests:
 tests/scripts/ENV
 tests/scripts/exec
+examples/vector/eigenwords/model.vs

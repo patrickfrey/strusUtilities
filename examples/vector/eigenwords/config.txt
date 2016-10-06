@@ -1,0 +1,12 @@
+path=examples/vector/eigenwords/model.vs;
+dim=200;
+bit=64;
+var=32;
+simdist=240;
+raddist=160;
+eqdist=80;
+mutations=50;
+votes=13;
+descendants=10;
+maxage=20;
+iterations=20

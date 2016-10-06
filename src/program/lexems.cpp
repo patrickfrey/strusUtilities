@@ -165,6 +165,27 @@ double parser::parse_FLOAT( char const*& src)
 			++src;
 		}
 	}
+	if (*src == 'E')
+	{
+		++src;
+		int exp = parse_INTEGER( src);
+		if (exp > 0)
+		{
+			while (exp > 0)
+			{
+				rt *= 10;
+				exp -= 1;
+			}
+		}
+		else
+		{
+			while (exp < 0)
+			{
+				rt /= 10;
+				exp += 1;
+			}
+		}
+	}
 	skipSpaces( src);
 	return sign?-rt:rt;
 }

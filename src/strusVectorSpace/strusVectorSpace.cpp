@@ -52,11 +52,11 @@ static Command getCommand( const std::string& name)
 	{
 		return CmdLearnFeatures;
 	}
-	else if (strus::utils::caseInsensitiveEquals( name, "features"))
+	else if (strus::utils::caseInsensitiveEquals( name, "feature"))
 	{
 		return CmdMapFeatures;
 	}
-	else if (strus::utils::caseInsensitiveEquals( name, "classes"))
+	else if (strus::utils::caseInsensitiveEquals( name, "class"))
 	{
 		return CmdMapClasses;
 	}
@@ -66,13 +66,19 @@ static Command getCommand( const std::string& name)
 	}
 }
 
-static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& content)
+static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
 	std::vector<strus::FeatureVectorDef> samples;
-
-	if (!strus::parseFeatureVectors( samples, fmt, content, g_errorBuffer))
 	{
-		throw strus::runtime_error(_TXT("could not load training data"));
+		// Read input data file:
+		std::string inputstr;
+		int ec = strus::readFile( inputfile, inputstr);
+		if (ec) throw strus::runtime_error(_TXT("failed to read input file %s (errno %u): %s"), inputfile.c_str(), ec, ::strerror(ec));
+	
+		if (!strus::parseFeatureVectors( samples, fmt, inputstr, g_errorBuffer))
+		{
+			throw strus::runtime_error(_TXT("could not load training data"));
+		}
 	}
 	std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config));
 	if (!builder.get())
@@ -84,8 +90,11 @@ static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const 
 	for (; si != se; ++si,++sidx)
 	{
 		builder->addSampleVector( si->vec);
-		if ((sidx & 1023) == 0 && g_errorBuffer->hasError()) break;
-		fprintf( stderr, "\radded %u vectors    ", sidx);
+		if ((sidx & 1023) == 0)
+		{
+			if (g_errorBuffer->hasError()) break;
+			fprintf( stderr, "\radded %u vectors    ", sidx);
+		}
 	}
 	fprintf( stderr, "\radded %u vectors  (done)\n", sidx);
 	if (g_errorBuffer->hasError())
@@ -104,12 +113,19 @@ static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const 
 	}
 }
 
-static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& content)
+static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
 	std::vector<strus::FeatureVectorDef> samples;
-	if (!strus::parseFeatureVectors( samples, fmt, content, g_errorBuffer))
 	{
-		throw strus::runtime_error(_TXT("could not load features to map"));
+		// Read input data file:
+		std::string inputstr;
+		int ec = strus::readFile( inputfile, inputstr);
+		if (ec) throw strus::runtime_error(_TXT("failed to read input file %s (errno %u): %s"), inputfile.c_str(), ec, ::strerror(ec));
+	
+		if (!strus::parseFeatureVectors( samples, fmt, inputstr, g_errorBuffer))
+		{
+			throw strus::runtime_error(_TXT("could not load features to map"));
+		}
 	}
 	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( config));
 	if (!instance.get())
@@ -138,12 +154,19 @@ static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const st
 	}
 }
 
-static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& content)
+static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
 	std::vector<strus::FeatureVectorDef> samples;
-	if (!strus::parseFeatureVectors( samples, fmt, content, g_errorBuffer))
 	{
-		throw strus::runtime_error(_TXT("could not load features to map"));
+		// Read input data file:
+		std::string inputstr;
+		int ec = strus::readFile( inputfile, inputstr);
+		if (ec) throw strus::runtime_error(_TXT("failed to read input file %s (errno %u): %s"), inputfile.c_str(), ec, ::strerror(ec));
+	
+		if (!strus::parseFeatureVectors( samples, fmt, inputstr, g_errorBuffer))
+		{
+			throw strus::runtime_error(_TXT("could not load features to map"));
+		}
 	}
 	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( config));
 	if (!instance.get())
@@ -287,7 +310,7 @@ int main( int argc, const char* argv[])
 			nof_config += 1;
 			std::string configfile = opt[ "configfile"];
 			int ec = strus::readFile( configfile, config);
-			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u)"), configfile.c_str(), ec);
+			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u): %s"), configfile.c_str(), ec, ::strerror(ec));
 
 			std::string::iterator di = config.begin(), de = config.end();
 			for (; di != de; ++di)
@@ -387,17 +410,17 @@ int main( int argc, const char* argv[])
 				throw strus::runtime_error(_TXT("wrong format option: %s"), errorBuffer->fetchError());
 			}
 		}
-		std::string inputstr;
+
 		switch (command)
 		{
 			case CmdLearnFeatures:
-				doLearnFeatures( vsi, config, format, inputstr);
+				doLearnFeatures( vsi, config, format, inputfile);
 			break;
 			case CmdMapFeatures:
-				doMapFeatures( vsi, config, format, inputstr);
+				doMapFeatures( vsi, config, format, inputfile);
 			break;
 			case CmdMapClasses:
-				doMapClasses( vsi, config, format, inputstr);
+				doMapClasses( vsi, config, format, inputfile);
 			break;
 		}
 		if (errorBuffer->hasError())
