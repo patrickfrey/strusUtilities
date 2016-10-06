@@ -212,22 +212,101 @@ bool parseDocumentClass(
 		const std::string& source,
 		ErrorBufferInterface* errorhnd);
 
-/// \brief Structure for one feature vector definition
-struct FeatureVectorDef
-{
-	std::string term;		///< term of the feature
-	std::vector<double> vec;	///< vector assigned to this feature
 
+/// \brief Structure for a big list of feature vector definitions
+struct FeatureVectorList
+{
 	/// \brief Default constructor
-	FeatureVectorDef()
-		:term(),vec(){}
-	/// \brief Constructor
-	FeatureVectorDef( const std::string& term_, const std::vector<double>& vec_)
-		:term(term_),vec(vec_){}
+	FeatureVectorList( std::size_t collsize_=0, std::size_t vecsize_=0)
+		:m_termofs(),m_termstrings(),m_vecvalues(),m_vecsize(vecsize_)
+	{
+		m_termofs.reserve( collsize_);
+		m_termstrings.reserve( collsize_ * 12);
+		m_vecvalues.reserve( collsize_);
+		
+	}
 	/// \brief Copy constructor
-	FeatureVectorDef( const FeatureVectorDef& o)
-		:term(o.term),vec(o.vec){}
+	FeatureVectorList( const FeatureVectorList& o)
+		:m_termofs(o.m_termofs),m_termstrings(o.m_termstrings),m_vecvalues(o.m_vecvalues),m_vecsize(o.m_vecsize){}
+
+	void add( const char* term_, std::size_t termsize_, const std::vector<double>& vec_);
+
+	class const_iterator;
+
+	class Element
+	{
+	public:
+		const char* term() const	{return m_term;}
+		const double* vec() const	{return m_vec;}
+		std::size_t vecsize() const	{return m_vecsize;}
+
+		Element( const char* term_, const double* vec_, std::size_t vecsize_)
+			:m_term(term_),m_vec(vec_),m_vecsize(vecsize_){}
+		Element( const Element& o)
+			:m_term(o.m_term),m_vec(o.m_vec),m_vecsize(o.m_vecsize){}
+	private:
+		friend class FeatureVectorList::const_iterator;
+		const char* m_term;
+		const double* m_vec;
+		std::size_t m_vecsize;
+	};
+
+	Element operator[]( std::size_t idx) const
+	{
+		return Element( m_termstrings.c_str() + m_termofs[ idx], &m_vecvalues[ idx * m_vecsize], m_vecsize);
+	}
+
+	class const_iterator
+	{
+	public:
+		const_iterator( std::size_t itr_, const char* termstrings_base_, const std::size_t* termofs_base_, const double* vecvalues_base_, const std::size_t& vecsize_)
+			:content(termstrings_base_,vecvalues_base_,vecsize_)
+			,itr(itr_)
+			,termstrings_base(termstrings_base_)
+			,termofs_base(termofs_base_)
+			,vecvalues_base(vecvalues_base_){}
+		const_iterator( const const_iterator& o)
+			:content(o.content)
+			,itr(o.itr)
+			,termstrings_base(o.termstrings_base)
+			,termofs_base(o.termofs_base)
+			,vecvalues_base(o.vecvalues_base){}
+
+		const_iterator& operator++()				{++itr; initElement(); return *this;}
+		const_iterator operator++(int)				{const_iterator rt=*this; ++itr; initElement(); return rt;}
+
+		const Element& operator*() const			{return content;}
+		const Element* operator->() const			{return &content;}
+
+		bool operator==( const const_iterator& o) const		{return itr == o.itr;}
+		bool operator!=( const const_iterator& o) const		{return itr != o.itr;}
+		bool operator<( const const_iterator& o) const		{return itr < o.itr;}
+		bool operator<=( const const_iterator& o) const		{return itr <= o.itr;}
+		bool operator>( const const_iterator& o) const		{return itr > o.itr;}
+		bool operator>=( const const_iterator& o) const		{return itr >= o.itr;}
+
+	private:
+		void initElement()					{content.m_term = termstrings_base + termofs_base[itr]; content.m_vec = vecvalues_base + itr * content.vecsize();}
+
+		Element content;
+		std::size_t itr;
+		const char* termstrings_base;
+		const std::size_t* termofs_base;
+		const double* vecvalues_base;
+	};
+
+	const_iterator begin() const		{return const_iterator( 0, m_termstrings.c_str(), m_termofs.data(), m_vecvalues.data(), m_vecsize);}
+	const_iterator end() const		{return const_iterator( m_termofs.size(), 0, m_termofs.data(), 0, m_vecsize);}
+
+	std::size_t size() const		{return m_termofs.size();}
+
+private:
+	std::vector<std::size_t> m_termofs;	///< term offsets
+	std::string m_termstrings;		///< term of the feature
+	std::vector<double> m_vecvalues;	///< vector assigned to this feature
+	std::size_t m_vecsize;			///< size of a vector
 };
+
 
 /// \brief Source format variants for feature vector definitions
 enum FeatureVectorDefFormat {
@@ -252,7 +331,7 @@ bool parseFeatureVectorDefFormat(
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success
 bool parseFeatureVectors(
-		std::vector<FeatureVectorDef>& result,
+		FeatureVectorList& result,
 		const FeatureVectorDefFormat& sourceFormat,
 		const std::string& sourceString,
 		ErrorBufferInterface* errorhnd);

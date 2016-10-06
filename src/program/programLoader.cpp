@@ -2159,6 +2159,16 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 	}
 }
 
+
+DLL_PUBLIC void FeatureVectorList::add( const char* term_, std::size_t termsize_, const std::vector<double>& vec_)
+{
+	if (vec_.size() != m_vecsize) throw strus::runtime_error( _TXT("feature vector size does no match"));
+	m_termstrings.push_back('\0');
+	m_termofs.push_back( m_termstrings.size());
+	m_termstrings.append( term_, termsize_);
+	m_vecvalues.insert( m_vecvalues.end(), vec_.begin(), vec_.end());
+}
+
 static bool isLittleEndian()
 {
 	int n = 1;
@@ -2179,7 +2189,7 @@ float littleToBigEndian( const float& val)
 }
 
 static void parseFeatureVectors_DefWord2VecBin(
-		std::vector<FeatureVectorDef>& result,
+		FeatureVectorList& result,
 		char const*& si,
 		std::size_t size)
 {
@@ -2196,19 +2206,19 @@ static void parseFeatureVectors_DefWord2VecBin(
 		skipToEoln( si);
 		++si;
 	}
+	result = FeatureVectorList( collsize, vecsize);
 	while (si < se)
 	{
-		FeatureVectorDef elem;
-		for (; si < se && (unsigned char)*si > 32; ++si)
-		{
-			elem.term.push_back( *si);
-		}
+		const char* term = si;
+		for (; si < se && (unsigned char)*si > 32; ++si){}
+		std::size_t termsize = si - term;
 		++si;
 		if (si+vecsize*sizeof(float) > se)
 		{
 			throw strus::runtime_error( _TXT("wrong file format"));
 		}
-		elem.vec.reserve( vecsize);
+		std::vector<double> vec;
+		vec.reserve( vecsize);
 		unsigned int vi = 0;
 		for (; vi < vecsize; vi++)
 		{
@@ -2216,24 +2226,24 @@ static void parseFeatureVectors_DefWord2VecBin(
 			std::memcpy( (void*)&val, si, sizeof( float));
 			si += sizeof( float);
 			if (!littleEndian) val = littleToBigEndian( val);
-			elem.vec.push_back( val);
+			vec.push_back( val);
 		}
 		double len = 0;
 		for (vi = 0; vi < vecsize; vi++)
 		{
-			double vv = elem.vec[vi];
+			double vv = vec[vi];
 			len += vv * vv;
 		}
 		len = sqrt( len);
 		for (; vi < vecsize; vi++)
 		{
-			elem.vec[vi] /= len;
-			if (elem.vec[vi] < -1.0 || elem.vec[vi] > 1.0)
+			vec[vi] /= len;
+			if (vec[vi] < -1.0 || vec[vi] > 1.0)
 			{
 				throw strus::runtime_error( _TXT("illegal values in vectors"));
 			}
 		}
-		result.push_back( elem);
+		result.add( term, termsize, vec);
 	}
 	if (si != se)
 	{
@@ -2246,26 +2256,28 @@ static void parseFeatureVectors_DefWord2VecBin(
 }
 
 static void parseFeatureVectors_DefText(
-		std::vector<FeatureVectorDef>& result,
+		FeatureVectorList& result,
 		char const*& si)
 {
+	result = FeatureVectorList( 0, 0);
+	bool result_defined = false;
 	while (*si)
 	{
-		FeatureVectorDef elem;
+		const char* term;
+		std::size_t termsize;
+		std::vector<double> vec;
 		skipSpaces( si);
+		term = si;
 	AGAIN:
-		for (; *si && *si != ' ' && *si != '\t'; ++si)
-		{
-			elem.term.push_back( *si);
-		}
+		for (; *si && *si != ' ' && *si != '\t'; ++si){}
 		if (!*si)
 		{
 			throw strus::runtime_error(_TXT("unexpected end of file"));
 		}
+		termsize = si - term;
 		++si;
 		if (!isMinus(*si) && !isDigit(*si))
 		{
-			elem.term.push_back( ' ');
 			goto AGAIN;
 		}
 		char const* eoln = si;
@@ -2273,19 +2285,24 @@ static void parseFeatureVectors_DefText(
 		skipSpaces( si);
 		while (si < eoln && is_FLOAT(si))
 		{
-			elem.vec.push_back( parse_FLOAT( si));
+			vec.push_back( parse_FLOAT( si));
 			skipSpaces( si);
 		}
 		if (si < eoln)
 		{
 			throw strus::runtime_error(_TXT("expected vector of double precision floating point numbers after term definition"));
 		}
-		result.push_back( elem);
+		if (!result_defined)
+		{
+			result = FeatureVectorList( 0, vec.size());
+			result_defined = true;
+		}
+		result.add( term, termsize, vec);
 	}
 }
 
 DLL_PUBLIC bool strus::parseFeatureVectors(
-		std::vector<FeatureVectorDef>& result,
+		FeatureVectorList& result,
 		const FeatureVectorDefFormat& sourceFormat,
 		const std::string& sourceString,
 		ErrorBufferInterface* errorhnd)
