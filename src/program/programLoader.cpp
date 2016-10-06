@@ -2204,7 +2204,7 @@ static void parseFeatureVectors_DefWord2VecBin(
 			elem.term.push_back( *si);
 		}
 		++si;
-		if (si+vecsize*sizeof(float) >= se)
+		if (si+vecsize*sizeof(float) > se)
 		{
 			throw strus::runtime_error( _TXT("wrong file format"));
 		}
