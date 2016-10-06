@@ -190,6 +190,16 @@ static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std
 				classesmap.insert( ClassesElem( *fi, sidx));
 			}
 		}
+		if ((sidx & 1023) == 0)
+		{
+			if (g_errorBuffer->hasError()) break;
+			fprintf( stderr, "\rmapped %u vectors    ", sidx);
+		}
+	}
+	fprintf( stderr, "\rmapped %u vectors  (done)\n", sidx);
+	if (g_errorBuffer->hasError())
+	{
+		throw strus::runtime_error(_TXT("error mapping vectors"));
 	}
 	ClassesMap::const_iterator ci = classesmap.begin(), ce = classesmap.end();
 	while (ci != ce)
