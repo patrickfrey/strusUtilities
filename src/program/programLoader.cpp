@@ -55,25 +55,31 @@ using namespace strus::parser;
 class ErrorPosition
 {
 public:
-	ErrorPosition( const char* base, const char* itr)
+	ErrorPosition( const char* base, const char* itr, bool binary=false)
 	{
-		unsigned int line = 1;
-		unsigned int col = 1;
-		std::ostringstream msg;
-	
-		for (unsigned int ii=0,nn=itr-base; ii < nn; ++ii)
+		if (binary)
 		{
-			if (base[ii] == '\n')
-			{
-				col = 1;
-				++line;
-			}
-			else
-			{
-				++col;
-			}
+			strus_snprintf( m_buf, sizeof(m_buf), _TXT("at byte %u"), itr-base);
 		}
-		strus_snprintf( m_buf, sizeof(m_buf), "at line %u column %u", line, col);
+		else
+		{
+			unsigned int line = 1;
+			unsigned int col = 1;
+		
+			for (unsigned int ii=0,nn=itr-base; ii < nn; ++ii)
+			{
+				if (base[ii] == '\n')
+				{
+					col = 1;
+					++line;
+				}
+				else
+				{
+					++col;
+				}
+			}
+			strus_snprintf( m_buf, sizeof(m_buf), _TXT("at line %u column %u"), line, col);
+		}
 	}
 
 	const char* c_str() const
@@ -2153,6 +2159,88 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 	}
 }
 
+static bool isLittleEndian()
+{
+	int n = 1;
+	return (*(char *)&n == 1);
+}
+
+float littleToBigEndian( const float& val)
+{
+	union
+	{
+		unsigned char ar[4];
+		float val;
+	} st;
+	st.val = val;
+	std::swap( ar[0], ar[3]);
+	std::swap( ar[1], ar[2]);
+	return st.val;
+}
+
+static void parseFeatureVectors_DefWord2VecBin(
+		std::vector<FeatureVectorDef>& result,
+		char const*& si,
+		std::size_t size)
+{
+	bool littleEndian = isLittleEndian();
+	const char* start = si;
+	const char* se = si + size;
+	skipSpaces( si);
+	unsigned int collsize;
+	unsigned int vecsize;
+	if (!is_UNSIGNED(si)) throw strus::runtime_error("expected collection size as first element of the header line (word2vec binary file)");
+	collsize = parse_UNSIGNED1( si);
+	skipSpaces( si);
+	if (!is_UNSIGNED(si)) throw strus::runtime_error("expected vector size as second element of the header line (word2vec binary file)");
+	vecsize = parse_UNSIGNED1( si);
+	skipToEoln( si);
+	++si;
+	while (si < se)
+	{
+		FeatureVectorDef elem;
+		for (; si < se && (unsigned char)*si > 32; ++si)
+		{
+			elem.term.push_back( *si);
+		}
+		++si;
+		if (si+vecsize*sizeof(float) >= se)
+		{
+			throw strus::runtime_error( _TXT("wrong file format"));
+		}
+		elem.vec.reserve( vecsize);
+		unsigned int vi = 0;
+		for (; vi < vecsize; vi++)
+		{
+			float val;
+			std::memcpy( (void*)&val, si, sizeof( float));
+			si += sizeof( float);
+			if (!littleEndian) val = littleToBigEndian( val);
+			elem.vec.push_back( val);
+		}
+		double len = 0;
+		for (vi = 0; vi < vecsize; vi++)
+		{
+			double vv = elem.vec[vi];
+			len += vv * vv;
+		}
+		len = sqrt( len);
+		for (; vi < vecsize; vi++)
+		{
+			elem.vec[vi] /= len;
+			if (elem.vec[vi] < -1.0 || elem.vec[vi] > 1.0)
+			{
+				throw strus::runtime_error( _TXT("illegal values in vectors"));
+			}
+		}
+		result.push_back( elem);
+	}
+	while (si != se)
+	{
+		throw strus::runtime_error( _TXT("trailing bytes at end of file"));
+	}
+}
+
 static void parseFeatureVectors_DefText(
 		std::vector<FeatureVectorDef>& result,
 		char const*& si)
@@ -2198,26 +2286,34 @@ DLL_PUBLIC bool strus::parseFeatureVectors(
 		const std::string& sourceString,
 		ErrorBufferInterface* errorhnd)
 {
+	const char* formatname = 0;
+	bool binaryFormat = false;
 	char const* si = sourceString.c_str();
 	try
 	{
 		switch (sourceFormat)
 		{
 			case FeatureVectorDefTextssv:
+				formatname = "text SSV";
 				parseFeatureVectors_DefText( result, si);
+				break;
+			case FeatureVectorDefWord2vecbin:
+				formatname = "word2vec binary format";
+				binaryFormat = true;
+				parseFeatureVectors_DefWord2VecBin( result, si, sourceString.size());
 				break;
 		}
 		return true;
 	}
 	catch (const std::bad_alloc&)
 	{
-		ErrorPosition pos( sourceString.c_str(), si);
-		errorhnd->report( _TXT("out of memory parsing feature vector definitions %s"), pos.c_str());
+		ErrorPosition pos( sourceString.c_str(), si, binaryFormat);
+		errorhnd->report( _TXT("out of memory parsing feature vector definitions (%s) %s"), formatname, pos.c_str());
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		ErrorPosition pos( sourceString.c_str(), si);
+		ErrorPosition pos( sourceString.c_str(), si, binaryFormat);
 		errorhnd->report( _TXT("error parsing feature vector definitions %s: %s"), pos.c_str(), e.what());
 		return false;
 	}
@@ -2237,6 +2333,10 @@ DLL_PUBLIC bool strus::parseFeatureVectorDefFormat(
 		if (name == "text_ssv")
 		{
 			result = FeatureVectorDefTextssv;
+		}
+		else if (name == "bin_word2vec")
+		{
+			return = FeatureVectorDefWord2vecbin;
 		}
 		else
 		{

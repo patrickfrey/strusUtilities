@@ -76,3 +76,5 @@ src/strusPatternMatcher/strusPatternMatcher
 tests/scripts/ENV
 tests/scripts/exec
 examples/vector/eigenwords/model.vs
+examples/vector/eigenwords/classes.txt
+examples/vector/eigenwords/features.txt

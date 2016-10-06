@@ -231,7 +231,8 @@ struct FeatureVectorDef
 
 /// \brief Source format variants for feature vector definitions
 enum FeatureVectorDefFormat {
-	FeatureVectorDefTextssv	///< text file with lines starting with the term, followed by the vector elements as double precision floating point numbers separated by spaces
+	FeatureVectorDefTextssv,	///< text file with lines starting with the term, followed by the vector elements as double precision floating point numbers separated by spaces
+	FeatureVectorDefWord2vecbin	///< binary format of Google Word2Vec
 };
 
 /// \brief Parses a feature vector definition format identifier
