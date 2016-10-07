@@ -68,7 +68,7 @@ static Command getCommand( const std::string& name)
 
 static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
-	std::vector<strus::FeatureVectorDef> samples;
+	strus::FeatureVectorList samples;
 	{
 		// Read input data file:
 		std::string inputstr;
@@ -85,11 +85,12 @@ static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const 
 	{
 		throw strus::runtime_error(_TXT("error initializing vector space model builder"));
 	}
-	std::vector<strus::FeatureVectorDef>::const_iterator si = samples.begin(), se = samples.end();
+	strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
 	unsigned int sidx = 0;
 	for (; si != se; ++si,++sidx)
 	{
-		builder->addSampleVector( si->vec);
+		std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
+		builder->addSampleVector( vec);
 		if ((sidx & 1023) == 0)
 		{
 			if (g_errorBuffer->hasError()) break;
@@ -115,13 +116,13 @@ static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const 
 
 static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
-	std::vector<strus::FeatureVectorDef> samples;
+	strus::FeatureVectorList samples;
 	{
 		// Read input data file:
 		std::string inputstr;
 		int ec = strus::readFile( inputfile, inputstr);
 		if (ec) throw strus::runtime_error(_TXT("failed to read input file %s (errno %u): %s"), inputfile.c_str(), ec, ::strerror(ec));
-	
+
 		if (!strus::parseFeatureVectors( samples, fmt, inputstr, g_errorBuffer))
 		{
 			throw strus::runtime_error(_TXT("could not load features to map"));
@@ -132,14 +133,15 @@ static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const st
 	{
 		throw strus::runtime_error(_TXT("error initializing vector space model instance"));
 	}
-	std::vector<strus::FeatureVectorDef>::const_iterator si = samples.begin(), se = samples.end();
+	strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
 	unsigned int sidx = 0;
 	for (; si != se; ++si,++sidx)
 	{
-		std::vector<unsigned int> features( instance->mapVectorToFeatures( si->vec));
+		std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
+		std::vector<unsigned int> features( instance->mapVectorToFeatures( vec));
 		if (!features.empty())
 		{
-			std::cout << si->term;
+			std::cout << si->term();
 			std::vector<unsigned int>::const_iterator fi = features.begin(), fe = features.end();
 			for (unsigned int fidx=0; fi != fe; ++fi,++fidx)
 			{
@@ -156,7 +158,7 @@ static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const st
 
 static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
-	std::vector<strus::FeatureVectorDef> samples;
+	strus::FeatureVectorList samples;
 	{
 		// Read input data file:
 		std::string inputstr;
@@ -177,11 +179,12 @@ static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std
 	typedef std::pair<unsigned int,std::size_t> ClassesElem;
 	ClassesMap classesmap;
 
-	std::vector<strus::FeatureVectorDef>::const_iterator si = samples.begin(), se = samples.end();
+	strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
 	unsigned int sidx = 0;
 	for (; si != se; ++si,++sidx)
 	{
-		std::vector<unsigned int> features( instance->mapVectorToFeatures( si->vec));
+		std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
+		std::vector<unsigned int> features( instance->mapVectorToFeatures( vec));
 		if (!features.empty())
 		{
 			std::vector<unsigned int>::const_iterator fi = features.begin(), fe = features.end();
@@ -208,7 +211,7 @@ static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std
 		std::cout << key;
 		for (; ci != ce && ci->first == key; ++ci)
 		{
-			std::cout << ' ' << samples[ ci->second].term;
+			std::cout << ' ' << samples[ ci->second].term();
 		}
 		std::cout << std::endl;
 	}
@@ -239,7 +242,7 @@ int main( int argc, const char* argv[])
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:",
 				"s,config:", "S,configfile:", "T,trace:",
-				"f,format:");
+				"F,format:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -367,9 +370,11 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
-			std::cout << "-f|--format <INFMT>" << std::endl;
-			std::cout << "    " << _TXT("declare the input file format of the processed data to be <INFMT>") << std::endl;
-			std::cout << "    " << _TXT("  (default 'text' for text with and space delimited columns)") << std::endl;
+			std::cout << "-F|--format <INFMT>" << std::endl;
+			std::cout << "    " << _TXT("Declare the input file format of the processed data to be <INFMT>") << std::endl;
+			std::cout << "    " << _TXT("Possible formats:") << std::endl;
+			std::cout << "    " << _TXT("  'text_ssv'     (default) for text with and space delimited columns") << std::endl;
+			std::cout << "    " << _TXT("  'bin_word2vec' for the google word2vec binary format little endian") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
