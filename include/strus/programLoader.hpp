@@ -229,6 +229,10 @@ struct FeatureVectorList
 	FeatureVectorList( const FeatureVectorList& o)
 		:m_termofs(o.m_termofs),m_termstrings(o.m_termstrings),m_vecvalues(o.m_vecvalues),m_vecsize(o.m_vecsize){}
 
+	/// \brief Add a new term definition
+	/// \param[in] term_ pointer to the name of the term (does not have to be 0 terminated)
+	/// \param[in] termsize_ length of term_ in bytes
+	/// \param[in] vec_ vector assigned to the term added
 	void add( const char* term_, std::size_t termsize_, const std::vector<double>& vec_);
 
 	class const_iterator;
@@ -251,20 +255,25 @@ struct FeatureVectorList
 		std::size_t m_vecsize;
 	};
 
+	/// \brief Get term vector definition by index
+	/// \param[in] idx index starting from 0
 	Element operator[]( std::size_t idx) const
 	{
 		return Element( m_termstrings.c_str() + m_termofs[ idx], &m_vecvalues[ idx * m_vecsize], m_vecsize);
 	}
 
+	/// \brief Term definition iterator
 	class const_iterator
 	{
 	public:
+		/// \brief Constructor
 		const_iterator( std::size_t itr_, const char* termstrings_base_, const std::size_t* termofs_base_, const double* vecvalues_base_, const std::size_t& vecsize_)
 			:content(termstrings_base_,vecvalues_base_,vecsize_)
 			,itr(itr_)
 			,termstrings_base(termstrings_base_)
 			,termofs_base(termofs_base_)
 			,vecvalues_base(vecvalues_base_){}
+		/// \brief Copy constructor
 		const_iterator( const const_iterator& o)
 			:content(o.content)
 			,itr(o.itr)
@@ -272,7 +281,9 @@ struct FeatureVectorList
 			,termofs_base(o.termofs_base)
 			,vecvalues_base(o.vecvalues_base){}
 
+		/// \brief Increment operator
 		const_iterator& operator++()				{++itr; initElement(); return *this;}
+		/// \brief Post increment operator
 		const_iterator operator++(int)				{const_iterator rt=*this; ++itr; initElement(); return rt;}
 
 		const Element& operator*() const			{return content;}
@@ -295,9 +306,12 @@ struct FeatureVectorList
 		const double* vecvalues_base;
 	};
 
+	/// \brief Get the begin iterator
 	const_iterator begin() const		{return const_iterator( 0, m_termstrings.c_str(), m_termofs.data(), m_vecvalues.data(), m_vecsize);}
+	/// \brief Get the end iterator
 	const_iterator end() const		{return const_iterator( m_termofs.size(), 0, m_termofs.data(), 0, m_vecsize);}
 
+	/// \brief Get size of the term definition list
 	std::size_t size() const		{return m_termofs.size();}
 
 private:

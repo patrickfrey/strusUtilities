@@ -1,4 +1,5 @@
 path=examples/vector/google/model.vs;
+logfile=-;
 dim=300;
 bit=64;
 var=32;
