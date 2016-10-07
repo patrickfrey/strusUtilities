@@ -700,8 +700,10 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Define a character sequence inserted before every result declaration") << std::endl;
 			std::cout << "-X|--lexer <LX>" << std::endl;
 			std::cout << "    " << _TXT("Use pattern lexer named <LX>") << std::endl;
+			std::cout << "    " << _TXT("Default is 'pattern_std'") << std::endl;
 			std::cout << "-Y|--matcher <PT>" << std::endl;
 			std::cout << "    " << _TXT("Use pattern lexer named <PT>") << std::endl;
+			std::cout << "    " << _TXT("Default is 'pattern_std'") << std::endl;
 			std::cout << "-p|--program <PRG>" << std::endl;
 			std::cout << "    " << _TXT("Load program <PRG> with patterns to process") << std::endl;
 			std::cout << "-o|--output <FILE>" << std::endl;
@@ -721,8 +723,8 @@ int main( int argc, const char* argv[])
 		std::string mimetype;
 		std::string encoding;
 		std::vector<std::string> expressions;
-		std::string matcher("stream");
-		std::string lexer("stream");
+		std::string matcher("pattern_std");
+		std::string lexer("pattern_std");
 		std::vector<std::string> programfiles;
 		bool printTokens = false;
 		std::map<std::string,int> markups;

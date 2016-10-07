@@ -5,8 +5,8 @@ set -e
 
 # Prepare test output:
 ARG=$1
-TESTROT=`pwd`"/"`dirname $ARG`
-TESTDIR="$TESTROT/"`basename $ARG`
+TESTROT=$PROJECT/tests/scripts
+TESTDIR=$TESTROT/$ARG
 EXECROT="$PROJECT/tests/scripts/exec"
 EXECDIR="$EXECROT/$ARG"
 mkdir -p $EXECDIR
@@ -28,7 +28,7 @@ cd -
 diff $TESTDIR/EXP $EXECDIR/OUT > $EXECDIR/DIFF || true
 ERR=$(wc -l <"$EXECDIR/DIFF")
 echo "$ERR" > $EXECDIR/ERR
-if [[ "$ERR" -gt 0 ]]; then
+if test "$ERR" -gt 0; then
 	echo "ERROR $ERR $1"
 	exit 1
 fi
