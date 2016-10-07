@@ -1,4 +1,5 @@
 path=examples/vector/eigenwords/model.vs;
+logfile=-;
 dim=200;
 bit=64;
 var=32;
