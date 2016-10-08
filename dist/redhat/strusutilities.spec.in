@@ -299,6 +299,7 @@ make test
 %{_bindir}/strusAnalyzePhrase
 %{_bindir}/strusHelp
 %{_bindir}/strusVectorSpace
+%{_bindir}/strusPatternMatcher
 
 %files devel
 %defattr( -, root, root )
