@@ -1,4 +1,4 @@
-path=examples/vector/google/model.vs;
+path=examples/vector/google/vsmodel;
 logfile=-;
 dim=300;
 bit=64;
@@ -10,4 +10,6 @@ mutations=20;
 votes=5;
 descendants=5;
 maxage=20;
-iterations=20
+iterations=20;
+assignments=7;
+singletons=no

@@ -41,6 +41,7 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
 enum Command
 {
+	CmdStoreModel,
 	CmdLearnFeatures,
 	CmdMapFeatures,
 	CmdMapClasses
@@ -48,7 +49,11 @@ enum Command
 
 static Command getCommand( const std::string& name)
 {
-	if (strus::utils::caseInsensitiveEquals( name, "learn"))
+	if (strus::utils::caseInsensitiveEquals( name, "store"))
+	{
+		return CmdStoreModel;
+	}
+	else if (strus::utils::caseInsensitiveEquals( name, "learn"))
 	{
 		return CmdLearnFeatures;
 	}
@@ -66,9 +71,10 @@ static Command getCommand( const std::string& name)
 	}
 }
 
-static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
+static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile, bool withFinalize)
 {
 	strus::FeatureVectorList samples;
+	if (!inputfile.empty())
 	{
 		// Read input data file:
 		std::string inputstr;
@@ -85,27 +91,33 @@ static void doLearnFeatures( const strus::VectorSpaceModelInterface* vsi, const 
 	{
 		throw strus::runtime_error(_TXT("error initializing vector space model builder"));
 	}
-	strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
-	unsigned int sidx = 0;
-	for (; si != se; ++si,++sidx)
+	if (!inputfile.empty())
 	{
-		std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
-		builder->addSampleVector( vec);
-		if ((sidx & 1023) == 0)
+		strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
+		unsigned int sidx = 0;
+		for (; si != se; ++si,++sidx)
 		{
-			if (g_errorBuffer->hasError()) break;
-			fprintf( stderr, "\radded %u vectors    ", sidx);
+			std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
+			builder->addSampleVector( vec);
+			if ((sidx & 1023) == 0)
+			{
+				if (g_errorBuffer->hasError()) break;
+				fprintf( stderr, "\radded %u vectors    ", sidx);
+			}
+		}
+		fprintf( stderr, "\radded %u vectors  (done)\n", sidx);
+		if (g_errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("error adding vector space model samples"));
 		}
 	}
-	fprintf( stderr, "\radded %u vectors  (done)\n", sidx);
-	if (g_errorBuffer->hasError())
+	if (withFinalize)
 	{
-		throw strus::runtime_error(_TXT("error adding vector space model samples"));
-	}
-	std::cerr << "learning features from samples ..." << std::endl;
-	if (!builder->finalize())
-	{
-		throw strus::runtime_error(_TXT("error building vector space model"));
+		std::cerr << "unsupervised learning of features ..." << std::endl;
+		if (!builder->finalize())
+		{
+			throw strus::runtime_error(_TXT("error building vector space model"));
+		}
 	}
 	std::cerr << "storing model ..." << std::endl;
 	if (!builder->store())
@@ -344,12 +356,14 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusVectorSpace [options] <command> <inputfile>" << std::endl;
+			std::cout << _TXT("usage:") << " strusVectorSpace [options] <command> [<inputfile>]" << std::endl;
 			std::cout << _TXT("description: Utility program for processing data with a vector space model.") << std::endl;
 			std::cout << _TXT("<command>     :command to perform, one of the following:") << std::endl;
-			std::cout << _TXT("                 'learn' = unsupervised learning of features") << std::endl;
-			std::cout << _TXT("                 'map'   = map all input features according to model") << std::endl;
-			std::cout << _TXT("<inputfile>   :input file to process") << std::endl;
+			std::cout << _TXT("                 'store'    = store model without learning step") << std::endl;
+			std::cout << _TXT("                 'learn'    = unsupervised learning of features") << std::endl;
+			std::cout << _TXT("                 'feature'  = map all input features according to model") << std::endl;
+			std::cout << _TXT("                 'class'    = same as feature but with inverted output") << std::endl;
+			std::cout << _TXT("<inputfile>   :input file to process (optional)") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -391,8 +405,11 @@ int main( int argc, const char* argv[])
 		}
 		// Get arguments:
 		Command command = getCommand( opt[0]);
-		std::string inputfile( opt[1]);
-
+		std::string inputfile;
+		if (opt.nofargs() > 1)
+		{
+			inputfile = opt[1];
+		}
 		// Create root object:
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
@@ -428,8 +445,11 @@ int main( int argc, const char* argv[])
 
 		switch (command)
 		{
+			case CmdStoreModel:
+				doProcessFeatures( vsi, config, format, inputfile, false);
+			break;
 			case CmdLearnFeatures:
-				doLearnFeatures( vsi, config, format, inputfile);
+				doProcessFeatures( vsi, config, format, inputfile, true);
 			break;
 			case CmdMapFeatures:
 				doMapFeatures( vsi, config, format, inputfile);
