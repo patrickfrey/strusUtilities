@@ -1,5 +1,6 @@
 path=examples/vector/google/vsmodel;
 logfile=-;
+threads=4;
 dim=300;
 bit=64;
 var=32;
@@ -12,4 +13,5 @@ descendants=5;
 maxage=20;
 iterations=20;
 assignments=7;
+isaf=0.6;
 singletons=no
