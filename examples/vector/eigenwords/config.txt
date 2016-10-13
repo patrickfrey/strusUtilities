@@ -1,3 +1,4 @@
+threads=4;
 path=examples/vector/eigenwords/vsmodel;
 logfile=-;
 dim=200;

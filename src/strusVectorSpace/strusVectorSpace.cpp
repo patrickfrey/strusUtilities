@@ -321,7 +321,7 @@ int main( int argc, const char* argv[])
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			else if (opt.nofargs() < 2)
+			else if (opt.nofargs() < 1)
 			{
 				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
