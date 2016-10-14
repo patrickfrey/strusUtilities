@@ -7,7 +7,9 @@
  */
 #ifndef _STRUS_THREAD_HPP_INCLUDED
 #define _STRUS_THREAD_HPP_INCLUDED
-#include "private/utils.hpp"
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp> 
 
 namespace strus {
 
@@ -37,7 +39,7 @@ public:
 	void start()
 	{
 		if (m_thread) throw std::logic_error( "called subsequent start without wait termination in Thread");
-		m_thread = new utils::Thread<Task>( m_task);
+		m_thread = new boost::thread( boost::bind( &Task::run, m_task));
 	}
 
 	void stop()
@@ -59,7 +61,7 @@ public:
 
 private:
 	Task* m_task;
-	utils::Thread<Task>* m_thread;
+	boost::thread* m_thread;
 	const char* m_name;
 };
 
@@ -82,7 +84,7 @@ public:
 	void start( Task* task_)
 	{
 		m_task.push_back( task_);
-		m_thread_group.add_thread( new utils::Thread<Task>( task_));
+		m_thread_group.add_thread( new boost::thread( boost::bind( &Task::run, task_)));
 	}
 
 	void stop()
@@ -98,7 +100,7 @@ public:
 
 private:
 	std::vector<Task*> m_task;
-	utils::ThreadGroup m_thread_group;
+	boost::thread_group m_thread_group;
 	const char* m_name;
 };
 

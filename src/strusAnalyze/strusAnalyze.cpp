@@ -29,6 +29,7 @@
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
@@ -302,7 +303,7 @@ int main( int argc, const char* argv[])
 			{
 				if (!doc.subDocumentTypeName().empty())
 				{
-					std::cout << "-- " << strus::utils::string_sprintf( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
+					std::cout << "-- " << strus::string_format( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
 				}
 				std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
 				std::sort( itermar.begin(), itermar.end(), TermOrder());

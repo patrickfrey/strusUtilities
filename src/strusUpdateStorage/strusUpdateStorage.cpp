@@ -31,6 +31,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/version.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
@@ -303,7 +304,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("error in update storage"));
 		}
-		std::cerr << strus::utils::string_sprintf( _TXT("done %u update operations"), nofUpdates) << std::endl;
+		std::cerr << strus::string_format( _TXT("done %u update operations"), nofUpdates) << std::endl;
 		if (logfile) fclose( logfile);
 		return 0;
 	}

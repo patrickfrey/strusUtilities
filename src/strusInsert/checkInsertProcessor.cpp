@@ -19,6 +19,7 @@
 #include "strus/analyzer/document.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/base/fileio.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/utils.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
@@ -128,13 +129,13 @@ void CheckInsertProcessor::run()
 					strus::analyzer::DocumentClass dclass;
 					if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 					{
-						std::cerr << utils::string_sprintf( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
+						std::cerr << string_format( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 						continue;
 					}
 					const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
 					if (!analyzer)
 					{
-						std::cerr << utils::string_sprintf( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
+						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
 						continue;
 					}
 					analyzerContext.reset( analyzer->createContext( dclass));
@@ -144,7 +145,7 @@ void CheckInsertProcessor::run()
 					const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( m_analyzerMap.documentClass());
 					if (!analyzer)
 					{
-						std::cerr << utils::string_sprintf( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), m_analyzerMap.documentClass().mimeType().c_str(), m_analyzerMap.documentClass().scheme().c_str()) << std::endl; 
+						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), m_analyzerMap.documentClass().mimeType().c_str(), m_analyzerMap.documentClass().scheme().c_str()) << std::endl; 
 						continue;
 					}
 					analyzerContext.reset( analyzer->createContext( m_analyzerMap.documentClass()));
@@ -273,7 +274,7 @@ void CheckInsertProcessor::run()
 									}
 									else
 									{
-										std::cerr << utils::string_sprintf( _TXT( "meta data assignment is not convertible to the type expected: (%s) %.4f"), "int", val) << std::endl;
+										std::cerr << string_format( _TXT( "meta data assignment is not convertible to the type expected: (%s) %.4f"), "int", val) << std::endl;
 									}
 									break;
 								case strus::NumericVariant::UInt:
@@ -285,7 +286,7 @@ void CheckInsertProcessor::run()
 									}
 									else
 									{
-										std::cerr << utils::string_sprintf( _TXT( "meta data assignment is not convertible to the type expected: (%s) %.4f"), "unsigned int", val) << std::endl;
+										std::cerr << string_format( _TXT( "meta data assignment is not convertible to the type expected: (%s) %.4f"), "unsigned int", val) << std::endl;
 									}
 									break;
 								case strus::NumericVariant::Float:
@@ -297,7 +298,7 @@ void CheckInsertProcessor::run()
 						// Issue warning for documents cut because they are too big to insert:
 						if (maxpos > Constants::storage_max_position_info())
 						{
-							std::cerr << utils::string_sprintf( _TXT( "token positions of document '%s' are out or range (document too big, %u token positions assigned)"), docid, maxpos) << std::endl;
+							std::cerr << string_format( _TXT( "token positions of document '%s' are out or range (document too big, %u token positions assigned)"), docid, maxpos) << std::endl;
 						}
 						storagedoc->done();
 					}
@@ -305,23 +306,23 @@ void CheckInsertProcessor::run()
 			}
 			catch (const std::bad_alloc& err)
 			{
-				std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': memory allocation error"), fitr->c_str()) << std::endl;
+				std::cerr << string_format( _TXT( "failed to check document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 			}
 			catch (const std::runtime_error& err)
 			{
 				const char* errmsg = m_errorhnd->fetchError();
 				if (errmsg)
 				{
-					std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': %s; %s"), fitr->c_str(), err.what(), errmsg) << std::endl;
+					std::cerr << string_format( _TXT( "failed to check document '%s': %s; %s"), fitr->c_str(), err.what(), errmsg) << std::endl;
 				}
 				else
 				{
-					std::cerr << utils::string_sprintf( _TXT( "failed to check document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
+					std::cerr << string_format( _TXT( "failed to check document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
 				}
 			}
 		}
 		filesChecked += files.size();
-		std::cerr << utils::string_sprintf( (filesChecked == 1)
+		std::cerr << string_format( (filesChecked == 1)
 				?_TXT( "\rchecked %u file"):_TXT( "\rchecked %u files"),
 				filesChecked) << std::endl;
 	}

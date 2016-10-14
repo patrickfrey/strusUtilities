@@ -58,13 +58,3 @@ std::string utils::tostring( int val)
 	}
 }
 
-std::string utils::string_sprintf( const char* format, ...)
-{
-	char msgbuf[ 4096];
-	va_list ap;
-	va_start(ap, format);
-	strus_vsnprintf( msgbuf, sizeof(msgbuf), format, ap);
-	va_end(ap);
-	return std::string( msgbuf);
-}
-

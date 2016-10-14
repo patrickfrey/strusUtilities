@@ -33,6 +33,7 @@
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/programOptions.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
@@ -86,7 +87,7 @@ public:
 	virtual void pushTerm( const std::string& type_, const std::string& value_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called pushTerm %s '%s'"), type_.c_str(), value_.c_str()) << std::endl;
+		std::cerr << strus::string_format( _TXT("called pushTerm %s '%s'"), type_.c_str(), value_.c_str()) << std::endl;
 		printState( std::cerr);
 #endif
 		m_stack.push_back( m_tree.size());
@@ -99,7 +100,7 @@ public:
 				std::size_t argc, int range, unsigned int cardinality)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, (unsigned int)argc, range, cardinality) << std::endl;
+		std::cerr << strus::string_format( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, (unsigned int)argc, range, cardinality) << std::endl;
 		printState( std::cerr);
 #endif
 		int expridx = m_tree.size();
@@ -140,7 +141,7 @@ public:
 	virtual void attachVariable( const std::string& name_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called attachVariable %s"), name_.c_str()) << std::endl;
+		std::cerr << strus::string_format( _TXT("called attachVariable %s"), name_.c_str()) << std::endl;
 		printState( std::cerr);
 #endif
 		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of variable assignment without term or expression defined"));
@@ -150,7 +151,7 @@ public:
 	virtual void defineFeature( const std::string& set_, double weight_=1.0)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;
+		std::cerr << strus::string_format( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;
 		printState( std::cerr);
 #endif
 		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of feature without term or expression defined"));
@@ -167,7 +168,7 @@ public:
 
 		const char* ng = newGroup?"new group":"";
 		std::cerr
-			<< strus::utils::string_sprintf(_TXT("called addMetaDataRestrictionCondition %s %s %s %s"), 
+			<< strus::string_format(_TXT("called addMetaDataRestrictionCondition %s %s %s %s"), 
 					name.c_str(), Restriction::compareOperatorName(opr), operandstr.c_str(), ng)
 			<< std::endl;
 		printState( std::cerr);
@@ -179,7 +180,7 @@ public:
 			const std::vector<strus::Index>& docnolist_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called addDocumentEvaluationSet %u"), (unsigned int)docnolist_.size()) << std::endl;
+		std::cerr << strus::string_format( _TXT("called addDocumentEvaluationSet %u"), (unsigned int)docnolist_.size()) << std::endl;
 #endif
 		m_evalset_docnolist.insert( m_evalset_docnolist.end(), docnolist_.begin(), docnolist_.end());
 		std::sort( m_evalset_docnolist.begin(), m_evalset_docnolist.end());
@@ -194,7 +195,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		char valbuf[ 64];
 		print_number( valbuf, sizeof(valbuf), stats_.documentFrequency());
-		std::cerr << strus::utils::string_sprintf( _TXT("called defineTermStatistics %s '%s' = %s"), type.c_str(), value.c_str(), valbuf) << std::endl;
+		std::cerr << strus::string_format( _TXT("called defineTermStatistics %s '%s' = %s"), type.c_str(), value.c_str(), valbuf) << std::endl;
 #endif
 		m_termstats[ Term( type, value)] = stats_;
 	}
@@ -205,7 +206,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		char valbuf[ 64];
 		print_number( valbuf, sizeof(valbuf), stats_.nofDocumentsInserted());
-		std::cerr << strus::utils::string_sprintf( _TXT("called defineGlobalStatistics %s"), valbuf) << std::endl;
+		std::cerr << strus::string_format( _TXT("called defineGlobalStatistics %s"), valbuf) << std::endl;
 #endif
 		m_globstats = stats_;
 	}
@@ -213,7 +214,7 @@ public:
 	virtual void setMaxNofRanks( std::size_t maxNofRanks_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called setMaxNofRanks %u"), (unsigned int)maxNofRanks_) << std::endl;
+		std::cerr << strus::string_format( _TXT("called setMaxNofRanks %u"), (unsigned int)maxNofRanks_) << std::endl;
 #endif
 		m_maxNofRanks = maxNofRanks_;
 	}
@@ -221,7 +222,7 @@ public:
 	virtual void setMinRank( std::size_t minRank_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT( "called setMinRank %u"), (unsigned int)minRank_) << std::endl;
+		std::cerr << strus::string_format( _TXT( "called setMinRank %u"), (unsigned int)minRank_) << std::endl;
 #endif
 		m_minRank = minRank_;
 	}
@@ -229,7 +230,7 @@ public:
 	virtual void addUserName( const std::string& username_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT( "called addUserName %s"), username_.c_str()) << std::endl;
+		std::cerr << strus::string_format( _TXT( "called addUserName %s"), username_.c_str()) << std::endl;
 #endif
 		m_users.push_back( username_);
 	}
@@ -237,7 +238,7 @@ public:
 	virtual void setWeightingVariableValue( const std::string& name, double value)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT( "called setWeightingFormulaVariableValue %s %g"), name.c_str(), value) << std::endl;
+		std::cerr << strus::string_format( _TXT( "called setWeightingFormulaVariableValue %s %g"), name.c_str(), value) << std::endl;
 #endif
 	}
 
@@ -267,7 +268,7 @@ public:
 			out << _TXT("Features:") << std::endl;
 			for (; fi != fe; ++fi)
 			{
-				out << strus::utils::string_sprintf( _TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
+				out << strus::string_format( _TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
 				print_expression( out, 1, fi->expression);
 			}
 		}
@@ -277,7 +278,7 @@ public:
 			out << _TXT("Restrictions:") << std::endl;
 			for (; ri != re; ++ri)
 			{
-				out << strus::utils::string_sprintf( _TXT("restriction %s %s '%s'"), ri->name.c_str(), ri->oprname(), ri->operand.tostring().c_str()) << std::endl;
+				out << strus::string_format( _TXT("restriction %s %s '%s'"), ri->name.c_str(), ri->oprname(), ri->operand.tostring().c_str()) << std::endl;
 			}
 		}
 		std::vector<std::string>::const_iterator ui = m_users.begin(), ue = m_users.end();
@@ -286,7 +287,7 @@ public:
 			out << _TXT("Allowed:") << std::endl;
 			for (; ui != ue; ++ui)
 			{
-				out << strus::utils::string_sprintf(_TXT("user '%s'"), ui->c_str()) << std::endl;
+				out << strus::string_format(_TXT("user '%s'"), ui->c_str()) << std::endl;
 			}
 		}
 		if (m_evalset_defined)
@@ -307,7 +308,7 @@ public:
 			{
 				char valbuf[ 64];
 				print_number( valbuf, sizeof(valbuf), ti->second.documentFrequency());
-				out << strus::utils::string_sprintf( _TXT("stats %s '%s' = %s"), ti->first.type.c_str(), ti->first.value.c_str(), valbuf) << std::endl;
+				out << strus::string_format( _TXT("stats %s '%s' = %s"), ti->first.type.c_str(), ti->first.value.c_str(), valbuf) << std::endl;
 			}
 		}
 		if (m_globstats.nofDocumentsInserted() >= 0)
@@ -318,7 +319,7 @@ public:
 				out << _TXT("Global statistics:") << std::endl;
 				char valbuf[ 64];
 				print_number( valbuf, sizeof(valbuf), m_globstats.nofDocumentsInserted());
-				out << strus::utils::string_sprintf( _TXT("nof documents inserted: %s"), valbuf) << std::endl;
+				out << strus::string_format( _TXT("nof documents inserted: %s"), valbuf) << std::endl;
 			}
 		}
 	}
@@ -330,14 +331,14 @@ public:
 		std::vector<int>::const_iterator si = m_stack.begin(), se = m_stack.end();
 		for (int sidx=0; si != se; ++si,++sidx)
 		{
-			out << strus::utils::string_sprintf(_TXT("address [%d]"), -(int)(m_stack.size() - sidx)) << std::endl;
+			out << strus::string_format(_TXT("address [%d]"), -(int)(m_stack.size() - sidx)) << std::endl;
 			print_expression( out, 1, *si);
 		}
 		out << _TXT("Features:") << std::endl;
 		std::vector<Feature>::const_iterator fi = m_features.begin(), fe = m_features.end();
 		for (; fi != fe; ++fi)
 		{
-			out << strus::utils::string_sprintf(_TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
+			out << strus::string_format(_TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
 			print_expression( out, 1, fi->expression);
 		}
 	}

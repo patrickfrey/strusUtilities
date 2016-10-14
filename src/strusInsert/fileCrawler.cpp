@@ -9,6 +9,7 @@
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
 #include "strus/base/fileio.hpp"
+#include "strus/base/string_format.hpp"
 
 using namespace strus;
 
@@ -65,7 +66,7 @@ void FileCrawler::findFilesToProcess()
 		unsigned int ec = strus::readDirFiles( path, m_extension, files);
 		if (ec)
 		{
-			std::cerr << utils::string_sprintf( _TXT( "could not read directory to process '%s' (errno %u)"), path.c_str(), ec) << std::endl;
+			std::cerr << string_format( _TXT( "could not read directory to process '%s' (errno %u)"), path.c_str(), ec) << std::endl;
 		}
 		else
 		{
@@ -87,7 +88,7 @@ void FileCrawler::findFilesToProcess()
 		m_diritr = m_directories.erase( m_diritr);
 		if (ec)
 		{
-			std::cerr << utils::string_sprintf( _TXT( "could not read subdirectories to process '%s' (errno %u)"), path.c_str(), ec) << std::endl;
+			std::cerr << string_format( _TXT( "could not read subdirectories to process '%s' (errno %u)"), path.c_str(), ec) << std::endl;
 			continue;
 		}
 		std::vector<std::string>::const_iterator

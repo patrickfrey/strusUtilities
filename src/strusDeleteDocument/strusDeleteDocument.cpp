@@ -32,6 +32,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/version.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
@@ -234,7 +235,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("failed to delete documents"));
 		}
-		std::cerr << strus::utils::string_sprintf( _TXT("done %u documents deleted"), (unsigned int)opt.nofargs()) << std::endl;
+		std::cerr << strus::string_format( _TXT("done %u documents deleted"), (unsigned int)opt.nofargs()) << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

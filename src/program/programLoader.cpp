@@ -38,12 +38,14 @@
 #include "strus/analyzer/documentClass.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/snprintf.h"
+#include "strus/base/string_format.hpp"
 #include "strus/base/dll_tags.hpp"
 #include "private/inputStream.hpp"
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
 #include <string>
 #include <vector>
+#include <set>
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
