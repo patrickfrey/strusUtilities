@@ -43,6 +43,7 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;
 enum Command
 {
 	CmdStoreModel,
+	CmdStoreNames,
 	CmdLearnFeatures,
 	CmdMapFeatures,
 	CmdMapClasses
@@ -53,6 +54,7 @@ static const char* commandName( Command cmd)
 	switch (cmd)
 	{
 		case CmdStoreModel: return "store";
+		case CmdStoreNames: return "names";
 		case CmdLearnFeatures: return "learn";
 		case CmdMapFeatures: return "feature";
 		case CmdMapClasses: return "class";
@@ -65,6 +67,10 @@ static Command getCommand( const std::string& name)
 	if (strus::utils::caseInsensitiveEquals( name, "store"))
 	{
 		return CmdStoreModel;
+	}
+	if (strus::utils::caseInsensitiveEquals( name, "names"))
+	{
+		return CmdStoreNames;
 	}
 	else if (strus::utils::caseInsensitiveEquals( name, "learn"))
 	{
@@ -84,21 +90,25 @@ static Command getCommand( const std::string& name)
 	}
 }
 
+// Read input vectors data file:
+static strus::FeatureVectorList readInputVectors( const std::string& inputfile, const strus::FeatureVectorDefFormat& fmt)
+{
+	strus::FeatureVectorList rt;
+	std::string inputstr;
+	int ec = strus::readFile( inputfile, inputstr);
+	if (ec) throw strus::runtime_error(_TXT("failed to read input file %s (errno %u): %s"), inputfile.c_str(), ec, ::strerror(ec));
+	
+	if (!strus::parseFeatureVectors( rt, fmt, inputstr, g_errorBuffer))
+	{
+		throw strus::runtime_error(_TXT("could not load features to map"));
+	}
+	return rt;
+}
+
 static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile, bool withFinalize)
 {
-	strus::FeatureVectorList samples;
-	if (!inputfile.empty())
-	{
-		// Read input data file:
-		std::string inputstr;
-		int ec = strus::readFile( inputfile, inputstr);
-		if (ec) throw strus::runtime_error(_TXT("failed to read input file %s (errno %u): %s"), inputfile.c_str(), ec, ::strerror(ec));
-	
-		if (!strus::parseFeatureVectors( samples, fmt, inputstr, g_errorBuffer))
-		{
-			throw strus::runtime_error(_TXT("could not load training data"));
-		}
-	}
+	strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
+
 	std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config));
 	if (!builder.get())
 	{
@@ -141,18 +151,8 @@ static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, cons
 
 static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
-	strus::FeatureVectorList samples;
-	{
-		// Read input data file:
-		std::string inputstr;
-		int ec = strus::readFile( inputfile, inputstr);
-		if (ec) throw strus::runtime_error(_TXT("failed to read input file %s (errno %u): %s"), inputfile.c_str(), ec, ::strerror(ec));
+	strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
 
-		if (!strus::parseFeatureVectors( samples, fmt, inputstr, g_errorBuffer))
-		{
-			throw strus::runtime_error(_TXT("could not load features to map"));
-		}
-	}
 	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( config));
 	if (!instance.get())
 	{
@@ -183,18 +183,8 @@ static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const st
 
 static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
-	strus::FeatureVectorList samples;
-	{
-		// Read input data file:
-		std::string inputstr;
-		int ec = strus::readFile( inputfile, inputstr);
-		if (ec) throw strus::runtime_error(_TXT("failed to read input file %s (errno %u): %s"), inputfile.c_str(), ec, ::strerror(ec));
-	
-		if (!strus::parseFeatureVectors( samples, fmt, inputstr, g_errorBuffer))
-		{
-			throw strus::runtime_error(_TXT("could not load features to map"));
-		}
-	}
+	strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
+
 	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( config));
 	if (!instance.get())
 	{
@@ -246,6 +236,31 @@ static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std
 	}
 }
 
+static void doStoreNames( const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile, const std::string& outputfile)
+{
+	strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
+	std::string content;
+
+	strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
+	unsigned int sidx = 0;
+	if (outputfile.empty())
+	{
+		for (; si != se; ++si,++sidx)
+		{
+			std::cout << si->name() << std::endl;
+		}
+	}
+	else
+	{
+		for (; si != se; ++si,++sidx)
+		{
+			content.append( si->name());
+			content.push_back( '\0');
+		}
+		unsigned int ec = strus::writeFile( outputfile, content);
+		if (ec) throw strus::runtime_error(_TXT("failed to write vector names to file '%s': %s [%u]"), outputfile.c_str(), ::strerror(ec), ec);
+	}
+}
 
 int main( int argc, const char* argv[])
 {
@@ -366,6 +381,7 @@ int main( int argc, const char* argv[])
 			std::cout << _TXT("usage:") << " strusVectorSpace [options] <command>" << std::endl;
 			std::cout << _TXT("description: Utility program for processing data with a vector space model.") << std::endl;
 			std::cout << _TXT("<command>     :command to perform, one of the following:") << std::endl;
+			std::cout << _TXT("                 'names'    = store or print vector term names in original file") << std::endl;
 			std::cout << _TXT("                 'store'    = store model without learning step") << std::endl;
 			std::cout << _TXT("                 'learn'    = unsupervised learning of features") << std::endl;
 			std::cout << _TXT("                 'feature'  = map all input features according to model") << std::endl;
@@ -418,6 +434,7 @@ int main( int argc, const char* argv[])
 		// Get arguments:
 		Command command = getCommand( opt[0]);
 		std::string inputfile;
+		std::string outputfile;
 		if (opt("file"))
 		{
 			inputfile = opt["file"];
@@ -454,9 +471,17 @@ int main( int argc, const char* argv[])
 				throw strus::runtime_error(_TXT("wrong format option: %s"), errorBuffer->fetchError());
 			}
 		}
+		if (opt("output"))
+		{
+			outputfile = opt["output"];
+		}
 
 		switch (command)
 		{
+			case CmdStoreNames:
+				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
+				doStoreNames( format, inputfile, outputfile);
+			break;
 			case CmdStoreModel:
 				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
 				doProcessFeatures( vsi, config, format, inputfile, false);
