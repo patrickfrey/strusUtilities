@@ -2165,9 +2165,9 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 DLL_PUBLIC void FeatureVectorList::add( const char* term_, std::size_t termsize_, const std::vector<double>& vec_)
 {
 	if (vec_.size() != m_vecsize) throw strus::runtime_error( _TXT("feature vector size does no match"));
-	m_termstrings.push_back('\0');
-	m_termofs.push_back( m_termstrings.size());
-	m_termstrings.append( term_, termsize_);
+	m_namestrings.push_back('\0');
+	m_nameofs.push_back( m_namestrings.size());
+	m_namestrings.append( term_, termsize_);
 	m_vecvalues.insert( m_vecvalues.end(), vec_.begin(), vec_.end());
 }
 

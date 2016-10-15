@@ -218,16 +218,16 @@ struct FeatureVectorList
 {
 	/// \brief Default constructor
 	FeatureVectorList( std::size_t collsize_=0, std::size_t vecsize_=0)
-		:m_termofs(),m_termstrings(),m_vecvalues(),m_vecsize(vecsize_)
+		:m_nameofs(),m_namestrings(),m_vecvalues(),m_vecsize(vecsize_)
 	{
-		m_termofs.reserve( collsize_);
-		m_termstrings.reserve( collsize_ * 12);
+		m_nameofs.reserve( collsize_);
+		m_namestrings.reserve( collsize_ * 12);
 		m_vecvalues.reserve( collsize_);
 		
 	}
 	/// \brief Copy constructor
 	FeatureVectorList( const FeatureVectorList& o)
-		:m_termofs(o.m_termofs),m_termstrings(o.m_termstrings),m_vecvalues(o.m_vecvalues),m_vecsize(o.m_vecsize){}
+		:m_nameofs(o.m_nameofs),m_namestrings(o.m_namestrings),m_vecvalues(o.m_vecvalues),m_vecsize(o.m_vecsize){}
 
 	/// \brief Add a new term definition
 	/// \param[in] term_ pointer to the name of the term (does not have to be 0 terminated)
@@ -240,17 +240,17 @@ struct FeatureVectorList
 	class Element
 	{
 	public:
-		const char* term() const	{return m_term;}
+		const char* name() const	{return m_name;}
 		const double* vec() const	{return m_vec;}
 		std::size_t vecsize() const	{return m_vecsize;}
 
 		Element( const char* term_, const double* vec_, std::size_t vecsize_)
-			:m_term(term_),m_vec(vec_),m_vecsize(vecsize_){}
+			:m_name(term_),m_vec(vec_),m_vecsize(vecsize_){}
 		Element( const Element& o)
-			:m_term(o.m_term),m_vec(o.m_vec),m_vecsize(o.m_vecsize){}
+			:m_name(o.m_name),m_vec(o.m_vec),m_vecsize(o.m_vecsize){}
 	private:
 		friend class FeatureVectorList::const_iterator;
-		const char* m_term;
+		const char* m_name;
 		const double* m_vec;
 		std::size_t m_vecsize;
 	};
@@ -259,7 +259,7 @@ struct FeatureVectorList
 	/// \param[in] idx index starting from 0
 	Element operator[]( std::size_t idx) const
 	{
-		return Element( m_termstrings.c_str() + m_termofs[ idx], &m_vecvalues[ idx * m_vecsize], m_vecsize);
+		return Element( m_namestrings.c_str() + m_nameofs[ idx], &m_vecvalues[ idx * m_vecsize], m_vecsize);
 	}
 
 	/// \brief Term definition iterator
@@ -297,7 +297,7 @@ struct FeatureVectorList
 		bool operator>=( const const_iterator& o) const		{return itr >= o.itr;}
 
 	private:
-		void initElement()					{content.m_term = termstrings_base + termofs_base[itr]; content.m_vec = vecvalues_base + itr * content.vecsize();}
+		void initElement()					{content.m_name = termstrings_base + termofs_base[itr]; content.m_vec = vecvalues_base + itr * content.vecsize();}
 
 		Element content;
 		std::size_t itr;
@@ -307,16 +307,16 @@ struct FeatureVectorList
 	};
 
 	/// \brief Get the begin iterator
-	const_iterator begin() const		{return const_iterator( 0, m_termstrings.c_str(), m_termofs.data(), m_vecvalues.data(), m_vecsize);}
+	const_iterator begin() const		{return const_iterator( 0, m_namestrings.c_str(), m_nameofs.data(), m_vecvalues.data(), m_vecsize);}
 	/// \brief Get the end iterator
-	const_iterator end() const		{return const_iterator( m_termofs.size(), 0, m_termofs.data(), 0, m_vecsize);}
+	const_iterator end() const		{return const_iterator( m_nameofs.size(), 0, m_nameofs.data(), 0, m_vecsize);}
 
 	/// \brief Get size of the term definition list
-	std::size_t size() const		{return m_termofs.size();}
+	std::size_t size() const		{return m_nameofs.size();}
 
 private:
-	std::vector<std::size_t> m_termofs;	///< term offsets
-	std::string m_termstrings;		///< term of the feature
+	std::vector<std::size_t> m_nameofs;	///< term offsets
+	std::string m_namestrings;		///< term of the feature
 	std::vector<double> m_vecvalues;	///< vector assigned to this feature
 	std::size_t m_vecsize;			///< size of a vector
 };

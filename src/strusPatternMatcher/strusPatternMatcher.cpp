@@ -707,7 +707,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-p|--program <PRG>" << std::endl;
 			std::cout << "    " << _TXT("Load program <PRG> with patterns to process") << std::endl;
 			std::cout << "-o|--output <FILE>" << std::endl;
-			std::cout << "    " << _TXT("Write output to file (thread id is inserted before '.', if threads specified)") << std::endl;
+			std::cout << "    " << _TXT("Write output to file <FILE> (thread id is inserted before '.' with threads)") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;

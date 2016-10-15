@@ -29,6 +29,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/string_format.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -46,6 +47,18 @@ enum Command
 	CmdMapFeatures,
 	CmdMapClasses
 };
+
+static const char* commandName( Command cmd)
+{
+	switch (cmd)
+	{
+		case CmdStoreModel: return "store";
+		case CmdLearnFeatures: return "learn";
+		case CmdMapFeatures: return "feature";
+		case CmdMapClasses: return "class";
+	}
+	return 0;
+}
 
 static Command getCommand( const std::string& name)
 {
@@ -98,7 +111,7 @@ static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, cons
 		for (; si != se; ++si,++sidx)
 		{
 			std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
-			builder->addVector( vec);
+			builder->addVector( si->name(), vec);
 			if ((sidx & 1023) == 0)
 			{
 				if (g_errorBuffer->hasError()) break;
@@ -153,7 +166,7 @@ static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const st
 		std::vector<unsigned int> features( instance->mapVectorToFeatures( vec));
 		if (!features.empty())
 		{
-			std::cout << si->term();
+			std::cout << si->name();
 			std::vector<unsigned int>::const_iterator fi = features.begin(), fe = features.end();
 			for (unsigned int fidx=0; fi != fe; ++fi,++fidx)
 			{
@@ -223,7 +236,7 @@ static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std
 		std::cout << key;
 		for (; ci != ce && ci->first == key; ++ci)
 		{
-			std::cout << ' ' << samples[ ci->second].term();
+			std::cout << ' ' << samples[ ci->second].name();
 		}
 		std::cout << std::endl;
 	}
@@ -250,11 +263,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 10,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:",
 				"s,config:", "S,configfile:", "T,trace:",
-				"F,format:");
+				"F,format:", "f,file:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -315,13 +328,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 2)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			else if (opt.nofargs() < 1)
+			if (opt.nofargs() < 1)
 			{
 				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
@@ -356,7 +363,7 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusVectorSpace [options] <command> [<inputfile>]" << std::endl;
+			std::cout << _TXT("usage:") << " strusVectorSpace [options] <command>" << std::endl;
 			std::cout << _TXT("description: Utility program for processing data with a vector space model.") << std::endl;
 			std::cout << _TXT("<command>     :command to perform, one of the following:") << std::endl;
 			std::cout << _TXT("                 'store'    = store model without learning step") << std::endl;
@@ -384,11 +391,16 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "-f|--file <INFILE>" << std::endl;
+			std::cout << "    " << _TXT("Declare the input file with the vectors to process a <INFILE>") << std::endl;
+			std::cout << "    " << _TXT("The format of this file is declared with -F.") << std::endl;
 			std::cout << "-F|--format <INFMT>" << std::endl;
 			std::cout << "    " << _TXT("Declare the input file format of the processed data to be <INFMT>") << std::endl;
 			std::cout << "    " << _TXT("Possible formats:") << std::endl;
 			std::cout << "    " << _TXT("  'text_ssv'     (default) for text with and space delimited columns") << std::endl;
 			std::cout << "    " << _TXT("  'bin_word2vec' for the google word2vec binary format little endian") << std::endl;
+			std::cout << "-o|--output <FILE>" << std::endl;
+			std::cout << "    " << _TXT("Write output to file <FILE>") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -406,9 +418,9 @@ int main( int argc, const char* argv[])
 		// Get arguments:
 		Command command = getCommand( opt[0]);
 		std::string inputfile;
-		if (opt.nofargs() > 1)
+		if (opt("file"))
 		{
-			inputfile = opt[1];
+			inputfile = opt["file"];
 		}
 		// Create root object:
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
@@ -446,15 +458,19 @@ int main( int argc, const char* argv[])
 		switch (command)
 		{
 			case CmdStoreModel:
+				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
 				doProcessFeatures( vsi, config, format, inputfile, false);
 			break;
 			case CmdLearnFeatures:
+				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
 				doProcessFeatures( vsi, config, format, inputfile, true);
 			break;
 			case CmdMapFeatures:
+				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
 				doMapFeatures( vsi, config, format, inputfile);
 			break;
 			case CmdMapClasses:
+				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
 				doMapClasses( vsi, config, format, inputfile);
 			break;
 		}
