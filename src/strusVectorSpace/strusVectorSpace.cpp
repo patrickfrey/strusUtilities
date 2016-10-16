@@ -107,8 +107,6 @@ static strus::FeatureVectorList readInputVectors( const std::string& inputfile, 
 
 static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile, bool withFinalize)
 {
-	strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
-
 	std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config));
 	if (!builder.get())
 	{
@@ -116,6 +114,8 @@ static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, cons
 	}
 	if (!inputfile.empty())
 	{
+		strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
+
 		strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
 		unsigned int sidx = 0;
 		for (; si != se; ++si,++sidx)
@@ -278,11 +278,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 10,
+				argc, argv, 11,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:",
 				"s,config:", "S,configfile:", "T,trace:",
-				"F,format:", "f,file:");
+				"F,format:", "f,file:", "o,output:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
