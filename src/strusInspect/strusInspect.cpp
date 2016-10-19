@@ -309,7 +309,10 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 		attreader( storage.createAttributeReader());
 	if (!attreader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
 	strus::Index hnd = attreader->elementHandle( key[0]);
-
+	if (hnd == 0)
+	{
+		throw strus::runtime_error( _TXT("try to access unknown document attribute '%s'"), key[0]);
+	}
 	if (size == 1)
 	{
 		strus::Index maxDocno = storage.maxDocumentNumber();
@@ -368,6 +371,10 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
 	if (!metadata.get()) throw strus::runtime_error(_TXT("failed to create meta data reader"));
 	strus::Index hnd = metadata->elementHandle( key[0]);
+	if (hnd < 0)
+	{
+		throw strus::runtime_error( _TXT("try to access unknown document meta data element '%s'"), key[0]);
+	}
 	if (size == 1)
 	{
 		strus::Index maxDocno = storage.maxDocumentNumber();

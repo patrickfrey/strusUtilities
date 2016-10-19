@@ -42,6 +42,9 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
+#include <string>
+#include <vector>
+#include <map>
 
 struct TermOrder
 {
@@ -57,6 +60,75 @@ struct TermOrder
 	}
 };
 
+static bool skipSpace( char const*& di)
+{
+	while (*di && (unsigned char)*di <= 32) ++di;
+	return *di != '\0';
+}
+
+static void skipIdent( char const*& di)
+{
+	for (; *di && (((unsigned char)(*di|32) > 'a' && (unsigned char)(*di|32) < 'z') || *di == '_'); ++di){}
+}
+
+typedef std::map<std::string,std::string> DumpConfig;
+typedef std::pair<std::string,std::string> DumpConfigElem;
+
+static DumpConfigElem getNextDumpConfigElem( char const*& di)
+{
+	skipSpace( di);
+	char const* de = di;
+	skipIdent( de);
+	std::string type( di, de-di);
+	std::string value;
+	di = de;
+	skipSpace( di);
+	if (*di == '=')
+	{
+		++di;
+		skipSpace( di);
+		if (*di == '\'' || *di == '\"')
+		{
+			char eb = *di++;
+			char const* valstart = di;
+			for (; *di && *di != eb; ++di){}
+			value.append( valstart, di-valstart);
+			if (*di) ++di;
+			skipSpace( di);
+		}
+		else
+		{
+			char const* valstart = di;
+			for (; *di && *di != ',' && (unsigned char)*di >= 32; ++di){}
+			value.append( valstart, di-valstart);
+			skipSpace( di);
+		}
+	}
+	if (*di == ',') ++di;
+	return DumpConfigElem( type, value);
+}
+
+
+static void filterTerms( std::vector<strus::analyzer::Term>& termar, const DumpConfig& dumpConfig, const std::vector<strus::analyzer::Term>& inputtermar)
+{
+	std::vector<strus::analyzer::Term>::const_iterator
+		ti = inputtermar.begin(), te = inputtermar.end();
+	for (; ti != te; ++ti)
+	{
+		DumpConfig::const_iterator dci = dumpConfig.find( ti->type());
+		if (dci != dumpConfig.end())
+		{
+			if (dci->second.empty())
+			{
+				termar.push_back( *ti);
+			}
+			else
+			{
+				termar.push_back( strus::analyzer::Term( ti->type(), dci->second, ti->pos()));
+			}
+		}
+	}
+}
 
 int main( int argc, const char* argv[])
 {
@@ -72,9 +144,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
-				"h,help", "v,version", "license", "m,module:", "r,rpc:",
-				"g,segmenter:", "M,moduledir:", "R,resourcedir:", "T,trace:");
+				argc, argv, 10,
+				"h,help", "v,version", "license", "m,module:",
+				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
+				"g,segmenter:", "D,dump:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
@@ -165,23 +238,42 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
-			std::cout << "-R|--resourcedir <DIR>" << std::endl;
-			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
-			std::cout << "-g|--segmenter <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "-R|--resourcedir <DIR>" << std::endl;
+			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
+			std::cout << "-g|--segmenter <NAME>" << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
+			std::cout << "-D|--dump <DUMPCFG>" << std::endl;
+			std::cout << "    " << _TXT("Dump ouput according <DUMPCFG>.") << std::endl;
+			std::cout << "    " << _TXT("<DUMPCFG> is a comma separated list of types or type value assignments.") << std::endl;
+			std::cout << "    " << _TXT("A type in <DUMPCFG> specifies the type to dump.") << std::endl;
+			std::cout << "    " << _TXT("A value an optional replacement of the term value.") << std::endl;
+			std::cout << "    " << _TXT("This kind of output is suitable for content analysis.") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
 		std::string analyzerprg = opt[0];
 		std::string docpath = opt[1];
 		std::string segmentername;
+		DumpConfig dumpConfig;
+		bool doDump = false;
 		if (opt( "segmenter"))
 		{
 			segmentername = opt[ "segmenter"];
+		}
+		if (opt( "dump"))
+		{
+			doDump = true;
+			std::string ds = opt[ "dump"];
+			char const* di = ds.c_str();
+			while (skipSpace( di))
+			{
+				DumpConfigElem dt( getNextDumpConfigElem( di));
+				dumpConfig.insert( dt);
+			}
 		}
 
 		// Declare trace proxy objects:
@@ -301,60 +393,113 @@ int main( int argc, const char* argv[])
 			strus::analyzer::Document doc;
 			while (analyzerContext->analyzeNext( doc))
 			{
-				if (!doc.subDocumentTypeName().empty())
+				if (doDump)
 				{
-					std::cout << "-- " << strus::string_format( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
+					std::vector<strus::analyzer::Term> termar;
+					std::vector<strus::analyzer::MetaData>::const_iterator
+						mi = doc.metadata().begin(), me = doc.metadata().end();
+					for (; mi != me; ++mi)
+					{
+						DumpConfig::const_iterator dci = dumpConfig.find( mi->name());
+						if (dci != dumpConfig.end())
+						{
+							if (dci->second.empty())
+							{
+								termar.push_back( strus::analyzer::Term( mi->name(), mi->value().tostring().c_str(), 0));
+							}
+							else
+							{
+								termar.push_back( strus::analyzer::Term( mi->name(), dci->second, 0));
+							}
+						}
+					}
+					std::vector<strus::analyzer::Attribute>::const_iterator
+						ai = doc.attributes().begin(), ae = doc.attributes().end();
+					for (; ai != ae; ++ai)
+					{
+						DumpConfig::const_iterator dci = dumpConfig.find( ai->name());
+						if (dci != dumpConfig.end())
+						{
+							if (dci->second.empty())
+							{
+								termar.push_back( strus::analyzer::Term( ai->name(), ai->value(), 0));
+							}
+							else
+							{
+								termar.push_back( strus::analyzer::Term( ai->name(), dci->second, 0));
+							}
+						}
+					}
+					filterTerms( termar, dumpConfig, doc.searchIndexTerms());
+					filterTerms( termar, dumpConfig, doc.forwardIndexTerms());
+
+					std::sort( termar.begin(), termar.end(), TermOrder());
+
+					std::vector<strus::analyzer::Term>::const_iterator
+						ti = termar.begin(), te = termar.end();
+					for (unsigned int tidx=0; ti != te; ++ti,++tidx)
+					{
+						if (tidx) std::cout << ' ';
+						std::cout << ti->value();
+					}
 				}
-				std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
-				std::sort( itermar.begin(), itermar.end(), TermOrder());
-	
-				std::vector<strus::analyzer::Term>::const_iterator
-					ti = itermar.begin(), te = itermar.end();
-	
-				std::cout << std::endl << _TXT("search index terms:") << std::endl;
-				for (; ti != te; ++ti)
+				else
 				{
-					std::cout << ti->pos()
-						  << " " << ti->type()
-						  << " '" << ti->value() << "'"
-						  << std::endl;
-				}
-	
-				std::vector<strus::analyzer::Term> ftermar = doc.forwardIndexTerms();
-				std::sort( ftermar.begin(), ftermar.end(), TermOrder());
-	
-				std::vector<strus::analyzer::Term>::const_iterator
-					fi = ftermar.begin(), fe = ftermar.end();
-	
-				std::cout << std::endl << _TXT("forward index terms:") << std::endl;
-				for (; fi != fe; ++fi)
-				{
-					std::cout << fi->pos()
-						  << " " << fi->type()
-						  << " '" << fi->value() << "'"
-						  << std::endl;
-				}
-	
-				std::vector<strus::analyzer::MetaData>::const_iterator
-					mi = doc.metadata().begin(), me = doc.metadata().end();
-	
-				std::cout << std::endl << _TXT("metadata:") << std::endl;
-				for (; mi != me; ++mi)
-				{
-					std::cout << mi->name()
-						  << " '" << mi->value().tostring().c_str() << "'"
-						  << std::endl;
-				}
-	
-				std::vector<strus::analyzer::Attribute>::const_iterator
-					ai = doc.attributes().begin(), ae = doc.attributes().end();
+					if (!doc.subDocumentTypeName().empty())
+					{
+						std::cout << "-- " << strus::string_format( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
+					}
+					std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
+					std::sort( itermar.begin(), itermar.end(), TermOrder());
 		
-				std::cout << std::endl << _TXT("attributes:") << std::endl;
-				for (; ai != ae; ++ai)
-				{
-					std::cout << ai->name()
-						  << " '" << ai->value() << "'"
-						  << std::endl;
+					std::vector<strus::analyzer::Term>::const_iterator
+						ti = itermar.begin(), te = itermar.end();
+
+					std::cout << std::endl << _TXT("search index terms:") << std::endl;
+					for (; ti != te; ++ti)
+					{
+						std::cout << ti->pos()
+							  << " " << ti->type()
+							  << " '" << ti->value() << "'"
+							  << std::endl;
+					}
+
+					std::vector<strus::analyzer::Term> ftermar = doc.forwardIndexTerms();
+					std::sort( ftermar.begin(), ftermar.end(), TermOrder());
+		
+					std::vector<strus::analyzer::Term>::const_iterator
+						fi = ftermar.begin(), fe = ftermar.end();
+
+					std::cout << std::endl << _TXT("forward index terms:") << std::endl;
+					for (; fi != fe; ++fi)
+					{
+						std::cout << fi->pos()
+							  << " " << fi->type()
+							  << " '" << fi->value() << "'"
+							  << std::endl;
+					}
+
+					std::vector<strus::analyzer::MetaData>::const_iterator
+						mi = doc.metadata().begin(), me = doc.metadata().end();
+		
+					std::cout << std::endl << _TXT("metadata:") << std::endl;
+					for (; mi != me; ++mi)
+					{
+						std::cout << mi->name()
+							  << " '" << mi->value().tostring().c_str() << "'"
+							  << std::endl;
+					}
+
+					std::vector<strus::analyzer::Attribute>::const_iterator
+						ai = doc.attributes().begin(), ae = doc.attributes().end();
+
+					std::cout << std::endl << _TXT("attributes:") << std::endl;
+					for (; ai != ae; ++ai)
+					{
+						std::cout << ai->name()
+							  << " '" << ai->value() << "'"
+							  << std::endl;
+					}
 				}
 			}
 		}

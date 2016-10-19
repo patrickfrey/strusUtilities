@@ -256,7 +256,7 @@ void CheckInsertProcessor::run()
 						{
 							storagedoc->setAttribute( ai->name(), ai->value());
 						}
-	
+
 						// Define all metadata elements extracted from the document analysis:
 						std::vector<strus::analyzer::MetaData>::const_iterator
 							mi = doc.metadata().begin(), me = doc.metadata().end();
@@ -264,7 +264,11 @@ void CheckInsertProcessor::run()
 						{
 							double val = mi->value();
 							Index midx = metadata->elementHandle( mi->name());
-							switch (metadatatype[midx])
+							if (midx < 0)
+							{
+								std::cerr << string_format( _TXT( "unknown meta data element '%s'"), mi->name().c_str()) << std::endl;
+							}
+							else switch (metadatatype[midx])
 							{
 								case strus::NumericVariant::Int:
 									if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
