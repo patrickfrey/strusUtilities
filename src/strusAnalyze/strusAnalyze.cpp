@@ -46,6 +46,8 @@
 #include <vector>
 #include <map>
 
+#define STRUS_LOWLEVEL_DEBUG
+
 struct TermOrder
 {
 	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
@@ -273,6 +275,16 @@ int main( int argc, const char* argv[])
 			{
 				DumpConfigElem dt( getNextDumpConfigElem( di));
 				dumpConfig.insert( dt);
+#ifdef STRUS_LOWLEVEL_DEBUG
+				if (dt.second.empty())
+				{
+					std::cerr << strus::string_format( "got dump config [%s]", dt.first.c_str()) << std::endl;
+				}
+				else
+				{
+					std::cerr << strus::string_format( "got dump config [%s] = '%s'", dt.first.c_str(), dt.second.c_str()) << std::endl;
+				}
+#endif
 			}
 		}
 
