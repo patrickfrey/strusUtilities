@@ -7,7 +7,6 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
-#include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/vectorSpaceModelInterface.hpp"
@@ -19,6 +18,7 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
 #include "strus/programLoader.hpp"
+#include "strus/reference.hpp"
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
