@@ -46,7 +46,7 @@
 #include <vector>
 #include <map>
 
-#define STRUS_LOWLEVEL_DEBUG
+#undef STRUS_LOWLEVEL_DEBUG
 
 struct TermOrder
 {
