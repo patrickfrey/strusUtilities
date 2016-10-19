@@ -20,6 +20,7 @@ namespace utils {
 
 std::string tolower( const std::string& val);
 std::string trim( const std::string& val);
+std::string unescape( const std::string& val);
 bool caseInsensitiveEquals( const std::string& val1, const std::string& val2);
 bool caseInsensitiveStartsWith( const std::string& val, const std::string& prefix);
 int toint( const std::string& val);

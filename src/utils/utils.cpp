@@ -24,6 +24,34 @@ std::string utils::trim( const std::string& val)
 	return boost::algorithm::trim_copy( val);
 }
 
+std::string utils::unescape( const std::string& val)
+{
+	std::string rt;
+	std::string::const_iterator vi = val.begin(), ve = val.end();
+	for (; vi != ve; ++vi)
+	{
+		if (*vi == '\\')
+		{
+			++vi;
+			if (*vi == 'n') rt.push_back('\n');
+			else if (*vi == 'a') rt.push_back('\a');
+			else if (*vi == 'b') rt.push_back('\b');
+			else if (*vi == 't') rt.push_back('\t');
+			else if (*vi == 'r') rt.push_back('\r');
+			else if (*vi == 'f') rt.push_back('\f');
+			else if (*vi == 'v') rt.push_back('\v');
+			else if (*vi == '\\') rt.push_back('\\');
+			else if (*vi == '0') rt.push_back('\0');
+			else throw strus::runtime_error(_TXT("unknown escape character \\%c"), *vi);
+		}
+		else
+		{
+			rt.push_back( *vi);
+		}
+	}
+	return rt;
+}
+
 bool utils::caseInsensitiveEquals( const std::string& val1, const std::string& val2)
 {
 	return boost::algorithm::iequals( val1, val2);

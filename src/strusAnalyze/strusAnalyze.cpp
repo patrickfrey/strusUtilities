@@ -70,7 +70,7 @@ static bool skipSpace( char const*& di)
 
 static void skipIdent( char const*& di)
 {
-	for (; *di && (((unsigned char)(*di|32) > 'a' && (unsigned char)(*di|32) < 'z') || *di == '_'); ++di){}
+	for (; *di && (((unsigned char)(*di|32) >= 'a' && (unsigned char)(*di|32) <= 'z') || *di == '_'); ++di){}
 }
 
 typedef std::map<std::string,std::string> DumpConfig;
@@ -94,7 +94,7 @@ static DumpConfigElem getNextDumpConfigElem( char const*& di)
 			char eb = *di++;
 			char const* valstart = di;
 			for (; *di && *di != eb; ++di){}
-			value.append( valstart, di-valstart);
+			value = strus::utils::unescape( std::string( valstart, di-valstart));
 			if (*di) ++di;
 			skipSpace( di);
 		}
@@ -106,7 +106,14 @@ static DumpConfigElem getNextDumpConfigElem( char const*& di)
 			skipSpace( di);
 		}
 	}
-	if (*di == ',') ++di;
+	if (*di == ',')
+	{
+		++di;
+	}
+	else if (*di)
+	{
+		throw strus::runtime_error(_TXT("illegal token in dump configuration string at '%s'"), di);
+	}
 	return DumpConfigElem( type, value);
 }
 
