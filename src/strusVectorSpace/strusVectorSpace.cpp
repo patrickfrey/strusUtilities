@@ -121,7 +121,7 @@ static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, cons
 		for (; si != se; ++si,++sidx)
 		{
 			std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
-			builder->addVector( si->name(), vec);
+			builder->addSampleVector( si->name(), vec);
 			if ((sidx & 1023) == 0)
 			{
 				if (g_errorBuffer->hasError()) break;
