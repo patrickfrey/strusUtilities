@@ -12,6 +12,7 @@
 #include "strus/vectorSpaceModelInterface.hpp"
 #include "strus/vectorSpaceModelBuilderInterface.hpp"
 #include "strus/vectorSpaceModelInstanceInterface.hpp"
+#include "strus/databaseInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -35,7 +36,7 @@
 #include <stdexcept>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace"
+#define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace_std"
 #define DEFAULT_VECTOR_MODEL  "vector_std"
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
@@ -43,7 +44,6 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;
 enum Command
 {
 	CmdStoreModel,
-	CmdStoreNames,
 	CmdLearnFeatures,
 	CmdMapFeatures,
 	CmdMapClasses
@@ -54,7 +54,6 @@ static const char* commandName( Command cmd)
 	switch (cmd)
 	{
 		case CmdStoreModel: return "store";
-		case CmdStoreNames: return "names";
 		case CmdLearnFeatures: return "learn";
 		case CmdMapFeatures: return "feature";
 		case CmdMapClasses: return "class";
@@ -67,10 +66,6 @@ static Command getCommand( const std::string& name)
 	if (strus::utils::caseInsensitiveEquals( name, "store"))
 	{
 		return CmdStoreModel;
-	}
-	if (strus::utils::caseInsensitiveEquals( name, "names"))
-	{
-		return CmdStoreNames;
 	}
 	else if (strus::utils::caseInsensitiveEquals( name, "learn"))
 	{
@@ -105,9 +100,9 @@ static strus::FeatureVectorList readInputVectors( const std::string& inputfile, 
 	return rt;
 }
 
-static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile, bool withFinalize)
+static void doProcessFeatures( const strus::DatabaseInterface* dbi, const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile, bool withFinalize)
 {
-	std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config));
+	std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( dbi, config));
 	if (!builder.get())
 	{
 		throw strus::runtime_error(_TXT("error initializing vector space model builder"));
@@ -128,11 +123,11 @@ static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, cons
 				fprintf( stderr, "\radded %u vectors    ", sidx);
 			}
 		}
-		fprintf( stderr, "\radded %u vectors  (done)\n", sidx);
-		if (g_errorBuffer->hasError())
+		if (!builder->commit() || g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("error adding vector space model samples"));
 		}
+		fprintf( stderr, "\radded %u vectors  (done)\n", sidx);
 	}
 	if (withFinalize)
 	{
@@ -142,18 +137,13 @@ static void doProcessFeatures( const strus::VectorSpaceModelInterface* vsi, cons
 			throw strus::runtime_error(_TXT("error building vector space model"));
 		}
 	}
-	std::cerr << "storing model ..." << std::endl;
-	if (!builder->store())
-	{
-		throw strus::runtime_error(_TXT("error storing vector space model"));
-	}
 }
 
-static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
+static void doMapFeatures( const strus::DatabaseInterface* dbi, const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
 	strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
 
-	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( config));
+	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( dbi, config));
 	if (!instance.get())
 	{
 		throw strus::runtime_error(_TXT("error initializing vector space model instance"));
@@ -163,11 +153,11 @@ static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const st
 	for (; si != se; ++si,++sidx)
 	{
 		std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
-		std::vector<unsigned int> features( instance->mapVectorToFeatures( vec));
+		std::vector<strus::Index> features( instance->mapVectorToFeatures( vec));
 		if (!features.empty())
 		{
 			std::cout << si->name();
-			std::vector<unsigned int>::const_iterator fi = features.begin(), fe = features.end();
+			std::vector<strus::Index>::const_iterator fi = features.begin(), fe = features.end();
 			for (unsigned int fidx=0; fi != fe; ++fi,++fidx)
 			{
 				std::cout << ' ' << *fi;
@@ -181,17 +171,17 @@ static void doMapFeatures( const strus::VectorSpaceModelInterface* vsi, const st
 	}
 }
 
-static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
+static void doMapClasses( const strus::DatabaseInterface* dbi, const strus::VectorSpaceModelInterface* vsi, const std::string& config, const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile)
 {
 	strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
 
-	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( config));
+	std::auto_ptr<strus::VectorSpaceModelInstanceInterface> instance( vsi->createInstance( dbi, config));
 	if (!instance.get())
 	{
 		throw strus::runtime_error(_TXT("error initializing vector space model instance"));
 	}
-	typedef std::multimap<unsigned int,std::size_t> ClassesMap;
-	typedef std::pair<unsigned int,std::size_t> ClassesElem;
+	typedef std::multimap<strus::Index,strus::Index> ClassesMap;
+	typedef std::pair<strus::Index,strus::Index> ClassesElem;
 	ClassesMap classesmap;
 
 	strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
@@ -199,10 +189,10 @@ static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std
 	for (; si != se; ++si,++sidx)
 	{
 		std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
-		std::vector<unsigned int> features( instance->mapVectorToFeatures( vec));
+		std::vector<strus::Index> features( instance->mapVectorToFeatures( vec));
 		if (!features.empty())
 		{
-			std::vector<unsigned int>::const_iterator fi = features.begin(), fe = features.end();
+			std::vector<strus::Index>::const_iterator fi = features.begin(), fe = features.end();
 			for (unsigned int fidx=0; fi != fe; ++fi,++fidx)
 			{
 				classesmap.insert( ClassesElem( *fi, sidx));
@@ -222,7 +212,7 @@ static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std
 	ClassesMap::const_iterator ci = classesmap.begin(), ce = classesmap.end();
 	while (ci != ce)
 	{
-		unsigned int key = ci->first;
+		strus::Index key = ci->first;
 		std::cout << key;
 		for (; ci != ce && ci->first == key; ++ci)
 		{
@@ -233,32 +223,6 @@ static void doMapClasses( const strus::VectorSpaceModelInterface* vsi, const std
 	if (g_errorBuffer->hasError())
 	{
 		throw strus::runtime_error(_TXT("error mapping vectors to classes"));
-	}
-}
-
-static void doStoreNames( const strus::FeatureVectorDefFormat& fmt, const std::string& inputfile, const std::string& outputfile)
-{
-	strus::FeatureVectorList samples = readInputVectors( inputfile, fmt);
-	std::string content;
-
-	strus::FeatureVectorList::const_iterator si = samples.begin(), se = samples.end();
-	unsigned int sidx = 0;
-	if (outputfile.empty())
-	{
-		for (; si != se; ++si,++sidx)
-		{
-			std::cout << si->name() << std::endl;
-		}
-	}
-	else
-	{
-		for (; si != se; ++si,++sidx)
-		{
-			content.append( si->name());
-			content.push_back( '\0');
-		}
-		unsigned int ec = strus::writeFile( outputfile, content);
-		if (ec) throw strus::runtime_error(_TXT("failed to write vector names to file '%s': %s [%u]"), outputfile.c_str(), ::strerror(ec), ec);
 	}
 }
 
@@ -462,6 +426,8 @@ int main( int argc, const char* argv[])
 		}
 		const strus::VectorSpaceModelInterface* vsi = storageBuilder->getVectorSpaceModel( modelname);
 		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
+		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( config);
+		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
 		strus::FeatureVectorDefFormat format = strus::FeatureVectorDefTextssv;
 		if (opt("format"))
@@ -478,25 +444,21 @@ int main( int argc, const char* argv[])
 
 		switch (command)
 		{
-			case CmdStoreNames:
-				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
-				doStoreNames( format, inputfile, outputfile);
-			break;
 			case CmdStoreModel:
 				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
-				doProcessFeatures( vsi, config, format, inputfile, false);
+				doProcessFeatures( dbi, vsi, config, format, inputfile, false);
 			break;
 			case CmdLearnFeatures:
 				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
-				doProcessFeatures( vsi, config, format, inputfile, true);
+				doProcessFeatures( dbi, vsi, config, format, inputfile, true);
 			break;
 			case CmdMapFeatures:
 				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
-				doMapFeatures( vsi, config, format, inputfile);
+				doMapFeatures( dbi, vsi, config, format, inputfile);
 			break;
 			case CmdMapClasses:
 				if (opt.nofargs() > 1) throw strus::runtime_error(_TXT("too many arguments for command '%s'"), commandName( command));
-				doMapClasses( vsi, config, format, inputfile);
+				doMapClasses( dbi, vsi, config, format, inputfile);
 			break;
 		}
 		if (errorBuffer->hasError())
