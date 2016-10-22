@@ -35,13 +35,17 @@
 #include <cstring>
 #include <stdexcept>
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
+	std::string configstr( config);
+	std::string dbname;
+	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
+	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
-	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));

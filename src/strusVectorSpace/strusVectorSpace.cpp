@@ -424,9 +424,13 @@ int main( int argc, const char* argv[])
 			modelname = DEFAULT_VECTOR_MODEL;
 			if (errorBuffer->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
 		}
+		std::string dbname;
+		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
+		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
+
 		const strus::VectorSpaceModelInterface* vsi = storageBuilder->getVectorSpaceModel( modelname);
 		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
-		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( config);
+		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
 		strus::FeatureVectorDefFormat format = strus::FeatureVectorDefTextssv;

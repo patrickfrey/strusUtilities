@@ -35,13 +35,18 @@
 #include <stdexcept>
 
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
+	std::string configstr( config);
+	std::string dbname;
+	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
+	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
+
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
-	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
@@ -136,16 +141,16 @@ int main( int argc, const char* argv[])
 				rt = 1;
 			}
 		}
-		std::string databasecfg;
-		int nof_databasecfg = 0;
+		std::string storagecfg;
+		int nof_storagecfg = 0;
 		if (opt("configfile"))
 		{
-			nof_databasecfg += 1;
+			nof_storagecfg += 1;
 			std::string configfile = opt[ "configfile"];
-			int ec = strus::readFile( configfile, databasecfg);
+			int ec = strus::readFile( configfile, storagecfg);
 			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u)"), configfile.c_str(), ec);
 
-			std::string::iterator di = databasecfg.begin(), de = databasecfg.end();
+			std::string::iterator di = storagecfg.begin(), de = storagecfg.end();
 			for (; di != de; ++di)
 			{
 				if ((unsigned char)*di < 32) *di = ' ';
@@ -153,22 +158,22 @@ int main( int argc, const char* argv[])
 		}
 		if (opt("storage"))
 		{
-			nof_databasecfg += 1;
-			databasecfg = opt[ "storage"];
+			nof_storagecfg += 1;
+			storagecfg = opt[ "storage"];
 		}
 		if (opt.nofargs() == 1)
 		{
 			std::cerr << _TXT("warning: passing storage as first parameter instead of option -s (deprecated)") << std::endl;
-			nof_databasecfg += 1;
-			databasecfg = opt[0];
+			nof_storagecfg += 1;
+			storagecfg = opt[0];
 		}
-		if (nof_databasecfg > 1)
+		if (nof_storagecfg > 1)
 		{
 			std::cerr << _TXT("conflicting configuration options specified: --storage and --configfile") << std::endl;
 			rt = 10003;
 			printUsageAndExit = true;
 		}
-		else if (!printUsageAndExit && nof_databasecfg == 0)
+		else if (!printUsageAndExit && nof_storagecfg == 0)
 		{
 			std::cerr << _TXT("missing configuration option: --storage or --configfile has to be defined") << std::endl;
 			rt = 10004;
@@ -192,7 +197,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), databasecfg, errorBuffer.get());
+			printStorageConfigOptions( std::cout, moduleLoader.get(), storagecfg, errorBuffer.get());
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
@@ -228,40 +233,15 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create objects:
-		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( databasecfg);
+		std::string dbname;
+		(void)strus::extractStringFromConfigString( dbname, storagecfg, "database", errorBuffer.get());
+
+		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 		const strus::StorageInterface* sti = storageBuilder->getStorage();
 		if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
 
-		std::string dbname;
-		(void)strus::extractStringFromConfigString( dbname, databasecfg, "database", errorBuffer.get());
-		std::string storagecfg( databasecfg);
-
-		strus::removeKeysFromConfigString(
-				databasecfg,
-				sti->getConfigParameters(
-					strus::StorageInterface::CmdCreateClient), errorBuffer.get());
-		//... In database_cfg is now the pure database configuration without the storage settings
-
-		strus::removeKeysFromConfigString(
-				storagecfg,
-				dbi->getConfigParameters(
-					strus::DatabaseInterface::CmdCreateClient), errorBuffer.get());
-		//... In storage_cfg is now the pure storage configuration without the database settings
-		if (errorBuffer->hasError())
-		{
-			throw strus::runtime_error(_TXT("failed to parse storage configuration"));
-		}
-		if (!dbi->createDatabase( databasecfg))
-		{
-			throw strus::runtime_error(_TXT("failed to create key/value store database files"));
-		}
-
-		strus::utils::ScopedPtr<strus::DatabaseClientInterface>
-			database( dbi->createClient( databasecfg));
-		if (!database.get()) throw strus::runtime_error(_TXT("failed to create database client"));
-
-		if (!sti->createStorage( storagecfg, database.get()))
+		if (!sti->createStorage( storagecfg, dbi))
 		{
 			throw strus::runtime_error(_TXT("failed to create storage"));
 		}
