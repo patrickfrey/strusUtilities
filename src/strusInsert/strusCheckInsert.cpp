@@ -45,11 +45,12 @@
 #include "private/traceUtils.hpp"
 #include "fileCrawler.hpp"
 #include "checkInsertProcessor.hpp"
-#include "thread.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
@@ -360,40 +361,39 @@ int main( int argc_, const char* argv_[])
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
-		
-		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler(
-				datapath, notificationInterval, nofThreads*5+5, fileext);
 
-		std::auto_ptr< strus::Thread< strus::FileCrawler> >
-			fileCrawlerThread(
-				new strus::Thread< strus::FileCrawler >( fileCrawler, "filecrawler"));
 		std::cout.flush();
-		fileCrawlerThread->start();
+		strus::FileCrawler fileCrawler( datapath, notificationInterval, nofThreads*5+5, fileext);
+		std::auto_ptr<boost::thread> fileCrawlerThread(
+			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));
 
 		if (nofThreads == 0)
 		{
 			strus::CheckInsertProcessor checker(
-				storage.get(), textproc, analyzerMap, fileCrawler, logfile, errorBuffer.get());
+				storage.get(), textproc, analyzerMap, &fileCrawler, logfile, errorBuffer.get());
 			checker.run();
 		}
 		else
 		{
-			std::auto_ptr< strus::ThreadGroup< strus::CheckInsertProcessor > >
-				checkInsertThreads(
-					new strus::ThreadGroup<strus::CheckInsertProcessor>(
-					"checker"));
-
+			std::vector<strus::Reference<strus::CheckInsertProcessor> > processorList;
+			processorList.reserve( nofThreads);
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)
 			{
-				checkInsertThreads->start(
+				processorList.push_back(
 					new strus::CheckInsertProcessor(
 						storage.get(), textproc, analyzerMap,
-						fileCrawler, logfile, errorBuffer.get()));
+						&fileCrawler, logfile, errorBuffer.get()));
 			}
-			checkInsertThreads->wait_termination();
+			{
+				boost::thread_group tgroup;
+				for (unsigned int ti = 0; ti<nofThreads; ++ti)
+				{
+					tgroup.create_thread( boost::bind( &strus::CheckInsertProcessor::run, processorList[ti].get()));
+				}
+				tgroup.join_all();
+			}
 		}
-		fileCrawlerThread->wait_termination();
+		fileCrawlerThread->join();
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("unhandled error in check insert"));

@@ -891,16 +891,17 @@ int main( int argc, const char* argv[])
 		{
 			fprintf( stderr, _TXT("starting %u threads for evaluation ...\n"), nofThreads);
 
-			std::vector<ThreadContext> ctxar;
+			std::vector<strus::Reference<ThreadContext> > processorList;
+			processorList.reserve( nofThreads);
 			for (unsigned int ti=0; ti<nofThreads; ++ti)
 			{
-				ctxar.push_back( ThreadContext( &globalContext, analyzerBuilder.get(), ti+1, outputfile));
+				processorList.push_back( new ThreadContext( &globalContext, analyzerBuilder.get(), ti+1, outputfile));
 			}
 			{
 				boost::thread_group tgroup;
 				for (unsigned int ti=0; ti<nofThreads; ++ti)
 				{
-					tgroup.create_thread( boost::bind( &ThreadContext::run, &ctxar[ti]));
+					tgroup.create_thread( boost::bind( &ThreadContext::run, processorList[ti].get()));
 				}
 				tgroup.join_all();
 			}

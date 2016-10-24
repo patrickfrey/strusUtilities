@@ -45,12 +45,13 @@
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "insertProcessor.hpp"
-#include "thread.hpp"
 #include <iostream>
 #include <sstream>
 #include <memory>
 #include <cstring>
 #include <stdexcept>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
@@ -384,39 +385,39 @@ int main( int argc_, const char* argv_[])
 		strus::utils::ScopedPtr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get(), verbose, errorBuffer.get()));
 
-		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
-
-		strus::utils::ScopedPtr< strus::Thread< strus::FileCrawler> >
-			fileCrawlerThread(
-				new strus::Thread< strus::FileCrawler >(
-					fileCrawler, "filecrawler"));
 		std::cout.flush();
-		fileCrawlerThread->start();
+		strus::FileCrawler fileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
+		std::auto_ptr<boost::thread> fileCrawlerThread(
+			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));
 
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
 				storage.get(), textproc, analyzerMap, commitQue.get(),
-				fileCrawler, transactionSize, verbose, errorBuffer.get());
+				&fileCrawler, transactionSize, verbose, errorBuffer.get());
 			inserter.run();
 		}
 		else
 		{
-			std::auto_ptr< strus::ThreadGroup< strus::InsertProcessor > >
-				inserterThreads(
-					new strus::ThreadGroup<strus::InsertProcessor>( "inserter"));
-
+			std::vector<strus::Reference<strus::InsertProcessor> > processorList;
+			processorList.reserve( nofThreads);
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)
 			{
-				inserterThreads->start(
+				processorList.push_back(
 					new strus::InsertProcessor(
 						storage.get(), textproc, analyzerMap, commitQue.get(),
-						fileCrawler, transactionSize, verbose, errorBuffer.get()));
+						&fileCrawler, transactionSize, verbose, errorBuffer.get()));
 			}
-			inserterThreads->wait_termination();
+			{
+				boost::thread_group tgroup;
+				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				{
+					tgroup.create_thread( boost::bind( &strus::InsertProcessor::run, processorList[ti].get()));
+				}
+				tgroup.join_all();
+			}
 		}
-		fileCrawlerThread->wait_termination();
+		fileCrawlerThread->join();
 
 		if (errorBuffer->hasError())
 		{

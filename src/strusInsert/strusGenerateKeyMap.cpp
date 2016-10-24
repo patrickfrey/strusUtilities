@@ -31,13 +31,13 @@
 #include "private/traceUtils.hpp"
 #include "fileCrawler.hpp"
 #include "keyMapGenProcessor.hpp"
-#include "thread.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
 #include <memory>
-
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
 int main( int argc_, const char* argv_[])
 {
@@ -262,39 +262,39 @@ int main( int argc_, const char* argv_[])
 		}
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
 
+		std::cout.flush();
 		strus::KeyMapGenResultList resultList;
-		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler(
-				datapath, unitSize, nofThreads*5+5, fileext);
+		strus::FileCrawler fileCrawler( datapath, unitSize, nofThreads*5+5, fileext);
 
 		// [3] Start threads:
-		std::auto_ptr< strus::Thread< strus::FileCrawler> >
-			fileCrawlerThread(
-				new strus::Thread< strus::FileCrawler >( fileCrawler,
-					"filecrawler"));
-		std::cout.flush();
-		fileCrawlerThread->start();
+		std::auto_ptr<boost::thread> fileCrawlerThread(
+			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));
 
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
-				textproc, analyzerMap, &resultList, fileCrawler, errorBuffer.get());
+				textproc, analyzerMap, &resultList, &fileCrawler, errorBuffer.get());
 			processor.run();
 		}
 		else
 		{
-			std::auto_ptr< strus::ThreadGroup< strus::KeyMapGenProcessor > >
-				processors( new strus::ThreadGroup<strus::KeyMapGenProcessor>( "keymapgen"));
-
+			std::vector<strus::Reference<strus::KeyMapGenProcessor> > processorList;
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)
 			{
-				processors->start(
+				processorList.push_back(
 					new strus::KeyMapGenProcessor(
-						textproc, analyzerMap, &resultList, fileCrawler, errorBuffer.get()));
+						textproc, analyzerMap, &resultList, &fileCrawler, errorBuffer.get()));
 			}
-			processors->wait_termination();
+			{
+				boost::thread_group tgroup;
+				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				{
+					tgroup.create_thread( boost::bind( &strus::KeyMapGenProcessor::run, processorList[ti].get()));
+				}
+				tgroup.join_all();
+			}
 		}
-		fileCrawlerThread->wait_termination();
+		fileCrawlerThread->join();
 
 		// [3] Final merge:
 		std::cerr << std::endl << _TXT("merging results:") << std::endl;

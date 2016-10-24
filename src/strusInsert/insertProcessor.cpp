@@ -27,6 +27,7 @@
 #include "commitQueue.hpp"
 #include <memory>
 #include <fstream>
+#include <boost/thread.hpp>
 
 using namespace strus;
 
@@ -283,6 +284,10 @@ void InsertProcessor::run()
 		{
 			std::cerr << string_format( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
 		}
+	}
+	catch (const boost::thread_interrupted&)
+	{
+		std::cerr << _TXT("failed to complete inserts: thread interrupted") << std::endl; 
 	}
 }
 
