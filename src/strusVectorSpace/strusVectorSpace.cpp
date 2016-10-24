@@ -116,7 +116,7 @@ static void doProcessFeatures( const strus::DatabaseInterface* dbi, const strus:
 		for (; si != se; ++si,++sidx)
 		{
 			std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
-			builder->addSampleVector( si->name(), vec);
+			builder->addFeature( si->name(), vec);
 			if ((sidx & 1023) == 0)
 			{
 				if (g_errorBuffer->hasError()) break;
@@ -153,7 +153,7 @@ static void doMapFeatures( const strus::DatabaseInterface* dbi, const strus::Vec
 	for (; si != se; ++si,++sidx)
 	{
 		std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
-		std::vector<strus::Index> features( instance->mapVectorToFeatures( vec));
+		std::vector<strus::Index> features( instance->mapVectorToConcepts( vec));
 		if (!features.empty())
 		{
 			std::cout << si->name();
@@ -189,7 +189,7 @@ static void doMapClasses( const strus::DatabaseInterface* dbi, const strus::Vect
 	for (; si != se; ++si,++sidx)
 	{
 		std::vector<double> vec( si->vec(), si->vec() + si->vecsize());
-		std::vector<strus::Index> features( instance->mapVectorToFeatures( vec));
+		std::vector<strus::Index> features( instance->mapVectorToConcepts( vec));
 		if (!features.empty())
 		{
 			std::vector<strus::Index>::const_iterator fi = features.begin(), fe = features.end();
