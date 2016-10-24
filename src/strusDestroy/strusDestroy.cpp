@@ -225,7 +225,11 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create objects:
-		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( databasecfg);
+		std::string dbname;
+		(void)strus::extractStringFromConfigString( dbname, databasecfg, "database", errorBuffer.get());
+		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorBuffer->fetchError());
+
+		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
 		// Do the delete:
