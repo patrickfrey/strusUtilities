@@ -125,7 +125,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 1)
+			if (opt.nofargs() > 0)
 			{
 				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
@@ -146,12 +146,6 @@ int main( int argc, const char* argv[])
 			{
 				if ((unsigned char)*di < 32) *di = ' ';
 			}
-		}
-		if (opt.nofargs() == 1)
-		{
-			std::cerr << _TXT("warning: passing storage as first parameter instead of option -s (deprecated)") << std::endl;
-			nof_databasecfg += 1;
-			databasecfg = opt[0];
 		}
 		if (opt("storage"))
 		{

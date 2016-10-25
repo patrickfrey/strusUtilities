@@ -95,7 +95,7 @@ std::size_t InputStream::readAhead( char* buf, std::size_t bufsize)
 		if (restsize)
 		{
 			m_buffer.append( buf, rt);
-			std::memcpy( buf, m_buffer.c_str(), bufsize);
+			std::memcpy( buf, m_buffer.c_str() + m_bufferidx, bufsize);
 			return bufsize;
 		}
 		else

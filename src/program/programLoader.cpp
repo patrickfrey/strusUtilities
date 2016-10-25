@@ -2246,8 +2246,8 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 			}
 			std::vector<double> vec;
 			vec.reserve( vecsize);
-			unsigned int vi = 0;
-			for (; vi < vecsize; vi++)
+			unsigned int ii = 0;
+			for (; ii < vecsize; ii++)
 			{
 				float val;
 				std::memcpy( (void*)&val, si, sizeof( float));
@@ -2256,21 +2256,23 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 				vec.push_back( val);
 			}
 			double len = 0;
-			for (vi = 0; vi < vecsize; vi++)
+			std::vector<double>::iterator vi = vec.begin(), ve = vec.end();
+			for (; vi != ve; ++vi)
 			{
-				double vv = vec[vi];
+				double vv = *vi;
 				len += vv * vv;
 			}
 			len = sqrt( len);
-			for (; vi < vecsize; vi++)
+			vi = vec.begin(), ve = vec.end();
+			for (; vi != ve; ++vi)
 			{
-				vec[vi] /= len;
-				if (vec[vi] >= -1.0 && vec[vi] <= 1.0)
+				if (*vi >= -1.0 && *vi <= 1.0)
 				{/*OK*/}
 				else
 				{
 					throw strus::runtime_error( _TXT("illegal values in vectors"));
 				}
+				*vi /= len;
 			}
 			vsmbuilder->addFeature( std::string(term, termsize), vec);
 			if (errorhnd->hasError())
@@ -2279,7 +2281,7 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 			}
 			infile.read( linebuf, si - linebuf);
 			size = infile.readAhead( linebuf, linebufsize);
-			if (progressCallback) progressCallback( linecnt, true);
+			if (progressCallback) progressCallback( linecnt, false);
 		}
 		if (progressCallback) progressCallback( linecnt, true);
 		if (collsize != linecnt)
@@ -2313,7 +2315,7 @@ static void loadVectorSpaceModelVectors_word2vecText(
 		char* linebuf = (char*)std::malloc( LineBufSize);
 		charp_scope linebuf_scope(linebuf);
 		const char* line = infile.readLine( linebuf, LineBufSize);
-		while (line)
+		for (; line; line = infile.readLine( linebuf, LineBufSize))
 		{
 			char const* si = line;
 			const char* se = si + std::strlen(si);
@@ -2322,7 +2324,7 @@ static void loadVectorSpaceModelVectors_word2vecText(
 			const char* term;
 			std::size_t termsize;
 			std::vector<double> vec;
-			skipSpaces( si);
+			while (isSpace( *si)) ++si;
 			term = si;
 		AGAIN:
 			for (; *si && *si != ' ' && *si != '\t'; ++si){}
@@ -2338,15 +2340,25 @@ static void loadVectorSpaceModelVectors_word2vecText(
 			}
 			char const* eoln = si;
 			skipToEoln( eoln);
-			skipSpaces( si);
+			while (isSpace( *si)) ++si;
 			while (si < eoln && is_FLOAT(si))
 			{
 				vec.push_back( parse_FLOAT( si));
-				skipSpaces( si);
+				while (isSpace( *si)) ++si;
 			}
 			if (si < eoln)
 			{
 				throw strus::runtime_error(_TXT("expected vector of double precision floating point numbers after term definition"));
+			}
+			std::vector<double>::const_iterator vi = vec.begin(), ve = vec.end();
+			for (; vi != ve; vi++)
+			{
+				if (*vi >= -1.0 && *vi <= 1.0)
+				{/*OK*/}
+				else
+				{
+					throw strus::runtime_error(_TXT("found a non normalized vector value"));
+				}
 			}
 			vsmbuilder->addFeature( std::string(term, termsize), vec);
 			if (errorhnd->hasError())
