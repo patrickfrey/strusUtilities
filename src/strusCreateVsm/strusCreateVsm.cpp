@@ -40,6 +40,7 @@
 #define DEFAULT_VECTOR_MODEL  "vector_std"
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
+static unsigned int g_commitsize = 1000;
 
 void vectorSpaceModelLoaderProgressCallback( unsigned int cnt, bool final)
 {
@@ -47,7 +48,7 @@ void vectorSpaceModelLoaderProgressCallback( unsigned int cnt, bool final)
 	{
 		printf( "\rinserted %u features       \n", cnt);
 	}
-	else if (cnt % 1000 == 0)
+	else if (cnt % g_commitsize == 0)
 	{
 		::fprintf( stderr, "\rinserted %u features      ", cnt);
 		::fflush( stderr);
@@ -71,11 +72,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 10,
+				argc, argv, 11,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "f,file:",
-				"V,verbose");
+				"V,verbose", "c,commit:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -158,6 +159,10 @@ int main( int argc, const char* argv[])
 				if ((unsigned char)*di < 32) *di = ' ';
 			}
 		}
+		if (opt("commit"))
+		{
+			g_commitsize = opt.asUint("commit");
+		}
 		if (opt("config"))
 		{
 			nof_config += 1;
@@ -198,6 +203,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Known formats are word2vec binary or text format.") << std::endl;
 			std::cout << "    " << _TXT("All files are added, if there are many input files specified.") << std::endl;
 			std::cout << "    " << _TXT("No input files lead to an empty model.") << std::endl;
+			std::cout << "-c|--commit <N>" << std::endl;
+			std::cout << "    " << _TXT("Forces a commit after every <N> feature insert operations") << std::endl;
+			std::cout << "    " << _TXT("(default is 1000)") << std::endl;
 			std::cout << "-V|--verbose" << std::endl;
 			std::cout << "    " << _TXT("Print progress of feature insertion") << std::endl;
 			return rt;

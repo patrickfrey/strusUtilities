@@ -8,6 +8,7 @@
 #ifndef _STRUS_UTILITIES_PROGRAM_OPTIONS_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_OPTIONS_HPP_INCLUDED
 #include "private/utils.hpp"
+#include "private/internationalization.hpp"
 #include <cstring>
 #include <stdexcept>
 #include <map>
@@ -43,7 +44,7 @@ private:
 				{
 					if (aa - arg != 1)
 					{
-						throw std::runtime_error( "one character option expected before comma ',' in option definition string");
+						throw strus::runtime_error( _TXT("one character option expected before comma ',' in option definition string"));
 					}
 					alias = *arg;
 					longnamestart = aa+1;
@@ -52,7 +53,7 @@ private:
 				{
 					if (longnameend - aa != 1)
 					{
-						throw std::runtime_error( "colon expected only at end of option definition string");
+						throw strus::runtime_error( _TXT("colon expected only at end of option definition string"));
 					}
 					longnameend = aa;
 					hasArg = true;
@@ -63,7 +64,7 @@ private:
 			{
 				if (!alias)
 				{
-					throw std::runtime_error( "empty option definition");
+					throw strus::runtime_error( _TXT("empty option definition"));
 				}
 				longname.push_back( alias);
 			}
@@ -103,7 +104,7 @@ private:
 					std::map<char,std::string>::const_iterator oi = aliasmap.find( *oo);
 					if (oi == aliasmap.end())
 					{
-						if (oo == argv+1) throw std::runtime_error( std::string( "unknown option '-") + *oo +"'");
+						if (oo == argv+1) throw strus::runtime_error( _TXT("unknown option '-%c'"), *oo);
 						optarg = std::string( oo);
 						break;
 					}
@@ -149,7 +150,7 @@ public:
 			for (; oi != oe; ++oi)
 			{
 				std::map<std::string,bool>::iterator li = optmapdef.longnamemap.find( *oi);
-				if (li == optmapdef.longnamemap.end()) throw std::runtime_error( std::string( "unknown option '--") + *oi +"'");
+				if (li == optmapdef.longnamemap.end()) throw strus::runtime_error( _TXT("unknown option '--%s'"), oi->c_str());
 				if (li->second && oi+1 == oe)
 				{
 					if (optarg.empty() && m_argc > 1 && m_argv[1][0] != '-')
@@ -202,7 +203,7 @@ public:
 	{
 		if (m_opt.count( optname) > 1)
 		{
-			throw std::runtime_error( std::string( "option '") + optname + "' specified more than once");
+			throw strus::runtime_error( _TXT("option '%s' specified more than once"), optname.c_str());
 		}
 		std::map<std::string,std::string>::const_iterator
 			oi = m_opt.find( optname);
@@ -214,7 +215,7 @@ public:
 	{
 		if (m_opt.count( optname) > 1)
 		{
-			throw std::runtime_error( std::string( "option '") + optname + "' specified more than once");
+			throw strus::runtime_error( _TXT("option '%s' specified more than once"), optname.c_str());
 		}
 		std::map<std::string,std::string>::const_iterator
 			oi = m_opt.find( optname);
@@ -225,14 +226,14 @@ public:
 		}
 		catch (const std::runtime_error&)
 		{
-			throw std::runtime_error( std::string("option '") + optname + "' has not the requested value type");
+			throw strus::runtime_error( _TXT("option '%s' has not the requested value type"), optname.c_str());
 		}
 	}
 
 	unsigned int asUint( const std::string& optname) const
 	{
 		int rt = asInt( optname);
-		if (rt < 0) throw std::runtime_error( std::string( "non negative value expected for option '") + optname + "'");
+		if (rt < 0) throw strus::runtime_error( _TXT("non negative value expected for option '%s'"), optname.c_str());
 		return (unsigned int)rt;
 	}
 
