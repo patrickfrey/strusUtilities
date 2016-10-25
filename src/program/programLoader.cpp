@@ -33,6 +33,7 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageDocumentUpdateInterface.hpp"
+#include "strus/vectorSpaceModelBuilderInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/analyzer/documentClass.hpp"
@@ -40,6 +41,7 @@
 #include "strus/base/snprintf.h"
 #include "strus/base/string_format.hpp"
 #include "strus/base/dll_tags.hpp"
+#include "strus/base/fileio.hpp"
 #include "private/inputStream.hpp"
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
@@ -1920,7 +1922,7 @@ static unsigned int loadStorageValues(
 	try
 	{
 		char line[ 2048];
-		for (; stream.readline( line, sizeof(line)); ++linecnt)
+		for (; stream.readLine( line, sizeof(line)); ++linecnt)
 		{
 			char const* itr = line;
 			Index docno = parseDocno( storage, itr);
@@ -2162,22 +2164,13 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 }
 
 
-DLL_PUBLIC void FeatureVectorList::add( const char* term_, std::size_t termsize_, const std::vector<double>& vec_)
-{
-	if (vec_.size() != m_vecsize) throw strus::runtime_error( _TXT("feature vector size does no match"));
-	m_namestrings.push_back('\0');
-	m_nameofs.push_back( m_namestrings.size());
-	m_namestrings.append( term_, termsize_);
-	m_vecvalues.insert( m_vecvalues.end(), vec_.begin(), vec_.end());
-}
-
 static bool isLittleEndian()
 {
 	int n = 1;
 	return (*(char *)&n == 1);
 }
 
-float littleToBigEndian( const float& val)
+static float littleToBigEndian( const float& val)
 {
 	union
 	{
@@ -2190,193 +2183,208 @@ float littleToBigEndian( const float& val)
 	return st.val;
 }
 
-static void parseFeatureVectors_DefWord2VecBin(
-		FeatureVectorList& result,
-		char const*& si,
-		std::size_t size)
+static void loadVectorSpaceModelVectors_word2vecBin( 
+		VectorSpaceModelBuilderInterface* vsmbuilder,
+		const std::string& vectorfile,
+		ErrorBufferInterface* errorhnd)
 {
-	bool littleEndian = isLittleEndian();
-	const char* se = si + size;
-	skipSpaces( si);
-	if (!is_UNSIGNED(si)) throw strus::runtime_error("expected collection size as first element of the header line (word2vec binary file)");
-	unsigned int collsize = parse_UNSIGNED1( si);
-	skipSpaces( si);
-	if (!is_UNSIGNED(si)) throw strus::runtime_error("expected vector size as second element of the header line (word2vec binary file)");
-	unsigned int vecsize = parse_UNSIGNED1( si);
-	if (*(si-1) != '\n')
+	unsigned int linecnt = 0;
+	try
 	{
-		skipToEoln( si);
-		++si;
-	}
-	result = FeatureVectorList( collsize, vecsize);
-	while (si < se)
-	{
-		const char* term = si;
-		for (; si < se && (unsigned char)*si > 32; ++si){}
-		std::size_t termsize = si - term;
-		++si;
-		if (si+vecsize*sizeof(float) > se)
+		bool littleEndian = isLittleEndian();
+		InputStream infile( vectorfile);
+		unsigned int collsize;
+		unsigned int vecsize;
+	
+		// Read first text line, that contains two numbers, the collection size and the vector size:
+		char firstline[ 256];
+		std::size_t size = infile.readAhead( firstline, sizeof(firstline)-1);
+		firstline[ size] = '\0';
+		char const* si = firstline;
+		const char* se = std::strchr( si, '\n');
+		if (!se) throw strus::runtime_error(_TXT("failed to parse header line"));
+		skipSpaces( si);
+		if (!is_UNSIGNED(si)) throw strus::runtime_error("expected collection size as first element of the header line");
+		collsize = parse_UNSIGNED1( si);
+		skipSpaces( si);
+		if (!is_UNSIGNED(si)) throw strus::runtime_error("expected vector size as second element of the header line");
+		vecsize = parse_UNSIGNED1( si);
+		if (*(si-1) != '\n')
 		{
-			throw strus::runtime_error( _TXT("wrong file format"));
+			skipToEoln( si);
+			++si;
 		}
-		std::vector<double> vec;
-		vec.reserve( vecsize);
-		unsigned int vi = 0;
-		for (; vi < vecsize; vi++)
+		infile.read( firstline, si - firstline);
+	
+		// Declare buffer for reading lines:
+		struct charp_scope
 		{
-			float val;
-			std::memcpy( (void*)&val, si, sizeof( float));
-			si += sizeof( float);
-			if (!littleEndian) val = littleToBigEndian( val);
-			vec.push_back( val);
-		}
-		double len = 0;
-		for (vi = 0; vi < vecsize; vi++)
+			charp_scope( char* ptr_)	:ptr(ptr_){}
+			~charp_scope()			{if (ptr) std::free(ptr);}
+			char* ptr;
+		};
+		enum {MaxIdSize = 2048};
+		std::size_t linebufsize = MaxIdSize + vecsize * sizeof(float);
+		char* linebuf = (char*)std::malloc( linebufsize);
+		charp_scope linebuf_scope( linebuf);
+	
+		// Parse vector by vector and add them to the builder till EOF:
+		size = infile.readAhead( linebuf, linebufsize);
+		while (size)
 		{
-			double vv = vec[vi];
-			len += vv * vv;
-		}
-		len = sqrt( len);
-		for (; vi < vecsize; vi++)
-		{
-			vec[vi] /= len;
-			if (vec[vi] < -1.0 || vec[vi] > 1.0)
+			++linecnt;
+			char const* si = linebuf;
+			const char* se = linebuf + size;
+			for (; si < se && (unsigned char)*si > 32; ++si){}
+			const char* term = linebuf;
+			std::size_t termsize = si - linebuf;
+			++si;
+			if (si+vecsize*sizeof(float) > se)
 			{
-				throw strus::runtime_error( _TXT("illegal values in vectors"));
+				throw strus::runtime_error( _TXT("wrong file format"));
+			}
+			std::vector<double> vec;
+			vec.reserve( vecsize);
+			unsigned int vi = 0;
+			for (; vi < vecsize; vi++)
+			{
+				float val;
+				std::memcpy( (void*)&val, si, sizeof( float));
+				si += sizeof( float);
+				if (!littleEndian) val = littleToBigEndian( val);
+				vec.push_back( val);
+			}
+			double len = 0;
+			for (vi = 0; vi < vecsize; vi++)
+			{
+				double vv = vec[vi];
+				len += vv * vv;
+			}
+			len = sqrt( len);
+			for (; vi < vecsize; vi++)
+			{
+				vec[vi] /= len;
+				if (vec[vi] >= -1.0 && vec[vi] <= 1.0)
+				{/*OK*/}
+				else
+				{
+					throw strus::runtime_error( _TXT("illegal values in vectors"));
+				}
+			}
+			vsmbuilder->addFeature( std::string(term, termsize), vec);
+			if (errorhnd->hasError())
+			{
+				throw strus::runtime_error(_TXT("add vector failed: %s"), errorhnd->fetchError());
+			}
+			infile.read( linebuf, si - linebuf);
+			size = infile.readAhead( linebuf, linebufsize);
+		}
+		if (collsize != linecnt)
+		{
+			throw strus::runtime_error(_TXT("collection size does not match"));
+		}
+	}
+	catch (const std::runtime_error& err)
+	{
+		throw strus::runtime_error( _TXT("in word2vec binary file in record %u: %s"), linecnt, err.what());
+	}
+}
+
+static void loadVectorSpaceModelVectors_word2vecText( 
+		VectorSpaceModelBuilderInterface* vsmbuilder,
+		const std::string& vectorfile,
+		ErrorBufferInterface* errorhnd)
+{
+	unsigned int linecnt = 0;
+	try
+	{
+		InputStream infile( vectorfile);
+		enum {LineBufSize=1<<20};
+		struct charp_scope
+		{
+			charp_scope( char* ptr_)	:ptr(ptr_){}
+			~charp_scope()			{if (ptr) std::free(ptr);}
+			char* ptr;
+		};
+		char* linebuf = (char*)std::malloc( LineBufSize);
+		charp_scope linebuf_scope(linebuf);
+		const char* line = infile.readLine( linebuf, LineBufSize);
+		while (line)
+		{
+			char const* si = line;
+			const char* se = si + std::strlen(si);
+			if (se - si == LineBufSize-1) throw strus::runtime_error(_TXT("input line too long"));
+			++linecnt;
+			const char* term;
+			std::size_t termsize;
+			std::vector<double> vec;
+			skipSpaces( si);
+			term = si;
+		AGAIN:
+			for (; *si && *si != ' ' && *si != '\t'; ++si){}
+			if (!*si)
+			{
+				throw strus::runtime_error(_TXT("unexpected end of file"));
+			}
+			termsize = si - term;
+			++si;
+			if (!isMinus(*si) && !isDigit(*si))
+			{
+				goto AGAIN;
+			}
+			char const* eoln = si;
+			skipToEoln( eoln);
+			skipSpaces( si);
+			while (si < eoln && is_FLOAT(si))
+			{
+				vec.push_back( parse_FLOAT( si));
+				skipSpaces( si);
+			}
+			if (si < eoln)
+			{
+				throw strus::runtime_error(_TXT("expected vector of double precision floating point numbers after term definition"));
+			}
+			vsmbuilder->addFeature( std::string(term, termsize), vec);
+			if (errorhnd->hasError())
+			{
+				throw strus::runtime_error(_TXT("add vector failed: %s"), errorhnd->fetchError());
 			}
 		}
-		result.add( term, termsize, vec);
 	}
-	if (si != se)
+	catch (const std::runtime_error& err)
 	{
-		throw strus::runtime_error( _TXT("trailing bytes at end of file"));
-	}
-	if (result.size() != collsize)
-	{
-		throw strus::runtime_error( _TXT("number of vectors and collection size specified in header do not match (%u != %u)"), result.size(), collsize);
+		throw strus::runtime_error( _TXT("in word2vec text file on line %u: %s"), linecnt, err.what());
 	}
 }
 
-static void parseFeatureVectors_DefText(
-		FeatureVectorList& result,
-		char const*& si)
-{
-	result = FeatureVectorList( 0, 0);
-	bool result_defined = false;
-	while (*si)
-	{
-		const char* term;
-		std::size_t termsize;
-		std::vector<double> vec;
-		skipSpaces( si);
-		term = si;
-	AGAIN:
-		for (; *si && *si != ' ' && *si != '\t'; ++si){}
-		if (!*si)
-		{
-			throw strus::runtime_error(_TXT("unexpected end of file"));
-		}
-		termsize = si - term;
-		++si;
-		if (!isMinus(*si) && !isDigit(*si))
-		{
-			goto AGAIN;
-		}
-		char const* eoln = si;
-		skipToEoln( eoln);
-		skipSpaces( si);
-		while (si < eoln && is_FLOAT(si))
-		{
-			vec.push_back( parse_FLOAT( si));
-			skipSpaces( si);
-		}
-		if (si < eoln)
-		{
-			throw strus::runtime_error(_TXT("expected vector of double precision floating point numbers after term definition"));
-		}
-		if (!result_defined)
-		{
-			result = FeatureVectorList( 0, vec.size());
-			result_defined = true;
-		}
-		result.add( term, termsize, vec);
-	}
-}
-
-DLL_PUBLIC bool strus::parseFeatureVectors(
-		FeatureVectorList& result,
-		const FeatureVectorDefFormat& sourceFormat,
-		const std::string& sourceString,
+DLL_PUBLIC bool strus::loadVectorSpaceModelVectors( 
+		VectorSpaceModelBuilderInterface* vsmbuilder,
+		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd)
 {
-	const char* formatname = 0;
-	bool binaryFormat = false;
-	char const* si = sourceString.c_str();
+	char const* filetype = 0;
 	try
 	{
-		switch (sourceFormat)
+		if (isTextFile( vectorfile))
 		{
-			case FeatureVectorDefTextssv:
-				formatname = "text SSV";
-				parseFeatureVectors_DefText( result, si);
-				break;
-			case FeatureVectorDefWord2vecbin:
-				formatname = "word2vec binary format";
-				binaryFormat = true;
-				parseFeatureVectors_DefWord2VecBin( result, si, sourceString.size());
-				break;
-		}
-		return true;
-	}
-	catch (const std::bad_alloc&)
-	{
-		ErrorPosition pos( sourceString.c_str(), si, binaryFormat);
-		errorhnd->report( _TXT("out of memory parsing feature vector definitions (%s) %s"), formatname, pos.c_str());
-		return false;
-	}
-	catch (const std::runtime_error& e)
-	{
-		ErrorPosition pos( sourceString.c_str(), si, binaryFormat);
-		errorhnd->report( _TXT("error parsing feature vector definitions %s: %s"), pos.c_str(), e.what());
-		return false;
-	}
-}
-
-DLL_PUBLIC bool strus::parseFeatureVectorDefFormat(
-		FeatureVectorDefFormat& result,
-		const std::string& source,
-		ErrorBufferInterface* errorhnd)
-{
-	char const* si = source.c_str();
-	try
-	{
-		skipSpaces(si);
-		if (!isAlpha(*si)) throw strus::runtime_error(_TXT("identifier expected for feature vector definition format"));
-		std::string name = utils::tolower( parse_IDENTIFIER( si));
-		if (name == "text_ssv")
-		{
-			result = FeatureVectorDefTextssv;
-		}
-		else if (name == "bin_word2vec")
-		{
-			result = FeatureVectorDefWord2vecbin;
+			filetype = "word2vec text file";
+			loadVectorSpaceModelVectors_word2vecText( vsmbuilder, vectorfile, errorhnd);
 		}
 		else
 		{
-			throw strus::runtime_error(_TXT("unknown feature vector definition format identifier '%s'"), name.c_str());
+			filetype = "word2vec binary file";
+			loadVectorSpaceModelVectors_word2vecBin( vsmbuilder, vectorfile, errorhnd);
 		}
-		skipSpaces(si);
-		if (*si) throw strus::runtime_error(_TXT("unexpected token at end of feature vector definition format identifier"));
 		return true;
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory parsing feature vector definition format"));
+		errorhnd->report( _TXT("out of memory loading feature vectors from file (file format: %s)"), vectorfile.c_str(), filetype);
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("error parsing feature vector definition format: %s"), e.what());
+		errorhnd->report( _TXT("error loading feature vectors from file %s (file format: %s): %s"), vectorfile.c_str(), filetype, e.what());
 		return false;
 	}
 }

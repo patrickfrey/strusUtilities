@@ -36,7 +36,7 @@ public:
 	/// \param[in,out] buf where to write to
 	/// \param[in] bufsize allocation size of 'buf' (capacity) 
 	/// \return pointer to the line read
-	const char* readline( char* buf, std::size_t bufsize);
+	const char* readLine( char* buf, std::size_t bufsize);
 
 	/// \brief Read some data and keep it in a buffer for the next read
 	/// \param[in,out] buf where to write to
