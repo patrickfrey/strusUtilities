@@ -2165,6 +2165,25 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 }
 
 
+static bool isLittleEndian()
+{
+	int32_t n = 1;
+	return (*(char *)&n == 1);
+}
+
+static float littleToBigEndian( const float& val)
+{
+	union
+	{
+		unsigned char ar[4];
+		float val;
+	} st;
+	st.val = val;
+	std::swap( st.ar[0], st.ar[3]);
+	std::swap( st.ar[1], st.ar[2]);
+	return st.val;
+}
+
 static void loadVectorSpaceModelVectors_word2vecBin( 
 		VectorSpaceModelBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
@@ -2174,6 +2193,7 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 	unsigned int linecnt = 0;
 	try
 	{
+		bool littleEndian = isLittleEndian();
 		InputStream infile( vectorfile);
 		unsigned int collsize;
 		unsigned int vecsize;
@@ -2233,7 +2253,7 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 				float val;
 				std::memcpy( (void*)&val, si, sizeof( float));
 				si += sizeof( float);
-				val = ByteOrder<float>::ntoh( val);
+				if (!littleEndian) val = littleToBigEndian( val);
 				vec.push_back( val);
 			}
 			double len = 0;
