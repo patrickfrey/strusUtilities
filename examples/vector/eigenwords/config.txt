@@ -1,5 +1,4 @@
 path=examples/vector/eigenwords/vsmodel;
-prepath=examples/vector/eigenwords/premodel;
 logfile=-;
 threads=3;
 dim=200;

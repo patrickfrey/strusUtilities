@@ -37,13 +37,14 @@ void CommitQueue::handleWaitingTransactions()
 			{
 				::printf( _TXT("\rinserted %u documents (total %u)          "),
 						nofDocsInserted, totalNofDocuments);
-				::fflush(stdout);
+				::fflush( stdout);
 			}
 		}
 		catch (const std::bad_alloc&)
 		{
 			m_errorhnd->report( _TXT("out of memory handling transaction in queue"));
-			fprintf( stderr, _TXT("out of memory handling transaction in queue\n"));
+			::fprintf( stderr, _TXT("out of memory handling transaction in queue\n"));
+			::fflush( stderr);
 		}
 		catch (const std::exception& err)
 		{
@@ -51,12 +52,14 @@ void CommitQueue::handleWaitingTransactions()
 			if (errmsg)
 			{
 				m_errorhnd->report( _TXT("error handling transaction in queue: %s, %s"), err.what(), errmsg);
-				fprintf( stderr, _TXT("error handling transaction in queue: %s, %s\n"), err.what(), errmsg);
+				::fprintf( stderr, _TXT("error handling transaction in queue: %s, %s\n"), err.what(), errmsg);
+				::fflush( stderr);
 			}
 			else
 			{
 				m_errorhnd->report( _TXT("error handling transaction in queue: %s"), err.what());
-				fprintf( stderr, _TXT("error handling transaction in queue: %s\n"), err.what());
+				::fprintf( stderr, _TXT("error handling transaction in queue: %s\n"), err.what());
+				::fflush( stderr);
 			}
 			utils::ScopedLock lock( m_mutex_errors);
 			m_errors.push_back( m_errorhnd->fetchError());

@@ -385,7 +385,6 @@ int main( int argc_, const char* argv_[])
 		strus::utils::ScopedPtr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get(), verbose, errorBuffer.get()));
 
-		std::cout.flush();
 		strus::FileCrawler fileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
 		std::auto_ptr<boost::thread> fileCrawlerThread(
 			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));

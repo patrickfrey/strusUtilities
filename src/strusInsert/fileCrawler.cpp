@@ -67,6 +67,7 @@ void FileCrawler::findFilesToProcess()
 		if (ec)
 		{
 			std::cerr << string_format( _TXT( "could not read directory to process '%s' (errno %u)"), path.c_str(), ec) << std::endl;
+			std::cerr.flush();
 		}
 		else
 		{
@@ -89,6 +90,7 @@ void FileCrawler::findFilesToProcess()
 		if (ec)
 		{
 			std::cerr << string_format( _TXT( "could not read subdirectories to process '%s' (errno %u)"), path.c_str(), ec) << std::endl;
+			std::cerr.flush();
 			continue;
 		}
 		std::vector<std::string>::const_iterator

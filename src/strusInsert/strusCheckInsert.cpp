@@ -362,7 +362,6 @@ int main( int argc_, const char* argv_[])
 		}
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
 
-		std::cout.flush();
 		strus::FileCrawler fileCrawler( datapath, notificationInterval, nofThreads*5+5, fileext);
 		std::auto_ptr<boost::thread> fileCrawlerThread(
 			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));

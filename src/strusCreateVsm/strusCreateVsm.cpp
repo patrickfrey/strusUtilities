@@ -41,6 +41,19 @@
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
+void vectorSpaceModelLoaderProgressCallback( unsigned int cnt, bool final)
+{
+	if (final)
+	{
+		printf( "\rinserted %u features\n", cnt);
+	}
+	else if (cnt % 1000 == 0)
+	{
+		::fprintf( stderr, "\rinserted %u features", cnt);
+		::fflush( stderr);
+	}
+}
+strus::VectorSpaceModelLoaderProgressCallback progressCallback = 0;
 
 int main( int argc, const char* argv[])
 {
@@ -58,10 +71,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 10,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "f,file:");
+				"s,config:", "S,configfile:", "f,file:",
+				"V,verbose");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -122,9 +136,9 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() < 1)
+			if (opt.nofargs() > 0)
 			{
-				std::cerr << _TXT("too few arguments") << std::endl;
+				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -184,6 +198,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Known formats are word2vec binary or text format.") << std::endl;
 			std::cout << "    " << _TXT("All files are added, if there are many input files specified.") << std::endl;
 			std::cout << "    " << _TXT("No input files lead to an empty model.") << std::endl;
+			std::cout << "-V|--verbose" << std::endl;
+			std::cout << "    " << _TXT("Print progress of feature insertion") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -236,10 +252,12 @@ int main( int argc, const char* argv[])
 		if (!vsi->createRepository( config, dbi)) throw strus::runtime_error(_TXT("failed to create vector space model repository"));
 		std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config, dbi));
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector space model builder"));
+
+		if (opt( "verbose")) progressCallback = vectorSpaceModelLoaderProgressCallback;
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_errorBuffer))
+			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_errorBuffer, progressCallback))
 			{
 				throw strus::runtime_error(_TXT("failed to load input"));
 			}

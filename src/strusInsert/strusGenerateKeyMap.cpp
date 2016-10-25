@@ -262,7 +262,6 @@ int main( int argc_, const char* argv_[])
 		}
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
 
-		std::cout.flush();
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler fileCrawler( datapath, unitSize, nofThreads*5+5, fileext);
 
