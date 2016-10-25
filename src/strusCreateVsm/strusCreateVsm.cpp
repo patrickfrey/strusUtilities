@@ -45,11 +45,11 @@ void vectorSpaceModelLoaderProgressCallback( unsigned int cnt, bool final)
 {
 	if (final)
 	{
-		printf( "\rinserted %u features\n", cnt);
+		printf( "\rinserted %u features       \n", cnt);
 	}
 	else if (cnt % 1000 == 0)
 	{
-		::fprintf( stderr, "\rinserted %u features", cnt);
+		::fprintf( stderr, "\rinserted %u features      ", cnt);
 		::fflush( stderr);
 	}
 }

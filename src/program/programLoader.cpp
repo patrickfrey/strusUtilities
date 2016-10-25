@@ -2270,7 +2270,7 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 				{/*OK*/}
 				else
 				{
-					throw strus::runtime_error( _TXT("illegal values in vectors"));
+					throw strus::runtime_error( _TXT("illegal value in vector: %f"), *vi);
 				}
 				*vi /= len;
 			}
@@ -2350,15 +2350,23 @@ static void loadVectorSpaceModelVectors_word2vecText(
 			{
 				throw strus::runtime_error(_TXT("expected vector of double precision floating point numbers after term definition"));
 			}
-			std::vector<double>::const_iterator vi = vec.begin(), ve = vec.end();
+			double len = 0;
+			std::vector<double>::iterator vi = vec.begin(), ve = vec.end();
+			for (; vi != ve; ++vi)
+			{
+				double vv = *vi;
+				len += vv * vv;
+			}
+			len = sqrt( len);
 			for (; vi != ve; vi++)
 			{
 				if (*vi >= -1.0 && *vi <= 1.0)
 				{/*OK*/}
 				else
 				{
-					throw strus::runtime_error(_TXT("found a non normalized vector value"));
+					throw strus::runtime_error( _TXT("illegal value in vector: %f"), *vi);
 				}
+				*vi /= len;
 			}
 			vsmbuilder->addFeature( std::string(term, termsize), vec);
 			if (errorhnd->hasError())
