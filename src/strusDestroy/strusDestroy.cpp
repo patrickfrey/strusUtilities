@@ -241,7 +241,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("unhandled error in destroy storage"));
 		}
-		std::cerr << _TXT("storage successfully destroyed.") << std::endl;
+		std::cerr << _TXT("database successfully destroyed.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

@@ -157,15 +157,8 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusVectorSpace [options] <command>" << std::endl;
-			std::cout << _TXT("description: Utility program for processing data with a vector space model.") << std::endl;
-			std::cout << _TXT("<command>     :command to perform, one of the following:") << std::endl;
-			std::cout << _TXT("                 'names'    = store or print vector term names in original file") << std::endl;
-			std::cout << _TXT("                 'store'    = store model without learning step") << std::endl;
-			std::cout << _TXT("                 'learn'    = unsupervised learning of features") << std::endl;
-			std::cout << _TXT("                 'feature'  = map all input features according to model") << std::endl;
-			std::cout << _TXT("                 'class'    = same as feature but with inverted output") << std::endl;
-			std::cout << _TXT("<inputfile>   :input file to process (optional)") << std::endl;
+			std::cout << _TXT("usage:") << " strusCreateVsm [options]" << std::endl;
+			std::cout << _TXT("description: Utility program for creating a vector space model.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -187,13 +180,10 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "-f|--file <INFILE>" << std::endl;
-			std::cout << "    " << _TXT("Declare the input file with the vectors to process a <INFILE>") << std::endl;
-			std::cout << "    " << _TXT("The format of this file is declared with -F.") << std::endl;
-			std::cout << "-F|--format <INFMT>" << std::endl;
-			std::cout << "    " << _TXT("Declare the input file format of the processed data to be <INFMT>") << std::endl;
-			std::cout << "    " << _TXT("Possible formats:") << std::endl;
-			std::cout << "    " << _TXT("  'text_ssv'     (default) for text with and space delimited columns") << std::endl;
-			std::cout << "    " << _TXT("  'bin_word2vec' for the google word2vec binary format little endian") << std::endl;
+			std::cout << "    " << _TXT("Declare an input file with the vectors to process a <INFILE>") << std::endl;
+			std::cout << "    " << _TXT("Known formats are word2vec binary or text format.") << std::endl;
+			std::cout << "    " << _TXT("All files are added, if there are many input files specified.") << std::endl;
+			std::cout << "    " << _TXT("No input files lead to an empty model.") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -209,7 +199,6 @@ int main( int argc, const char* argv[])
 			}
 		}
 		// Get arguments:
-		Command command = getCommand( opt[0]);
 		std::vector<std::string> inputfiles;
 		if (opt("file"))
 		{
@@ -228,7 +217,6 @@ int main( int argc, const char* argv[])
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
 		}
-
 		// Create objects:
 		std::string modelname;
 		if (!strus::extractStringFromConfigString( modelname, config, "model", errorBuffer.get()))
@@ -244,12 +232,14 @@ int main( int argc, const char* argv[])
 		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
-		std::auto_ptr<VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config, dbi));
+
+		if (!vsi->createRepository( config, dbi)) throw strus::runtime_error(_TXT("failed to create vector space model repository"));
+		std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config, dbi));
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector space model builder"));
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::loadVectorSpaceModelVectors( builder.get(), inputfile, g_errorBuffer))
+			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_errorBuffer))
 			{
 				throw strus::runtime_error(_TXT("failed to load input"));
 			}
