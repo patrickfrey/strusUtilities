@@ -265,7 +265,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_errorBuffer, progressCallback))
+			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_commitsize, g_errorBuffer, progressCallback))
 			{
 				throw strus::runtime_error(_TXT("failed to load input"));
 			}
