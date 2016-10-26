@@ -2164,24 +2164,17 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 	}
 }
 
-
-static bool isLittleEndian()
+static void print_value_seq( unsigned int idx, const void* sq, unsigned int sqlen)
 {
-	int32_t n = 1;
-	return (*(char *)&n == 1);
-}
-
-static float littleToBigEndian( const float& val)
-{
-	union
+	static const char* HEX = "0123456789ABCDEF";
+	unsigned char const* si = (const unsigned char*) sq;
+	unsigned const char* se = (const unsigned char*) sq + sqlen;
+	for (; si != se; ++si)
 	{
-		unsigned char ar[4];
-		float val;
-	} st;
-	st.val = val;
-	std::swap( st.ar[0], st.ar[3]);
-	std::swap( st.ar[1], st.ar[2]);
-	return st.val;
+		unsigned char lo = *si % 16, hi = *si / 16;
+		printf( " %c%c", HEX[hi], HEX[lo]);
+	}
+	printf(" |");
 }
 
 static void loadVectorSpaceModelVectors_word2vecBin( 
@@ -2194,7 +2187,6 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 	unsigned int linecnt = 0;
 	try
 	{
-		bool littleEndian = isLittleEndian();
 		InputStream infile( vectorfile);
 		unsigned int collsize;
 		unsigned int vecsize;
@@ -2246,17 +2238,19 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 			{
 				throw strus::runtime_error( _TXT("wrong file format"));
 			}
+			/*[-]*/for (std::size_t ti=0; ti<termsize; ++ti) printf("%c",term[ti]);
 			std::vector<double> vec;
 			vec.reserve( vecsize);
 			unsigned int ii = 0;
 			for (; ii < vecsize; ii++)
 			{
 				float val;
+				/*[-]*/print_value_seq( ii, si, sizeof( float));
 				std::memcpy( (void*)&val, si, sizeof( float));
 				si += sizeof( float);
-				if (!littleEndian) val = littleToBigEndian( val);
-				vec.push_back( val);
+				vec.push_back( ByteOrder<float>::ntoh( val));
 			}
+			/*[-]*/printf("\n");
 			double len = 0;
 			std::vector<double>::iterator vi = vec.begin(), ve = vec.end();
 			for (; vi != ve; ++vi)
