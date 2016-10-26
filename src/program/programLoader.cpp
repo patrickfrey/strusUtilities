@@ -57,6 +57,8 @@
 using namespace strus;
 using namespace strus::parser;
 
+#undef STRUS_LOWLEVEL_DEBUG
+
 class ErrorPosition
 {
 public:
@@ -2164,6 +2166,7 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 	}
 }
 
+#ifdef STRUS_LOWLEVEL_DEBUG
 static void print_value_seq( unsigned int idx, const void* sq, unsigned int sqlen)
 {
 	static const char* HEX = "0123456789ABCDEF";
@@ -2176,6 +2179,7 @@ static void print_value_seq( unsigned int idx, const void* sq, unsigned int sqle
 	}
 	printf(" |");
 }
+#endif
 
 static void loadVectorSpaceModelVectors_word2vecBin( 
 		VectorSpaceModelBuilderInterface* vsmbuilder,
@@ -2238,19 +2242,25 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 			{
 				throw strus::runtime_error( _TXT("wrong file format"));
 			}
-			/*[-]*/for (std::size_t ti=0; ti<termsize; ++ti) printf("%c",term[ti]);
+#ifdef STRUS_LOWLEVEL_DEBUG
+			for (std::size_t ti=0; ti<termsize; ++ti) printf("%c",term[ti]);
+#endif
 			std::vector<double> vec;
 			vec.reserve( vecsize);
 			unsigned int ii = 0;
 			for (; ii < vecsize; ii++)
 			{
 				float val;
-				/*[-]*/print_value_seq( ii, si, sizeof( float));
+#ifdef STRUS_LOWLEVEL_DEBUG
+				print_value_seq( ii, si, sizeof( float));
+#endif
 				std::memcpy( (void*)&val, si, sizeof( float));
 				si += sizeof( float);
 				vec.push_back( ByteOrder<float>::ntoh( val));
 			}
-			/*[-]*/printf("\n");
+#ifdef STRUS_LOWLEVEL_DEBUG
+			printf("\n");
+#endif
 			double len = 0;
 			std::vector<double>::iterator vi = vec.begin(), ve = vec.end();
 			for (; vi != ve; ++vi)
