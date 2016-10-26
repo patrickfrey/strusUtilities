@@ -217,6 +217,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Parse arguments:

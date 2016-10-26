@@ -198,6 +198,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			std::cout << "-f|--file <INFILE>" << std::endl;
 			std::cout << "    " << _TXT("Declare an input file with the vectors to process a <INFILE>") << std::endl;
 			std::cout << "    " << _TXT("Known formats are word2vec binary or text format.") << std::endl;

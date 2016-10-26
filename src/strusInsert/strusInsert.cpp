@@ -29,6 +29,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
+#include "strus/base/string_format.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -252,6 +253,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("verbose output") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:

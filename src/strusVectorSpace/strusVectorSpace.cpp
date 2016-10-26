@@ -371,6 +371,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			std::cout << "-f|--file <INFILE>" << std::endl;
 			std::cout << "    " << _TXT("Declare the input file with the vectors to process a <INFILE>") << std::endl;
 			std::cout << "    " << _TXT("The format of this file is declared with -F.") << std::endl;

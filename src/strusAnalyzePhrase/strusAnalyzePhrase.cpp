@@ -22,6 +22,7 @@
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -165,6 +166,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Do not print position and define default quotes as empty") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:

@@ -30,6 +30,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/string_format.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -203,6 +204,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:

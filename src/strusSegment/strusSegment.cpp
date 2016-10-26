@@ -27,6 +27,7 @@
 #include "strus/analyzer/term.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/programOptions.hpp"
 #include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
@@ -194,6 +195,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Escape end of line with space") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Parse arguments:

@@ -31,6 +31,7 @@
 #include "strus/constants.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
@@ -199,6 +200,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Dump only the blocks of a certain type with prefix <KEY>") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
