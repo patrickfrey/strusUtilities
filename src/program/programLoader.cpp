@@ -2282,6 +2282,14 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 					throw strus::runtime_error(_TXT("add vector commit failed: %s"), errorhnd->fetchError());
 				}
 			}
+			if (*si == '\n')
+			{
+				++si;
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("end of line marker expected after binary vector instead of '%x'"), (unsigned int)(unsigned char)*si);
+			}
 			infile.read( linebuf, si - linebuf);
 			size = infile.readAhead( linebuf, linebufsize);
 			if (progressCallback) progressCallback( linecnt, false);
@@ -2342,15 +2350,13 @@ static void loadVectorSpaceModelVectors_word2vecText(
 			{
 				goto AGAIN;
 			}
-			char const* eoln = si;
-			skipToEoln( eoln);
 			while (isSpace( *si)) ++si;
-			while (si < eoln && is_FLOAT(si))
+			while (si < se && is_FLOAT(si))
 			{
 				vec.push_back( parse_FLOAT( si));
 				while (isSpace( *si)) ++si;
 			}
-			if (si < eoln)
+			if (si < se)
 			{
 				throw strus::runtime_error(_TXT("expected vector of double precision floating point numbers after term definition"));
 			}
