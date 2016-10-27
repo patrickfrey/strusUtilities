@@ -70,6 +70,7 @@ src/strusHelp/strusHelp
 src/strusDeleteDocument/strusDeleteDocument
 src/strusVectorSpace/strusVectorSpace
 src/strusCreateVsm/strusCreateVsm
+src/strusBuildVsm/strusBuildVsm
 src/strusPatternMatcher/strusPatternMatcher
 .travis.yml
 
