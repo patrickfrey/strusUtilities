@@ -71,6 +71,7 @@ src/strusDeleteDocument/strusDeleteDocument
 src/strusVectorSpace/strusVectorSpace
 src/strusCreateVsm/strusCreateVsm
 src/strusBuildVsm/strusBuildVsm
+src/strusInspectVsm/strusInspectVsm
 src/strusPatternMatcher/strusPatternMatcher
 .travis.yml
 

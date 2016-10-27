@@ -32,6 +32,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
 #include <iostream>
+#include <iomanip>
 #include <cstring>
 #include <stdexcept>
 
@@ -40,6 +41,68 @@
 #define DEFAULT_VECTOR_MODEL  "vector_std"
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
+
+static strus::Index getFeatureIndex( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char* inpectarg)
+{
+	strus::Index idx;
+	if (inpectarg[0] == '#' && inpectarg[1] >= '0' && inpectarg[1] <= '9')
+	{
+		idx = strus::utils::toint( inpectarg+1);
+		if (idx < 0) strus::runtime_error(_TXT("feature number must not be negative"));
+	}
+	else
+	{
+		idx = vsmodel->featureIndex( inpectarg);
+		if (idx < 0)
+		{
+			if (g_errorBuffer->hasError()) throw strus::runtime_error(_TXT("feature with name '%s' could not be retrieved"), inpectarg);
+			throw strus::runtime_error(_TXT("feature with name '%s' not found"), inpectarg);
+		}
+	}
+	return idx;
+}
+
+static void printVector( const std::vector<double>& vec)
+{
+	std::ostringstream out;
+	std::vector<double>::const_iterator vi = vec.begin(), ve = vec.end();
+	for (unsigned int vidx=0; vi != ve; ++vi,++vidx)
+	{
+		if (vidx) out << " ";
+		out << *vi;
+	}
+	std::cout << out.str() << std::endl;
+}
+
+void inspectVector( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inpectarg, std::size_t inspectargsize)
+{
+	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments for command '%s' (at least %u arguments expected)"), "vector", 1U);
+	if (inspectargsize > 2) throw strus::runtime_error(_TXT("too many arguments for command '%s' (at maximum %u arguments expected)"), "vector", 2U);
+	if (inspectargsize == 2)
+	{
+		strus::Index idx = getFeatureIndex( vsmodel, inpectarg[0]);
+		std::ostringstream out;
+		out << std::setprecision(6) << std::fixed;
+		std::vector<double> vec = vsmodel->featureVector( idx);
+		printVector( vec);
+	}
+	else
+	{
+		strus::Index fi = 0, fe = vsmodel->nofFeatures();
+		for (; fi != fe; ++fi)
+		{
+			std::vector<double> vec = vsmodel->featureVector( fi);
+			printVector( vec);
+		}
+	}
+}
+
+void inspectConfig( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+{
+	if (inspectargsize) throw strus::runtime_error(_TXT("too many arguments for command '%s' (%u arguments expected)"), "config", 0U);
+	std::cout << vsmodel->config() << std::endl;
+}
+
 
 int main( int argc, const char* argv[])
 {
@@ -57,10 +120,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 8,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "f,file:" );
+				"s,config:", "S,configfile:" );
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -121,9 +184,9 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 0)
+			if (opt.nofargs() < 1)
 			{
-				std::cerr << _TXT("too many arguments") << std::endl;
+				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
@@ -156,8 +219,13 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusCreateVsm [options]" << std::endl;
-			std::cout << _TXT("description: Creates a vector space model repository with all vectors inserted.") << std::endl;
+			std::cout << _TXT("usage:") << " strusInspectVsm [options] <what...>" << std::endl;
+			std::cout << "<what>    : " << _TXT("what to inspect:") << std::endl;
+			std::cout << "            \"vector\" <feature name/feature id>" << std::endl;
+			std::cout << "               = " << _TXT("Get the definition vector of the feature.") << std::endl;
+			std::cout << "            \"config\"" << std::endl;
+			std::cout << "               = " << _TXT("Get the configuration the VSM repository was created with.") << std::endl;
+			std::cout << _TXT("description: Inspects some data defined in a vector space model build.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -179,11 +247,6 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
-			std::cout << "-f|--file <INFILE>" << std::endl;
-			std::cout << "    " << _TXT("Declare an input file with the vectors to process a <INFILE>") << std::endl;
-			std::cout << "    " << _TXT("Known formats are word2vec binary or text format.") << std::endl;
-			std::cout << "    " << _TXT("All files are added, if there are many input files specified.") << std::endl;
-			std::cout << "    " << _TXT("No input files lead to an empty model.") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -197,12 +260,6 @@ int main( int argc, const char* argv[])
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
-		}
-		// Get arguments:
-		std::vector<std::string> inputfiles;
-		if (opt("file"))
-		{
-			inputfiles = opt.list( "file");
 		}
 		// Create root object:
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
@@ -233,21 +290,25 @@ int main( int argc, const char* argv[])
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
-		if (!vsi->createRepository( config, dbi)) throw strus::runtime_error(_TXT("failed to create vector space model repository"));
-		std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config, dbi));
-		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector space model builder"));
+		std::auto_ptr<strus::VectorSpaceModelInstanceInterface> vsmodel( vsi->createInstance( config, dbi));
+		if (!vsmodel.get()) throw strus::runtime_error(_TXT("failed to create vector space model instance"));
 
-		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
-		for (; fi != fe; ++fi)
+		std::string what = opt[0];
+		const char** inpectarg = opt.argv() + 1;
+		std::size_t inpectargsize = opt.nofargs() - 1;
+
+		// Do inspect what is requested:
+		if (strus::utils::caseInsensitiveEquals( what, "vector"))
 		{
-			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_errorBuffer))
-			{
-				throw strus::runtime_error(_TXT("failed to load input"));
-			}
-			if (!builder->commit())
-			{
-				throw strus::runtime_error(_TXT("load input commit failed"));
-			}
+			inspectVector( vsmodel.get(), inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "config"))
+		{
+			inspectConfig( vsmodel.get(), inpectarg, inpectargsize);
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT( "unknown item to inspect '%s'"), what.c_str());
 		}
 		if (errorBuffer->hasError())
 		{

@@ -664,6 +664,13 @@ static void inspectDocno( strus::StorageClientInterface& storage, const char** k
 	std::cout << storage.documentNumber( key[0]) << std::endl;
 }
 
+static void inspectConfig( strus::StorageClientInterface& storage, const char**, int size)
+{
+	if (size > 0) throw strus::runtime_error( _TXT("too many arguments"));
+
+	std::cout << storage.config() << std::endl;
+}
+
 
 int main( int argc, const char* argv[])
 {
@@ -802,6 +809,8 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Get the list of terms in the forward index for a type") << std::endl;
 			std::cout << "            \"docno\" <docid>" << std::endl;
 			std::cout << "               = " << _TXT("Get the internal document number for a document id") << std::endl;
+			std::cout << "            \"config\"" << std::endl;
+			std::cout << "               = " << _TXT("Get the configuration the storage was created with") << std::endl;
 			std::cout << _TXT("description: Inspect some data in the storage.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
@@ -835,10 +844,6 @@ int main( int argc, const char* argv[])
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
 			storagecfg = opt["storage"];
 		}
-		std::string what = opt[0];
-		const char** inpectarg = opt.argv() + 1;
-		std::size_t inpectargsize = opt.nofargs() - 1;
-
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -880,6 +885,9 @@ int main( int argc, const char* argv[])
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
 		}
+		std::string what = opt[0];
+		const char** inpectarg = opt.argv() + 1;
+		std::size_t inpectargsize = opt.nofargs() - 1;
 
 		// Do inspect what is requested:
 		std::auto_ptr<strus::StorageClientInterface>
@@ -957,6 +965,10 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "token"))
 		{
 			inspectToken( *storage, inpectarg, inpectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "config"))
+		{
+			inspectConfig( *storage, inpectarg, inpectargsize);
 		}
 		else
 		{

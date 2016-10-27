@@ -156,8 +156,8 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusCreateVsm [options]" << std::endl;
-			std::cout << _TXT("description: Utility program for creating a vector space model.") << std::endl;
+			std::cout << _TXT("usage:") << " strusBuildVsm [options]" << std::endl;
+			std::cout << _TXT("description: Builds a vector space model from the vectors defined with strusCreateVsm.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
