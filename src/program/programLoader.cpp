@@ -2185,8 +2185,7 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 		VectorSpaceModelBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
 		unsigned int commitsize,
-		ErrorBufferInterface* errorhnd,
-		VectorSpaceModelLoaderProgressCallback progressCallback)
+		ErrorBufferInterface* errorhnd)
 {
 	unsigned int linecnt = 0;
 	try
@@ -2302,9 +2301,7 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 			}
 			infile.read( linebuf, si - linebuf);
 			size = infile.readAhead( linebuf, linebufsize);
-			if (progressCallback) progressCallback( linecnt, false);
 		}
-		if (progressCallback) progressCallback( linecnt, true);
 		if (collsize != linecnt)
 		{
 			throw strus::runtime_error(_TXT("collection size does not match"));
@@ -2320,8 +2317,7 @@ static void loadVectorSpaceModelVectors_word2vecText(
 		VectorSpaceModelBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
 		unsigned int commitsize,
-		ErrorBufferInterface* errorhnd,
-		VectorSpaceModelLoaderProgressCallback progressCallback)
+		ErrorBufferInterface* errorhnd)
 {
 	unsigned int linecnt = 0;
 	try
@@ -2400,9 +2396,7 @@ static void loadVectorSpaceModelVectors_word2vecText(
 					throw strus::runtime_error(_TXT("add vector commit failed: %s"), errorhnd->fetchError());
 				}
 			}
-			if (progressCallback) progressCallback( linecnt, false);
 		}
-		if (progressCallback) progressCallback( linecnt, true);
 	}
 	catch (const std::runtime_error& err)
 	{
@@ -2414,8 +2408,7 @@ DLL_PUBLIC bool strus::loadVectorSpaceModelVectors(
 		VectorSpaceModelBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
 		unsigned int commitsize,
-		ErrorBufferInterface* errorhnd,
-		VectorSpaceModelLoaderProgressCallback progressCallback)
+		ErrorBufferInterface* errorhnd)
 {
 	char const* filetype = 0;
 	try
@@ -2423,12 +2416,12 @@ DLL_PUBLIC bool strus::loadVectorSpaceModelVectors(
 		if (isTextFile( vectorfile))
 		{
 			filetype = "word2vec text file";
-			loadVectorSpaceModelVectors_word2vecText( vsmbuilder, vectorfile, commitsize, errorhnd, progressCallback);
+			loadVectorSpaceModelVectors_word2vecText( vsmbuilder, vectorfile, commitsize, errorhnd);
 		}
 		else
 		{
 			filetype = "word2vec binary file";
-			loadVectorSpaceModelVectors_word2vecBin( vsmbuilder, vectorfile, commitsize, errorhnd, progressCallback);
+			loadVectorSpaceModelVectors_word2vecBin( vsmbuilder, vectorfile, commitsize, errorhnd);
 		}
 		return true;
 	}

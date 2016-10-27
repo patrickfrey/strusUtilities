@@ -213,10 +213,6 @@ bool parseDocumentClass(
 		const std::string& source,
 		ErrorBufferInterface* errorhnd);
 
-
-/// \brief Callback function for reposting progress of the loader
-typedef void (*VectorSpaceModelLoaderProgressCallback)( unsigned int cnt, bool final);
-
 /// \brief Adds the feature definitions in the file with path vectorfile to a vector space model builder
 /// \param[in] vsmbuilder VSM builder object where to add the loaded vectors to
 /// \param[in] vectorfile Path of the file to parse, either a google binary vector file format or text
@@ -227,8 +223,7 @@ bool loadVectorSpaceModelVectors(
 		VectorSpaceModelBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
 		unsigned int commitsize,
-		ErrorBufferInterface* errorhnd,
-		VectorSpaceModelLoaderProgressCallback progressCallback);
+		ErrorBufferInterface* errorhnd);
 
 
 /// \brief Result of a loadPatternMatcherProgram call, all structures created and instrumented by the loader

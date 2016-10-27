@@ -42,20 +42,6 @@
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 static unsigned int g_commitsize = 1000;
 
-void vectorSpaceModelLoaderProgressCallback( unsigned int cnt, bool final)
-{
-	if (final)
-	{
-		printf( "\rinserted %u features       \n", cnt);
-	}
-	else if (cnt % g_commitsize == 0)
-	{
-		::fprintf( stderr, "\rinserted %u features      ", cnt);
-		::fflush( stderr);
-	}
-}
-strus::VectorSpaceModelLoaderProgressCallback progressCallback = 0;
-
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -72,11 +58,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 11,
+				argc, argv, 10,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "f,file:",
-				"V,verbose", "c,commit:");
+				"c,commit:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -207,8 +193,6 @@ int main( int argc, const char* argv[])
 			std::cout << "-c|--commit <N>" << std::endl;
 			std::cout << "    " << _TXT("Forces a commit after every <N> feature insert operations") << std::endl;
 			std::cout << "    " << _TXT("(default is 1000)") << std::endl;
-			std::cout << "-V|--verbose" << std::endl;
-			std::cout << "    " << _TXT("Print progress of feature insertion") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -262,11 +246,10 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config, dbi));
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector space model builder"));
 
-		if (opt( "verbose")) progressCallback = vectorSpaceModelLoaderProgressCallback;
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_commitsize, g_errorBuffer, progressCallback))
+			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_commitsize, g_errorBuffer))
 			{
 				throw strus::runtime_error(_TXT("failed to load input"));
 			}
