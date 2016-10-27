@@ -2184,7 +2184,6 @@ static void print_value_seq( unsigned int idx, const void* sq, unsigned int sqle
 static void loadVectorSpaceModelVectors_word2vecBin( 
 		VectorSpaceModelBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
-		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd)
 {
 	unsigned int linecnt = 0;
@@ -2284,13 +2283,6 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 			{
 				throw strus::runtime_error(_TXT("add vector failed: %s"), errorhnd->fetchError());
 			}
-			if (commitsize && linecnt % commitsize == 0)
-			{
-				if (!vsmbuilder->commit())
-				{
-					throw strus::runtime_error(_TXT("add vector commit failed: %s"), errorhnd->fetchError());
-				}
-			}
 			if (*si == '\n')
 			{
 				++si;
@@ -2316,7 +2308,6 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 static void loadVectorSpaceModelVectors_word2vecText( 
 		VectorSpaceModelBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
-		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd)
 {
 	unsigned int linecnt = 0;
@@ -2389,13 +2380,6 @@ static void loadVectorSpaceModelVectors_word2vecText(
 			{
 				throw strus::runtime_error(_TXT("add vector failed: %s"), errorhnd->fetchError());
 			}
-			if (commitsize && linecnt % commitsize == 0)
-			{
-				if (!vsmbuilder->commit())
-				{
-					throw strus::runtime_error(_TXT("add vector commit failed: %s"), errorhnd->fetchError());
-				}
-			}
 		}
 	}
 	catch (const std::runtime_error& err)
@@ -2407,7 +2391,6 @@ static void loadVectorSpaceModelVectors_word2vecText(
 DLL_PUBLIC bool strus::loadVectorSpaceModelVectors( 
 		VectorSpaceModelBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
-		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd)
 {
 	char const* filetype = 0;
@@ -2416,12 +2399,12 @@ DLL_PUBLIC bool strus::loadVectorSpaceModelVectors(
 		if (isTextFile( vectorfile))
 		{
 			filetype = "word2vec text file";
-			loadVectorSpaceModelVectors_word2vecText( vsmbuilder, vectorfile, commitsize, errorhnd);
+			loadVectorSpaceModelVectors_word2vecText( vsmbuilder, vectorfile, errorhnd);
 		}
 		else
 		{
 			filetype = "word2vec binary file";
-			loadVectorSpaceModelVectors_word2vecBin( vsmbuilder, vectorfile, commitsize, errorhnd);
+			loadVectorSpaceModelVectors_word2vecBin( vsmbuilder, vectorfile, errorhnd);
 		}
 		return true;
 	}
