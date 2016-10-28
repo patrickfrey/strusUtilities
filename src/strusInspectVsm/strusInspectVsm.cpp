@@ -92,8 +92,39 @@ static void printUniqResultConcepts( const std::vector<strus::Index>& res_)
 	std::cout << std::endl;
 }
 
+enum FeatureResultPrintMode
+{
+	PrintIndex,
+	PrintName,
+	PrintIndexName
+};
+
+static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::vector<strus::Index>& res_, FeatureResultPrintMode mode)
+{
+	std::vector<strus::Index> res( res_);
+	std::sort( res.begin(), res.end());
+	std::vector<strus::Index>::const_iterator ri = res.begin(), re = res.end();
+	std::size_t ridx = 0;
+	while (ri != re)
+	{
+		strus::Index uniq = *ri;
+		for (; ri != re && uniq == *ri; ++ri){}
+	
+		if (ridx++) std::cout << " ";
+		if (mode == PrintIndex || mode == PrintIndexName)
+		{
+			std::cout << *ri;
+			if (mode == PrintIndexName) std::cout << ":";
+		}
+		if (mode == PrintName || mode == PrintIndexName)
+		{
+			std::cout << vsmodel->featureName( *ri);
+		}
+	}
+}
+
 // Inspect strus::VectorSpaceModelInstanceInterface::mapVectorToConcepts()
-void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+static void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<double> vec;
 	std::size_t ai = 0, ae = inspectargsize;
@@ -110,7 +141,7 @@ void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInterface*
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::featureConcepts()
-void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+static void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<strus::Index> far;
 	std::size_t ai = 0, ae = inspectargsize;
@@ -133,7 +164,7 @@ void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterface* vsm
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::featureVector()
-void inspectFeatureVector( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+static void inspectFeatureVector( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (at least %u arguments expected)"), 1U);
 	if (inspectargsize > 2) throw strus::runtime_error(_TXT("too many arguments (maximum %u arguments expected)"), 2U);
@@ -161,38 +192,49 @@ void inspectFeatureVector( const strus::VectorSpaceModelInstanceInterface* vsmod
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::featureName()
-void inspectFeatureName( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+static void inspectFeatureName( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
-	std::vector<strus::Index> far;
-	std::size_t ai = 0, ae = inspectargsize;
-	for (; ai != ae; ++ai)
+	if (inspectargsize > 0)
 	{
-		if (inspectarg[ai][0] == '#' && inspectarg[ai][1] >= '0' && inspectarg[ai][1] <= '9')
+		std::vector<strus::Index> far;
+		std::size_t ai = 0, ae = inspectargsize;
+		for (; ai != ae; ++ai)
 		{
-			std::cerr << "you do not have to specify '#', feature number expected as input" << std::endl;
-			far.push_back( getFeatureIndex( vsmodel, inspectarg[ai]));
+			if (inspectarg[ai][0] == '#' && inspectarg[ai][1] >= '0' && inspectarg[ai][1] <= '9')
+			{
+				std::cerr << "you do not have to specify '#', feature number expected as input" << std::endl;
+				far.push_back( getFeatureIndex( vsmodel, inspectarg[ai]));
+			}
+			else
+			{
+				far.push_back( strus::utils::toint( inspectarg[ai]));
+			}
 		}
-		else
+		std::vector<strus::Index>::const_iterator fi = far.begin(), fe = far.end();
+		for (std::size_t fidx=0; fi != fe; ++fi,++fidx)
 		{
-			far.push_back( strus::utils::toint( inspectarg[ai]));
+			std::string name = vsmodel->featureName( *fi);
+			if (name.empty() && g_errorBuffer->hasError())
+			{
+				throw strus::runtime_error(_TXT("failed to get feature name"));
+			}
+			if (fidx) std::cout << " ";
+			std::cout << name;
+		}
+		std::cout << std::endl;
+	}
+	else
+	{
+		strus::Index fi = 0, fe = vsmodel->nofFeatures();
+		for (; fi != fe; ++fi)
+		{
+			std::cout << fi << " " << vsmodel->featureName( fi) << std::endl;
 		}
 	}
-	std::vector<strus::Index>::const_iterator fi = far.begin(), fe = far.end();
-	for (std::size_t fidx=0; fi != fe; ++fi,++fidx)
-	{
-		std::string name = vsmodel->featureName( *fi);
-		if (name.empty() && g_errorBuffer->hasError())
-		{
-			throw strus::runtime_error(_TXT("failed to get feature name"));
-		}
-		if (fidx) std::cout << " ";
-		std::cout << name;
-	}
-	std::cout << std::endl;
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::featureIndex()
-void inspectFeatureIndex( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+static void inspectFeatureIndex( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<strus::Index> far;
 	std::size_t ai = 0, ae = inspectargsize;
@@ -213,70 +255,59 @@ void inspectFeatureIndex( const strus::VectorSpaceModelInstanceInterface* vsmode
 	std::cout << std::endl;
 }
 
-enum FeatureResultPrintMode
-{
-	PrintIndex,
-	PrintName,
-	PrintIndexName
-};
-
 // Inspect strus::VectorSpaceModelInstanceInterface::conceptFeatures()
-void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
 {
-	std::vector<strus::Index> car;
-	std::size_t ai = 0, ae = inspectargsize;
-	for (; ai != ae; ++ai)
+	if (inspectargsize > 0)
 	{
-		car.push_back( strus::utils::toint( inspectarg[ai]));
-	}
-	std::vector<strus::Index> res;
-	std::vector<strus::Index>::const_iterator ci = car.begin(), ce = car.end();
-	for (std::size_t cidx=0; ci != ce; ++ci,++cidx)
-	{
-		std::vector<strus::Index> far = vsmodel->conceptFeatures( *ci);
-		if (far.empty() && g_errorBuffer->hasError())
+		std::vector<strus::Index> car;
+		std::size_t ai = 0, ae = inspectargsize;
+		for (; ai != ae; ++ai)
 		{
-			throw strus::runtime_error(_TXT("failed to get concept features"));
+			car.push_back( strus::utils::toint( inspectarg[ai]));
 		}
-		res.insert( res.end(), far.begin(), far.end());
-	}
-	std::sort( res.begin(), res.end());
-	std::vector<strus::Index>::const_iterator ri = res.begin(), re = res.end();
-	std::size_t ridx = 0;
-	while (ri != re)
-	{
-		strus::Index uniq = *ri;
-		for (; ri != re && uniq == *ri; ++ri){}
-
-		if (ridx++) std::cout << " ";
-		if (mode == PrintIndex || mode == PrintIndexName)
+		std::vector<strus::Index> res;
+		std::vector<strus::Index>::const_iterator ci = car.begin(), ce = car.end();
+		for (std::size_t cidx=0; ci != ce; ++ci,++cidx)
 		{
-			std::cout << *ri;
-			if (mode == PrintIndexName) std::cout << ":";
+			std::vector<strus::Index> far = vsmodel->conceptFeatures( *ci);
+			if (far.empty() && g_errorBuffer->hasError())
+			{
+				throw strus::runtime_error(_TXT("failed to get concept features"));
+			}
+			res.insert( res.end(), far.begin(), far.end());
 		}
-		if (mode == PrintName || mode == PrintIndexName)
+		printUniqResultFeatures( vsmodel, res, mode);
+	}
+	else
+	{
+		strus::Index ci = 1, ce = vsmodel->nofConcepts()+1;
+		for (; ci != ce; ++ci)
 		{
-			std::cout << vsmodel->featureName( *ri);
+			std::vector<strus::Index> far = vsmodel->conceptFeatures( ci);
+			if (far.empty()) continue;
+			std::cout << ci;
+			printUniqResultFeatures( vsmodel, far, mode);
 		}
 	}
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::nofConcepts()
-void inspectNofConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+static void inspectNofConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"), 2U);
 	std::cout << vsmodel->nofConcepts() << std::endl;
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::nofFeatures()
-void inspectNofFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+static void inspectNofFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"), 2U);
 	std::cout << vsmodel->nofFeatures() << std::endl;
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::config()
-void inspectConfig( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+static void inspectConfig( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
 	std::cout << vsmodel->config() << std::endl;
@@ -400,22 +431,22 @@ int main( int argc, const char* argv[])
 		{
 			std::cout << _TXT("usage:") << " strusInspectVsm [options] <what...>" << std::endl;
 			std::cout << "<what>    : " << _TXT("what to inspect:") << std::endl;
-			std::cout << "            \"mapvec\"" << std::endl;
+			std::cout << "            \"mapvec\" { <vector> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a vector of double precision floats as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return a list of indices of concepts near it.") << std::endl;
-			std::cout << "            \"featcon\"" << std::endl;
+			std::cout << "            \"featcon\" { <featno> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of feature numbers (with '#' prefix) or names as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return a sorted list of indices of concepts assigned to it.") << std::endl;
-			std::cout << "            \"featvec\"" << std::endl;
+			std::cout << "            \"featvec\" <featno>" << std::endl;
 			std::cout << "               = " << _TXT("Take a single feature number (with '#' prefix) or name as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return the vector assigned to it.") << std::endl;
-			std::cout << "            \"featname\"" << std::endl;
+			std::cout << "            \"featname\" { <featno> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of feature numbers as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return the list of names assigned to it.") << std::endl;
-			std::cout << "            \"featidx\"" << std::endl;
+			std::cout << "            \"featidx\" { <featname> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of feature names as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return the list of indices assigned to it.") << std::endl;
-			std::cout << "            \"confeat\" or \"confeatidx\" \"confeatname\"" << std::endl;
+			std::cout << "            \"confeat\" or \"confeatidx\" \"confeatname\" { <conceptno> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of concept numbers as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return a sorted list of features assigned to it.") << std::endl;
 			std::cout << "               = " << _TXT("\"confeatidx\" prints only the result feature indices.") << std::endl;
