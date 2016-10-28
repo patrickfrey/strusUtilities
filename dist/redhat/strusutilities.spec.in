@@ -298,7 +298,9 @@ make test
 %{_bindir}/strusQuery
 %{_bindir}/strusAnalyzePhrase
 %{_bindir}/strusHelp
-%{_bindir}/strusVectorSpace
+%{_bindir}/strusCreateVsm
+%{_bindir}/strusBuildVsm
+%{_bindir}/strusInspectVsm
 %{_bindir}/strusPatternMatcher
 
 %files devel
