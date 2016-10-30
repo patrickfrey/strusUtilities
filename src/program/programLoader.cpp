@@ -2167,7 +2167,7 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 }
 
 #ifdef STRUS_LOWLEVEL_DEBUG
-static void print_value_seq( unsigned int idx, const void* sq, unsigned int sqlen)
+static void print_value_seq( const void* sq, unsigned int sqlen)
 {
 	static const char* HEX = "0123456789ABCDEF";
 	unsigned char const* si = (const unsigned char*) sq;
@@ -2250,7 +2250,7 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 			{
 				float val;
 #ifdef STRUS_LOWLEVEL_DEBUG
-				print_value_seq( ii, si, sizeof( float));
+				print_value_seq( si, sizeof( float));
 #endif
 				std::memcpy( (void*)&val, si, sizeof( float));
 				si += sizeof( float);

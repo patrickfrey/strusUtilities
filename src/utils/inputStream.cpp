@@ -40,6 +40,11 @@ InputStream::~InputStream()
 
 std::size_t InputStream::read( char* buf, std::size_t bufsize)
 {
+	if (m_bufferidx > bufsize * 2)
+	{
+		m_buffer = std::string( m_buffer.c_str() + m_bufferidx, m_buffer.size() - m_bufferidx);
+		m_bufferidx = 0;
+	}
 	if (!bufsize) return 0;
 	unsigned int idx = 0;
 	if (m_bufferidx < m_buffer.size())
@@ -51,9 +56,12 @@ std::size_t InputStream::read( char* buf, std::size_t bufsize)
 			m_bufferidx += bufsize;
 			return bufsize;
 		}
-		std::memcpy( buf, m_buffer.c_str()+m_bufferidx, restsize);
-		idx = restsize;
-
+		else
+		{
+			std::memcpy( buf, m_buffer.c_str()+m_bufferidx, restsize);
+			m_bufferidx += restsize;
+			idx = restsize;
+		}
 		if (m_bufferidx == m_buffer.size())
 		{
 			m_buffer.clear();
@@ -74,6 +82,11 @@ std::size_t InputStream::read( char* buf, std::size_t bufsize)
 
 std::size_t InputStream::readAhead( char* buf, std::size_t bufsize)
 {
+	if (m_bufferidx > bufsize * 2)
+	{
+		m_buffer = std::string( m_buffer.c_str() + m_bufferidx, m_buffer.size() - m_bufferidx);
+		m_bufferidx = 0;
+	}
 	if (!bufsize) return 0;
 	std::size_t restsize = m_buffer.size() - m_bufferidx;
 	if (restsize >= bufsize)
@@ -110,77 +123,38 @@ std::size_t InputStream::readAhead( char* buf, std::size_t bufsize)
 const char* InputStream::readLine( char* buf, std::size_t bufsize)
 {
 	if (!bufsize) return 0;
-	if (m_bufferidx != m_buffer.size())
+	char const* eolptr = ::strchr( m_buffer.c_str() + m_bufferidx, '\n');
+	if (!eolptr)
 	{
-		char const* eolptr = ::strchr( m_buffer.c_str() + m_bufferidx, '\n');
-		if (eolptr)
+		(void)readAhead( buf, bufsize);
+		eolptr = ::strchr( m_buffer.c_str() + m_bufferidx, '\n');
+	}
+	const char* ptr = m_buffer.c_str() + m_bufferidx;
+	if (eolptr)
+	{
+		std::size_t len = eolptr - ptr;
+		if (len >= bufsize)
 		{
-			const char* ptr = m_buffer.c_str() + m_bufferidx;
-			std::size_t len = eolptr - ptr;
-			if (len >= bufsize)
-			{
-				std::memcpy( buf, ptr, bufsize-1);
-				buf[ bufsize-1] = '\0';
-				m_bufferidx += bufsize-1;
-			}
-			else
-			{
-				std::memcpy( buf, ptr, len);
-				buf[ len] = '\0';
-				m_bufferidx += len + 1/*\n*/;
-			}
+			std::memcpy( buf, ptr, bufsize-1);
+			buf[ bufsize-1] = '\0';
+			m_bufferidx += bufsize-1;
 		}
 		else
 		{
-			std::size_t restbufsize = m_buffer.size() - m_bufferidx;
-			if (restbufsize >= bufsize)
-			{
-				std::memcpy( buf, m_buffer.c_str() + m_bufferidx, bufsize-1);
-				buf[ bufsize-1] = '\0';
-				m_bufferidx += bufsize-1;
-			}
-			else
-			{
-				m_buffer = std::string( m_buffer.c_str() + m_bufferidx, restbufsize);
-				m_bufferidx = 0;
-				char* restline = ::fgets( buf, bufsize-restbufsize-1, m_fh);
-				if (restline)
-				{
-					m_buffer.append( restline);
-					std::memcpy( buf, m_buffer.c_str(), m_buffer.size());
-					buf[ m_buffer.size()] = '\0';
-					m_buffer.clear();
-				}
-				else if (feof( m_fh))
-				{
-					std::memcpy( buf, m_buffer.c_str() + m_bufferidx, restbufsize);
-					buf[ restbufsize] = '\0';
-					m_bufferidx = 0;
-					m_buffer.clear();
-					if (!restbufsize) return 0;
-				}
-				else
-				{
-					unsigned int ec = ::ferror( m_fh);
-					throw strus::runtime_error(_TXT("failed to read from file '%s' (errno %d)"), m_docpath.c_str(), ec);
-				}
-			}
+			std::memcpy( buf, ptr, len);
+			buf[ len] = '\0';
+			m_bufferidx += len + 1/*\n*/;
 		}
-		return buf;
 	}
 	else
 	{
-		char* rt = ::fgets( buf, bufsize, m_fh);
-		if (!rt)
-		{
-			if (!feof( m_fh))
-			{
-				unsigned int ec = ::ferror( m_fh);
-				throw strus::runtime_error(_TXT("failed to read from file '%s' (errno %d)"), m_docpath.c_str(), ec);
-			}
-		}
-		return rt;
+		std::size_t restsize = m_buffer.size() - m_bufferidx;
+		std::size_t nn = (restsize >= bufsize)?(bufsize-1):restsize;
+		std::memcpy( buf, ptr, nn);
+		buf[ nn] = '\0';
+		m_bufferidx += nn;
 	}
+	return buf;
 }
 
 
