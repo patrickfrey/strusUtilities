@@ -306,6 +306,49 @@ static void inspectNofFeatures( const strus::VectorSpaceModelInstanceInterface* 
 	std::cout << vsmodel->nofFeatures() << std::endl;
 }
 
+// Inspect strus::VectorSpaceModelInstanceInterface::attributes(), attributeNames()
+static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+{
+	if (inspectargsize < 2) throw strus::runtime_error(_TXT("too few arguments (at least %u arguments expected)"), 2U);
+
+	std::string attributeName( inspectarg[0]);
+	std::vector<strus::Index> indexar;
+	std::size_t ai = 1, ae = inspectargsize;
+	for (; ai != ae; ++ai)
+	{
+		if (inspectarg[ai][0] < '0' || inspectarg[ai][0] > '9')
+		{
+			throw strus::runtime_error(_TXT("number expected as argument"));
+		}
+		indexar.push_back( strus::utils::toint( inspectarg[ai]));
+	}
+	std::vector<strus::Index>::const_iterator ii = indexar.begin(), ie = indexar.end();
+	for (; ii != ie; ++ii)
+	{
+		std::vector<std::string> attributes = vsmodel->attributes( attributeName, *ii);
+		if (attributes.empty() && g_errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to get attributes"));
+		}
+		std::vector<std::string>::const_iterator ai = attributes.begin(), ae = attributes.end();
+		for (; ai != ae; ++ai)
+		{
+			std::cout << *ai << std::endl;
+		}
+	}
+}
+
+static void inspectAttributeNames( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+{
+	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
+	std::vector<std::string> attributeNames = vsmodel->attributeNames();
+	std::vector<std::string>::const_iterator ai = attributeNames.begin(), ae = attributeNames.end();
+	for (; ai != ae; ++ai)
+	{
+		std::cout << *ai << std::endl;
+	}
+}
+
 // Inspect strus::VectorSpaceModelInstanceInterface::config()
 static void inspectConfig( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
@@ -456,6 +499,11 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Get the number of concepts defined.") << std::endl;
 			std::cout << "            \"noffeat\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of features defined.") << std::endl;
+			std::cout << "            \"attribute\" <name> <index>" << std::endl;
+			std::cout << "               = " << _TXT("Get the internal attribute with name <name> of the model.") << std::endl;
+			std::cout << "                 " << _TXT("The index of the item to get the attribute from is <index>.") << std::endl;
+			std::cout << "            \"attributes\""<< std::endl;
+			std::cout << "               = " << _TXT("Get the implemented <name> arguments for the command 'attribute'.") << std::endl;
 			std::cout << "            \"config\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the configuration the VSM repository was created with.") << std::endl;
 			std::cout << _TXT("description: Inspects some data defined in a vector space model build.") << std::endl;
@@ -570,6 +618,14 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "noffeat"))
 		{
 			inspectNofFeatures( vsmodel.get(), inspectarg, inspectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "attribute"))
+		{
+			inspectAttribute( vsmodel.get(), inspectarg, inspectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "attributes"))
+		{
+			inspectAttributeNames( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "config"))
 		{
