@@ -640,7 +640,6 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("unhandled error in command"));
 		}
-		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
