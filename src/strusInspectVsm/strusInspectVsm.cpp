@@ -121,6 +121,7 @@ static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterf
 			std::cout << vsmodel->featureName( *ri);
 		}
 	}
+	std::cout << std::endl;
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::mapVectorToConcepts()
