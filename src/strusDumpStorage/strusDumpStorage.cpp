@@ -273,11 +273,11 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			std::auto_ptr<strus::StorageClientInterface>
-				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-			if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
+			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);
+			const strus::StorageInterface* sti = storageBuilder->getStorage();
+			if (!sti) throw strus::runtime_error(_TXT("failed to get storage client"));
 
-			std::auto_ptr<strus::StorageDumpInterface> dump( storage->createDump( keyprefix));
+			std::auto_ptr<strus::StorageDumpInterface> dump( sti->createDump( storagecfg, dbi, keyprefix));
 			if (!dump.get()) throw strus::runtime_error(_TXT("could not create storage dump interface"));
 
 			const char* buf;

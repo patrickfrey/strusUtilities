@@ -12,6 +12,7 @@
 #include "strus/vectorSpaceModelInterface.hpp"
 #include "strus/vectorSpaceModelBuilderInterface.hpp"
 #include "strus/vectorSpaceModelInstanceInterface.hpp"
+#include "strus/vectorSpaceModelDumpInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -357,6 +358,20 @@ static void inspectConfig( const strus::VectorSpaceModelInstanceInterface* vsmod
 	std::cout << vsmodel->config() << std::endl;
 }
 
+// Inspect dump of VSM storage with VectorSpaceModelDumpInterface
+static void inspectDump( const strus::VectorSpaceModelInterface* vsi, const strus::DatabaseInterface* dbi, const std::string& config, const char** inspectarg, std::size_t inspectargsize)
+{
+	if (inspectargsize > 1) throw strus::runtime_error(_TXT("too many arguments (one argument expected)"));
+	std::auto_ptr<strus::VectorSpaceModelDumpInterface> dumpitr( vsi->createDump( config, dbi, inspectargsize?inspectarg[0]:""));
+	const char* chunk;
+	std::size_t chunksize;
+	while (dumpitr->nextChunk( chunk, chunksize))
+	{
+		std::cout << std::string( chunk, chunksize);
+		if (g_errorBuffer->hasError()) throw strus::runtime_error(_TXT("error dumping VSM storage to stdout"));
+	}
+}
+
 
 int main( int argc, const char* argv[])
 {
@@ -631,6 +646,10 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "config"))
 		{
 			inspectConfig( vsmodel.get(), inspectarg, inspectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "dump"))
+		{
+			inspectDump( vsi, dbi, config, inspectarg, inspectargsize);
 		}
 		else
 		{
