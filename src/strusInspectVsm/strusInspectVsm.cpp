@@ -522,6 +522,9 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Get the implemented <name> arguments for the command 'attribute'.") << std::endl;
 			std::cout << "            \"config\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the configuration the VSM repository was created with.") << std::endl;
+			std::cout << "            \"dump\" [ <dbprefix> ]" << std::endl;
+			std::cout << "               = " << _TXT("Dump the contents of the VSM repository.") << std::endl;
+			std::cout << "               = " << _TXT("The optional parameter <dbprefix> selects a specific block type.") << std::endl;
 			std::cout << _TXT("description: Inspects some data defined in a vector space model build.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
