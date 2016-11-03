@@ -311,18 +311,25 @@ static void inspectNofFeatures( const strus::VectorSpaceModelInstanceInterface* 
 // Inspect strus::VectorSpaceModelInstanceInterface::attributes(), attributeNames()
 static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
-	if (inspectargsize < 2) throw strus::runtime_error(_TXT("too few arguments (at least %u arguments expected)"), 2U);
+	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
 
 	std::string attributeName( inspectarg[0]);
 	std::vector<strus::Index> indexar;
-	std::size_t ai = 1, ae = inspectargsize;
-	for (; ai != ae; ++ai)
+	if (inspectargsize == 1)
 	{
-		if (inspectarg[ai][0] < '0' || inspectarg[ai][0] > '9')
+		indexar.push_back( -1);
+	}
+	else
+	{
+		std::size_t ai = 1, ae = inspectargsize;
+		for (; ai != ae; ++ai)
 		{
-			throw strus::runtime_error(_TXT("number expected as argument"));
+			if (inspectarg[ai][0] < '0' || inspectarg[ai][0] > '9')
+			{
+				throw strus::runtime_error(_TXT("number expected as argument"));
+			}
+			indexar.push_back( strus::utils::toint( inspectarg[ai]));
 		}
-		indexar.push_back( strus::utils::toint( inspectarg[ai]));
 	}
 	std::vector<strus::Index>::const_iterator ii = indexar.begin(), ie = indexar.end();
 	for (; ii != ie; ++ii)
@@ -515,7 +522,7 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Get the number of concepts defined.") << std::endl;
 			std::cout << "            \"noffeat\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of features defined.") << std::endl;
-			std::cout << "            \"attribute\" <name> <index>" << std::endl;
+			std::cout << "            \"attribute\" <name> [ <index> ]" << std::endl;
 			std::cout << "               = " << _TXT("Get the internal attribute with name <name> of the model.") << std::endl;
 			std::cout << "                 " << _TXT("The index of the item to get the attribute from is <index>.") << std::endl;
 			std::cout << "            \"attributes\""<< std::endl;
