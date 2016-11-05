@@ -1301,7 +1301,7 @@ static void translateQuery(
 		const QueryStack& stk,
 		ErrorBufferInterface* errorhnd)
 {
-	std::vector<analyzer::TermVector> analyzerResult = analyzer->analyzePhraseBulk( stk.phraseBulk);
+	std::vector<analyzer::TermArray> analyzerResult = analyzer->analyzePhraseBulk( stk.phraseBulk);
 	if (errorhnd->hasError())
 	{
 		throw strus::runtime_error( _TXT("failed to analyze query: %s"), errorhnd->fetchError());
