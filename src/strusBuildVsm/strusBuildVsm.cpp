@@ -57,10 +57,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 8,
+				argc, argv, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:" );
+				"s,config:", "S,configfile:", "B,rebase" );
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -179,6 +179,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
+			std::cout << "-B|--rebase" << std::endl;
+			std::cout << "    " << _TXT("Do a rebase step instead of an unsupervised learning (finalize) step") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -225,9 +227,19 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config, dbi));
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector space model builder"));
 
-		if (!builder->finalize())
+		if (opt("rebase"))
 		{
-			throw strus::runtime_error(_TXT("building vector space model failed"));
+			if (!builder->rebase())
+			{
+				throw strus::runtime_error(_TXT("rebase step failed"));
+			}
+		}
+		else
+		{
+			if (!builder->finalize())
+			{
+				throw strus::runtime_error(_TXT("finalize step failed"));
+			}
 		}
 		if (errorBuffer->hasError())
 		{
