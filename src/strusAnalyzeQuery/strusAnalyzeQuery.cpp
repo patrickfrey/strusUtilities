@@ -689,14 +689,13 @@ int main( int argc, const char* argv[])
 		while (!eof)
 		{
 			std::size_t readsize = input.read( buf, sizeof(buf));
-			if (!readsize)
+			if (readsize < sizeof(buf))
 			{
 				if (input.error())
 				{
 					throw strus::runtime_error( _TXT("failed to read query source file '%s': %s"), querypath.c_str(), ::strerror(input.error())); 
 				}
 				eof = true;
-				continue;
 			}
 			querysource.append( buf, readsize);
 		}

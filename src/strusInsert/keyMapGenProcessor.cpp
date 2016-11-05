@@ -172,7 +172,7 @@ void KeyMapGenProcessor::run()
 					while (!eof)
 					{
 						std::size_t readsize = input.read( buf, sizeof(buf));
-						if (!readsize)
+						if (readsize < sizeof(buf))
 						{
 							if (input.error())
 							{
@@ -180,9 +180,8 @@ void KeyMapGenProcessor::run()
 								break;
 							}
 							eof = true;
-							continue;
 						}
-						analyzerContext->putInput( buf, readsize, readsize != AnalyzerBufSize);
+						analyzerContext->putInput( buf, readsize, eof);
 			
 						// Analyze the document and print the result:
 						strus::analyzer::Document doc;

@@ -406,16 +406,15 @@ int main( int argc, const char* argv[])
 		while (!eof)
 		{
 			std::size_t readsize = input.read( buf, sizeof(buf));
-			if (!readsize)
+			if (readsize < sizeof(buf))
 			{
 				if (input.error())
 				{
 					throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
 				}
 				eof = true;
-				continue;
 			}
-			analyzerContext->putInput( buf, readsize, readsize != AnalyzerBufSize);
+			analyzerContext->putInput( buf, readsize, eof);
 
 			// Analyze the document and print the result:
 			strus::analyzer::Document doc;
