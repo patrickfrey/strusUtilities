@@ -43,7 +43,6 @@
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
-#include "private/inputStream.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <fstream>

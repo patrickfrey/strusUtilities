@@ -33,7 +33,6 @@
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
 #include "private/version.hpp"
-#include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"

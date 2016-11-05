@@ -13,9 +13,9 @@
 #include "strus/constants.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/inputStream.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "private/utils.hpp"
-#include "private/inputStream.hpp"
 #include "private/internationalization.hpp"
 
 using namespace strus;
@@ -133,7 +133,11 @@ void KeyMapGenProcessor::run()
 						// Read the input file to analyze and detect its document type:
 						char hdrbuf[ 1024];
 						std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
-
+						if (input.error())
+						{
+							std::cerr << string_format( _TXT( "failed to read document file '%s': %s"), fitr->c_str(), ::strerror( input.error())) << std::endl; 
+							break;
+						}
 						strus::analyzer::DocumentClass dclass;
 						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 						{
@@ -170,6 +174,11 @@ void KeyMapGenProcessor::run()
 						std::size_t readsize = input.read( buf, sizeof(buf));
 						if (!readsize)
 						{
+							if (input.error())
+							{
+								std::cerr << string_format( _TXT( "failed to read document file '%s': %s"), fitr->c_str(), ::strerror( input.error())) << std::endl; 
+								break;
+							}
 							eof = true;
 							continue;
 						}

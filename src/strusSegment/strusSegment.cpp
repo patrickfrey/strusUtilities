@@ -28,8 +28,8 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/inputStream.hpp"
 #include "private/programOptions.hpp"
-#include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -274,6 +274,10 @@ int main( int argc, const char* argv[])
 		strus::InputStream input( docpath);
 		char hdrbuf[ 1024];
 		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+		if (input.error())
+		{
+			throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+		}
 		strus::analyzer::DocumentClass dclass;
 		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 		{
@@ -293,6 +297,10 @@ int main( int argc, const char* argv[])
 			std::size_t readsize = input.read( buf, sizeof(buf));
 			if (!readsize)
 			{
+				if (input.error())
+				{
+					throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+				}
 				eof = true;
 				continue;
 			}

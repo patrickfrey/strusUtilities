@@ -43,7 +43,7 @@
 #include "strus/base/dll_tags.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/hton.hpp"
-#include "private/inputStream.hpp"
+#include "strus/base/inputStream.hpp"
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
 #include <string>
@@ -1916,6 +1916,7 @@ static unsigned int loadStorageValues(
 		unsigned int commitsize)
 {
 	InputStream stream( file);
+	if (stream.error()) throw strus::runtime_error(_TXT("failed to open storage value file '%s': %s"), file.c_str(), ::strerror(stream.error()));
 	unsigned int rt = 0;
 	std::auto_ptr<StorageTransactionInterface>
 		transaction( storage.createTransaction());
@@ -1983,6 +1984,10 @@ static unsigned int loadStorageValues(
 				transaction.reset( storage.createTransaction());
 				if (!transaction.get()) throw strus::runtime_error( _TXT("failed to recreate storage transaction after commit"));
 			}
+		}
+		if (stream.error())
+		{
+			throw strus::runtime_error(_TXT("failed to read from storage value file '%s': %s"), file.c_str(), ::strerror(stream.error()));
 		}
 		if (commitcnt)
 		{
@@ -2190,6 +2195,10 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 	try
 	{
 		InputStream infile( vectorfile);
+		if (infile.error())
+		{
+			throw strus::runtime_error(_TXT("failed to open word2vec file '%s': %s"), vectorfile.c_str(), ::strerror(infile.error()));
+		}
 		unsigned int collsize;
 		unsigned int vecsize;
 	
@@ -2294,6 +2303,10 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 			infile.read( linebuf, si - linebuf);
 			size = infile.readAhead( linebuf, linebufsize);
 		}
+		if (infile.error())
+		{
+			throw strus::runtime_error(_TXT("failed to read from word2vec file '%s': %s"), vectorfile.c_str(), ::strerror(infile.error()));
+		}
 		if (collsize != linecnt)
 		{
 			throw strus::runtime_error(_TXT("collection size does not match"));
@@ -2314,6 +2327,10 @@ static void loadVectorSpaceModelVectors_word2vecText(
 	try
 	{
 		InputStream infile( vectorfile);
+		if (infile.error())
+		{
+			throw strus::runtime_error(_TXT("failed to open word2vec file '%s': %s"), vectorfile.c_str(), ::strerror(infile.error()));
+		}
 		enum {LineBufSize=1<<20};
 		struct charp_scope
 		{
@@ -2380,6 +2397,10 @@ static void loadVectorSpaceModelVectors_word2vecText(
 			{
 				throw strus::runtime_error(_TXT("add vector failed: %s"), errorhnd->fetchError());
 			}
+		}
+		if (infile.error())
+		{
+			throw strus::runtime_error(_TXT("failed to read from word2vec file '%s': %s"), vectorfile.c_str(), ::strerror(infile.error()));
 		}
 	}
 	catch (const std::runtime_error& err)

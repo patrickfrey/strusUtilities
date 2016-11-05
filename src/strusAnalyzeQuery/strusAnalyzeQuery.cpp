@@ -34,8 +34,8 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/inputStream.hpp"
 #include "private/programOptions.hpp"
-#include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -691,6 +691,10 @@ int main( int argc, const char* argv[])
 			std::size_t readsize = input.read( buf, sizeof(buf));
 			if (!readsize)
 			{
+				if (input.error())
+				{
+					throw strus::runtime_error( _TXT("failed to read query source file '%s': %s"), querypath.c_str(), ::strerror(input.error())); 
+				}
 				eof = true;
 				continue;
 			}
