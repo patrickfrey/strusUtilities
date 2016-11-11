@@ -30,6 +30,7 @@
 #include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageDocumentUpdateInterface.hpp"
@@ -46,6 +47,7 @@
 #include "strus/base/inputStream.hpp"
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
+#include "queryStruct.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -116,6 +118,7 @@ static std::string parseQueryTerm( char const*& src)
 
 static void parseTermConfig(
 		QueryEvalInterface& qeval,
+		QueryDescriptors& qdescr,
 		char const*& src)
 {
 	if (isAlpha(*src))
@@ -204,6 +207,7 @@ static void parseWeightingFormula(
 
 static void parseWeightingConfig(
 		QueryEvalInterface& qeval,
+		QueryDescriptors& qdescr,
 		const QueryProcessorInterface* queryproc,
 		char const*& src)
 {
@@ -260,6 +264,10 @@ static void parseWeightingConfig(
 			std::string parameterValue = parse_STRING( src);
 			if (isFeatureParam)
 			{
+				if (qdescr.weightingFeatureSet.empty())
+				{
+					qdescr.weightingFeatureSet = parameterValue;
+				}
 				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
 			}
 			else
@@ -272,6 +280,10 @@ static void parseWeightingConfig(
 			std::string parameterValue = parse_IDENTIFIER( src);
 			if (isFeatureParam)
 			{
+				if (qdescr.weightingFeatureSet.empty())
+				{
+					qdescr.weightingFeatureSet = parameterValue;
+				}
 				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
 			}
 			else
@@ -391,6 +403,7 @@ static void parseSummarizerConfig(
 
 DLL_PUBLIC bool strus::loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
+		QueryDescriptors& qdescr,
 		const QueryProcessorInterface* queryproc,
 		const std::string& source,
 		ErrorBufferInterface* errorhnd)
@@ -407,12 +420,13 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 			switch ((StatementKeyword)parse_KEYWORD( src, 6, "FORMULA", "EVAL", "SELECT", "RESTRICT", "TERM", "SUMMARIZE"))
 			{
 				case e_TERM:
-					parseTermConfig( qeval, src);
+					parseTermConfig( qeval, qdescr, src);
 					break;
 				case e_SELECTION:
 					while (*src && isAlnum( *src))
 					{
-						qeval.addSelectionFeature( parse_IDENTIFIER(src));
+						qdescr.selectionFeatureSet = parse_IDENTIFIER(src);
+						qeval.addSelectionFeature( qdescr.selectionFeatureSet);
 						if (isComma( *src))
 						{
 							(void)parse_OPERATOR( src);
@@ -438,7 +452,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 					}
 					break;
 				case e_EVAL:
-					parseWeightingConfig( qeval, queryproc, src);
+					parseWeightingConfig( qeval, qdescr, queryproc, src);
 					break;
 				case e_FORMULA:
 					parseWeightingFormula( qeval, queryproc, src);
@@ -455,6 +469,10 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 				}
 				(void)parse_OPERATOR( src);
 			}
+		}
+		if (qdescr.selectionFeatureSet.empty())
+		{
+			throw strus::runtime_error(_TXT("no selection defined in query evaluation configuration"));
 		}
 		return true;
 	}
@@ -661,10 +679,10 @@ static FunctionConfig parseAggregatorFunctionConfig( char const*& src)
 }
 
 
-static DocumentAnalyzerInterface::FeatureOptions
+static analyzer::FeatureOptions
 	parseFeatureOptions( char const*& src)
 {
-	DocumentAnalyzerInterface::FeatureOptions rt;
+	analyzer::FeatureOptions rt;
 	if (isOpenCurlyBracket(*src))
 	{
 		do
@@ -752,41 +770,66 @@ static std::string parseSelectorExpression( char const*& src)
 	}
 }
 
-static void parseFeatureDef(
-	DocumentAnalyzerInterface& analyzer,
-	const TextProcessorInterface* textproc,
-	const std::string& featurename,
-	char const*& src,
-	FeatureClass featureClass)
+struct FeatureDef
 {
 	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
 	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
 	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
 
-	// [1] Parse normalizer:
-	std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
-	std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
-	for (; ni != ne; ++ni)
+	~FeatureDef()
 	{
-		const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
-		if (!nm) throw strus::runtime_error(_TXT( "normalizer function '%s' not found"), ni->name().c_str());
-
-		Reference<NormalizerFunctionInstanceInterface> nmi( nm->createInstance( ni->args(), textproc));
-		if (!nmi.get()) throw strus::runtime_error(_TXT( "failed to create instance of normalizer function '%s'"), ni->name().c_str());
-
-		normalizer_ref.push_back( nmi);
-		normalizer.push_back( nmi.get());
+		std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
+			ri = normalizer_ref.begin(), re = normalizer_ref.end();
+		for (; ri != re; ++ri)
+		{
+			(void)ri->release();
+		}
+		(void)tokenizer.release();
 	}
-	// [2] Parse tokenizer:
-	FunctionConfig tokenizercfg = parseTokenizerConfig( src);
-	const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
-	if (!tk) throw strus::runtime_error(_TXT( "tokenizer function '%s' not found"), tokenizercfg.name().c_str());
 
-	tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
-	if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
+	void parseNormalizer( char const*& src, const TextProcessorInterface* textproc)
+	{
+		std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
+		std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
+		for (; ni != ne; ++ni)
+		{
+			const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
+			if (!nm) throw strus::runtime_error(_TXT( "normalizer function '%s' not found"), ni->name().c_str());
+	
+			Reference<NormalizerFunctionInstanceInterface> nmi( nm->createInstance( ni->args(), textproc));
+			if (!nmi.get()) throw strus::runtime_error(_TXT( "failed to create instance of normalizer function '%s'"), ni->name().c_str());
+	
+			normalizer_ref.push_back( nmi);
+			normalizer.push_back( nmi.get());
+		}
+	}
+
+	void parseTokenizer( char const*& src, const TextProcessorInterface* textproc)
+	{
+		FunctionConfig tokenizercfg = parseTokenizerConfig( src);
+		const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+		if (!tk) throw strus::runtime_error(_TXT( "tokenizer function '%s' not found"), tokenizercfg.name().c_str());
+	
+		tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+		if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
+	}
+};
+
+static void parseDocumentFeatureDef(
+	DocumentAnalyzerInterface& analyzer,
+	const TextProcessorInterface* textproc,
+	const std::string& featureName,
+	char const*& src,
+	FeatureClass featureClass)
+{
+	FeatureDef featuredef;
+	// [1] Parse normalizer:
+	featuredef.parseNormalizer( src, textproc);
+	// [2] Parse tokenizer:
+	featuredef.parseTokenizer( src, textproc);
 
 	// [3] Parse feature options, if defined:
-	DocumentAnalyzerInterface::FeatureOptions featopt( parseFeatureOptions( src));
+	analyzer::FeatureOptions featopt( parseFeatureOptions( src));
 
 	// [4] Parse selection expression:
 	std::string xpathexpr( parseSelectorExpression( src));
@@ -795,15 +838,15 @@ static void parseFeatureDef(
 	{
 		case FeatSearchIndexTerm:
 			analyzer.addSearchIndexFeature(
-				featurename, xpathexpr,
-				tokenizer.get(), normalizer,
+				featureName, xpathexpr,
+				featuredef.tokenizer.get(), featuredef.normalizer,
 				featopt);
 			break;
 
 		case FeatForwardIndexTerm:
 			analyzer.addForwardIndexFeature(
-				featurename, xpathexpr,
-				tokenizer.get(), normalizer,
+				featureName, xpathexpr,
+				featuredef.tokenizer.get(), featuredef.normalizer,
 				featopt);
 			break;
 
@@ -813,8 +856,8 @@ static void parseFeatureDef(
 				throw strus::runtime_error( _TXT("no feature options expected for meta data feature"));
 			}
 			analyzer.defineMetaData(
-				featurename, xpathexpr,
-				tokenizer.get(), normalizer);
+				featureName, xpathexpr,
+				featuredef.tokenizer.get(), featuredef.normalizer);
 			break;
 
 		case FeatAttribute:
@@ -823,21 +866,88 @@ static void parseFeatureDef(
 				throw strus::runtime_error( _TXT("no feature options expected for attribute feature"));
 			}
 			analyzer.defineAttribute(
-				featurename, xpathexpr,
-				tokenizer.get(), normalizer);
+				featureName, xpathexpr,
+				featuredef.tokenizer.get(), featuredef.normalizer);
 			break;
 		case FeatSubDocument:
 			throw std::logic_error("illegal call of parse feature definition for sub document");
 		case FeatAggregator:
 			throw std::logic_error("illegal call of parse feature definition for aggregator");
 	}
-	std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
-		ri = normalizer_ref.begin(), re = normalizer_ref.end();
-	for (; ri != re; ++ri)
+}
+
+static void parseQueryFeatureDef(
+	QueryAnalyzerInterface& analyzer,
+	QueryDescriptors& qdescr,
+	const TextProcessorInterface* textproc,
+	const std::string& featureName,
+	char const*& src,
+	FeatureClass featureClass)
+{
+	FeatureDef featuredef;
+	// [1] Parse normalizer:
+	featuredef.parseNormalizer( src, textproc);
+	// [2] Parse tokenizer:
+	featuredef.parseTokenizer( src, textproc);
+
+	// [3] Parse field type (corresponds to xpath selection in document):
+	std::string fieldType;
+	if (!isAlpha(*src))
 	{
-		(void)ri->release();
+		if (featureClass == FeatMetaData)
+		{
+			fieldType = featureName;
+		}
+		else
+		{
+			throw strus::runtime_error(_TXT("expected field type name"));
+		}
 	}
-	(void)tokenizer.release();
+	fieldType = parse_IDENTIFIER( src);
+
+	switch (featureClass)
+	{
+		case FeatSearchIndexTerm:
+			analyzer.addSearchIndexElement(
+				featureName, fieldType,
+				featuredef.tokenizer.get(), featuredef.normalizer);
+			break;
+
+		case FeatMetaData:
+			analyzer.addMetaDataElement(
+				featureName, fieldType,
+				featuredef.tokenizer.get(), featuredef.normalizer);
+			break;
+
+		case FeatForwardIndexTerm:
+			throw std::logic_error("illegal call of parse feature definition for forward index feature in query");
+		case FeatAttribute:
+			throw std::logic_error("illegal call of parse feature definition for attribute in query");
+		case FeatSubDocument:
+			throw std::logic_error("illegal call of parse feature definition for sub document in query");
+		case FeatAggregator:
+			throw std::logic_error("illegal call of parse feature definition for aggregator in query");
+	}
+}
+
+static FeatureClass parseFeatureClassDef( char const*& src)
+{
+	FeatureClass rt = FeatSearchIndexTerm;
+	if (isOpenSquareBracket( *src))
+	{
+		(void)parse_OPERATOR(src);
+		if (!isAlnum(*src))
+		{
+			throw strus::runtime_error( _TXT("feature class identifier expected after open square bracket '['"));
+		}
+		rt = featureClassFromName( parse_IDENTIFIER( src));
+		if (!isCloseSquareBracket( *src))
+		{
+			throw strus::runtime_error( _TXT("close square bracket ']' expected to close feature class section definition"));
+		}
+		(void)parse_OPERATOR(src);
+	}
+	return rt;
 }
 
 
@@ -852,22 +962,11 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 	try
 	{
 		FeatureClass featclass = FeatSearchIndexTerm;
-		
 		while (*src)
 		{
 			if (isOpenSquareBracket( *src))
 			{
-				(void)parse_OPERATOR(src);
-				if (!isAlnum(*src))
-				{
-					throw strus::runtime_error( _TXT("feature class identifier expected after open square bracket '['"));
-				}
-				featclass = featureClassFromName( parse_IDENTIFIER( src));
-				if (!isCloseSquareBracket( *src))
-				{
-					throw strus::runtime_error( _TXT("close square bracket ']' expected to close feature class section definition"));
-				}
-				(void)parse_OPERATOR(src);
+				featclass = parseFeatureClassDef( src);
 			}
 			if (!isAlnum(*src))
 			{
@@ -900,7 +999,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			}
 			else
 			{
-				parseFeatureDef( analyzer, textproc, identifier, src, featclass);
+				parseDocumentFeatureDef( analyzer, textproc, identifier, src, featclass);
 			}
 			if (!isSemiColon(*src))
 			{
@@ -920,6 +1019,61 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 	{
 		ErrorPosition pos( source.c_str(), src);
 		errorhnd->report(_TXT("error in document analyzer program %s: %s"), pos.c_str(), e.what());
+		return false;
+	}
+}
+
+DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
+		QueryAnalyzerInterface& analyzer,
+		QueryDescriptors& qdescr,
+		const TextProcessorInterface* textproc,
+		const std::string& source,
+		ErrorBufferInterface* errorhnd)
+{
+	char const* src = source.c_str();
+	skipSpaces(src);
+	try
+	{
+		FeatureClass featclass = FeatSearchIndexTerm;
+		while (*src)
+		{
+			if (isOpenSquareBracket( *src))
+			{
+				featclass = parseFeatureClassDef( src);
+			}
+			if (!isAlnum(*src))
+			{
+				throw strus::runtime_error( _TXT("feature type name (identifier) expected at start of a feature declaration"));
+			}
+			std::string identifier = parse_IDENTIFIER( src);
+			if (!isAssign( *src))
+			{
+				throw strus::runtime_error( _TXT("assignment operator '=' expected after set identifier in a feature declaration"));
+			}
+			(void)parse_OPERATOR(src);
+			if (qdescr.defaultFieldType.empty())
+			{
+				qdescr.defaultFieldType = identifier;
+			}
+			parseQueryFeatureDef( analyzer, qdescr, textproc, identifier, src, featclass);
+			if (!isSemiColon(*src))
+			{
+				throw strus::runtime_error( _TXT("semicolon ';' expected at end of feature declaration"));
+			}
+			(void)parse_OPERATOR(src);
+		}
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("out of memory parsing query analyzer program %s"), pos.c_str());
+		return false;
+	}
+	catch (const std::runtime_error& e)
+	{
+		ErrorPosition pos( source.c_str(), src);
+		errorhnd->report(_TXT("error in query analyzer program %s: %s"), pos.c_str(), e.what());
 		return false;
 	}
 }
@@ -1049,167 +1203,9 @@ DLL_PUBLIC bool strus::loadAnalyzerMap(
 }
 
 
-DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
-		QueryAnalyzerInterface& analyzer,
-		const TextProcessorInterface* textproc,
-		const std::string& source,
-		ErrorBufferInterface* errorhnd)
-{
-	char const* src = source.c_str();
-	skipSpaces(src);
-	try
-	{
-		while (*src)
-		{
-			if (!isAlpha(*src))
-			{
-				throw strus::runtime_error( _TXT("identifier (feature type name) expected after assign '=' in a query phrase type declaration"));
-			}
-			std::string phraseType = parse_IDENTIFIER( src);
-			std::string featureType;
-			if (isAssign( *src))
-			{
-				featureType = phraseType;
-			}
-			else if (isAlnum( *src))
-			{
-				featureType = parse_IDENTIFIER( src);
-			}
-			if (!isAssign( *src))
-			{
-				throw strus::runtime_error( _TXT("assignment operator '=' expected after feature type identifier in a query phrase type declaration"));
-			}
-			(void)parse_OPERATOR(src);
-
-			std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
-			std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
-			std::vector<NormalizerFunctionInstanceInterface*> normalizer;
-
-			std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( src);
-			std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
-			for (; ni != ne; ++ni)
-			{
-				const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
-				if (!nm) throw strus::runtime_error(_TXT( "unknown normalizer function '%s'"), ni->name().c_str());
-
-				Reference<NormalizerFunctionInstanceInterface> nmi( nm->createInstance( ni->args(), textproc));
-				if (!nmi.get()) throw strus::runtime_error(_TXT( "failed to create instance of normalizer function '%s'"), ni->name().c_str());
-
-				normalizer_ref.push_back( nmi);
-				normalizer.push_back( nmi.get());
-			}
-			FunctionConfig tokenizercfg = parseTokenizerConfig( src);
-			const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
-			if (!tk) throw strus::runtime_error(_TXT( "tokenizer function '%s' not found"), tokenizercfg.name().c_str());
-
-			tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
-			if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
-
-			analyzer.definePhraseType(
-				phraseType, featureType, tokenizer.get(), normalizer);
-
-			std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
-				ri = normalizer_ref.begin(), re = normalizer_ref.end();
-			for (; ri != re; ++ri)
-			{
-				(void)ri->release();
-			}
-			(void)tokenizer.release();
-
-			if (!isSemiColon(*src))
-			{
-				throw strus::runtime_error( _TXT("semicolon ';' expected at end of query phrase type declaration"));
-			}
-			(void)parse_OPERATOR(src);
-		}
-		return true;
-	}
-	catch (const std::bad_alloc&)
-	{
-		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("out of memory loading query analyzer program %s"), pos.c_str());
-		return false;
-	}
-	catch (const std::runtime_error& e)
-	{
-		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("error in query analyzer program %s: %s"), pos.c_str(), e.what());
-		return false;
-	}
-}
 
 
-DLL_PUBLIC bool strus::loadQueryAnalyzerPhraseType(
-		QueryAnalyzerInterface& analyzer,
-		const TextProcessorInterface* textproc,
-		const std::string& phraseType,
-		const std::string& featureType,
-		const std::string& normalizersrc,
-		const std::string& tokenizersrc,
-		ErrorBufferInterface* errorhnd)
-{
-	try
-	{
-		std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
-		std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
-		std::vector<NormalizerFunctionInstanceInterface*> normalizer;
-	
-		char const* nsrc = normalizersrc.c_str();
-		std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( nsrc);
-		if ((std::size_t)(nsrc - normalizersrc.c_str()) < normalizersrc.size())
-		{
-			throw strus::runtime_error( _TXT("unexpected token after end of normalizer definition: '%s'"), nsrc);
-		}
-		std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
-		for (; ni != ne; ++ni)
-		{
-			const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
-			if (!nm) throw strus::runtime_error(_TXT( "unknown normalizer function '%s'"), ni->name().c_str());
-	
-			Reference<NormalizerFunctionInstanceInterface> nmi( nm->createInstance( ni->args(), textproc));
-			if (!nmi.get()) throw strus::runtime_error(_TXT( "failed to create instance of normalizer function '%s'"), ni->name().c_str());
-	
-			normalizer_ref.push_back( nmi);
-			normalizer.push_back( nmi.get());
-		}
-		char const* tsrc = tokenizersrc.c_str();
-		FunctionConfig tokenizercfg = parseTokenizerConfig( tsrc);
-		if ((std::size_t)(tsrc - tokenizersrc.c_str()) < tokenizersrc.size())
-		{
-			throw strus::runtime_error( _TXT("unexpected token after end of tokenizer definition: '%s'"), nsrc);
-		}
-		const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
-		if (!tk) throw strus::runtime_error(_TXT( "tokenizer function '%s' not found"), tokenizercfg.name().c_str());
-	
-		tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
-		if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
-	
-		analyzer.definePhraseType(
-			phraseType, featureType, tokenizer.get(), normalizer);
-	
-		std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
-			ri = normalizer_ref.begin(), re = normalizer_ref.end();
-		for (; ri != re; ++ri)
-		{
-			(void)ri->release();
-		}
-		tokenizer.release();
-		return true;
-	}
-	catch (const std::bad_alloc&)
-	{
-		errorhnd->report(_TXT("out of memory loading query analyzer phrase type"));
-		return false;
-	}
-	catch (const std::runtime_error& e)
-	{
-		errorhnd->report(_TXT("error in query analyzer phrase type: %s"), e.what());
-		return false;
-	}
-}
-
-
-static std::string parseQueryPhraseType( char const*& src)
+static std::string parseQueryFieldType( char const*& src)
 {
 	if (isColon( *src))
 	{
@@ -1229,7 +1225,6 @@ static std::string parseQueryPhraseType( char const*& src)
 	}
 }
 
-
 static std::string parseVariableRef( char const*& src)
 {
 	std::string rt;
@@ -1241,157 +1236,16 @@ static std::string parseVariableRef( char const*& src)
 	return rt;
 }
 
-
-struct QueryStackElement
-{
-	QueryStackElement( const PostingJoinOperatorInterface* function_, int arg_, int range_, unsigned int cardinality_, float weight_)
-		:function(function_),arg(arg_),range(range_),cardinality(cardinality_),weight(weight_){}
-	QueryStackElement( const QueryStackElement& o)
-		:function(o.function),arg(o.arg),range(o.range),cardinality(o.cardinality),name(o.name),weight(o.weight){}
-	QueryStackElement()
-		:function(0),arg(-1),range(0),cardinality(0),weight(0.0f){}
-
-	const PostingJoinOperatorInterface* function;
-	int arg;
-	int range;
-	unsigned int cardinality;
-	std::string name;
-	float weight;
-};
-
-struct QueryStack
-{
-	QueryStack( const QueryStack& o)
-		:ar(o.ar),phraseBulk(o.phraseBulk){}
-	QueryStack(){}
-
-	std::vector<QueryStackElement> ar;
-	std::vector<QueryAnalyzerInterface::Phrase> phraseBulk;
-
-	void defineFeature( const std::string& featureSet, float weight)
-	{
-		ar.push_back( QueryStackElement( 0, -1/*arg*/, 0/*range*/, 0/*cardinality*/, weight));
-		ar.back().name = featureSet;
-	}
-
-	void pushPhrase( const std::string& phraseType, const std::string& phraseContent, const std::string& variableName)
-	{
-		ar.push_back( QueryStackElement( 0, phraseBulk.size(), 0/*range*/, 0/*cardinality*/, 0.0/*weight*/));
-		phraseBulk.push_back( QueryAnalyzerInterface::Phrase( phraseType, phraseContent));
-		if (!variableName.empty())
-		{
-			ar.back().name = variableName;
-		}
-	}
-
-	void pushExpression( const PostingJoinOperatorInterface* function, int arg, int range, unsigned int cardinality, const std::string& variableName)
-	{
-		ar.push_back( QueryStackElement( function, arg, range, cardinality, 0.0));
-		if (!variableName.empty())
-		{
-			ar.back().name = variableName;
-		}
-	}
-};
-
-static void translateQuery(
-		QueryInterface& query,
-		const QueryAnalyzerInterface* analyzer,
-		const QueryProcessorInterface* queryproc,
-		const QueryStack& stk,
-		ErrorBufferInterface* errorhnd)
-{
-	std::vector<analyzer::TermArray> analyzerResult = analyzer->analyzePhraseBulk( stk.phraseBulk);
-	if (errorhnd->hasError())
-	{
-		throw strus::runtime_error( _TXT("failed to analyze query: %s"), errorhnd->fetchError());
-	}
-	std::vector<QueryStackElement>::const_iterator si = stk.ar.begin(), se = stk.ar.end();
-	for (; si != se; ++si)
-	{
-		if (si->function)
-		{
-			// Expression function definition:
-			query.pushExpression( si->function, si->arg, si->range, si->cardinality);
-			if (!si->name.empty())
-			{
-				query.attachVariable( si->name);
-			}
-		}
-		else if (si->arg < 0)
-		{
-			// Feature definition:
-			query.defineFeature( si->name, si->weight);
-		}
-		else
-		{
-			// Term definition:
-			std::vector<analyzer::Term>::const_iterator
-				ti = analyzerResult[ si->arg].begin(), te = analyzerResult[si->arg].end();
-			if (ti == te)
-			{
-				throw strus::runtime_error( _TXT("query analyzer returned empty list of terms for query phrase %s: '%s'"),
-								stk.phraseBulk[ si->arg].type().c_str(), stk.phraseBulk[ si->arg].content().c_str());
-			}
-			unsigned int pos = 0;
-			std::size_t seq_argc = 0;
-			while (ti != te)
-			{
-				if (pos == 0 || ti->pos() != pos)
-				{
-					++seq_argc;
-					std::size_t join_argc = 0;
-					pos = ti->pos();
-					for (; ti != te && ti->pos() == pos; ++ti)
-					{
-						join_argc++;
-						query.pushTerm( ti->type(), ti->value());
-					}
-					if (join_argc > 1)
-					{
-						const PostingJoinOperatorInterface* join 
-							= queryproc->getPostingJoinOperator(
-								Constants::operator_query_phrase_same_position());
-						if (!join)
-						{
-							throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
-											Constants::operator_query_phrase_same_position());
-						}
-						query.pushExpression( join, join_argc, 0, 0);
-					}
-				}
-			}
-			if (seq_argc > 1)
-			{
-				const PostingJoinOperatorInterface* seq
-					= queryproc->getPostingJoinOperator(
-						Constants::operator_query_phrase_sequence());
-				if (!seq)
-				{
-					throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
-									Constants::operator_query_phrase_sequence());
-				}
-				query.pushExpression( seq, seq_argc, pos, 0);
-			}
-			if (!si->name.empty())
-			{
-				query.attachVariable( si->name);
-			}
-		}
-	}
-}
-
 static void parseQueryExpression(
-		QueryStack& querystack,
+		QueryStruct& queryStruct,
 		const QueryProcessorInterface* queryproc,
-		const std::string& defaultPhraseType,
+		const QueryDescriptors& qdescr,
 		char const*& src)
 {
-	std::string functionName;
 	if (isAlpha( *src))
 	{
 		char const* src_bk = src;
-		functionName = parse_IDENTIFIER(src);
+		std::string functionName = parse_IDENTIFIER(src);
 		if (isOpenOvalBracket(*src))
 		{
 			(void)parse_OPERATOR( src);
@@ -1400,7 +1254,7 @@ static void parseQueryExpression(
 			if (!isCloseOvalBracket( *src)) while (*src)
 			{
 				argc++;
-				parseQueryExpression( querystack, queryproc, defaultPhraseType, src);
+				parseQueryExpression( queryStruct, queryproc, qdescr, src);
 				if (isComma( *src))
 				{
 					(void)parse_OPERATOR( src);
@@ -1447,8 +1301,18 @@ static void parseQueryExpression(
 								functionName.c_str());
 			}
 			std::string variableName = parseVariableRef( src);
-
-			querystack.pushExpression( function, argc, range, cardinality, variableName);
+			queryStruct.defineExpression( function, argc, range, cardinality);
+			if (!variableName.empty())
+			{
+				queryStruct.defineVariable( variableName);
+			}
+			return;
+		}
+		else if (isCompareOperator(src))
+		{
+			MetaDataRestrictionInterface::CompareOperator opr = parse_CompareOperator( src);
+			std::string value = parseQueryTerm( src);
+			queryStruct.defineMetaDataRestriction( functionName, opr, functionName/*field type == metadata name in condition*/, value);
 			return;
 		}
 		else
@@ -1456,205 +1320,41 @@ static void parseQueryExpression(
 			src = src_bk;
 		}
 	}
+	bool isSelection = true;
+	if (isExclamation( *src))
+	{
+		(void)parse_OPERATOR( src);
+		isSelection = false;
+	}
 	if (isTextChar( *src) || isStringQuote( *src))
 	{
-		std::string queryPhrase = parseQueryTerm( src);
-		std::string phraseType = parseQueryPhraseType( src);
-		if (phraseType.empty())
+		std::string queryField = parseQueryTerm( src);
+		std::string fieldType = parseQueryFieldType( src);
+		if (fieldType.empty())
 		{
-			phraseType = defaultPhraseType;
+			fieldType = qdescr.weightingFeatureSet;
 		}
-		std::string variableName = parseVariableRef( src);
+		queryStruct.defineField( fieldType, queryField, isSelection);
 
-		querystack.pushPhrase( phraseType, queryPhrase, variableName);
+		std::string variableName = parseVariableRef( src);
+		if (!variableName.empty())
+		{
+			queryStruct.defineVariable( variableName);
+		}
 	}
 	else if (isColon( *src))
 	{
-		std::string phraseType = parseQueryPhraseType( src);
+		std::string fieldType = parseQueryFieldType( src);
 		std::string variableName = parseVariableRef( src);
-		querystack.pushPhrase( phraseType, std::string(), variableName);
+		queryStruct.defineField( fieldType, std::string(), false/*isSelection*/);
+		if (!variableName.empty())
+		{
+			queryStruct.defineVariable( variableName);
+		}
 	}
 	else
 	{
 		throw strus::runtime_error( _TXT("syntax error in query, query expression or term expected"));
-	}
-}
-
-static NumericVariant parseMetaDataOperand( char const*& src)
-{
-	try
-	{
-		NumericVariant rt;
-		if (is_INTEGER( src))
-		{
-			if (isMinus(*src))
-			{
-				rt = parse_INTEGER( src);
-			}
-			else
-			{
-				if (isPlus(*src))
-				{
-					parse_OPERATOR( src);
-					if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
-				}
-				rt = parse_UNSIGNED( src);
-			}
-		}
-		else
-		{
-			rt = parse_FLOAT( src);
-		}
-		return rt;
-	}
-	catch (const std::runtime_error& err)
-	{
-		throw strus::runtime_error( _TXT("error parsing meta data restriction operand: %s"), err.what());
-	}
-}
-
-static std::vector<NumericVariant> parseMetaDataOperands( char const*& src)
-{
-	std::vector<NumericVariant> rt;
-	for (;;)
-	{
-		if (isStringQuote( *src))
-		{
-			std::string value = parse_STRING( src);
-			char const* vv = value.c_str();
-			rt.push_back( parseMetaDataOperand( vv));
-		}
-		else
-		{
-			rt.push_back( parseMetaDataOperand( src));
-		}
-		if (isComma( *src))
-		{
-			(void)parse_OPERATOR( src);
-			continue;
-		}
-		break;
-	}
-	return rt;
-}
-
-static MetaDataRestrictionInterface::CompareOperator
-		invertedOperator( MetaDataRestrictionInterface::CompareOperator op)
-{
-	switch (op)
-	{
-		case MetaDataRestrictionInterface::CompareLess: return MetaDataRestrictionInterface::CompareGreaterEqual;
-		case MetaDataRestrictionInterface::CompareLessEqual: return MetaDataRestrictionInterface::CompareGreater;
-		case MetaDataRestrictionInterface::CompareEqual: return MetaDataRestrictionInterface::CompareNotEqual;
-		case MetaDataRestrictionInterface::CompareNotEqual: return MetaDataRestrictionInterface::CompareEqual;
-		case MetaDataRestrictionInterface::CompareGreater: return MetaDataRestrictionInterface::CompareLessEqual;
-		case MetaDataRestrictionInterface::CompareGreaterEqual: return MetaDataRestrictionInterface::CompareLess;
-	}
-	throw strus::runtime_error( _TXT("bad query meta data operator"));
-}
-
-static MetaDataRestrictionInterface::CompareOperator parseMetaDataComparionsOperator( char const*& src)
-{
-	MetaDataRestrictionInterface::CompareOperator rt;
-	if (*src == '=')
-	{
-		parse_OPERATOR( src);
-		rt = MetaDataRestrictionInterface::CompareEqual;
-	}
-	else if (*src == '>')
-	{
-		++src;
-		if (*src == '=')
-		{
-			++src;
-			rt = MetaDataRestrictionInterface::CompareGreaterEqual;
-		}
-		else
-		{
-			rt = MetaDataRestrictionInterface::CompareGreater;
-		}
-	}
-	else if (*src == '<')
-	{
-		++src;
-		if (*src == '=')
-		{
-			++src;
-			rt = MetaDataRestrictionInterface::CompareLessEqual;
-		}
-		else
-		{
-			rt = MetaDataRestrictionInterface::CompareLess;
-		}
-	}
-	else if (*src == '!')
-	{
-		if (*src == '=')
-		{
-			++src;
-			rt = MetaDataRestrictionInterface::CompareNotEqual;
-		}
-		else
-		{
-			throw strus::runtime_error( _TXT("unknown meta data comparison operator"));
-		}
-	}
-	else
-	{
-		throw strus::runtime_error( _TXT("expected meta data comparison operator"));
-	}
-	skipSpaces( src);
-	if (*src && !isAlnum( *src) && !isStringQuote( *src))
-	{
-		throw strus::runtime_error( _TXT("unexpected character after meta data comparison operator"));
-	}
-	return rt;
-}
-
-static void parseMetaDataRestriction(
-		QueryInterface& query,
-		const QueryAnalyzerInterface* analyzer,
-		char const*& src)
-{
-	if (isAlpha( *src))
-	{
-		std::string fieldname = parse_IDENTIFIER( src);
-
-		MetaDataRestrictionInterface::CompareOperator
-			cmpop = parseMetaDataComparionsOperator( src);
-
-		std::vector<NumericVariant>
-			operands = parseMetaDataOperands( src);
-
-		std::vector<NumericVariant>::const_iterator
-			oi = operands.begin(), oe = operands.end();
-		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
-		for (++oi; oi != oe; ++oi)
-		{
-			query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, false);
-		}
-	}
-	else if (isStringQuote( *src) || isDigit( *src) || isMinus( *src) || isPlus( *src))
-	{
-		std::vector<NumericVariant>
-			operands = parseMetaDataOperands( src);
-
-		MetaDataRestrictionInterface::CompareOperator
-			cmpop = invertedOperator( parseMetaDataComparionsOperator( src));
-
-		if (!isAlpha( *src))
-		{
-			throw strus::runtime_error( _TXT("expected at least one meta data field identifier in query restriction expression"));
-		}
-		std::string fieldname = parse_IDENTIFIER( src);
-
-		std::vector<NumericVariant>::const_iterator
-			oi = operands.begin(), oe = operands.end();
-		query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, true);
-		for (++oi; oi != oe; ++oi)
-		{
-			query.addMetaDataRestrictionCondition( cmpop, fieldname, *oi, false);
-		}
 	}
 }
 
@@ -1664,43 +1364,39 @@ DLL_PUBLIC bool strus::loadQuery(
 		const QueryAnalyzerInterface* analyzer,
 		const QueryProcessorInterface* queryproc,
 		const std::string& source,
+		const QueryDescriptors& qdescr,
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
 	try
 	{
-		QueryStack querystack;
+		QueryStruct queryStruct( analyzer);
+		bool haveSelectionFeatureDefined = false;
 		skipSpaces(src);
 		while (*src)
 		{
 			// Parse query section:
-			if (!isOpenSquareBracket( *src))
-			{
-				throw strus::runtime_error( _TXT("expected open square bracket to start query section declaration"));
-			}
-			(void)parse_OPERATOR( src);
-			if (!isAlnum(*src))
-			{
-				throw strus::runtime_error( _TXT("query section identifier expected after open square bracket '['"));
-			}
-			std::string name = parse_IDENTIFIER( src);
-			if (isEqual( name, "Feature"))
-			{
-				float featureWeight = 1.0;
+			float featureWeight = 1.0;
+			std::string featureSet;
+			const char* src_bk = src;
 
-				if (!isAlnum( *src))
-				{
-					throw strus::runtime_error( _TXT("feature set identifier expected after keyword 'Feature' in query section definition"));
-				}
-				std::string featureSet = parse_IDENTIFIER( src);
-
+			if (isAlnum( *src))
+			{
+				featureSet = parse_IDENTIFIER( src);
 				if (!isColon(*src))
 				{
-					throw strus::runtime_error( _TXT("colon ':' expected after feature set name in query section definition"));
+					src = src_bk;	//... step back
+					featureSet = qdescr.weightingFeatureSet;
 				}
+				if (utils::caseInsensitiveEquals( featureSet, qdescr.selectionFeatureSet))
+				{
+					haveSelectionFeatureDefined = true;
+				}
+			}
+			parseQueryExpression( queryStruct, queryproc, qdescr, src);
+			if (isAsterisk(*src))
+			{
 				(void)parse_OPERATOR(src);
-				std::string defaultPhraseType = parse_IDENTIFIER( src);
-
 				if (isDigit(*src))
 				{
 					featureWeight = parse_FLOAT( src);
@@ -1709,42 +1405,14 @@ DLL_PUBLIC bool strus::loadQuery(
 				{
 					featureWeight = 1.0;
 				}
-				if (!isCloseSquareBracket( *src))
-				{
-					throw strus::runtime_error( _TXT("close square bracket ']' expected to terminate query section declaration"));
-				}
-				(void)parse_OPERATOR( src);
-				while (*src && !isOpenSquareBracket( *src))
-				{
-					parseQueryExpression( querystack, queryproc, defaultPhraseType, src);
-					querystack.defineFeature( featureSet, featureWeight);
-				}
 			}
-			else if (isEqual( name, "Condition"))
-			{
-				if (!isCloseSquareBracket( *src))
-				{
-					throw strus::runtime_error( _TXT("close square bracket ']' expected to terminate query section declaration"));
-				}
-				while (*src && !isOpenSquareBracket( *src))
-				{
-					parseMetaDataRestriction( query, analyzer, src);
-					if (isSemiColon(*src))
-					{
-						(void)parse_OPERATOR( src);
-					}
-					else if (*src && !isOpenSquareBracket( *src))
-					{
-						throw strus::runtime_error( _TXT("semicolon ';' as separator of meta data restrictions"));
-					}
-				}
-			}
-			else
-			{
-				throw strus::runtime_error( _TXT("unknown query section identifier '%s'"),name.c_str());
-			}
+			queryStruct.defineFeature( featureSet, featureWeight);
 		}
-		translateQuery( query, analyzer, queryproc, querystack, errorhnd);
+		if (!haveSelectionFeatureDefined)
+		{
+			queryStruct.defineSelectionFeatures( queryproc, qdescr);
+		}
+		queryStruct.translate( query, queryproc, errorhnd);
 		return true;
 	}
 	catch (const std::bad_alloc&)
@@ -1761,6 +1429,72 @@ DLL_PUBLIC bool strus::loadQuery(
 	}
 }
 
+
+DLL_PUBLIC bool strus::loadPhraseAnalyzer(
+		QueryAnalyzerInterface& analyzer,
+		const TextProcessorInterface* textproc,
+		const std::string& normalizersrc,
+		const std::string& tokenizersrc,
+		ErrorBufferInterface* errorhnd)
+{
+	try
+	{
+		std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+		std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
+		std::vector<NormalizerFunctionInstanceInterface*> normalizer;
+	
+		char const* nsrc = normalizersrc.c_str();
+		std::vector<FunctionConfig> normalizercfg = parseNormalizerConfig( nsrc);
+		if ((std::size_t)(nsrc - normalizersrc.c_str()) < normalizersrc.size())
+		{
+			throw strus::runtime_error( _TXT("unexpected token after end of normalizer definition: '%s'"), nsrc);
+		}
+		std::vector<FunctionConfig>::const_iterator ni = normalizercfg.begin(), ne = normalizercfg.end();
+		for (; ni != ne; ++ni)
+		{
+			const NormalizerFunctionInterface* nm = textproc->getNormalizer( ni->name());
+			if (!nm) throw strus::runtime_error(_TXT( "unknown normalizer function '%s'"), ni->name().c_str());
+	
+			Reference<NormalizerFunctionInstanceInterface> nmi( nm->createInstance( ni->args(), textproc));
+			if (!nmi.get()) throw strus::runtime_error(_TXT( "failed to create instance of normalizer function '%s'"), ni->name().c_str());
+	
+			normalizer_ref.push_back( nmi);
+			normalizer.push_back( nmi.get());
+		}
+		char const* tsrc = tokenizersrc.c_str();
+		FunctionConfig tokenizercfg = parseTokenizerConfig( tsrc);
+		if ((std::size_t)(tsrc - tokenizersrc.c_str()) < tokenizersrc.size())
+		{
+			throw strus::runtime_error( _TXT("unexpected token after end of tokenizer definition: '%s'"), nsrc);
+		}
+		const TokenizerFunctionInterface* tk = textproc->getTokenizer( tokenizercfg.name());
+		if (!tk) throw strus::runtime_error(_TXT( "tokenizer function '%s' not found"), tokenizercfg.name().c_str());
+	
+		tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
+		if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
+	
+		analyzer.addSearchIndexElement( "", "", tokenizer.get(), normalizer);
+
+		std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
+			ri = normalizer_ref.begin(), re = normalizer_ref.end();
+		for (; ri != re; ++ri)
+		{
+			(void)ri->release();
+		}
+		tokenizer.release();
+		return true;
+	}
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report(_TXT("out of memory loading query analyzer phrase type"));
+		return false;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report(_TXT("error in query analyzer phrase type: %s"), e.what());
+		return false;
+	}
+}
 
 DLL_PUBLIC bool strus::scanNextProgram(
 		std::string& segment,

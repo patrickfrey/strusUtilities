@@ -11,6 +11,7 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -35,19 +36,6 @@
 #include <stdexcept>
 #include <memory>
 
-struct TermOrder
-{
-	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
-	{
-		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
-		int cmp;
-		cmp = aa.type().compare( bb.type());
-		if (cmp != 0) return (cmp < 0);
-		cmp = aa.value().compare( bb.value());
-		if (cmp != 0) return (cmp < 0);
-		return false;
-	}
-};
 
 int main( int argc, const char* argv[])
 {
@@ -239,9 +227,7 @@ int main( int argc, const char* argv[])
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Create phrase type (tokenizer and normalizer):
-		std::string phraseType;
-		if (!strus::loadQueryAnalyzerPhraseType(
-				*analyzer, textproc, phraseType, "", normalizer, tokenizer, errorBuffer.get()))
+		if (!loadPhraseAnalyzer( *analyzer, textproc, normalizer, tokenizer, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load analyze phrase type"));
 		}
@@ -260,21 +246,26 @@ int main( int argc, const char* argv[])
 		}
 
 		// Analyze the phrase and print the result:
-		std::vector<strus::analyzer::Term> terms
-			= analyzer->analyzePhrase( phraseType, phrase);
-
-		std::sort( terms.begin(), terms.end(), TermOrder());
-
-		std::vector<strus::analyzer::Term>::const_iterator
-			ti = terms.begin(), te = terms.end();
-
-		for (; ti != te; ++ti)
+		std::auto_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
+		if (!qryanactx.get()) throw strus::runtime_error(_TXT("failed to create query analyzer context"));
+	
+		qryanactx->putField( 1, "", phrase);
+		strus::analyzer::Query qry = qryanactx->analyze();
+		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("query analysis failed"));
+		std::vector<strus::analyzer::Term> terms;
+		std::vector<strus::analyzer::Query::Instruction>::const_iterator
+			ii = qry.instructions().begin(), ie = qry.instructions().end();
+		for (; ii != ie; ++ii)
 		{
-			if (!resultPlain)
+			if (ii->opCode() == strus::analyzer::Query::Instruction::PushSearchIndexTerm)
 			{
-				std::cout << ti->pos() << " ";
+				const strus::analyzer::Term& term = qry.searchIndexTerm( ii->idx());
+				if (!resultPlain)
+				{
+					std::cout << term.pos() << " ";
+				}
+				std::cout << resultQuot << term.value() << resultQuot << std::endl;
 			}
-			std::cout << resultQuot << ti->value() << resultQuot << std::endl;
 		}
 		if (errorBuffer->hasError())
 		{

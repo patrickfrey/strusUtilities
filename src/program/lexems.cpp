@@ -303,3 +303,50 @@ int parser::parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsig
 	return ii;
 }
 
+MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( const char*& si)
+{
+	if (si[0] == '<')
+	{
+		if (si[1] == '=')
+		{
+			si += 2;
+			return MetaDataRestrictionInterface::CompareLessEqual;
+		}
+		else
+		{
+			si += 1;
+			return MetaDataRestrictionInterface::CompareLess;
+		}
+	}
+	else if (si[0] == '>')
+	{
+		if (si[1] == '=')
+		{
+			si += 2;
+			return MetaDataRestrictionInterface::CompareGreaterEqual;
+		}
+		else
+		{
+			si += 1;
+			return MetaDataRestrictionInterface::CompareGreater;
+		}
+	}
+	else if (si[0] == '!')
+	{
+		if (si[1] == '=')
+		{
+			si += 2;
+			return MetaDataRestrictionInterface::CompareNotEqual;
+		}
+	}
+	else if (si[0] == '=')
+	{
+		if (si[1] == '=')
+		{
+			si += 2;
+			return MetaDataRestrictionInterface::CompareEqual;
+		}
+	}
+	throw strus::runtime_error( _TXT( "unknown compare operator"));
+}
+

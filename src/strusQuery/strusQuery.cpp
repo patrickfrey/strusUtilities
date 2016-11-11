@@ -18,6 +18,7 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -99,11 +100,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 14,
+				argc_, argv_, 15,
 				"h,help", "v,version", "license",
 				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
 				"D,time", "m,module:", "M,moduledir:", "R,resourcedir:",
-				"s,storage:", "r,rpc:", "T,trace:");
+				"s,storage:", "r,rpc:", "T,trace:", "V,verbose");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -223,6 +224,7 @@ int main( int argc_, const char* argv_[])
 		// Parse arguments:
 		bool quiet = opt( "quiet");
 		bool measureDuration = opt( "time");
+		bool verbose = opt("verbose");
 		std::string username;
 		std::size_t nofRanks = 20;
 		std::size_t firstRank = 0;
@@ -343,7 +345,8 @@ int main( int argc_, const char* argv_[])
 		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
 
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer.get()))
+		strus::QueryDescriptors querydescr;
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query analyzer program"));
 		}
@@ -352,7 +355,7 @@ int main( int argc_, const char* argv_[])
 		ec = strus::readFile( queryprg, qevalProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load query eval program %s (errno %u)"), queryprg.c_str(), ec);
 
-		if (!strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource, errorBuffer.get()))
+		if (!strus::loadQueryEvalProgram( *qeval, querydescr, qproc, qevalProgramSource, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query evaluation program"));
 		}
@@ -369,7 +372,15 @@ int main( int argc_, const char* argv_[])
 			ec = strus::readFile( querypath, querystring);
 			if (ec) throw strus::runtime_error(_TXT("failed to read query string from file %s (errno %u)"), querypath.c_str(), ec);
 		}
-
+		if (verbose)
+		{
+			std::cerr << "Query context:" << std::endl;
+			std::cerr << "Default field type: " << querydescr.defaultFieldType << std::endl;
+			std::cerr << "Selection feature set: " << querydescr.selectionFeatureSet << std::endl;
+			std::cerr << "Weighting feature set: " << querydescr.weightingFeatureSet << std::endl;
+			std::cerr << "Part of features weighted in selection: " << querydescr.defaultSelectionTermPart << std::endl;
+			std::cerr << "Default selection join operator: " << querydescr.defaultSelectionJoin << std::endl;
+		}
 		unsigned int nofQueries = 0;
 		double startTime = 0.0;
 		if (measureDuration)
@@ -385,16 +396,20 @@ int main( int argc_, const char* argv_[])
 				qeval->createQuery( storage.get()));
 			if (!query.get()) throw strus::runtime_error(_TXT("failed to create query object"));
 
-			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, errorBuffer.get()))
+			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, querydescr, errorBuffer.get()))
 			{
 				throw strus::runtime_error(_TXT("failed to load query from source"));
 			}
-
 			query->setMaxNofRanks( nofRanks);
 			query->setMinRank( firstRank);
 			if (!username.empty())
 			{
 				query->addUserName( username);
+			}
+			if (verbose)
+			{
+				std::cerr << "Query:" << std::endl;
+				std::cerr << query->tostring() << std::endl;
 			}
 			strus::QueryResult result = query->evaluate();
 

@@ -7,6 +7,7 @@
  */
 #ifndef _STRUS_PROGRAM_LEXEMS_HPP_INCLUDED
 #define _STRUS_PROGRAM_LEXEMS_HPP_INCLUDED
+#include "strus/metaDataRestrictionInterface.hpp"
 #include <string>
 
 namespace strus {
@@ -116,6 +117,10 @@ static inline bool isAsterisk( char ch)
 {
 	return ch == '*';
 }
+static inline bool isExclamation( char ch)
+{
+	return ch == '!';
+}
 static inline bool isPercent( char ch)
 {
 	return ch == '%';
@@ -127,6 +132,10 @@ static inline bool isStringQuote( char ch)
 static inline bool isSpace( char ch)
 {
 	return ch == ' ' || ch == '\t' || ch == '\n';
+}
+static inline bool isCompareOperator( const char* si)
+{
+	return si[0] == '<' || si[0] == '>' || (si[0] == '!' && si[1] == '=') || (si[0] == '=' && si[1] == '=');
 }
 static inline void skipToEoln( char const*& src)
 {
@@ -165,6 +174,7 @@ char parse_OPERATOR( char const*& src);
 int parse_INTEGER( char const*& src);
 int parse_KEYWORD( char const*& src, unsigned int nof, ...);
 int parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsigned int nof, ...);
+MetaDataRestrictionInterface::CompareOperator parse_CompareOperator( const char*& si);
 
 }}//namespace
 #endif

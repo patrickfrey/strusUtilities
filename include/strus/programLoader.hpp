@@ -13,6 +13,8 @@
 #include "strus/base/stdint.h"
 #include <string>
 #include <vector>
+#include <set>
+#include <map>
 
 /// \brief strus toplevel namespace
 namespace strus {
@@ -44,6 +46,26 @@ class VectorSpaceModelBuilderInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
 
+/// \brief Some default settings for parsing and building the query
+struct QueryDescriptors
+{
+	std::string defaultFieldType;			///< default field type name if not explicitely specified
+	std::string selectionFeatureSet;		///< default feature set used for document selection
+	std::string weightingFeatureSet;		///< default feature set used for document weighting
+	float defaultSelectionTermPart;			///< default percentage of weighting terms required in selection
+	std::string defaultSelectionJoin;		///< default operator used to join terms for selection
+
+	QueryDescriptors()
+		:defaultFieldType(),selectionFeatureSet(),weightingFeatureSet()
+		,defaultSelectionTermPart(0.6),defaultSelectionJoin("contains"){}
+	QueryDescriptors( const QueryDescriptors& o)
+		:defaultFieldType(o.defaultFieldType)
+		,selectionFeatureSet(o.selectionFeatureSet)
+		,weightingFeatureSet(o.weightingFeatureSet)
+		,defaultSelectionTermPart(o.defaultSelectionTermPart)
+		,defaultSelectionJoin(o.defaultSelectionJoin)
+		{}
+};
 
 /// \brief Load a document analyzer program from source
 /// \param[in,out] analyzer analyzer program to instatiate
@@ -60,6 +82,7 @@ bool loadDocumentAnalyzerProgram(
 
 /// \brief Load a query analyzer program from source
 /// \param[in,out] analyzer analyzer program to instatiate
+/// \param[in,out] qdescr some defaults for query language parsing filled by this procedure
 /// \param[in] textproc provider for text processing functions
 /// \param[in] source source string (not a file name!) to parse
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
@@ -67,26 +90,9 @@ bool loadDocumentAnalyzerProgram(
 /// \return true on success, false on failure
 bool loadQueryAnalyzerProgram(
 		QueryAnalyzerInterface& analyzer,
+		QueryDescriptors& qdescr,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
-		ErrorBufferInterface* errorhnd);
-
-/// \brief Load a phrase type definition from its source components
-/// \param[in,out] analyzer program for analyzing text segments in the query
-/// \param[in] textproc provider for text processing functions
-/// \param[in] phrasetype name of phrase type to define
-/// \param[in] featuretype name of the feature type produced by the defined phrase type
-/// \param[in] normalizersrc source with normalizer definitions
-/// \param[in] tokenizersrc source with tokenizer definitions
-/// \param[in,out] errorhnd buffer for reporting errors (exceptions)
-/// \return true on success, false on failure
-bool loadQueryAnalyzerPhraseType(
-		QueryAnalyzerInterface& analyzer,
-		const TextProcessorInterface* textproc,
-		const std::string& phrasetype,
-		const std::string& featuretype,
-		const std::string& normalizersrc,
-		const std::string& tokenizersrc,
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Description of one element of an analyzer map
@@ -123,12 +129,14 @@ bool loadAnalyzerMap(
 
 /// \brief Load a query evaluation program from source
 /// \param[in,out] qeval query evaluation interface to instrument
+/// \param[in,out] qdescr query descriptors to instrument
 /// \param[in] qproc query processor interface for info about objects loaded
 /// \param[in] source source string (not a file name!) to parse
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success, false on failure
 bool loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
+		QueryDescriptors& qdescr,
 		const QueryProcessorInterface* qproc,
 		const std::string& source,
 		ErrorBufferInterface* errorhnd);
@@ -138,6 +146,7 @@ bool loadQueryEvalProgram(
 /// \param[in] analyzer program for analyzing text segments in the query
 /// \param[in] qproc query processor interface for info about objects loaded
 /// \param[in] source source string (not a file name!) to parse
+/// \param[in] qdescr query descriptors to use in case something is not explicitely specified
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success, false on failure
 bool loadQuery(
@@ -145,6 +154,22 @@ bool loadQuery(
 		const QueryAnalyzerInterface* analyzer,
 		const QueryProcessorInterface* qproc,
 		const std::string& source,
+		const QueryDescriptors& qdescr,
+		ErrorBufferInterface* errorhnd);
+
+/// \brief Load a simple query analyzer config for one field (name "") producing one feature type ("")
+/// \param[in,out] query analyzer interface to instrument
+/// \param[in] textproc textprocessor to retrieve the functions loaded
+/// \param[in] normalizersrc source string (not a file name!) of the normalizers to parse
+/// \param[in] tokenizersrc source string (not a file name!) of the tokenizer to parse
+/// \param[in,out] errorhnd buffer for reporting errors (exceptions)
+/// \return true on success, false on failure
+/// \note This simplistic function is mainly intended for debugging and the program strusAnalyzePhrase that just checks the result of a tokenizer with some normalizers
+bool loadPhraseAnalyzer(
+		QueryAnalyzerInterface& analyzer,
+		const TextProcessorInterface* textproc,
+		const std::string& normalizersrc,
+		const std::string& tokenizersrc,
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Scan a source for the next program segment in a source that contains multiple programs.

@@ -18,6 +18,7 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/segmenterInterface.hpp"
@@ -97,7 +98,7 @@ public:
 
 	virtual void pushExpression(
 				const strus::PostingJoinOperatorInterface* operation,
-				std::size_t argc, int range, unsigned int cardinality)
+				unsigned int argc, int range, unsigned int cardinality)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cerr << strus::string_format( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, (unsigned int)argc, range, cardinality) << std::endl;
@@ -675,7 +676,8 @@ int main( int argc, const char* argv[])
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer.get()))
+		strus::QueryDescriptors querydescr;
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, errorBuffer.get()))
 		{
 			throw strus::runtime_error( _TXT("failed to load query analyze program %s"), analyzerprg.c_str());
 		}
@@ -704,7 +706,7 @@ int main( int argc, const char* argv[])
 		Query query;
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
 		if (!queryproc) throw strus::runtime_error(_TXT("failed to get query processor"));
-		if (!strus::loadQuery( query, analyzer.get(), queryproc, querysource, errorBuffer.get()))
+		if (!strus::loadQuery( query, analyzer.get(), queryproc, querysource, querydescr, errorBuffer.get()))
 		{
 			throw strus::runtime_error( _TXT("failed to load query %s"), querypath.c_str());
 		}
