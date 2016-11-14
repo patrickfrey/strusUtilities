@@ -125,8 +125,21 @@ static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterf
 	std::cout << std::endl;
 }
 
+// Inspect strus::VectorSpaceModelInstanceInterface::conceptClassNames()
+static void inspectConceptClassNames( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+{
+	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
+	std::vector<std::string> clnames = vsmodel->conceptClassNames();
+	std::vector<std::string>::const_iterator ci = clnames.begin(), ce = clnames.end();
+	for (; ci != ce; ++ci)
+	{
+		std::cout << *ci << " ";
+	}
+	std::cout << std::endl;
+}
+
 // Inspect strus::VectorSpaceModelInstanceInterface::mapVectorToConcepts()
-static void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+static void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<double> vec;
 	std::size_t ai = 0, ae = inspectargsize;
@@ -134,7 +147,7 @@ static void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInt
 	{
 		vec.push_back( strus::utils::tofloat( inspectarg[ai]));
 	}
-	std::vector<strus::Index> car = vsmodel->mapVectorToConcepts( vec);
+	std::vector<strus::Index> car = vsmodel->mapVectorToConcepts( clname, vec);
 	if (car.empty() && g_errorBuffer->hasError())
 	{
 		throw strus::runtime_error(_TXT("failed to map vector to concept features"));
@@ -143,7 +156,7 @@ static void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInt
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::featureConcepts()
-static void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+static void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<strus::Index> far;
 	std::size_t ai = 0, ae = inspectargsize;
@@ -155,7 +168,7 @@ static void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterfa
 	std::vector<strus::Index>::const_iterator fi = far.begin(), fe = far.end();
 	for (std::size_t fidx=0; fi != fe; ++fi,++fidx)
 	{
-		std::vector<strus::Index> car = vsmodel->featureConcepts( *fi);
+		std::vector<strus::Index> car = vsmodel->featureConcepts( clname, *fi);
 		if (car.empty() && g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to get feature concepts"));
@@ -258,7 +271,7 @@ static void inspectFeatureIndex( const strus::VectorSpaceModelInstanceInterface*
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::conceptFeatures()
-static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
 {
 	if (inspectargsize > 0)
 	{
@@ -272,7 +285,7 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 		std::vector<strus::Index>::const_iterator ci = car.begin(), ce = car.end();
 		for (std::size_t cidx=0; ci != ce; ++ci,++cidx)
 		{
-			std::vector<strus::Index> far = vsmodel->conceptFeatures( *ci);
+			std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, *ci);
 			if (far.empty() && g_errorBuffer->hasError())
 			{
 				throw strus::runtime_error(_TXT("failed to get concept features"));
@@ -283,10 +296,10 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 	}
 	else
 	{
-		strus::Index ci = 1, ce = vsmodel->nofConcepts()+1;
+		strus::Index ci = 1, ce = vsmodel->nofConcepts( clname)+1;
 		for (; ci != ce; ++ci)
 		{
-			std::vector<strus::Index> far = vsmodel->conceptFeatures( ci);
+			std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, ci);
 			if (far.empty()) continue;
 			std::cout << ci;
 			printUniqResultFeatures( vsmodel, far, mode);
@@ -295,10 +308,10 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::nofConcepts()
-static void inspectNofConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+static void inspectNofConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"), 2U);
-	std::cout << vsmodel->nofConcepts() << std::endl;
+	std::cout << vsmodel->nofConcepts( clname) << std::endl;
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::nofFeatures()
@@ -396,10 +409,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 8,
+				argc, argv, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:" );
+				"s,config:", "S,configfile:", "C,class");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -497,6 +510,8 @@ int main( int argc, const char* argv[])
 		{
 			std::cout << _TXT("usage:") << " strusInspectVsm [options] <what...>" << std::endl;
 			std::cout << "<what>    : " << _TXT("what to inspect:") << std::endl;
+			std::cout << "            \"classnames\"" << std::endl;
+			std::cout << "               = " << _TXT("Return all names of concept classes of the model.") << std::endl;
 			std::cout << "            \"mapvec\" { <vector> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a vector of double precision floats as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return a list of indices of concepts near it.") << std::endl;
@@ -551,6 +566,9 @@ int main( int argc, const char* argv[])
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector space model configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
+			std::cout << "-C|--class <CLASSNAME>" << std::endl;
+			std::cout << "    " << _TXT("Select <CLASSNAME> as concept class name (default '')") << std::endl;
+			std::cout << "    " << _TXT("Used in the context of inspecting data related to a concept.") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -567,6 +585,11 @@ int main( int argc, const char* argv[])
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
+		}
+		std::string clname;
+		if (opt("class"))
+		{
+			clname = opt["class"];
 		}
 		// Create root object:
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
@@ -605,60 +628,73 @@ int main( int argc, const char* argv[])
 		std::size_t inspectargsize = opt.nofargs() - 1;
 
 		// Do inspect what is requested:
-		if (strus::utils::caseInsensitiveEquals( what, "mapvec"))
+		if (strus::utils::caseInsensitiveEquals( what, "classnames"))
 		{
-			inspectMapVectorToConcepts( vsmodel.get(), inspectarg, inspectargsize);
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
+			inspectConceptClassNames( vsmodel.get(), inspectarg, inspectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "mapvec"))
+		{
+			inspectMapVectorToConcepts( vsmodel.get(), clname, inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featcon"))
 		{
-			inspectFeatureConcepts( vsmodel.get(), inspectarg, inspectargsize);
+			inspectFeatureConcepts( vsmodel.get(), clname, inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featvec"))
 		{
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectFeatureVector( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featname"))
 		{
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectFeatureName( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featidx"))
 		{
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectFeatureIndex( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "confeatidx"))
 		{
-			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndex);
+			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndex);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "confeatname"))
 		{
-			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintName);
+			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "confeat"))
 		{
-			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName);
+			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndexName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nofcon"))
 		{
-			inspectNofConcepts( vsmodel.get(), inspectarg, inspectargsize);
+			inspectNofConcepts( vsmodel.get(), clname, inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "noffeat"))
 		{
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectNofFeatures( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "attribute"))
 		{
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectAttribute( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "attributes"))
 		{
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectAttributeNames( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "config"))
 		{
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectConfig( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "dump"))
 		{
+			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectDump( vsi, dbi, config, inspectarg, inspectargsize);
 		}
 		else
