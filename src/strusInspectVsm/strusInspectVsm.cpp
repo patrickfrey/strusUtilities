@@ -182,9 +182,8 @@ static void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterfa
 // Inspect strus::VectorSpaceModelInstanceInterface::featureVector()
 static void inspectFeatureVector( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
-	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (at least %u arguments expected)"), 1U);
-	if (inspectargsize > 2) throw strus::runtime_error(_TXT("too many arguments (maximum %u arguments expected)"), 2U);
-	if (inspectargsize == 2)
+	if (inspectargsize > 1) throw strus::runtime_error(_TXT("too many arguments (maximum %u arguments expected)"), 1U);
+	if (inspectargsize == 1)
 	{
 		strus::Index idx = getFeatureIndex( vsmodel, inspectarg[0]);
 		std::ostringstream out;
