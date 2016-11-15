@@ -41,13 +41,14 @@
 #undef STRUS_LOWLEVEL_DEBUG
 #define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace_std"
 #define DEFAULT_VECTOR_MODEL  "vector_std"
+#define FEATNUM_PREFIX_CHAR   '%'
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
 static strus::Index getFeatureIndex( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char* inspectarg)
 {
 	strus::Index idx;
-	if (inspectarg[0] == '#' && inspectarg[1] >= '0' && inspectarg[1] <= '9')
+	if (inspectarg[0] == FEATNUM_PREFIX_CHAR && inspectarg[1] >= '0' && inspectarg[1] <= '9')
 	{
 		idx = strus::utils::toint( inspectarg+1);
 		if (idx < 0) strus::runtime_error(_TXT("feature number must not be negative"));
@@ -88,7 +89,7 @@ static void printUniqResultConcepts( const std::vector<strus::Index>& res_)
 		for (; ri != re && uniq == *ri; ++ri){}
 
 		if (ridx++) std::cout << " ";
-		std::cout << *ri;
+		std::cout << uniq;
 	}
 	std::cout << std::endl;
 }
@@ -114,12 +115,12 @@ static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterf
 		if (ridx++) std::cout << " ";
 		if (mode == PrintIndex || mode == PrintIndexName)
 		{
-			std::cout << *ri;
+			std::cout << uniq;
 			if (mode == PrintIndexName) std::cout << ":";
 		}
 		if (mode == PrintName || mode == PrintIndexName)
 		{
-			std::cout << vsmodel->featureName( *ri);
+			std::cout << vsmodel->featureName( uniq);
 		}
 	}
 	std::cout << std::endl;
@@ -215,9 +216,9 @@ static void inspectFeatureName( const strus::VectorSpaceModelInstanceInterface* 
 		std::size_t ai = 0, ae = inspectargsize;
 		for (; ai != ae; ++ai)
 		{
-			if (inspectarg[ai][0] == '#' && inspectarg[ai][1] >= '0' && inspectarg[ai][1] <= '9')
+			if (inspectarg[ai][0] == FEATNUM_PREFIX_CHAR && inspectarg[ai][1] >= '0' && inspectarg[ai][1] <= '9')
 			{
-				std::cerr << "you do not have to specify '#', feature number expected as input" << std::endl;
+				std::cerr << strus::string_format( _TXT("you do not have to specify '%c', feature number expected as input"), FEATNUM_PREFIX_CHAR) << std::endl;
 				far.push_back( getFeatureIndex( vsmodel, inspectarg[ai]));
 			}
 			else
@@ -412,7 +413,7 @@ int main( int argc, const char* argv[])
 				argc, argv, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "C,class");
+				"s,config:", "S,configfile:", "C,class:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -516,10 +517,10 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Take a vector of double precision floats as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return a list of indices of concepts near it.") << std::endl;
 			std::cout << "            \"featcon\" { <featno> }" << std::endl;
-			std::cout << "               = " << _TXT("Take a single or list of feature numbers (with '#' prefix) or names as input.") << std::endl;
+			std::cout << "               = " << strus::string_format( _TXT("Take a single or list of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "               = " << _TXT("Return a sorted list of indices of concepts assigned to it.") << std::endl;
 			std::cout << "            \"featvec\" <featno>" << std::endl;
-			std::cout << "               = " << _TXT("Take a single feature number (with '#' prefix) or name as input.") << std::endl;
+			std::cout << "               = " << strus::string_format( _TXT("Take a single feature number (with '%c' prefix) or name as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "               = " << _TXT("Return the vector assigned to it.") << std::endl;
 			std::cout << "            \"featname\" { <featno> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of feature numbers as input.") << std::endl;
