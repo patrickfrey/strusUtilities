@@ -135,7 +135,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 1)
+			if (opt.nofargs() > 0)
 			{
 				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
@@ -161,12 +161,6 @@ int main( int argc, const char* argv[])
 		{
 			nof_storagecfg += 1;
 			storagecfg = opt[ "storage"];
-		}
-		if (opt.nofargs() == 1)
-		{
-			std::cerr << _TXT("warning: passing storage as first parameter instead of option -s (deprecated)") << std::endl;
-			nof_storagecfg += 1;
-			storagecfg = opt[0];
 		}
 		if (nof_storagecfg > 1)
 		{
