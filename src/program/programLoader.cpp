@@ -2125,7 +2125,7 @@ DLL_PUBLIC bool strus::loadVectorSpaceModelVectors(
 			filetype = "word2vec binary file";
 			loadVectorSpaceModelVectors_word2vecBin( vsmbuilder, vectorfile, errorhnd);
 		}
-		return true;
+		return vsmbuilder->done();
 	}
 	catch (const std::bad_alloc&)
 	{

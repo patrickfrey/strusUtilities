@@ -244,10 +244,6 @@ int main( int argc, const char* argv[])
 			{
 				throw strus::runtime_error(_TXT("failed to load input"));
 			}
-			if (!builder->commit())
-			{
-				throw strus::runtime_error(_TXT("load input commit failed"));
-			}
 		}
 		if (errorBuffer->hasError())
 		{

@@ -57,10 +57,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 8,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "B,rebase" );
+				"s,config:", "S,configfile:" );
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -121,12 +121,17 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 0)
+			if (opt.nofargs() > 1)
 			{
 				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
+		}
+		std::string command;
+		if (opt.nofargs() > 0)
+		{
+			command = opt[0];
 		}
 		std::string config;
 		int nof_config = 0;
@@ -156,8 +161,8 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusBuildVsm [options]" << std::endl;
-			std::cout << _TXT("description: Builds a vector space model from the vectors defined with strusCreateVsm.") << std::endl;
+			std::cout << _TXT("usage:") << " strusBuildVsm [options] <command>" << std::endl;
+			std::cout << _TXT("description: Executes a vector space model builder command.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -179,8 +184,6 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
-			std::cout << "-B|--rebase" << std::endl;
-			std::cout << "    " << _TXT("Do a rebase step instead of an unsupervised learning (finalize) step") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -227,19 +230,9 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config, dbi));
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector space model builder"));
 
-		if (opt("rebase"))
+		if (!builder->run( command))
 		{
-			if (!builder->rebase())
-			{
-				throw strus::runtime_error(_TXT("rebase step failed"));
-			}
-		}
-		else
-		{
-			if (!builder->finalize())
-			{
-				throw strus::runtime_error(_TXT("finalize step failed"));
-			}
+			throw strus::runtime_error(_TXT("execute VSM command '%s' failed"), command.c_str());
 		}
 		if (errorBuffer->hasError())
 		{
