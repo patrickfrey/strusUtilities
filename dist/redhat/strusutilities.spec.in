@@ -122,6 +122,7 @@ License: MPLv2
 Group: Development/Libraries/C++
 
 Source: %{name}_%{main_version}.tar.gz
+Patch0: strusutilities-0.12.0-centos5-long-long.patch
 
 URL: http://project-strus.net
 
@@ -247,6 +248,9 @@ Requires: %{name} >= %{main_version}-%{release}
 
 %prep
 %setup -n %{name}-%{main_version}
+%if %{rhel5} || %{centos5} || %{scilin5}
+%patch0 -p1
+%endif
 
 %build
 
