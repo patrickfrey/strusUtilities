@@ -36,15 +36,16 @@
 #include <stdexcept>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace_std"
-#define DEFAULT_VECTOR_MODEL  "vector_std"
+#define DEFAULT_LOAD_MODULE		"modstrus_storage_vectorspace_std"
+#define DEFAULT_VECTOR_MODEL		"vector_std"
+#define DEFAULT_MAX_NOF_THREADS		16
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, DEFAULT_MAX_NOF_THREADS));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -57,11 +58,25 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 8,
+				argc, argv, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:" );
+				"s,config:", "S,configfile:", "t,threads" );
 		if (opt( "help")) printUsageAndExit = true;
+		if (opt( "threads"))
+		{
+			unsigned int nofThreads = opt.asUint( "threads");
+			if (nofThreads >= DEFAULT_MAX_NOF_THREADS)
+			{
+				errorBuffer.reset( strus::createErrorBuffer_standard( 0, nofThreads));
+				if (!errorBuffer.get())
+				{
+					std::cerr << _TXT("failed to create error buffer") << std::endl;
+					return -1;
+				}
+				g_errorBuffer = errorBuffer.get();
+			}
+		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -184,6 +199,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
+			std::cout << "-t|--threads <N>" << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Specify the maximum number of threads to use as <N> (default %u)"), DEFAULT_MAX_NOF_THREADS) << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
