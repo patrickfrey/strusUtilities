@@ -300,5 +300,6 @@ void InsertProcessor::run()
 	{
 		std::cerr << _TXT("failed to complete inserts: thread interrupted") << std::endl; 
 	}
+	m_errorhnd->releaseContext();
 }
 

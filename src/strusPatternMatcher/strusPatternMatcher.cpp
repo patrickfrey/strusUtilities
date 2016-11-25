@@ -533,6 +533,7 @@ public:
 			g_errorBuffer->report( "out of memory processing documents");
 		}
 		m_globalContext->fetchError();
+		g_errorBuffer->releaseContext();
 	}
 
 private:

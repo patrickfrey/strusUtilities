@@ -246,5 +246,6 @@ void KeyMapGenProcessor::run()
 			}
 		}
 	}
+	m_errorhnd->releaseContext();
 }
 
