@@ -353,6 +353,7 @@ void CheckInsertProcessor::run()
 	{
 		std::cerr << string_format( _TXT( "failed to check documents: %s"), err.what()) << std::endl;
 	}
+	m_errorhnd->releaseContext();
 }
 
 

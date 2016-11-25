@@ -61,7 +61,7 @@ int main( int argc, const char* argv[])
 				argc, argv, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "t,threads" );
+				"s,config:", "S,configfile:", "t,threads:" );
 		if (opt( "help")) printUsageAndExit = true;
 		if (opt( "threads"))
 		{
