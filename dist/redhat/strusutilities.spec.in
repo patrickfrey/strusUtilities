@@ -248,7 +248,7 @@ Requires: %{name} >= %{main_version}-%{release}
 
 %prep
 %setup -n %{name}-%{main_version}
-%if %{rhel5} || %{centos5} || %{scilin5}
+%if %{rhel5} || %{centos5} || %{scilin5} || %{sles11}
 %patch0 -p1
 %endif
 
