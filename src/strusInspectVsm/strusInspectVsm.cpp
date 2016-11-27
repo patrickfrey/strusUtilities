@@ -37,6 +37,7 @@
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
+#include <cmath>
 
 #undef STRUS_LOWLEVEL_DEBUG
 #define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace_std"
@@ -301,7 +302,7 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 		{
 			std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, ci);
 			if (far.empty()) continue;
-			std::cout << ci;
+			std::cout << ci << ": ";
 			printUniqResultFeatures( vsmodel, far, mode);
 		}
 	}
@@ -310,15 +311,56 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 // Inspect strus::VectorSpaceModelInstanceInterface::nofConcepts()
 static void inspectNofConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char**, std::size_t inspectargsize)
 {
-	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"), 2U);
+	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
 	std::cout << vsmodel->nofConcepts( clname) << std::endl;
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::nofFeatures()
 static void inspectNofFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
-	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"), 2U);
+	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
 	std::cout << vsmodel->nofFeatures() << std::endl;
+}
+
+static double vector_norm( std::vector<double> vec)
+{
+	double normA = 0.0;
+	std::vector<double>::const_iterator vi = vec.begin(), ve = vec.end();
+	for (; vi != ve; ++vi)
+	{
+		normA += *vi * *vi;
+	}
+	return std::sqrt( normA);
+}
+
+static double vector_prod( const std::vector<double>& v1, const std::vector<double>& v2)
+{
+	double prod = 0.0;
+	std::vector<double>::const_iterator ai = v1.begin(), ae = v1.end();
+	std::vector<double>::const_iterator bi = v2.begin(), be = v2.end();
+	for (; ai != ae && bi != be; ++ai,++bi)
+	{
+		prod += *ai * *bi;
+	}
+	return prod;
+}
+
+static double vector_cosinesim( const std::vector<double>& v1, const std::vector<double>& v2)
+{
+	return vector_prod( v1, v2) / (vector_norm( v1) * vector_norm( v2));
+}
+
+static void inspectFeatureSimilarity( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+{
+	if (inspectargsize < 2) throw strus::runtime_error(_TXT("too few arguments (%u arguments expected)"), 2U);
+	if (inspectargsize > 2) throw strus::runtime_error(_TXT("too many arguments (%u arguments expected)"), 2U);
+	strus::Index f1 = getFeatureIndex( vsmodel, inspectarg[0]);
+	strus::Index f2 = getFeatureIndex( vsmodel, inspectarg[1]);
+	std::vector<double> v1 = vsmodel->featureVector( f1);
+	std::vector<double> v2 = vsmodel->featureVector( f2);
+	std::ostringstream res;
+	res << std::setprecision(6) << std::fixed << vector_cosinesim( v1, v2) << std::endl;
+	std::cout << res.str();
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::attributes(), attributeNames()
@@ -636,6 +678,10 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "mapvec"))
 		{
 			inspectMapVectorToConcepts( vsmodel.get(), clname, inspectarg, inspectargsize);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "featsim"))
+		{
+			inspectFeatureSimilarity( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featcon"))
 		{
