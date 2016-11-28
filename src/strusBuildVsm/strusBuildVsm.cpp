@@ -42,6 +42,40 @@
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
+static void printBuilderCommands( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
+{
+	try
+	{
+		std::string configstr( config);
+		std::string modelname;
+		if (!strus::extractStringFromConfigString( modelname, configstr, "model", errorhnd))
+		{
+			modelname = DEFAULT_VECTOR_MODEL;
+			if (errorhnd->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
+		}
+		std::auto_ptr<strus::StorageObjectBuilderInterface>
+			storageBuilder( moduleLoader->createStorageObjectBuilder());
+		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+
+		const strus::VectorSpaceModelInterface* vsi = storageBuilder->getVectorSpaceModel( modelname);
+		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
+	
+		std::vector<std::string> cmds = vsi->builderCommands();
+		std::vector<std::string>::const_iterator ci = cmds.begin(), ce = cmds.end();
+		for (; ci != ce; ++ci)
+		{
+			out << "  " << *ci << ":\t" << vsi->builderCommandDescription( *ci) << std::endl;
+		}
+	}
+	catch (const std::runtime_error& err)
+	{
+		std::string msg;
+		if (errorhnd->hasError()) msg.append( errorhnd->fetchError());
+		errorhnd->report( _TXT("cannot list builder commands in usage: %s %s"), msg.c_str(), err.what()); 
+	}
+}
+
+
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -178,6 +212,8 @@ int main( int argc, const char* argv[])
 		{
 			std::cout << _TXT("usage:") << " strusBuildVsm [options] <command>" << std::endl;
 			std::cout << _TXT("description: Executes a vector space model builder command.") << std::endl;
+			std::cout << _TXT("commands:") << std::endl;
+			printBuilderCommands( std::cout, moduleLoader.get(), config, g_errorBuffer);
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -201,6 +237,10 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Specify the maximum number of threads to use as <N> (default %u)"), DEFAULT_MAX_NOF_THREADS) << std::endl;
+			if (g_errorBuffer->hasError())
+			{
+				throw strus::runtime_error( g_errorBuffer->fetchError());
+			}
 			return rt;
 		}
 		// Declare trace proxy objects:

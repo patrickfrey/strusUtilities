@@ -308,6 +308,44 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 	}
 }
 
+// Inspect strus::VectorSpaceModelInstanceInterface::featureConcepts() & conceptFeatures()
+static void inspectNeighbourFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+{
+	std::vector<strus::Index> far;
+	std::size_t ai = 0, ae = inspectargsize;
+	for (; ai != ae; ++ai)
+	{
+		far.push_back( getFeatureIndex( vsmodel, inspectarg[ai]));
+	}
+	std::set<strus::Index> concepts;
+	std::vector<strus::Index>::const_iterator fi = far.begin(), fe = far.end();
+	for (std::size_t fidx=0; fi != fe; ++fi,++fidx)
+	{
+		std::vector<strus::Index> car = vsmodel->featureConcepts( clname, *fi);
+		if (car.empty() && g_errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to get feature concepts"));
+		}
+		std::vector<strus::Index>::const_iterator ci = car.begin(), ce = car.end();
+		for (; ci != ce; ++ci)
+		{
+			concepts.insert( *ci);
+		}
+	}
+	std::vector<strus::Index> res;
+	std::set<strus::Index>::const_iterator ci = concepts.begin(), ce = concepts.end();
+	for (std::size_t cidx=0; ci != ce; ++ci,++cidx)
+	{
+		std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, *ci);
+		if (far.empty() && g_errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to get concept features"));
+		}
+		res.insert( res.end(), far.begin(), far.end());
+	}
+	printUniqResultFeatures( vsmodel, res, mode);
+}
+
 // Inspect strus::VectorSpaceModelInstanceInterface::nofConcepts()
 static void inspectNofConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char**, std::size_t inspectargsize)
 {
@@ -381,9 +419,12 @@ static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vs
 		{
 			if (inspectarg[ai][0] < '0' || inspectarg[ai][0] > '9')
 			{
-				throw strus::runtime_error(_TXT("number expected as argument"));
+				indexar.push_back( getFeatureIndex( vsmodel, inspectarg[ ai]));
 			}
-			indexar.push_back( strus::utils::toint( inspectarg[ai]));
+			else
+			{
+				indexar.push_back( strus::utils::toint( inspectarg[ai]));
+			}
 		}
 	}
 	std::vector<strus::Index>::const_iterator ii = indexar.begin(), ie = indexar.end();
@@ -557,13 +598,13 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"mapvec\" { <vector> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a vector of double precision floats as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return a list of indices of concepts near it.") << std::endl;
-			std::cout << "            \"featcon\" { <featno> }" << std::endl;
+			std::cout << "            \"featcon\" { <feat> }" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take a single or list of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "               = " << _TXT("Return a sorted list of indices of concepts assigned to it.") << std::endl;
-			std::cout << "            \"featvec\" <featno>" << std::endl;
+			std::cout << "            \"featvec\" <feat>" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take a single feature number (with '%c' prefix) or name as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "               = " << _TXT("Return the vector assigned to it.") << std::endl;
-			std::cout << "            \"featname\" { <featno> }" << std::endl;
+			std::cout << "            \"featname\" { <feat> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of feature numbers as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return the list of names assigned to it.") << std::endl;
 			std::cout << "            \"featidx\" { <featname> }" << std::endl;
@@ -575,6 +616,12 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("\"confeatidx\" prints only the result feature indices.") << std::endl;
 			std::cout << "               = " << _TXT("\"confeatname\" prints only the result feature names.") << std::endl;
 			std::cout << "               = " << _TXT("\"confeat\" prints both indices and names.") << std::endl;
+			std::cout << "            \"nbfeat\" or \"nbfeatidx\" \"nbfeatname\"  { <feat> }" << std::endl;
+			std::cout << "               = " << strus::string_format( _TXT("Take a single or list of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
+			std::cout << "               = " << _TXT("Return a list of features reachable over any shared concept.") << std::endl;
+			std::cout << "               = " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
+			std::cout << "               = " << _TXT("\"nbfeatname\" prints only the result feature names.") << std::endl;
+			std::cout << "               = " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
 			std::cout << "            \"nofcon\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of concepts defined.") << std::endl;
 			std::cout << "            \"noffeat\"" << std::endl;
@@ -713,6 +760,18 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "confeat"))
 		{
 			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndexName);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
+		{
+			inspectNeighbourFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndex);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatname"))
+		{
+			inspectNeighbourFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintName);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "nbfeat"))
+		{
+			inspectNeighbourFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndexName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nofcon"))
 		{
