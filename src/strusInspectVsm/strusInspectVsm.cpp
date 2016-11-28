@@ -419,9 +419,12 @@ static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vs
 		{
 			if (inspectarg[ai][0] < '0' || inspectarg[ai][0] > '9')
 			{
-				throw strus::runtime_error(_TXT("number expected as argument"));
+				indexar.push_back( getFeatureIndex( vsmodel, inspectarg[ ai]));
 			}
-			indexar.push_back( strus::utils::toint( inspectarg[ai]));
+			else
+			{
+				indexar.push_back( strus::utils::toint( inspectarg[ai]));
+			}
 		}
 	}
 	std::vector<strus::Index>::const_iterator ii = indexar.begin(), ie = indexar.end();
