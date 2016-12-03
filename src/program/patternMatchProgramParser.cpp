@@ -122,7 +122,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 							(void)parse_OPERATOR(si);
 							posbind = analyzer::BindSuccessor;
 						}
-						m_patternLexer->definePattern(
+						m_patternLexer->defineLexem(
 							nameid, regex, resultIndex, level, posbind);
 					}
 					while (isOr(*si));
