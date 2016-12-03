@@ -610,6 +610,9 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"featidx\" { <featname> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of feature names as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return the list of indices assigned to it.") << std::endl;
+			std::cout << "            \"featsim\" <feat1> <feat2>" << std::endl;
+			std::cout << "               = " << _TXT("Take two feature numbers (with '%c' prefix) or names as input.") << std::endl;
+			std::cout << "               = " << _TXT("Return the cosine similarity, a value between 0.0 and 1.0.") << std::endl;
 			std::cout << "            \"confeat\" or \"confeatidx\" \"confeatname\" { <conceptno> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of concept numbers as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return a sorted list of features assigned to it.") << std::endl;

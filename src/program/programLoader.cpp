@@ -2143,17 +2143,20 @@ DLL_PUBLIC bool strus::loadVectorSpaceModelVectors(
 DLL_PUBLIC PatternMatcherProgram::~PatternMatcherProgram()
 {
 	if (m_lexer) delete m_lexer;
+	if (m_termFeeder) delete m_termFeeder;
 	if (m_matcher) delete m_matcher;
 }
 
 DLL_PUBLIC void PatternMatcherProgram::init(
 		PatternLexerInstanceInterface* lexer_,
+		PatternTermFeederInstanceInterface* termFeeder_,
 		PatternMatcherInstanceInterface* matcher_,
 		const std::vector<std::size_t>& regexidmap_,
 		const std::string& regexnames_,
 		const std::vector<uint32_t>& symbolRegexIdList_)
 {
 	m_lexer = lexer_;
+	m_termFeeder = termFeeder_;
 	m_matcher = matcher_;
 	m_regexidmap = regexidmap_;
 	m_regexnames = regexnames_;
@@ -2164,6 +2167,13 @@ DLL_PUBLIC PatternLexerInstanceInterface* PatternMatcherProgram::fetchLexer()
 {
 	PatternLexerInstanceInterface* rt = m_lexer;
 	m_lexer = 0;
+	return rt;
+}
+
+DLL_PUBLIC PatternTermFeederInstanceInterface* PatternMatcherProgram::fetchTermFeeder()
+{
+	PatternTermFeederInstanceInterface* rt = m_termFeeder;
+	m_termFeeder = 0;
 	return rt;
 }
 
@@ -2182,6 +2192,7 @@ DLL_PUBLIC const char* PatternMatcherProgram::tokenName( unsigned int id) const
 	}
 	return m_regexnames.c_str() + m_regexidmap[ id-1];
 }
+
 
 DLL_PUBLIC bool strus::loadPatternMatcherProgram(
 		PatternMatcherProgram& result,
@@ -2219,6 +2230,46 @@ DLL_PUBLIC bool strus::loadPatternMatcherProgram(
 	catch (const std::bad_alloc&)
 	{
 		errorhnd->report( _TXT("out of memory loading pattern match program '%s'"), prgname);
+		return false;
+	}
+}
+
+DLL_PUBLIC bool strus::loadPatternMatcherProgramForAnalyzerOutput(
+		PatternMatcherProgram& result,
+		const PatternTermFeederInterface* termFeeder,
+		const PatternMatcherInterface* matcher,
+		const std::vector<std::pair<std::string,std::string> >& sources,
+		ErrorBufferInterface* errorhnd)
+{
+	const char* prgname = "";
+	try
+	{
+		if (errorhnd->hasError()) throw std::runtime_error(_TXT("called load patter matcher program with error"));
+		PatternMatcherProgramParser program( termFeeder, matcher, errorhnd);
+
+		std::vector<std::pair<std::string,std::string> >::const_iterator
+			si = sources.begin(), se = sources.end();
+		for (; si != se; ++si)
+		{
+			prgname = si->first.c_str();
+			if (!program.load( si->second)) throw std::runtime_error( errorhnd->fetchError());
+		}
+		if (!program.compile())
+		{
+			errorhnd->explain(_TXT("failed to compile pattern match program for analyzer output"));
+			return false;
+		}
+		program.fetchResult( result);
+		return true;
+	}
+	catch (const std::runtime_error& e)
+	{
+		errorhnd->report( _TXT("failed to load pattern match program (for analyzer output) '%s': %s"), prgname, e.what());
+		return false;
+	}
+	catch (const std::bad_alloc&)
+	{
+		errorhnd->report( _TXT("out of memory loading pattern match program (for analyzer output) '%s'"), prgname);
 		return false;
 	}
 }

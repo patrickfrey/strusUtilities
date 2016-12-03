@@ -16,12 +16,13 @@
 /// \brief strus toplevel namespace
 using namespace strus;
 
-unsigned int SymbolTable::getOrCreate( const std::string& key)
+unsigned int SymbolTable::getOrCreate( const std::string& key, bool* isNew)
 {
 	std::string lokey = utils::tolower( key);
 	Map::const_iterator fi = m_map.find( lokey);
 	if (fi == m_map.end())
 	{
+		if (isNew) *isNew = true;
 		m_strings.push_back('\0');
 		m_inv.push_back( m_strings.size());
 		m_strings.append( key);
@@ -29,6 +30,7 @@ unsigned int SymbolTable::getOrCreate( const std::string& key)
 	}
 	else
 	{
+		if (isNew) *isNew = false;
 		return fi->second;
 	}
 }

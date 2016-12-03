@@ -10,8 +10,9 @@
 #include "patternMatchProgramParser.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/patternLexerInterface.hpp"
 #include "strus/patternMatcherInterface.hpp"
+#include "strus/patternLexerInterface.hpp"
+#include "strus/patternTermFeederInterface.hpp"
 #include "private/internationalization.hpp"
 #include "private/utils.hpp"
 #include "lexems.hpp"
@@ -31,13 +32,28 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	,m_patternLexerOptionNames(crm->getCompileOptions())
 	,m_patternMatcher(tpm->createInstance())
 	,m_patternLexer(crm->createInstance())
+	,m_patternTermFeeder()
 {
 	if (!m_patternMatcher.get() || !m_patternLexer.get()) throw strus::runtime_error("failed to create pattern matching structures to instrument");
 }
 
+PatternMatcherProgramParser::PatternMatcherProgramParser(
+		const PatternTermFeederInterface* tfm,
+		const PatternMatcherInterface* tpm,
+		ErrorBufferInterface* errorhnd_)
+	:m_errorhnd(errorhnd_)
+	,m_patternMatcherOptionNames(tpm->getCompileOptions())
+	,m_patternLexerOptionNames()
+	,m_patternMatcher(tpm->createInstance())
+	,m_patternLexer()
+	,m_patternTermFeeder(tfm->createInstance())
+{
+	if (!m_patternMatcher.get() || !m_patternTermFeeder.get()) throw strus::runtime_error("failed to create pattern matching structures to instrument");
+}
+
 void PatternMatcherProgramParser::fetchResult( PatternMatcherProgram& result)
 {
-	result.init( m_patternLexer.release(), m_patternMatcher.release(), m_regexNameSymbolTab.invmap(), m_regexNameSymbolTab.strings(), m_symbolRegexIdList);
+	result.init( m_patternLexer.release(), m_patternTermFeeder.release(), m_patternMatcher.release(), m_regexNameSymbolTab.invmap(), m_regexNameSymbolTab.strings(), m_symbolRegexIdList);
 }
 
 bool PatternMatcherProgramParser::load( const std::string& source)
@@ -72,7 +88,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					level = parse_UNSIGNED( si);
 					has_level = true;
 				}
-				if (isColon( *si))
+				if (m_patternLexer.get() && isColon( *si))
 				{
 					//... char regex expression declaration
 					if (!visible)
@@ -266,6 +282,22 @@ const char* PatternMatcherProgramParser::getSymbolRegexId( unsigned int id) cons
 	return m_regexNameSymbolTab.key( m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1]);
 }
 
+unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string& type)
+{
+	bool isNew = true;
+	unsigned int typid = m_regexNameSymbolTab.getOrCreate( type, &isNew);
+	if (typid > MaxRegularExpressionNameId)
+	{
+		throw strus::runtime_error(_TXT("too many term types defined: %u"), typid);
+	}
+	if (isNew)
+	{
+		m_patternTermFeeder->defineLexem( typid, type);
+	}
+	return typid;
+}
+
+
 void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo)
 {
 	exprinfo.minrange = 0;
@@ -399,7 +431,9 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 	}
 	else
 	{
-		unsigned int id = m_regexNameSymbolTab.get( name);
+		unsigned int id = m_patternLexer.get()
+				? m_regexNameSymbolTab.get( name)
+				: getAnalyzerTermType( name);
 		if (id)
 		{
 			if (isStringQuote(*si))

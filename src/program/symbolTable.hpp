@@ -26,7 +26,7 @@ public:
 		:m_map(o.m_map),m_inv(o.m_inv){}
 
 	/// \brief Lookup of id of a key with implicit definition if not defined
-	unsigned int getOrCreate( const std::string& key);
+	unsigned int getOrCreate( const std::string& key, bool* isNew=0);
 
 	/// \brief Lookup of id
 	unsigned int get( const std::string& key) const;

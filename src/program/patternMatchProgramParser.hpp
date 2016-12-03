@@ -11,6 +11,7 @@
 #define _STRUS_UTILITIES_PROGRAM_PATTERN_MATCH_PROGRAM_PARSER_INCLUDED
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/patternLexerInstanceInterface.hpp"
+#include "strus/patternTermFeederInstanceInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/stdint.h"
 #include "strus/analyzer/patternMatcherOptions.hpp"
@@ -27,6 +28,8 @@ namespace strus {
 /// \brief Forward declaration
 class PatternLexerInterface;
 /// \brief Forward declaration
+class PatternTermFeederInterface;
+/// \brief Forward declaration
 class PatternMatcherInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
@@ -41,6 +44,12 @@ public:
 	/// \brief Constructor
 	PatternMatcherProgramParser(
 			const PatternLexerInterface* crm,
+			const PatternMatcherInterface* tpm,
+			ErrorBufferInterface* errorhnd_);
+
+	/// \brief Constructor
+	PatternMatcherProgramParser(
+			const PatternTermFeederInterface* tfm,
 			const PatternMatcherInterface* tpm,
 			ErrorBufferInterface* errorhnd_);
 
@@ -61,6 +70,7 @@ private:
 
 	uint32_t getOrCreateSymbol( unsigned int regexid, const std::string& name);
 	const char* getSymbolRegexId( unsigned int id) const;
+	unsigned int getAnalyzerTermType( const std::string& type);
 	void loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo);
 	void loadExpression( char const*& si, SubExpressionInfo& exprinfo);
 	void loadOption( char const*& si);
@@ -73,6 +83,7 @@ private:
 	analyzer::PatternLexerOptions m_patternLexerOptions;
 	Reference<PatternMatcherInstanceInterface> m_patternMatcher;
 	Reference<PatternLexerInstanceInterface> m_patternLexer;
+	Reference<PatternTermFeederInstanceInterface> m_patternTermFeeder;
 	SymbolTable m_regexNameSymbolTab;
 	SymbolTable m_patternNameSymbolTab;
 	std::vector<uint32_t> m_symbolRegexIdList;
