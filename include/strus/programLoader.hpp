@@ -265,8 +265,7 @@ public:
 		PatternLexerInstanceInterface* lexer_,
 		PatternTermFeederInstanceInterface* termFeeder_,
 		PatternMatcherInstanceInterface* matcher_,
-		const std::vector<std::size_t>& regexidmap_,
-		const std::string& regexnames_,
+		const std::vector<std::string>& regexidmap_,
 		const std::vector<uint32_t>& symbolRegexIdList_);
 
 	PatternLexerInstanceInterface* fetchLexer();
@@ -279,8 +278,7 @@ private:
 	PatternLexerInstanceInterface* m_lexer;
 	PatternTermFeederInstanceInterface* m_termFeeder;
 	PatternMatcherInstanceInterface* m_matcher;
-	std::vector<std::size_t> m_regexidmap;
-	std::string m_regexnames;
+	std::vector<std::string> m_regexidmap;
 	std::vector<uint32_t> m_symbolRegexIdList;
 };
 

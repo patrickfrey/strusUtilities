@@ -45,10 +45,10 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/hton.hpp"
 #include "strus/base/inputStream.hpp"
+#include "strus/base/symbolTable.hpp"
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
 #include "queryStruct.hpp"
-#include "symbolTable.hpp"
 #include "errorPosition.hpp"
 #include "patternMatchProgramParser.hpp"
 #include <string>
@@ -2151,15 +2151,13 @@ DLL_PUBLIC void PatternMatcherProgram::init(
 		PatternLexerInstanceInterface* lexer_,
 		PatternTermFeederInstanceInterface* termFeeder_,
 		PatternMatcherInstanceInterface* matcher_,
-		const std::vector<std::size_t>& regexidmap_,
-		const std::string& regexnames_,
+		const std::vector<std::string>& regexidmap_,
 		const std::vector<uint32_t>& symbolRegexIdList_)
 {
 	m_lexer = lexer_;
 	m_termFeeder = termFeeder_;
 	m_matcher = matcher_;
 	m_regexidmap = regexidmap_;
-	m_regexnames = regexnames_;
 	m_symbolRegexIdList = symbolRegexIdList_;
 }
 
@@ -2190,7 +2188,7 @@ DLL_PUBLIC const char* PatternMatcherProgram::tokenName( unsigned int id) const
 	{
 		id = m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1];
 	}
-	return m_regexnames.c_str() + m_regexidmap[ id-1];
+	return m_regexidmap[ id-1].c_str();
 }
 
 

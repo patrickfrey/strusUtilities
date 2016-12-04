@@ -14,9 +14,9 @@
 #include "strus/patternTermFeederInstanceInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/stdint.h"
+#include "strus/base/symbolTable.hpp"
 #include "strus/analyzer/patternMatcherOptions.hpp"
 #include "strus/analyzer/patternLexerOptions.hpp"
-#include "symbolTable.hpp"
 #include <string>
 #include <vector>
 #include <map>

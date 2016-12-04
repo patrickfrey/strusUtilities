@@ -53,7 +53,10 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 
 void PatternMatcherProgramParser::fetchResult( PatternMatcherProgram& result)
 {
-	result.init( m_patternLexer.release(), m_patternTermFeeder.release(), m_patternMatcher.release(), m_regexNameSymbolTab.invmap(), m_regexNameSymbolTab.strings(), m_symbolRegexIdList);
+	std::vector<std::string> regexidmap;
+	SymbolTable::const_inv_iterator si = m_regexNameSymbolTab.inv_begin(), se = m_regexNameSymbolTab.inv_end();
+	for (; si != se; ++si) regexidmap.push_back( *si);
+	result.init( m_patternLexer.release(), m_patternTermFeeder.release(), m_patternMatcher.release(), regexidmap, m_symbolRegexIdList);
 }
 
 bool PatternMatcherProgramParser::load( const std::string& source)
@@ -284,13 +287,12 @@ const char* PatternMatcherProgramParser::getSymbolRegexId( unsigned int id) cons
 
 unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string& type)
 {
-	bool isNew = true;
-	unsigned int typid = m_regexNameSymbolTab.getOrCreate( type, &isNew);
+	unsigned int typid = m_regexNameSymbolTab.getOrCreate( type);
 	if (typid > MaxRegularExpressionNameId)
 	{
 		throw strus::runtime_error(_TXT("too many term types defined: %u"), typid);
 	}
-	if (isNew)
+	if (m_regexNameSymbolTab.isNew( typid))
 	{
 		m_patternTermFeeder->defineLexem( typid, type);
 	}
