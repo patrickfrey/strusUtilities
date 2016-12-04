@@ -258,7 +258,7 @@ class PatternMatcherProgram
 {
 public:
 	PatternMatcherProgram()
-		:m_lexer(0),m_matcher(0){}
+		:m_lexer(0),m_termFeeder(0),m_matcher(0){}
 	~PatternMatcherProgram();
 
 	void init( 
