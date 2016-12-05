@@ -223,7 +223,7 @@ int main( int argc_, const char* argv_[])
 		}
 		// Parse arguments:
 		bool quiet = opt( "quiet");
-		bool measureDuration = opt( "time");
+		bool doMeasureDuration = opt( "time");
 		bool verbose = opt("verbose");
 		std::string username;
 		std::size_t nofRanks = 20;
@@ -383,7 +383,7 @@ int main( int argc_, const char* argv_[])
 		}
 		unsigned int nofQueries = 0;
 		double startTime = 0.0;
-		if (measureDuration)
+		if (doMeasureDuration)
 		{
 			startTime = getTimeStamp();
 		}
@@ -440,7 +440,7 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
-		if (measureDuration)
+		if (doMeasureDuration)
 		{
 			double endTime = getTimeStamp();
 			double duration = endTime - startTime;

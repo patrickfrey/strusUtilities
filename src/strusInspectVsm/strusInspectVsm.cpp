@@ -38,6 +38,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <cmath>
+#include <ctime>
 
 #undef STRUS_LOWLEVEL_DEBUG
 #define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace_std"
@@ -593,6 +594,12 @@ static void inspectDump( const strus::VectorSpaceModelInterface* vsi, const stru
 	}
 }
 
+static double getTimeStamp()
+{
+	struct timeval now;
+	gettimeofday( &now, NULL);
+	return (double)now.tv_usec / 1000000.0 + now.tv_sec;
+}
 
 int main( int argc, const char* argv[])
 {
@@ -610,10 +617,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 10,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "C,class:");
+				"s,config:", "S,configfile:", "C,class:",
+				"D,time");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -785,6 +793,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
+			std::cout << "-D|--time" << std::endl;
+			std::cout << "    " << _TXT("Do measure duration of operation") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -824,6 +834,8 @@ int main( int argc, const char* argv[])
 			modelname = DEFAULT_VECTOR_MODEL;
 			if (errorBuffer->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
 		}
+		bool doMeasureDuration = opt( "time");
+
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
@@ -840,6 +852,12 @@ int main( int argc, const char* argv[])
 		const char** inspectarg = opt.argv() + 1;
 		std::size_t inspectargsize = opt.nofargs() - 1;
 
+		double startTime = 0.0;
+		if (doMeasureDuration)
+		{
+			vsmodel->preload();
+			startTime = getTimeStamp();
+		}
 		// Do inspect what is requested:
 		if (strus::utils::caseInsensitiveEquals( what, "classnames"))
 		{
@@ -937,6 +955,12 @@ int main( int argc, const char* argv[])
 		else
 		{
 			throw strus::runtime_error( _TXT( "unknown item to inspect '%s'"), what.c_str());
+		}
+		if (doMeasureDuration)
+		{
+			double endTime = getTimeStamp();
+			double duration = endTime - startTime;
+			std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
 		}
 		if (errorBuffer->hasError())
 		{
