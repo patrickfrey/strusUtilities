@@ -743,7 +743,7 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
 			std::cout << "               = " << _TXT("\"nbfeatname\" prints only the result feature names.") << std::endl;
 			std::cout << "               = " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
-			std::cout << "            \"opfeatcon\"  or \"opfeatname\" { <expr> }" << std::endl;
+			std::cout << "            \"opfeat\"  or \"opfeatname\" { <expr> }" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take an arithmetic expression of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "               = " << _TXT("Return a list of features found.") << std::endl;
 			std::cout << "            \"nofcon\"" << std::endl;
