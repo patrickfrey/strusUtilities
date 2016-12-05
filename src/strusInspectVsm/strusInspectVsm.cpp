@@ -127,6 +127,124 @@ static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterf
 	std::cout << std::endl;
 }
 
+static std::vector<double> parseNextVectorOperand( const strus::VectorSpaceModelInstanceInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
+{
+	std::vector<double> rt;
+	if (argidx >= inspectargsize)
+	{
+		throw strus::runtime_error(_TXT("unexpected end of arguments"));
+	}
+	char sign = '+';
+	const char* argptr = 0;
+	if (inspectarg[ argidx][0] == '+' || inspectarg[ argidx][0] == '-')
+	{
+		sign = inspectarg[ argidx][0];
+		if (inspectarg[ argidx][1])
+		{
+			argptr = inspectarg[ argidx]+1;
+		}
+		else
+		{
+			if (++argidx == inspectargsize) throw strus::runtime_error(_TXT( "unexpected end of arguments"));
+			argptr = inspectarg[ argidx];
+		}
+		++argidx;
+	}
+	else
+	{
+		argptr = inspectarg[ argidx];
+		++argidx;
+	}
+	strus::Index featidx = getFeatureIndex( vsmodel, argptr);
+	rt = vsmodel->featureVector( featidx);
+	if (sign == '-')
+	{
+		std::vector<double>::iterator vi = rt.begin(), ve = rt.end();
+		for (; vi != ve; ++vi)
+		{
+			*vi = -*vi;
+		}
+	}
+	return rt;
+}
+
+enum VectorOperator
+{
+	VectorPlus,
+	VectorMinus
+};
+static VectorOperator parseNextVectorOperator( const strus::VectorSpaceModelInstanceInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
+{
+	if (inspectarg[ argidx][0] == '+')
+	{
+		if (!inspectarg[ argidx][1])
+		{
+			++argidx;
+		}
+		return VectorPlus;
+	}
+	if (inspectarg[ argidx][0] == '-')
+	{
+		if (inspectarg[ argidx][1])
+		{
+			return VectorPlus;
+		}
+		else
+		{
+			++argidx;
+			return VectorMinus;
+		}
+	}
+	return VectorPlus;
+}
+
+static std::vector<double> addVector( const std::vector<double>& arg1, const std::vector<double>& arg2)
+{
+	std::vector<double> rt;
+	std::vector<double>::const_iterator i1 = arg1.begin(), e1 = arg1.end();
+	std::vector<double>::const_iterator i2 = arg2.begin(), e2 = arg2.end();
+	for (; i1 != e1 && i2 != e2; ++i1,++i2)
+	{
+		rt.push_back( *i1 + *i2);
+	}
+	return rt;
+}
+
+static std::vector<double> subVector( const std::vector<double>& arg1, const std::vector<double>& arg2)
+{
+	std::vector<double> rt;
+	std::vector<double>::const_iterator i1 = arg1.begin(), e1 = arg1.end();
+	std::vector<double>::const_iterator i2 = arg2.begin(), e2 = arg2.end();
+	for (; i1 != e1 && i2 != e2; ++i1,++i2)
+	{
+		rt.push_back( *i1 - *i2);
+	}
+	return rt;
+}
+
+static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+{
+	if (inspectargsize == 0) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
+	std::size_t argidx=0;
+	std::vector<double> res = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
+	while (argidx < inspectargsize)
+	{
+		VectorOperator opr = parseNextVectorOperator( vsmodel, argidx, inspectarg, inspectargsize);
+		std::vector<double> arg = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
+		switch (opr)
+		{
+			case VectorPlus:
+				res = addVector( res, arg);
+				break;
+			case VectorMinus:
+				res = subVector( res, arg);
+				break;
+		}
+	}
+	std::vector<strus::Index> feats = vsmodel->findSimFeatures( res);
+	printUniqResultFeatures( vsmodel, feats, mode);
+}
+
 // Inspect strus::VectorSpaceModelInstanceInterface::conceptClassNames()
 static void inspectConceptClassNames( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
@@ -625,6 +743,9 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
 			std::cout << "               = " << _TXT("\"nbfeatname\" prints only the result feature names.") << std::endl;
 			std::cout << "               = " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
+			std::cout << "            \"opfeatcon\"  or \"opfeatname\" { <expr> }" << std::endl;
+			std::cout << "               = " << strus::string_format( _TXT("Take an arithmetic expression of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
+			std::cout << "               = " << _TXT("Return a list of features found.") << std::endl;
 			std::cout << "            \"nofcon\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of concepts defined.") << std::endl;
 			std::cout << "            \"noffeat\"" << std::endl;
@@ -763,6 +884,14 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "confeat"))
 		{
 			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndexName);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "opfeat"))
+		{
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "opfeatname"))
+		{
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
 		{
