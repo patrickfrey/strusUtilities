@@ -8,7 +8,6 @@ set(source_files
 	errorPosition.cpp
 	queryStruct.cpp
 	patternMatchProgramParser.cpp
-	symbolTable.cpp
 	programLoader.cpp
 )
 

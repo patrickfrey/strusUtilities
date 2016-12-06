@@ -38,6 +38,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <cmath>
+#include <ctime>
 
 #undef STRUS_LOWLEVEL_DEBUG
 #define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace_std"
@@ -127,6 +128,124 @@ static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterf
 	std::cout << std::endl;
 }
 
+static std::vector<double> parseNextVectorOperand( const strus::VectorSpaceModelInstanceInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
+{
+	std::vector<double> rt;
+	if (argidx >= inspectargsize)
+	{
+		throw strus::runtime_error(_TXT("unexpected end of arguments"));
+	}
+	char sign = '+';
+	const char* argptr = 0;
+	if (inspectarg[ argidx][0] == '+' || inspectarg[ argidx][0] == '-')
+	{
+		sign = inspectarg[ argidx][0];
+		if (inspectarg[ argidx][1])
+		{
+			argptr = inspectarg[ argidx]+1;
+		}
+		else
+		{
+			if (++argidx == inspectargsize) throw strus::runtime_error(_TXT( "unexpected end of arguments"));
+			argptr = inspectarg[ argidx];
+		}
+		++argidx;
+	}
+	else
+	{
+		argptr = inspectarg[ argidx];
+		++argidx;
+	}
+	strus::Index featidx = getFeatureIndex( vsmodel, argptr);
+	rt = vsmodel->featureVector( featidx);
+	if (sign == '-')
+	{
+		std::vector<double>::iterator vi = rt.begin(), ve = rt.end();
+		for (; vi != ve; ++vi)
+		{
+			*vi = -*vi;
+		}
+	}
+	return rt;
+}
+
+enum VectorOperator
+{
+	VectorPlus,
+	VectorMinus
+};
+static VectorOperator parseNextVectorOperator( const strus::VectorSpaceModelInstanceInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
+{
+	if (inspectarg[ argidx][0] == '+')
+	{
+		if (!inspectarg[ argidx][1])
+		{
+			++argidx;
+		}
+		return VectorPlus;
+	}
+	if (inspectarg[ argidx][0] == '-')
+	{
+		if (inspectarg[ argidx][1])
+		{
+			return VectorPlus;
+		}
+		else
+		{
+			++argidx;
+			return VectorMinus;
+		}
+	}
+	return VectorPlus;
+}
+
+static std::vector<double> addVector( const std::vector<double>& arg1, const std::vector<double>& arg2)
+{
+	std::vector<double> rt;
+	std::vector<double>::const_iterator i1 = arg1.begin(), e1 = arg1.end();
+	std::vector<double>::const_iterator i2 = arg2.begin(), e2 = arg2.end();
+	for (; i1 != e1 && i2 != e2; ++i1,++i2)
+	{
+		rt.push_back( *i1 + *i2);
+	}
+	return rt;
+}
+
+static std::vector<double> subVector( const std::vector<double>& arg1, const std::vector<double>& arg2)
+{
+	std::vector<double> rt;
+	std::vector<double>::const_iterator i1 = arg1.begin(), e1 = arg1.end();
+	std::vector<double>::const_iterator i2 = arg2.begin(), e2 = arg2.end();
+	for (; i1 != e1 && i2 != e2; ++i1,++i2)
+	{
+		rt.push_back( *i1 - *i2);
+	}
+	return rt;
+}
+
+static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+{
+	if (inspectargsize == 0) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
+	std::size_t argidx=0;
+	std::vector<double> res = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
+	while (argidx < inspectargsize)
+	{
+		VectorOperator opr = parseNextVectorOperator( vsmodel, argidx, inspectarg, inspectargsize);
+		std::vector<double> arg = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
+		switch (opr)
+		{
+			case VectorPlus:
+				res = addVector( res, arg);
+				break;
+			case VectorMinus:
+				res = subVector( res, arg);
+				break;
+		}
+	}
+	std::vector<strus::Index> feats = vsmodel->findSimilarFeatures( res);
+	printUniqResultFeatures( vsmodel, feats, mode);
+}
+
 // Inspect strus::VectorSpaceModelInstanceInterface::conceptClassNames()
 static void inspectConceptClassNames( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
@@ -138,23 +257,6 @@ static void inspectConceptClassNames( const strus::VectorSpaceModelInstanceInter
 		std::cout << *ci << " ";
 	}
 	std::cout << std::endl;
-}
-
-// Inspect strus::VectorSpaceModelInstanceInterface::mapVectorToConcepts()
-static void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize)
-{
-	std::vector<double> vec;
-	std::size_t ai = 0, ae = inspectargsize;
-	for (; ai != ae; ++ai)
-	{
-		vec.push_back( strus::utils::tofloat( inspectarg[ai]));
-	}
-	std::vector<strus::Index> car = vsmodel->mapVectorToConcepts( clname, vec);
-	if (car.empty() && g_errorBuffer->hasError())
-	{
-		throw strus::runtime_error(_TXT("failed to map vector to concept features"));
-	}
-	printUniqResultConcepts( car);
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::featureConcepts()
@@ -430,7 +532,7 @@ static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vs
 	std::vector<strus::Index>::const_iterator ii = indexar.begin(), ie = indexar.end();
 	for (; ii != ie; ++ii)
 	{
-		std::vector<std::string> attributes = vsmodel->attributes( attributeName, *ii);
+		std::vector<std::string> attributes = vsmodel->featureAttributes( attributeName, *ii);
 		if (attributes.empty() && g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to get attributes"));
@@ -446,7 +548,7 @@ static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vs
 static void inspectAttributeNames( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
-	std::vector<std::string> attributeNames = vsmodel->attributeNames();
+	std::vector<std::string> attributeNames = vsmodel->featureAttributeNames();
 	std::vector<std::string>::const_iterator ai = attributeNames.begin(), ae = attributeNames.end();
 	for (; ai != ae; ++ai)
 	{
@@ -475,6 +577,12 @@ static void inspectDump( const strus::VectorSpaceModelInterface* vsi, const stru
 	}
 }
 
+static double getTimeStamp()
+{
+	struct timeval now;
+	gettimeofday( &now, NULL);
+	return (double)now.tv_usec / 1000000.0 + now.tv_sec;
+}
 
 int main( int argc, const char* argv[])
 {
@@ -492,10 +600,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 10,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "C,class:");
+				"s,config:", "S,configfile:", "C,class:",
+				"D,time");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -595,9 +704,6 @@ int main( int argc, const char* argv[])
 			std::cout << "<what>    : " << _TXT("what to inspect:") << std::endl;
 			std::cout << "            \"classnames\"" << std::endl;
 			std::cout << "               = " << _TXT("Return all names of concept classes of the model.") << std::endl;
-			std::cout << "            \"mapvec\" { <vector> }" << std::endl;
-			std::cout << "               = " << _TXT("Take a vector of double precision floats as input.") << std::endl;
-			std::cout << "               = " << _TXT("Return a list of indices of concepts near it.") << std::endl;
 			std::cout << "            \"featcon\" { <feat> }" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take a single or list of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "               = " << _TXT("Return a sorted list of indices of concepts assigned to it.") << std::endl;
@@ -610,6 +716,9 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"featidx\" { <featname> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of feature names as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return the list of indices assigned to it.") << std::endl;
+			std::cout << "            \"featsim\" <feat1> <feat2>" << std::endl;
+			std::cout << "               = " << _TXT("Take two feature numbers (with '%c' prefix) or names as input.") << std::endl;
+			std::cout << "               = " << _TXT("Return the cosine similarity, a value between 0.0 and 1.0.") << std::endl;
 			std::cout << "            \"confeat\" or \"confeatidx\" \"confeatname\" { <conceptno> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of concept numbers as input.") << std::endl;
 			std::cout << "               = " << _TXT("Return a sorted list of features assigned to it.") << std::endl;
@@ -622,6 +731,9 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
 			std::cout << "               = " << _TXT("\"nbfeatname\" prints only the result feature names.") << std::endl;
 			std::cout << "               = " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
+			std::cout << "            \"opfeat\"  or \"opfeatname\" { <expr> }" << std::endl;
+			std::cout << "               = " << strus::string_format( _TXT("Take an arithmetic expression of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
+			std::cout << "               = " << _TXT("Return a list of features found.") << std::endl;
 			std::cout << "            \"nofcon\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of concepts defined.") << std::endl;
 			std::cout << "            \"noffeat\"" << std::endl;
@@ -661,6 +773,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
+			std::cout << "-D|--time" << std::endl;
+			std::cout << "    " << _TXT("Do measure duration of operation") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -700,6 +814,8 @@ int main( int argc, const char* argv[])
 			modelname = DEFAULT_VECTOR_MODEL;
 			if (errorBuffer->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
 		}
+		bool doMeasureDuration = opt( "time");
+
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
@@ -716,15 +832,17 @@ int main( int argc, const char* argv[])
 		const char** inspectarg = opt.argv() + 1;
 		std::size_t inspectargsize = opt.nofargs() - 1;
 
+		double startTime = 0.0;
+		if (doMeasureDuration)
+		{
+			vsmodel->preload();
+			startTime = getTimeStamp();
+		}
 		// Do inspect what is requested:
 		if (strus::utils::caseInsensitiveEquals( what, "classnames"))
 		{
 			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectConceptClassNames( vsmodel.get(), inspectarg, inspectargsize);
-		}
-		else if (strus::utils::caseInsensitiveEquals( what, "mapvec"))
-		{
-			inspectMapVectorToConcepts( vsmodel.get(), clname, inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featsim"))
 		{
@@ -760,6 +878,14 @@ int main( int argc, const char* argv[])
 		else if (strus::utils::caseInsensitiveEquals( what, "confeat"))
 		{
 			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndexName);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "opfeat"))
+		{
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "opfeatname"))
+		{
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
 		{
@@ -805,6 +931,12 @@ int main( int argc, const char* argv[])
 		else
 		{
 			throw strus::runtime_error( _TXT( "unknown item to inspect '%s'"), what.c_str());
+		}
+		if (doMeasureDuration)
+		{
+			double endTime = getTimeStamp();
+			double duration = endTime - startTime;
+			std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
 		}
 		if (errorBuffer->hasError())
 		{

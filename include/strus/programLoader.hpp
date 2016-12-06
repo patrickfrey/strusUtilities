@@ -38,6 +38,10 @@ class PatternLexerInterface;
 /// \brief Forward declaration
 class PatternLexerInstanceInterface;
 /// \brief Forward declaration
+class PatternTermFeederInterface;
+/// \brief Forward declaration
+class PatternTermFeederInstanceInterface;
+/// \brief Forward declaration
 class PatternMatcherInterface;
 /// \brief Forward declaration
 class PatternMatcherInstanceInterface;
@@ -254,26 +258,27 @@ class PatternMatcherProgram
 {
 public:
 	PatternMatcherProgram()
-		:m_lexer(0),m_matcher(0){}
+		:m_lexer(0),m_termFeeder(0),m_matcher(0){}
 	~PatternMatcherProgram();
 
 	void init( 
 		PatternLexerInstanceInterface* lexer_,
+		PatternTermFeederInstanceInterface* termFeeder_,
 		PatternMatcherInstanceInterface* matcher_,
-		const std::vector<std::size_t>& regexidmap_,
-		const std::string& regexnames_,
+		const std::vector<std::string>& regexidmap_,
 		const std::vector<uint32_t>& symbolRegexIdList_);
 
 	PatternLexerInstanceInterface* fetchLexer();
+	PatternTermFeederInstanceInterface* fetchTermFeeder();
 	PatternMatcherInstanceInterface* fetchMatcher();
 
 	const char* tokenName( unsigned int id) const;
 
 private:
 	PatternLexerInstanceInterface* m_lexer;
+	PatternTermFeederInstanceInterface* m_termFeeder;
 	PatternMatcherInstanceInterface* m_matcher;
-	std::vector<std::size_t> m_regexidmap;
-	std::string m_regexnames;
+	std::vector<std::string> m_regexidmap;
 	std::vector<uint32_t> m_symbolRegexIdList;
 };
 
@@ -281,12 +286,26 @@ private:
 /// \param[out] result returned structures instrumented
 /// \param[in] lexer lexer class
 /// \param[in] matcher matcher class
-/// \param[in] sourceString source to parse
+/// \param[in] sources sources to parse
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success
 bool loadPatternMatcherProgram(
 		PatternMatcherProgram& result,
 		const PatternLexerInterface* lexer,
+		const PatternMatcherInterface* matcher,
+		const std::vector<std::pair<std::string,std::string> >& sources,
+		ErrorBufferInterface* errorhnd);
+
+/// \brief Loads and compiles a list of pattern matcher programs from source and instruments a term feeder for pattern matching as analyzer post processing and a matcher instance
+/// \param[out] result returned structures instrumented
+/// \param[in] termFeeder feeder for analyzer output terms
+/// \param[in] matcher matcher class
+/// \param[in] sources sources to parse
+/// \param[in,out] errorhnd buffer for reporting errors (exceptions)
+/// \return true on success
+bool loadPatternMatcherProgramForAnalyzerOutput(
+		PatternMatcherProgram& result,
+		const PatternTermFeederInterface* termFeeder,
 		const PatternMatcherInterface* matcher,
 		const std::vector<std::pair<std::string,std::string> >& sources,
 		ErrorBufferInterface* errorhnd);
