@@ -30,9 +30,15 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	:m_errorhnd(errorhnd_)
 	,m_patternMatcherOptionNames(tpm->getCompileOptions())
 	,m_patternLexerOptionNames(crm->getCompileOptions())
+	,m_patternMatcherOptions()
+	,m_patternLexerOptions()
 	,m_patternMatcher(tpm->createInstance())
 	,m_patternLexer(crm->createInstance())
 	,m_patternTermFeeder()
+	,m_regexNameSymbolTab(errorhnd_)
+	,m_patternNameSymbolTab(errorhnd_)
+	,m_symbolRegexIdList()
+	,m_unresolvedPatternNameSet()
 {
 	if (!m_patternMatcher.get() || !m_patternLexer.get()) throw strus::runtime_error("failed to create pattern matching structures to instrument");
 }
@@ -44,9 +50,15 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	:m_errorhnd(errorhnd_)
 	,m_patternMatcherOptionNames(tpm->getCompileOptions())
 	,m_patternLexerOptionNames()
+	,m_patternMatcherOptions()
+	,m_patternLexerOptions()
 	,m_patternMatcher(tpm->createInstance())
 	,m_patternLexer()
 	,m_patternTermFeeder(tfm->createInstance())
+	,m_regexNameSymbolTab(errorhnd_)
+	,m_patternNameSymbolTab(errorhnd_)
+	,m_symbolRegexIdList()
+	,m_unresolvedPatternNameSet()
 {
 	if (!m_patternMatcher.get() || !m_patternTermFeeder.get()) throw strus::runtime_error("failed to create pattern matching structures to instrument");
 }
@@ -99,13 +111,17 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 						throw strus::runtime_error(_TXT("unexpected colon ':' after dot '.' followed by an identifier, that starts an token pattern declaration marked as private (invisible in output)"));
 					}
 					unsigned int nameid = m_regexNameSymbolTab.getOrCreate( name);
+					if (nameid == 0)
+					{
+						throw strus::runtime_error(_TXT("failed to define regex name symbol"));
+					}
+					if (nameid > MaxRegularExpressionNameId)
+					{
+						throw strus::runtime_error(_TXT("too many regular expression tokens defined: %u"), nameid);
+					}
 					std::string regex;
 					do
 					{
-						if (nameid > MaxRegularExpressionNameId)
-						{
-							throw strus::runtime_error(_TXT("too many regular expression tokens defined: %u"), nameid);
-						}
 						(void)parse_OPERATOR(si);
 
 						//... Regex pattern def -> name : regex ;
@@ -154,6 +170,10 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					}
 					//... token pattern expression declaration
 					unsigned int nameid = m_patternNameSymbolTab.getOrCreate( name);
+					if (nameid == 0)
+					{
+						throw strus::runtime_error(_TXT("failed to define pattern name symbol"));
+					}
 					do
 					{
 						//... Token pattern def -> name = expression ;
@@ -288,6 +308,10 @@ const char* PatternMatcherProgramParser::getSymbolRegexId( unsigned int id) cons
 unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string& type)
 {
 	unsigned int typid = m_regexNameSymbolTab.getOrCreate( type);
+	if (typid == 0)
+	{
+		throw strus::runtime_error(_TXT("failed to define term type symbol"));
+	}
 	if (typid > MaxRegularExpressionNameId)
 	{
 		throw strus::runtime_error(_TXT("too many term types defined: %u"), typid);
@@ -451,6 +475,10 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 			if (!id)
 			{
 				id = m_patternNameSymbolTab.getOrCreate( name);
+				if (id == 0)
+				{
+					throw strus::runtime_error(_TXT("failed to define pattern name symbol"));
+				}
 				m_unresolvedPatternNameSet.insert( id);
 			}
 			m_patternMatcher->pushPattern( name);
