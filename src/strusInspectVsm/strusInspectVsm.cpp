@@ -242,7 +242,7 @@ static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterf
 				break;
 		}
 	}
-	std::vector<strus::Index> feats = vsmodel->findSimFeatures( res);
+	std::vector<strus::Index> feats = vsmodel->findSimilarFeatures( res);
 	printUniqResultFeatures( vsmodel, feats, mode);
 }
 
@@ -257,23 +257,6 @@ static void inspectConceptClassNames( const strus::VectorSpaceModelInstanceInter
 		std::cout << *ci << " ";
 	}
 	std::cout << std::endl;
-}
-
-// Inspect strus::VectorSpaceModelInstanceInterface::mapVectorToConcepts()
-static void inspectMapVectorToConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize)
-{
-	std::vector<double> vec;
-	std::size_t ai = 0, ae = inspectargsize;
-	for (; ai != ae; ++ai)
-	{
-		vec.push_back( strus::utils::tofloat( inspectarg[ai]));
-	}
-	std::vector<strus::Index> car = vsmodel->mapVectorToConcepts( clname, vec);
-	if (car.empty() && g_errorBuffer->hasError())
-	{
-		throw strus::runtime_error(_TXT("failed to map vector to concept features"));
-	}
-	printUniqResultConcepts( car);
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::featureConcepts()
@@ -549,7 +532,7 @@ static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vs
 	std::vector<strus::Index>::const_iterator ii = indexar.begin(), ie = indexar.end();
 	for (; ii != ie; ++ii)
 	{
-		std::vector<std::string> attributes = vsmodel->attributes( attributeName, *ii);
+		std::vector<std::string> attributes = vsmodel->featureAttributes( attributeName, *ii);
 		if (attributes.empty() && g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to get attributes"));
@@ -565,7 +548,7 @@ static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vs
 static void inspectAttributeNames( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
-	std::vector<std::string> attributeNames = vsmodel->attributeNames();
+	std::vector<std::string> attributeNames = vsmodel->featureAttributeNames();
 	std::vector<std::string>::const_iterator ai = attributeNames.begin(), ae = attributeNames.end();
 	for (; ai != ae; ++ai)
 	{
@@ -721,9 +704,6 @@ int main( int argc, const char* argv[])
 			std::cout << "<what>    : " << _TXT("what to inspect:") << std::endl;
 			std::cout << "            \"classnames\"" << std::endl;
 			std::cout << "               = " << _TXT("Return all names of concept classes of the model.") << std::endl;
-			std::cout << "            \"mapvec\" { <vector> }" << std::endl;
-			std::cout << "               = " << _TXT("Take a vector of double precision floats as input.") << std::endl;
-			std::cout << "               = " << _TXT("Return a list of indices of concepts near it.") << std::endl;
 			std::cout << "            \"featcon\" { <feat> }" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take a single or list of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "               = " << _TXT("Return a sorted list of indices of concepts assigned to it.") << std::endl;
@@ -863,10 +843,6 @@ int main( int argc, const char* argv[])
 		{
 			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectConceptClassNames( vsmodel.get(), inspectarg, inspectargsize);
-		}
-		else if (strus::utils::caseInsensitiveEquals( what, "mapvec"))
-		{
-			inspectMapVectorToConcepts( vsmodel.get(), clname, inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featsim"))
 		{
