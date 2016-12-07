@@ -35,8 +35,8 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	,m_patternMatcher(tpm->createInstance())
 	,m_patternLexer(crm->createInstance())
 	,m_patternTermFeeder()
-	,m_regexNameSymbolTab(errorhnd_)
-	,m_patternNameSymbolTab(errorhnd_)
+	,m_regexNameSymbolTab()
+	,m_patternNameSymbolTab()
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
@@ -55,8 +55,8 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	,m_patternMatcher(tpm->createInstance())
 	,m_patternLexer()
 	,m_patternTermFeeder(tfm->createInstance())
-	,m_regexNameSymbolTab(errorhnd_)
-	,m_patternNameSymbolTab(errorhnd_)
+	,m_regexNameSymbolTab()
+	,m_patternNameSymbolTab()
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
