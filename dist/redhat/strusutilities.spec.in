@@ -218,8 +218,11 @@ Requires: %{name} >= %{main_version}-%{release}
 
 %prep
 %setup -n %{name}-%{main_version}
-%if %{rhel5} || %{centos5} || %{scilin5} || %{sles11}
+
+%if %{suse} || %{sles}
+%if %{sles11}
 %patch0 -p1
+%endif
 %endif
 
 %build
