@@ -103,10 +103,13 @@ enum FeatureResultPrintMode
 	PrintIndexName
 };
 
-static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::vector<strus::Index>& res_, FeatureResultPrintMode mode)
+static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::vector<strus::Index>& res_, FeatureResultPrintMode mode, bool sortuniq)
 {
 	std::vector<strus::Index> res( res_);
-	std::sort( res.begin(), res.end());
+	if (sortuniq)
+	{
+		std::sort( res.begin(), res.end());
+	}
 	std::vector<strus::Index>::const_iterator ri = res.begin(), re = res.end();
 	std::size_t ridx = 0;
 	while (ri != re)
@@ -243,7 +246,7 @@ static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterf
 		}
 	}
 	std::vector<strus::Index> feats = vsmodel->findSimilarFeatures( res, maxNofRanks);
-	printUniqResultFeatures( vsmodel, feats, mode);
+	printUniqResultFeatures( vsmodel, feats, mode, false);
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::conceptClassNames()
@@ -395,7 +398,7 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 			}
 			res.insert( res.end(), far.begin(), far.end());
 		}
-		printUniqResultFeatures( vsmodel, res, mode);
+		printUniqResultFeatures( vsmodel, res, mode, true);
 	}
 	else
 	{
@@ -405,7 +408,7 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 			std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, ci);
 			if (far.empty()) continue;
 			std::cout << ci << ": ";
-			printUniqResultFeatures( vsmodel, far, mode);
+			printUniqResultFeatures( vsmodel, far, mode, true);
 		}
 	}
 }
@@ -445,7 +448,7 @@ static void inspectNeighbourFeatures( const strus::VectorSpaceModelInstanceInter
 		}
 		res.insert( res.end(), far.begin(), far.end());
 	}
-	printUniqResultFeatures( vsmodel, res, mode);
+	printUniqResultFeatures( vsmodel, res, mode, true);
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::nofConcepts()
