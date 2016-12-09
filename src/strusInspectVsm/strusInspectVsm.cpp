@@ -103,10 +103,13 @@ enum FeatureResultPrintMode
 	PrintIndexName
 };
 
-static void printUniqResultFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::vector<strus::Index>& res_, FeatureResultPrintMode mode)
+static void printResultFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::vector<strus::Index>& res_, FeatureResultPrintMode mode, bool sortuniq)
 {
 	std::vector<strus::Index> res( res_);
-	std::sort( res.begin(), res.end());
+	if (sortuniq)
+	{
+		std::sort( res.begin(), res.end());
+	}
 	std::vector<strus::Index>::const_iterator ri = res.begin(), re = res.end();
 	std::size_t ridx = 0;
 	while (ri != re)
@@ -223,7 +226,7 @@ static std::vector<double> subVector( const std::vector<double>& arg1, const std
 	return rt;
 }
 
-static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks)
 {
 	if (inspectargsize == 0) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
 	std::size_t argidx=0;
@@ -242,8 +245,8 @@ static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterf
 				break;
 		}
 	}
-	std::vector<strus::Index> feats = vsmodel->findSimilarFeatures( res);
-	printUniqResultFeatures( vsmodel, feats, mode);
+	std::vector<strus::Index> feats = vsmodel->findSimilarFeatures( res, maxNofRanks);
+	printResultFeatures( vsmodel, feats, mode, false);
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::conceptClassNames()
@@ -395,7 +398,7 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 			}
 			res.insert( res.end(), far.begin(), far.end());
 		}
-		printUniqResultFeatures( vsmodel, res, mode);
+		printResultFeatures( vsmodel, res, mode, true);
 	}
 	else
 	{
@@ -405,7 +408,7 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 			std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, ci);
 			if (far.empty()) continue;
 			std::cout << ci << ": ";
-			printUniqResultFeatures( vsmodel, far, mode);
+			printResultFeatures( vsmodel, far, mode, true);
 		}
 	}
 }
@@ -445,7 +448,7 @@ static void inspectNeighbourFeatures( const strus::VectorSpaceModelInstanceInter
 		}
 		res.insert( res.end(), far.begin(), far.end());
 	}
-	printUniqResultFeatures( vsmodel, res, mode);
+	printResultFeatures( vsmodel, res, mode, true);
 }
 
 // Inspect strus::VectorSpaceModelInstanceInterface::nofConcepts()
@@ -600,11 +603,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 10,
+				argc, argv, 11,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "C,class:",
-				"D,time");
+				"D,time", "N,nofranks:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -775,6 +778,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			std::cout << "-D|--time" << std::endl;
 			std::cout << "    " << _TXT("Do measure duration of operation") << std::endl;
+			std::cout << "-N|--nofranks <N>" << std::endl;
+			std::cout << "    " << _TXT("Limit the number of results to for searches to <N> (default 20)") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -815,7 +820,11 @@ int main( int argc, const char* argv[])
 			if (errorBuffer->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
 		}
 		bool doMeasureDuration = opt( "time");
-
+		unsigned int maxNofRanks = 20;
+		if (opt("nofranks"))
+		{
+			maxNofRanks = opt.asUint("nofranks");
+		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
@@ -881,11 +890,11 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeat"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeatname"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
 		{
