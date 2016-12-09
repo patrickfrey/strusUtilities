@@ -92,7 +92,20 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				(void)parse_OPERATOR( si);
 				visible = false;
 			}
-			if (isAlpha(*si))
+			if (m_patternTermFeeder.get() && isAssign(*si))
+			{
+				(void)parse_OPERATOR( si);
+				if (!isAlpha(*si)) throw strus::runtime_error(_TXT("feature type expected after colon ':' delaring an unused lexem that contributes only to position counting"));
+				std::string name = parse_IDENTIFIER( si);
+				(void)getAnalyzerTermType( name);
+
+				if (!isSemiColon(*si))
+				{
+					throw strus::runtime_error(_TXT("semicolon ';' expected at end of rule"));
+				}
+				(void)parse_OPERATOR(si);
+			}
+			else if (isAlpha(*si))
 			{
 				std::string name = parse_IDENTIFIER( si);
 				unsigned int level = 0;
