@@ -94,7 +94,7 @@ void QueryStruct::defineSelectionFeatures( const QueryProcessorInterface* queryp
 	defineFeature( qdescr.selectionFeatureSet, 1.0);
 }
 
-void QueryStruct::translate( QueryInterface& query, const QueryProcessorInterface* queryproc, ErrorBufferInterface* errorhnd) const
+void QueryStruct::translate( QueryInterface& query, const QueryProcessorInterface* queryproc, ErrorBufferInterface* errorhnd)
 {
 	analyzer::Query queryana = m_analyzer->analyze();
 	if (errorhnd->hasError())

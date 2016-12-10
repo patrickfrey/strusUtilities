@@ -57,7 +57,7 @@ public:
 	void defineSelectionFeatures( const QueryProcessorInterface* queryproc, const QueryDescriptors& qdescr);
 
 	/// \brief Analyzes the query fields and translates the query structure defined on the analyzed query terms and fills the query interface
-	void translate( QueryInterface& query, const QueryProcessorInterface* queryproc, ErrorBufferInterface* errorhnd) const;
+	void translate( QueryInterface& query, const QueryProcessorInterface* queryproc, ErrorBufferInterface* errorhnd);
 
 private:
 	std::vector<QueryExpressionStruct> m_expressions;
