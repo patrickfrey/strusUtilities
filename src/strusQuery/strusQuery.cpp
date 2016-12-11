@@ -219,6 +219,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
+			std::cout << "-V|--verbose" << std::endl;
+			std::cout << "    " << _TXT("Verbose mode: Print some info like query analysis") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
