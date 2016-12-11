@@ -259,10 +259,14 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( sproxy);
 		}
 
+		std::string dbname;
+		(void)strus::extractStringFromConfigString( dbname, storagecfg, "database", errorBuffer.get());
+		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorBuffer->fetchError());
+
 		// Dump the storage:
 		if (dumpOnlyBlockSizes)
 		{
-			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);
+			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 			std::auto_ptr<strus::DatabaseClientInterface> dbc( dbi->createClient( storagecfg));
 			std::auto_ptr<strus::DatabaseCursorInterface> cursor( dbc->createCursor( strus::DatabaseOptions()));
 			strus::DatabaseCursorInterface::Slice key = cursor->seekFirst( keyprefix.c_str(), keyprefix.size());
@@ -273,7 +277,8 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);
+			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
+			if (!dbi) throw strus::runtime_error(_TXT("failed to get storage database interface"));
 			const strus::StorageInterface* sti = storageBuilder->getStorage();
 			if (!sti) throw strus::runtime_error(_TXT("failed to get storage client"));
 
