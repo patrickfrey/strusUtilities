@@ -460,6 +460,7 @@ enum FeatureClass
 	FeatForwardIndexTerm,
 	FeatMetaData,
 	FeatAttribute,
+	FeatPatternLexem,
 	FeatSubDocument,
 	FeatAggregator
 };
@@ -481,6 +482,10 @@ static FeatureClass featureClassFromName( const std::string& name)
 	if (isEqual( name, "Attribute"))
 	{
 		return FeatAttribute;
+	}
+	if (isEqual( name, "PatternLexem"))
+	{
+		return FeatPatternLexem;
 	}
 	if (isEqual( name, "Document"))
 	{
@@ -833,8 +838,20 @@ static void parseDocumentFeatureDef(
 				featureName, xpathexpr,
 				featuredef.tokenizer.get(), featuredef.normalizer);
 			break;
+
+		case FeatPatternLexem:
+			if (featopt.opt())
+			{
+				throw strus::runtime_error( _TXT("no feature options expected for pattern lexem"));
+			}
+			analyzer.addPatternLexem(
+				featureName, xpathexpr,
+				featuredef.tokenizer.get(), featuredef.normalizer);
+			break;
+
 		case FeatSubDocument:
 			throw std::logic_error("illegal call of parse feature definition for sub document");
+
 		case FeatAggregator:
 			throw std::logic_error("illegal call of parse feature definition for aggregator");
 	}
@@ -879,6 +896,12 @@ static void parseQueryFeatureDef(
 
 		case FeatMetaData:
 			analyzer.addMetaDataElement(
+				featureName, fieldType,
+				featuredef.tokenizer.get(), featuredef.normalizer);
+			break;
+
+		case FeatPatternLexem:
+			analyzer.addPatternLexem(
 				featureName, fieldType,
 				featuredef.tokenizer.get(), featuredef.normalizer);
 			break;
