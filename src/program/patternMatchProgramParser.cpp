@@ -160,14 +160,12 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 						analyzer::PositionBind posbind = analyzer::BindContent;
 						if (isLeftArrow(si))
 						{
-							++si;
-							(void)parse_OPERATOR(si);
+							si += 2; skipSpaces( si); //....parse_OPERATOR
 							posbind = analyzer::BindPredecessor;
 						}
 						else if (isRightArrow(si))
 						{
-							++si;
-							(void)parse_OPERATOR(si);
+							si += 2; skipSpaces( si); //....parse_OPERATOR
 							posbind = analyzer::BindSuccessor;
 						}
 						m_patternLexer->defineLexem(
