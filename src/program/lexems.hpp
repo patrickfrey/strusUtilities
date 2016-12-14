@@ -57,6 +57,10 @@ static inline bool isDash( char ch)
 {
 	return ch == '-';
 }
+static inline bool isAt( char ch)
+{
+	return (ch == '@');
+}
 static inline bool isColon( char ch)
 {
 	return ch == ':';

@@ -90,7 +90,7 @@ static void parseTermConfig(
 		std::string termset = utils::tolower( parse_IDENTIFIER( src));
 		if (!isStringQuote( *src) && !isTextChar( *src))
 		{
-			throw strus::runtime_error(_TXT( "term value (string,identifier,number) after the feature group identifier"));
+			throw strus::runtime_error(_TXT( "term value (string,identifier,number) after the feature identifier"));
 		}
 		std::string termvalue = parseQueryTerm( src);
 		if (!isColon( *src))
@@ -461,6 +461,7 @@ enum FeatureClass
 	FeatMetaData,
 	FeatAttribute,
 	FeatPatternLexem,
+	FeatPatternMatch,
 	FeatSubDocument,
 	FeatAggregator
 };
@@ -486,6 +487,10 @@ static FeatureClass featureClassFromName( const std::string& name)
 	if (isEqual( name, "PatternLexem"))
 	{
 		return FeatPatternLexem;
+	}
+	if (isEqual( name, "PatternMatch"))
+	{
+		return FeatPatternMatch;
 	}
 	if (isEqual( name, "Document"))
 	{
@@ -720,7 +725,7 @@ static std::string parseSelectorExpression( char const*& src)
 	{
 		std::string rt;
 		char const* start = src;
-		while (*src && *src != ';' && *src != '{')
+		while (*src && *src != ',' && *src != ';' && *src != '{')
 		{
 			if (*src == '\'' || *src == '\"')
 			{
@@ -849,6 +854,9 @@ static void parseDocumentFeatureDef(
 				featuredef.tokenizer.get(), featuredef.normalizer);
 			break;
 
+		case FeatPatternMatch:
+			throw std::logic_error("illegal call of parse feature definition for pattern match program definition");
+
 		case FeatSubDocument:
 			throw std::logic_error("illegal call of parse feature definition for sub document");
 
@@ -906,6 +914,8 @@ static void parseQueryFeatureDef(
 				featuredef.tokenizer.get(), featuredef.normalizer);
 			break;
 
+		case FeatPatternMatch:
+			throw std::logic_error("illegal call of parse feature definition for pattern match program definition");
 		case FeatForwardIndexTerm:
 			throw std::logic_error("illegal call of parse feature definition for forward index feature in query");
 		case FeatAttribute:
@@ -983,6 +993,95 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 
 				analyzer.defineAggregatedMetaData( identifier, statfunc.get());
 				statfunc.release();
+			}
+			else if (featclass == FeatPatternMatch)
+			{
+				std::vector<std::string> selectexprlist;
+				if (isOpenCurlyBracket(*src))
+				{
+					do
+					{
+						(void)parse_OPERATOR( src);
+						selectexprlist.push_back( parseSelectorExpression( src));
+					} while (isComma(*src));
+					if (!isCloseCurlyBracket(*src))
+					{
+						throw strus::runtime_error(_TXT("expected close curly bracket '}' at end of pattern lexer selection expressions"));
+					}
+					(void)parse_OPERATOR( src);
+				}
+				std::string pmdomain;
+				if (isAt( *src))
+				{
+					(void)parse_OPERATOR( src);
+					if (!isAlpha(*src)) throw strus::runtime_error(_TXT("expected identifier (pattern matching module specifier) after at '@'"));
+					pmdomain = parse_IDENTIFIER( src);
+				}
+				std::vector<std::pair<std::string,std::string> > ptsources;
+				for(;;)
+				{
+					std::string filename = parseSelectorExpression( src);
+					std::string filepath = textproc->getResourcePath( filename);
+					if (filepath.empty() && errorhnd->hasError())
+					{
+						throw strus::runtime_error(_TXT( "failed to evaluate pattern match file path '%s': %s"), filename.c_str(), errorhnd->fetchError());
+					}
+					ptsources.push_back( std::pair<std::string,std::string>( filepath, std::string()));
+					unsigned int ec = readFile( filepath, ptsources.back().second);
+					if (ec)
+					{
+						throw strus::runtime_error(_TXT( "failed to read pattern match file '%s': %s"), filepath.c_str(), ::strerror(ec));
+					}
+					if (!isComma(*src)) break;
+					(void)parse_OPERATOR( src);
+				}
+				if (selectexprlist.empty())
+				{
+					const PatternMatcherInterface* matcher = textproc->getPatternMatcher( pmdomain);
+					const PatternTermFeederInterface* feeder = textproc->getPatternTermFeeder();
+					PatternMatcherProgram result;
+					if (!feeder || !matcher || !loadPatternMatcherProgramForAnalyzerOutput(
+							result, feeder, matcher, ptsources, errorhnd))
+					{
+						throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
+					}
+					std::auto_ptr<PatternTermFeederInstanceInterface> feederctx( result.fetchTermFeeder());
+					std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( result.fetchMatcher());
+					if (!feederctx.get() || !matcherctx.get())
+					{
+						throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
+					}
+					analyzer.definePatternMatcherPostProc( identifier, matcherctx.get(), feederctx.get());
+					matcherctx.release();
+					feederctx.release();
+					if (errorhnd->hasError())
+					{
+						throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
+					}
+				}
+				else
+				{
+					const PatternLexerInterface* lexer = textproc->getPatternLexer( pmdomain);
+					const PatternMatcherInterface* matcher = textproc->getPatternMatcher( pmdomain);
+					PatternMatcherProgram result;
+					if (!lexer || !matcher || !loadPatternMatcherProgram( result, lexer, matcher, ptsources, errorhnd))
+					{
+						throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
+					}
+					std::auto_ptr<PatternLexerInstanceInterface> lexerctx( result.fetchLexer());
+					std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( result.fetchMatcher());
+					if (!lexerctx.get() || !matcherctx.get())
+					{
+						throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
+					}
+					analyzer.definePatternMatcherPreProc( identifier, matcherctx.get(), lexerctx.get(), selectexprlist);
+					matcherctx.release();
+					lexerctx.release();
+					if (errorhnd->hasError())
+					{
+						throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
+					}
+				}
 			}
 			else
 			{
