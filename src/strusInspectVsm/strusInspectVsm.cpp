@@ -11,7 +11,8 @@
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/vectorSpaceModelInterface.hpp"
 #include "strus/vectorSpaceModelBuilderInterface.hpp"
-#include "strus/vectorSpaceModelInstanceInterface.hpp"
+#include "strus/vectorSpaceModelClientInterface.hpp"
+#include "strus/vectorSpaceModelSearchInterface.hpp"
 #include "strus/vectorSpaceModelDumpInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/versionStorage.hpp"
@@ -39,6 +40,8 @@
 #include <stdexcept>
 #include <cmath>
 #include <ctime>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
 #define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace_std"
@@ -47,7 +50,14 @@
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
-static strus::Index getFeatureIndex( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char* inspectarg)
+static double getTimeStamp()
+{
+	struct timeval now;
+	gettimeofday( &now, NULL);
+	return (double)now.tv_usec / 1000000.0 + now.tv_sec;
+}
+
+static strus::Index getFeatureIndex( const strus::VectorSpaceModelClientInterface* vsmodel, const char* inspectarg)
 {
 	strus::Index idx;
 	if (inspectarg[0] == FEATNUM_PREFIX_CHAR && inspectarg[1] >= '0' && inspectarg[1] <= '9')
@@ -103,7 +113,7 @@ enum FeatureResultPrintMode
 	PrintIndexName
 };
 
-static void printResultFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::vector<strus::Index>& res_, FeatureResultPrintMode mode, bool sortuniq)
+static void printResultFeatures( const strus::VectorSpaceModelClientInterface* vsmodel, const std::vector<strus::Index>& res_, FeatureResultPrintMode mode, bool sortuniq)
 {
 	std::vector<strus::Index> res( res_);
 	if (sortuniq)
@@ -131,7 +141,7 @@ static void printResultFeatures( const strus::VectorSpaceModelInstanceInterface*
 	std::cout << std::endl;
 }
 
-static std::vector<double> parseNextVectorOperand( const strus::VectorSpaceModelInstanceInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
+static std::vector<double> parseNextVectorOperand( const strus::VectorSpaceModelClientInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<double> rt;
 	if (argidx >= inspectargsize)
@@ -177,7 +187,7 @@ enum VectorOperator
 	VectorPlus,
 	VectorMinus
 };
-static VectorOperator parseNextVectorOperator( const strus::VectorSpaceModelInstanceInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
+static VectorOperator parseNextVectorOperator( const strus::VectorSpaceModelClientInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectarg[ argidx][0] == '+')
 	{
@@ -226,7 +236,30 @@ static std::vector<double> subVector( const std::vector<double>& arg1, const std
 	return rt;
 }
 
-static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks)
+class FindSimProcess
+{
+public:
+	FindSimProcess( const strus::VectorSpaceModelClientInterface* vsmodel, const strus::Index& range_from, const strus::Index& range_to)
+		:m_searcher( vsmodel->createSearcher( range_from, range_to)){}
+	FindSimProcess( const FindSimProcess& o)
+		:m_searcher(o.m_searcher),m_feats(o.m_feats){}
+
+	void run( const std::vector<double>& vec, unsigned int maxNofRanks)
+	{
+		m_feats = m_searcher->findSimilar( vec, maxNofRanks);
+	}
+
+	const std::vector<strus::VectorSpaceModelSearchInterface::Result>& results() const
+	{
+		return m_feats;
+	}
+
+private:
+	strus::Reference<strus::VectorSpaceModelSearchInterface> m_searcher;
+	std::vector<strus::VectorSpaceModelSearchInterface::Result> m_feats;
+};
+
+static void inspectVectorOperations( const strus::VectorSpaceModelClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration)
 {
 	if (inspectargsize == 0) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
 	std::size_t argidx=0;
@@ -245,12 +278,70 @@ static void inspectVectorOperations( const strus::VectorSpaceModelInstanceInterf
 				break;
 		}
 	}
-	std::vector<strus::Index> feats = vsmodel->findSimilarFeatures( res, maxNofRanks);
+	std::vector<strus::VectorSpaceModelSearchInterface::Result> results;
+	std::vector<strus::Index> feats;
+
+	if (nofThreads == 0)
+	{
+		double startTime = 0.0;
+		strus::Reference<strus::VectorSpaceModelSearchInterface> searcher( vsmodel->createSearcher( 0, std::numeric_limits<strus::Index>::max()));
+		if (doMeasureDuration)
+		{
+			startTime = getTimeStamp();
+		}
+		results = searcher->findSimilar( res, maxNofRanks);
+		if (doMeasureDuration)
+		{
+			double endTime = getTimeStamp();
+			double duration = endTime - startTime;
+			std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
+		}
+	}
+	else
+	{
+		double startTime = 0.0;
+		unsigned int chunksize = (vsmodel->nofFeatures() + nofThreads - 1) / nofThreads;
+		std::vector<FindSimProcess> procar;
+		unsigned int ti = 0, te = nofThreads;
+		for (unsigned int range_from=0; ti != te; ++ti,range_from+=chunksize)
+		{
+			procar.push_back( FindSimProcess( vsmodel, range_from, range_from + chunksize));
+		}
+
+		if (doMeasureDuration)
+		{
+			startTime = getTimeStamp();
+		}
+		boost::thread_group tgroup;
+		for (unsigned int ti=0; ti<nofThreads; ++ti)
+		{
+			tgroup.create_thread( boost::bind( &FindSimProcess::run, &procar[ti], res, maxNofRanks));
+		}
+		tgroup.join_all();
+		std::vector<FindSimProcess>::const_iterator pi = procar.begin(), pe = procar.end();
+		for (; pi != pe; ++pi)
+		{
+			results.insert( results.end(), pi->results().begin(), pi->results().end());
+		}
+		std::sort( results.begin(), results.end());
+		results.resize( std::min( maxNofRanks, (unsigned int)results.size()));
+		if (doMeasureDuration)
+		{
+			double endTime = getTimeStamp();
+			double duration = endTime - startTime;
+			std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
+		}
+	}
+	std::vector<strus::VectorSpaceModelSearchInterface::Result>::const_iterator ri = results.begin(), re = results.end();
+	for (; ri != re; ++ri)
+	{
+		feats.push_back( ri->featidx());
+	}
 	printResultFeatures( vsmodel, feats, mode, false);
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::conceptClassNames()
-static void inspectConceptClassNames( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::conceptClassNames()
+static void inspectConceptClassNames( const strus::VectorSpaceModelClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
 	std::vector<std::string> clnames = vsmodel->conceptClassNames();
@@ -262,8 +353,8 @@ static void inspectConceptClassNames( const strus::VectorSpaceModelInstanceInter
 	std::cout << std::endl;
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::featureConcepts()
-static void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::featureConcepts()
+static void inspectFeatureConcepts( const strus::VectorSpaceModelClientInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<strus::Index> far;
 	std::size_t ai = 0, ae = inspectargsize;
@@ -285,8 +376,8 @@ static void inspectFeatureConcepts( const strus::VectorSpaceModelInstanceInterfa
 	printUniqResultConcepts( res);
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::featureVector()
-static void inspectFeatureVector( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::featureVector()
+static void inspectFeatureVector( const strus::VectorSpaceModelClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize > 1) throw strus::runtime_error(_TXT("too many arguments (maximum %u arguments expected)"), 1U);
 	if (inspectargsize == 1)
@@ -312,8 +403,8 @@ static void inspectFeatureVector( const strus::VectorSpaceModelInstanceInterface
 	}
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::featureName()
-static void inspectFeatureName( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::featureName()
+static void inspectFeatureName( const strus::VectorSpaceModelClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0)
 	{
@@ -354,8 +445,8 @@ static void inspectFeatureName( const strus::VectorSpaceModelInstanceInterface* 
 	}
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::featureIndex()
-static void inspectFeatureIndex( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::featureIndex()
+static void inspectFeatureIndex( const strus::VectorSpaceModelClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<strus::Index> far;
 	std::size_t ai = 0, ae = inspectargsize;
@@ -376,8 +467,8 @@ static void inspectFeatureIndex( const strus::VectorSpaceModelInstanceInterface*
 	std::cout << std::endl;
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::conceptFeatures()
-static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+// Inspect strus::VectorSpaceModelClientInterface::conceptFeatures()
+static void inspectConceptFeatures( const strus::VectorSpaceModelClientInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
 {
 	if (inspectargsize > 0)
 	{
@@ -413,8 +504,8 @@ static void inspectConceptFeatures( const strus::VectorSpaceModelInstanceInterfa
 	}
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::featureConcepts() & conceptFeatures()
-static void inspectNeighbourFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+// Inspect strus::VectorSpaceModelClientInterface::featureConcepts() & conceptFeatures()
+static void inspectNeighbourFeatures( const strus::VectorSpaceModelClientInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
 {
 	std::vector<strus::Index> far;
 	std::size_t ai = 0, ae = inspectargsize;
@@ -451,15 +542,15 @@ static void inspectNeighbourFeatures( const strus::VectorSpaceModelInstanceInter
 	printResultFeatures( vsmodel, res, mode, true);
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::nofConcepts()
-static void inspectNofConcepts( const strus::VectorSpaceModelInstanceInterface* vsmodel, const std::string& clname, const char**, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::nofConcepts()
+static void inspectNofConcepts( const strus::VectorSpaceModelClientInterface* vsmodel, const std::string& clname, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
 	std::cout << vsmodel->nofConcepts( clname) << std::endl;
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::nofFeatures()
-static void inspectNofFeatures( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::nofFeatures()
+static void inspectNofFeatures( const strus::VectorSpaceModelClientInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
 	std::cout << vsmodel->nofFeatures() << std::endl;
@@ -493,7 +584,7 @@ static double vector_cosinesim( const std::vector<double>& v1, const std::vector
 	return vector_prod( v1, v2) / (vector_norm( v1) * vector_norm( v2));
 }
 
-static void inspectFeatureSimilarity( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+static void inspectFeatureSimilarity( const strus::VectorSpaceModelClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize < 2) throw strus::runtime_error(_TXT("too few arguments (%u arguments expected)"), 2U);
 	if (inspectargsize > 2) throw strus::runtime_error(_TXT("too many arguments (%u arguments expected)"), 2U);
@@ -506,8 +597,8 @@ static void inspectFeatureSimilarity( const strus::VectorSpaceModelInstanceInter
 	std::cout << res.str();
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::attributes(), attributeNames()
-static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::attributes(), attributeNames()
+static void inspectAttribute( const strus::VectorSpaceModelClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
 
@@ -548,7 +639,7 @@ static void inspectAttribute( const strus::VectorSpaceModelInstanceInterface* vs
 	}
 }
 
-static void inspectAttributeNames( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+static void inspectAttributeNames( const strus::VectorSpaceModelClientInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
 	std::vector<std::string> attributeNames = vsmodel->featureAttributeNames();
@@ -559,8 +650,8 @@ static void inspectAttributeNames( const strus::VectorSpaceModelInstanceInterfac
 	}
 }
 
-// Inspect strus::VectorSpaceModelInstanceInterface::config()
-static void inspectConfig( const strus::VectorSpaceModelInstanceInterface* vsmodel, const char**, std::size_t inspectargsize)
+// Inspect strus::VectorSpaceModelClientInterface::config()
+static void inspectConfig( const strus::VectorSpaceModelClientInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
 	if (inspectargsize) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
 	std::cout << vsmodel->config() << std::endl;
@@ -580,13 +671,6 @@ static void inspectDump( const strus::VectorSpaceModelInterface* vsi, const stru
 	}
 }
 
-static double getTimeStamp()
-{
-	struct timeval now;
-	gettimeofday( &now, NULL);
-	return (double)now.tv_usec / 1000000.0 + now.tv_sec;
-}
-
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -603,11 +687,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 11,
+				argc, argv, 12,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "C,class:",
-				"D,time", "N,nofranks:");
+				"t,threads:", "D,time", "N,nofranks:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -777,7 +861,10 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			std::cout << "-D|--time" << std::endl;
-			std::cout << "    " << _TXT("Do measure duration of operation") << std::endl;
+			std::cout << "    " << _TXT("Do measure duration of operation (only for search)") << std::endl;
+			std::cout << "-t|--threads <N>" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of threads to use (only for search)") << std::endl;
+			std::cout << "    " << _TXT("Default is no multithreading (N=0)") << std::endl;
 			std::cout << "-N|--nofranks <N>" << std::endl;
 			std::cout << "    " << _TXT("Limit the number of results to for searches to <N> (default 20)") << std::endl;
 			return rt;
@@ -825,6 +912,11 @@ int main( int argc, const char* argv[])
 		{
 			maxNofRanks = opt.asUint("nofranks");
 		}
+		unsigned int nofThreads = 0;	//... default use no multithreading
+		if (opt("threads"))
+		{
+			nofThreads = opt.asUint("threads");
+		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
@@ -834,19 +926,13 @@ int main( int argc, const char* argv[])
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
-		std::auto_ptr<strus::VectorSpaceModelInstanceInterface> vsmodel( vsi->createInstance( config, dbi));
-		if (!vsmodel.get()) throw strus::runtime_error(_TXT("failed to create vector space model instance"));
+		std::auto_ptr<strus::VectorSpaceModelClientInterface> vsmodel( vsi->createClient( config, dbi));
+		if (!vsmodel.get()) throw strus::runtime_error(_TXT("failed to create vector space model client interface"));
 
 		std::string what = opt[0];
 		const char** inspectarg = opt.argv() + 1;
 		std::size_t inspectargsize = opt.nofargs() - 1;
 
-		double startTime = 0.0;
-		if (doMeasureDuration)
-		{
-			vsmodel->preload();
-			startTime = getTimeStamp();
-		}
 		// Do inspect what is requested:
 		if (strus::utils::caseInsensitiveEquals( what, "classnames"))
 		{
@@ -890,11 +976,11 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeat"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeatname"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
 		{
@@ -940,12 +1026,6 @@ int main( int argc, const char* argv[])
 		else
 		{
 			throw strus::runtime_error( _TXT( "unknown item to inspect '%s'"), what.c_str());
-		}
-		if (doMeasureDuration)
-		{
-			double endTime = getTimeStamp();
-			double duration = endTime - startTime;
-			std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
 		}
 		if (errorBuffer->hasError())
 		{
