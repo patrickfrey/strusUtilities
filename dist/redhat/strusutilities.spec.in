@@ -266,9 +266,9 @@ make test
 %{_bindir}/strusQuery
 %{_bindir}/strusAnalyzePhrase
 %{_bindir}/strusHelp
-%{_bindir}/strusCreateVsm
-%{_bindir}/strusBuildVsm
-%{_bindir}/strusInspectVsm
+%{_bindir}/strusCreateVectorStorage
+%{_bindir}/strusBuildVectorStorage
+%{_bindir}/strusInspectVectorStorage
 %{_bindir}/strusPatternMatcher
 
 %files devel

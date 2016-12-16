@@ -69,9 +69,9 @@ src/strusSegment/strusSegment
 src/strusHelp/strusHelp
 src/strusDeleteDocument/strusDeleteDocument
 src/strusVectorSpace/strusVectorSpace
-src/strusCreateVsm/strusCreateVsm
-src/strusBuildVsm/strusBuildVsm
-src/strusInspectVsm/strusInspectVsm
+src/strusCreateVectorStorage/strusCreateVectorStorage
+src/strusBuildVectorStorage/strusBuildVectorStorage
+src/strusInspectVectorStorage/strusInspectVectorStorage
 src/strusPatternMatcher/strusPatternMatcher
 .travis.yml
 

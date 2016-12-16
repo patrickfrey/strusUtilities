@@ -9,8 +9,8 @@
 #include "strus/lib/error.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
-#include "strus/vectorSpaceModelInterface.hpp"
-#include "strus/vectorSpaceModelBuilderInterface.hpp"
+#include "strus/vectorStorageInterface.hpp"
+#include "strus/vectorStorageBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -35,15 +35,50 @@
 #include <stdexcept>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE   "modstrus_storage_vectorspace_std"
-#define DEFAULT_VECTOR_MODEL  "vector_std"
+#define DEFAULT_LOAD_MODULE		"modstrus_storage_vectorspace_std"
+#define DEFAULT_VECTOR_MODEL		"vector_std"
+#define DEFAULT_MAX_NOF_THREADS		16
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
+
+static void printBuilderCommands( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
+{
+	try
+	{
+		std::string configstr( config);
+		std::string modelname;
+		if (!strus::extractStringFromConfigString( modelname, configstr, "model", errorhnd))
+		{
+			modelname = DEFAULT_VECTOR_MODEL;
+			if (errorhnd->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
+		}
+		std::auto_ptr<strus::StorageObjectBuilderInterface>
+			storageBuilder( moduleLoader->createStorageObjectBuilder());
+		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+
+		const strus::VectorStorageInterface* vsi = storageBuilder->getVectorStorage( modelname);
+		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
+	
+		std::vector<std::string> cmds = vsi->builderCommands();
+		std::vector<std::string>::const_iterator ci = cmds.begin(), ce = cmds.end();
+		for (; ci != ce; ++ci)
+		{
+			out << "  " << *ci << ":\t" << vsi->builderCommandDescription( *ci) << std::endl;
+		}
+	}
+	catch (const std::runtime_error& err)
+	{
+		std::string msg;
+		if (errorhnd->hasError()) msg.append( errorhnd->fetchError());
+		errorhnd->report( _TXT("cannot list builder commands in usage: %s %s"), msg.c_str(), err.what()); 
+	}
+}
+
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, DEFAULT_MAX_NOF_THREADS));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -59,8 +94,22 @@ int main( int argc, const char* argv[])
 				argc, argv, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "f,file:" );
+				"s,config:", "S,configfile:", "t,threads:" );
 		if (opt( "help")) printUsageAndExit = true;
+		if (opt( "threads"))
+		{
+			unsigned int nofThreads = opt.asUint( "threads");
+			if (nofThreads >= DEFAULT_MAX_NOF_THREADS)
+			{
+				errorBuffer.reset( strus::createErrorBuffer_standard( 0, nofThreads));
+				if (!errorBuffer.get())
+				{
+					std::cerr << _TXT("failed to create error buffer") << std::endl;
+					return -1;
+				}
+				g_errorBuffer = errorBuffer.get();
+			}
+		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -120,12 +169,17 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 0)
+			if (opt.nofargs() > 1)
 			{
 				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
 			}
+		}
+		std::string command;
+		if (opt.nofargs() > 0)
+		{
+			command = opt[0];
 		}
 		std::string config;
 		int nof_config = 0;
@@ -155,8 +209,10 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusCreateVsm [options]" << std::endl;
-			std::cout << _TXT("description: Creates a vector space model repository with all vectors inserted.") << std::endl;
+			std::cout << _TXT("usage:") << " strusBuildVsm [options] <command>" << std::endl;
+			std::cout << _TXT("description: Executes a vector space model builder command.") << std::endl;
+			std::cout << _TXT("commands:") << std::endl;
+			printBuilderCommands( std::cout, moduleLoader.get(), config, g_errorBuffer);
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -178,11 +234,12 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
-			std::cout << "-f|--file <INFILE>" << std::endl;
-			std::cout << "    " << _TXT("Declare an input file with the vectors to process a <INFILE>") << std::endl;
-			std::cout << "    " << _TXT("Known formats are word2vec binary or text format.") << std::endl;
-			std::cout << "    " << _TXT("All files are added, if there are many input files specified.") << std::endl;
-			std::cout << "    " << _TXT("No input files lead to an empty model.") << std::endl;
+			std::cout << "-t|--threads <N>" << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Specify the maximum number of threads to use as <N> (default %u)"), DEFAULT_MAX_NOF_THREADS) << std::endl;
+			if (g_errorBuffer->hasError())
+			{
+				throw strus::runtime_error( g_errorBuffer->fetchError());
+			}
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -196,12 +253,6 @@ int main( int argc, const char* argv[])
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
-		}
-		// Get arguments:
-		std::vector<std::string> inputfiles;
-		if (opt("file"))
-		{
-			inputfiles = opt.list( "file");
 		}
 		// Create root object:
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
@@ -227,22 +278,17 @@ int main( int argc, const char* argv[])
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
 
-		const strus::VectorSpaceModelInterface* vsi = storageBuilder->getVectorSpaceModel( modelname);
+		const strus::VectorStorageInterface* vsi = storageBuilder->getVectorStorage( modelname);
 		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
-		if (!vsi->createRepository( config, dbi)) throw strus::runtime_error(_TXT("failed to create vector space model repository"));
-		std::auto_ptr<strus::VectorSpaceModelBuilderInterface> builder( vsi->createBuilder( config, dbi));
+		std::auto_ptr<strus::VectorStorageBuilderInterface> builder( vsi->createBuilder( config, dbi));
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector space model builder"));
 
-		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
-		for (; fi != fe; ++fi)
+		if (!builder->run( command))
 		{
-			if (!strus::loadVectorSpaceModelVectors( builder.get(), *fi, g_errorBuffer))
-			{
-				throw strus::runtime_error(_TXT("failed to load input"));
-			}
+			throw strus::runtime_error(_TXT("execute VSM command '%s' failed"), command.c_str());
 		}
 		if (errorBuffer->hasError())
 		{

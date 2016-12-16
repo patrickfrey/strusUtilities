@@ -46,7 +46,7 @@ class PatternMatcherInterface;
 /// \brief Forward declaration
 class PatternMatcherInstanceInterface;
 /// \brief Forward declaration
-class VectorSpaceModelBuilderInterface;
+class VectorStorageBuilderInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
 
@@ -247,8 +247,8 @@ bool parseDocumentClass(
 /// \param[in] vectorfile Path of the file to parse, either a google binary vector file format or text
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success
-bool loadVectorSpaceModelVectors( 
-		VectorSpaceModelBuilderInterface* vsmbuilder,
+bool loadVectorStorageVectors( 
+		VectorStorageBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd);
 

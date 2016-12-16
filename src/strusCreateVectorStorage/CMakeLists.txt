@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR )
 # SOURCES AND INCLUDES
 # --------------------------------------
 set(source_files
-	strusBuildVsm.cpp
+	strusCreateVectorStorage.cpp
 )
 
 include_directories(
@@ -30,18 +30,18 @@ link_directories(
 # ------------------------------
 # PROGRAMS
 # ------------------------------
-add_executable( strusBuildVsm ${source_files} )
-target_link_libraries( strusBuildVsm strus_storage_objbuild strus_private_utils strus_base strus_error strus_program strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
+add_executable( strusCreateVectorStorage ${source_files} )
+target_link_libraries( strusCreateVectorStorage strus_storage_objbuild strus_private_utils strus_base strus_error strus_program strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )
 if(LIBKVM_LIBRARIES)
-	target_link_libraries( strusBuildVsm ${LIBKVM_LIBRARIES} )
+	target_link_libraries( strusCreateVectorStorage ${LIBKVM_LIBRARIES} )
 endif()
 
 # ------------------------------
 # INSTALLATION
 # ------------------------------
-install( TARGETS strusBuildVsm
+install( TARGETS strusCreateVectorStorage
 	   RUNTIME DESTINATION bin )
 

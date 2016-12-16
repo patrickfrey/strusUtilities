@@ -34,7 +34,7 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageDocumentUpdateInterface.hpp"
-#include "strus/vectorSpaceModelBuilderInterface.hpp"
+#include "strus/vectorStorageBuilderInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/analyzer/documentClass.hpp"
@@ -2188,8 +2188,8 @@ static void print_value_seq( const void* sq, unsigned int sqlen)
 }
 #endif
 
-static void loadVectorSpaceModelVectors_word2vecBin( 
-		VectorSpaceModelBuilderInterface* vsmbuilder,
+static void loadVectorStorageVectors_word2vecBin( 
+		VectorStorageBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd)
 {
@@ -2320,8 +2320,8 @@ static void loadVectorSpaceModelVectors_word2vecBin(
 	}
 }
 
-static void loadVectorSpaceModelVectors_word2vecText( 
-		VectorSpaceModelBuilderInterface* vsmbuilder,
+static void loadVectorStorageVectors_word2vecText( 
+		VectorStorageBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd)
 {
@@ -2411,8 +2411,8 @@ static void loadVectorSpaceModelVectors_word2vecText(
 	}
 }
 
-DLL_PUBLIC bool strus::loadVectorSpaceModelVectors( 
-		VectorSpaceModelBuilderInterface* vsmbuilder,
+DLL_PUBLIC bool strus::loadVectorStorageVectors( 
+		VectorStorageBuilderInterface* vsmbuilder,
 		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd)
 {
@@ -2422,12 +2422,12 @@ DLL_PUBLIC bool strus::loadVectorSpaceModelVectors(
 		if (isTextFile( vectorfile))
 		{
 			filetype = "word2vec text file";
-			loadVectorSpaceModelVectors_word2vecText( vsmbuilder, vectorfile, errorhnd);
+			loadVectorStorageVectors_word2vecText( vsmbuilder, vectorfile, errorhnd);
 		}
 		else
 		{
 			filetype = "word2vec binary file";
-			loadVectorSpaceModelVectors_word2vecBin( vsmbuilder, vectorfile, errorhnd);
+			loadVectorStorageVectors_word2vecBin( vsmbuilder, vectorfile, errorhnd);
 		}
 		return vsmbuilder->done();
 	}
