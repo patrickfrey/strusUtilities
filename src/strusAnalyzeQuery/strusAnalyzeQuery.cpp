@@ -92,8 +92,21 @@ public:
 		printState( std::cerr);
 #endif
 		m_stack.push_back( m_tree.size());
-		m_tree.push_back( TreeNode( (int)m_terms.size()));
 		m_terms.push_back( Term( type_, value_));
+		m_tree.push_back( TreeNode( (int)m_terms.size()));
+	}
+
+	virtual void pushDocField(
+			const std::string& metadataRangeStart,
+			const std::string& metadataRangeEnd)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::string_format( _TXT("called pushDocField %s : %s"), metadataRangeStart.c_str(), metadataRangeEnd.c_str()) << std::endl;
+		printState( std::cerr);
+#endif
+		m_stack.push_back( m_tree.size());
+		m_docfields.push_back( DocField( metadataRangeStart, metadataRangeEnd));
+		m_tree.push_back( TreeNode( -(int)m_docfields.size()));
 	}
 
 	virtual void pushExpression(
@@ -348,7 +361,7 @@ public:
 private:
 	void print_expression( std::ostream& out, std::size_t indent, int treeidx) const
 	{
-		std::string indentstr( indent*3, ' ');
+		std::string indentstr( indent*2, ' ');
 		while (treeidx >= 0)
 		{
 			std::string attr;
@@ -364,10 +377,19 @@ private:
 				out << indentstr << attr << "func[0x" << std::hex << (uintptr_t)nod.func << std::dec << "] range=" << nod.arg << std::endl;
 				print_expression( out, indent+1, nod.child);
 			}
+			else if (nod.arg < 0)
+			{
+				const DocField& docfield = m_docfields[ -nod.arg-1];
+				out << indentstr << attr << "docfield " << docfield.metadataRangeStart << " : " << docfield.metadataRangeEnd << std::endl;
+			}
+			else if (nod.arg > 0)
+			{
+				const Term& term = m_terms[ nod.arg-1];
+				out << indentstr << attr << "term " << term.type << " '" << term.value << "'" << std::endl;
+			}
 			else
 			{
-				const Term& term = m_terms[ nod.arg];
-				out << indentstr << attr << "term " << term.type << " '" << term.value << "'" << std::endl;
+				throw strus::runtime_error(_TXT("illegal node in query tree"));
 			}
 			treeidx = nod.left;
 		}
@@ -396,6 +418,17 @@ private:
 	public:
 		std::string type;
 		std::string value;
+	};
+
+	struct DocField
+	{
+		DocField( const DocField& o)
+			:metadataRangeStart(o.metadataRangeStart),metadataRangeEnd(o.metadataRangeEnd){}
+		DocField( const std::string& start, const std::string& end)
+			:metadataRangeStart(start),metadataRangeEnd(end){}
+
+		std::string metadataRangeStart;		///< metadata element defining the start of the field
+		std::string metadataRangeEnd;		///< metadata element defining the end of the field
 	};
 
 	class TreeNode
@@ -457,6 +490,7 @@ private:
 	};
 
 	std::vector<Term> m_terms;
+	std::vector<DocField> m_docfields;
 	std::vector<TreeNode> m_tree;
 	std::vector<int> m_stack;
 	std::map<int, std::string> m_variables;
