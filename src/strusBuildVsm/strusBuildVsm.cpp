@@ -11,7 +11,6 @@
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/vectorSpaceModelInterface.hpp"
 #include "strus/vectorSpaceModelBuilderInterface.hpp"
-#include "strus/vectorSpaceModelInstanceInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
