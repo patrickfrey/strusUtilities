@@ -1162,16 +1162,69 @@ static void parseAnalyzerPatternMatchProgramDef(
 	}
 }
 
+static void expandIncludes(
+		const std::string& source,
+		const TextProcessorInterface* textproc,
+		std::set<std::string>& visited,
+		std::vector<std::pair<std::string,std::string> >& contents,
+		ErrorBufferInterface* errorhnd)
+{
+	char const* src = source.c_str();
+	skipSpaces(src);
+	while (*src == '#' && std::memcmp( src, "#include", 8) == 0 && isSpace(src[8]))
+	{
+		src+= 8;
+		skipSpaces(src);
+		std::string filename = isStringQuote(*src) ? parse_STRING( src) : parse_PATH( src);
+
+		if (filename.empty()) throw strus::runtime_error(_TXT("failed to parse include file path"));
+		std::string filepath = textproc->getResourcePath( filename);
+		if (filepath.empty()) throw strus::runtime_error(_TXT("failed to find include file path '%s': %s"), filename.c_str(), errorhnd->fetchError());
+
+		if (visited.find( filepath) == visited.end())
+		{
+			std::string include_source;
+			unsigned int ec = strus::readFile( filepath, include_source);
+			if (ec) throw strus::runtime_error(_TXT("failed to load include file '%s': %s"), filepath.c_str(), ::strerror( ec));
+
+			visited.insert( filepath);
+			expandIncludes( include_source, textproc, visited, contents, errorhnd);
+
+			contents.push_back( std::pair<std::string,std::string>( filename, include_source));
+		}
+		skipSpaces(src);
+	}
+}
+
 DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 		DocumentAnalyzerInterface& analyzer,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
+		bool allowIncludes,
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
 	skipSpaces(src);
 	try
 	{
+		if (allowIncludes)
+		{
+			std::set<std::string> visited;
+			std::vector<std::pair<std::string,std::string> > include_contents;
+
+			expandIncludes( source, textproc, visited, include_contents, errorhnd);
+			std::vector<std::pair<std::string,std::string> >::const_iterator
+				ci = include_contents.begin(), ce = include_contents.end();
+			for (; ci != ce; ++ci)
+			{
+				if (!strus::loadDocumentAnalyzerProgram(
+						analyzer, textproc, ci->second,
+						false/*!allowIncludes*/, errorhnd))
+				{
+					throw strus::runtime_error(_TXT("failed to load include file '%s': %s"), ci->first.c_str(), errorhnd->fetchError());
+				}
+			}
+		}
 		FeatureClass featclass = FeatSearchIndexTerm;
 		while (*src)
 		{
@@ -1264,12 +1317,31 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 		QueryDescriptors& qdescr,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
+		bool allowIncludes,
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
 	skipSpaces(src);
 	try
 	{
+		if (allowIncludes)
+		{
+			std::set<std::string> visited;
+			std::vector<std::pair<std::string,std::string> > include_contents;
+
+			expandIncludes( source, textproc, visited, include_contents, errorhnd);
+			std::vector<std::pair<std::string,std::string> >::const_iterator
+				ci = include_contents.begin(), ce = include_contents.end();
+			for (; ci != ce; ++ci)
+			{
+				if (!strus::loadQueryAnalyzerProgram(
+						analyzer, qdescr, textproc, ci->second,
+						false/*!allowIncludes*/, errorhnd))
+				{
+					throw strus::runtime_error(_TXT("failed to load include file '%s': %s"), ci->first.c_str(), errorhnd->fetchError());
+				}
+			}
+		}
 		FeatureClass featclass = FeatSearchIndexTerm;
 		while (*src)
 		{

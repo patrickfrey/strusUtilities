@@ -75,6 +75,7 @@ struct QueryDescriptors
 /// \param[in,out] analyzer analyzer program to instatiate
 /// \param[in] textproc provider for text processing functions
 /// \param[in] source source string (not a file name!) to parse
+/// \param[in] allowIncludes true if #include directives expanded, may be forbidden for security
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success, false on failure
 /// \note The grammar of the analyzer program source is defined <a href="http://www.project-strus.net/grammar_analyerprg.htm">here</a>.
@@ -82,6 +83,7 @@ bool loadDocumentAnalyzerProgram(
 		DocumentAnalyzerInterface& analyzer,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
+		bool allowIncludes,
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Load a query analyzer program from source
@@ -89,7 +91,7 @@ bool loadDocumentAnalyzerProgram(
 /// \param[in,out] qdescr some defaults for query language parsing filled by this procedure
 /// \param[in] textproc provider for text processing functions
 /// \param[in] source source string (not a file name!) to parse
-/// \param[in,out] errorhnd buffer for reporting errors (exceptions)
+/// \param[in] allowIncludes true if #include directives expanded, may be forbidden for security
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success, false on failure
 bool loadQueryAnalyzerProgram(
@@ -97,6 +99,7 @@ bool loadQueryAnalyzerProgram(
 		QueryDescriptors& qdescr,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
+		bool allowIncludes,
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Description of one element of an analyzer map

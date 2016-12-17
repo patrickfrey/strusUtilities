@@ -76,7 +76,7 @@ std::string parser::parse_TEXTWORD( char const*& src)
 std::string parser::parse_PATH( char const*& src)
 {
 	std::string rt;
-	while (isTextChar( *src) || *src == '/' || *src == '-') rt.push_back( *src++);
+	while (isTextChar( *src) || *src == '.' || *src == '/' || *src == '-') rt.push_back( *src++);
 	skipSpaces( src);
 	return rt;
 }

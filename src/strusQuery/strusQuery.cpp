@@ -348,7 +348,7 @@ int main( int argc_, const char* argv_[])
 		if (ec) throw strus::runtime_error(_TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
 
 		strus::QueryDescriptors querydescr;
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, errorBuffer.get()))
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, true/*allow includes*/, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query analyzer program"));
 		}
