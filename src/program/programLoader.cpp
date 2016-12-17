@@ -874,12 +874,12 @@ static void parseQueryPatternFeatureDef(
 	switch (featureClass)
 	{
 		case FeatSearchIndexTerm:
-			analyzer.addSearchIndexFeatureFromPatternMatch( 
+			analyzer.addSearchIndexElementFromPatternMatch( 
 				featureName, patternTypeName, featuredef.normalizer);
 			break;
 
 		case FeatMetaData:
-			analyzer.defineMetaDataFromPatternMatch( 
+			analyzer.addMetaDataElementFromPatternMatch( 
 				featureName, patternTypeName, featuredef.normalizer);
 			break;
 
@@ -2259,11 +2259,11 @@ static void loadVectorStorageVectors_word2vecBin(
 			unsigned int ii = 0;
 			for (; ii < vecsize; ii++)
 			{
-				float val;
+				ByteOrder<float>::net_value_type val;
 #ifdef STRUS_LOWLEVEL_DEBUG
 				print_value_seq( si, sizeof( float));
 #endif
-				std::memcpy( (void*)&val, si, sizeof( float));
+				std::memcpy( (void*)&val, si, sizeof( val));
 				si += sizeof( float);
 				vec.push_back( ByteOrder<float>::ntoh( val));
 			}
