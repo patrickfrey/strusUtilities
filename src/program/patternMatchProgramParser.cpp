@@ -80,7 +80,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 		{
 			if (isPercent(*si))
 			{
-				//... we got a char regex match option or a token pattern match option
+				//... we got a lexem match option or a token pattern match option
 				(void)parse_OPERATOR( si);
 				loadOption( si);
 				continue;
@@ -105,9 +105,10 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				}
 				(void)parse_OPERATOR(si);
 			}
-			else if (isAlpha(*si))
+			else if (isAlpha(*si) || isStringQuote(*si))
 			{
-				std::string name = parse_IDENTIFIER( si);
+				bool nameIsString = isStringQuote(*si);
+				std::string name = nameIsString ? parse_STRING( si) : parse_IDENTIFIER( si);
 				unsigned int level = 0;
 				bool has_level = false;
 				if (isExp(*si))
@@ -118,7 +119,11 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				}
 				if (m_patternLexer.get() && isColon( *si))
 				{
-					//... char regex expression declaration
+					//... lexem expression declaration
+					if (nameIsString)
+					{
+						throw strus::runtime_error(_TXT("string not allowed as lexem type"));
+					}
 					if (!visible)
 					{
 						throw strus::runtime_error(_TXT("unexpected colon ':' after dot '.' followed by an identifier, that starts an token pattern declaration marked as private (invisible in output)"));
@@ -126,7 +131,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					unsigned int nameid = m_regexNameSymbolTab.getOrCreate( name);
 					if (nameid == 0)
 					{
-						throw strus::runtime_error(_TXT("failed to define regex name symbol"));
+						throw strus::runtime_error(_TXT("failed to define lexem name symbol"));
 					}
 					if (nameid > MaxRegularExpressionNameId)
 					{
@@ -137,7 +142,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					{
 						(void)parse_OPERATOR(si);
 
-						//... Regex pattern def -> name : regex ;
+						//... lexem pattern def -> name : regex ;
 						if ((unsigned char)*si > 32)
 						{
 							regex = parse_REGEX( si);
@@ -202,7 +207,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				}
 				else
 				{
-					throw strus::runtime_error(_TXT("assign '=' (token pattern definition) or colon ':' (regex pattern definition) expected after name starting a pattern declaration"));
+					throw strus::runtime_error(_TXT("assign '=' (token pattern definition) or colon ':' (lexem pattern definition) expected after name starting a pattern declaration"));
 				}
 				if (!isSemiColon(*si))
 				{
@@ -212,7 +217,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("identifier expected at start of rule"));
+				throw strus::runtime_error(_TXT("identifier or string expected at start of rule"));
 			}
 		}
 		return true;
