@@ -306,14 +306,32 @@ static JoinOperation joinOperation( const std::string& name)
 
 uint32_t PatternMatcherProgramParser::getOrCreateSymbol( unsigned int regexid, const std::string& name)
 {
-	unsigned int id = m_patternLexer->getSymbol( regexid, name);
-	if (!id)
+	if (m_patternLexer.get())
 	{
-		m_symbolRegexIdList.push_back( regexid);
-		id = m_symbolRegexIdList.size() + MaxRegularExpressionNameId;
-		m_patternLexer->defineSymbol( id, regexid, name);
+		unsigned int id = m_patternLexer->getSymbol( regexid, name);
+		if (!id)
+		{
+			m_symbolRegexIdList.push_back( regexid);
+			id = m_symbolRegexIdList.size() + MaxRegularExpressionNameId;
+			m_patternLexer->defineSymbol( id, regexid, name);
+		}
+		return id;
 	}
-	return id;
+	else if (m_patternTermFeeder.get())
+	{
+		unsigned int id = m_patternTermFeeder->getSymbol( regexid, name);
+		if (!id)
+		{
+			m_symbolRegexIdList.push_back( regexid);
+			id = m_symbolRegexIdList.size() + MaxRegularExpressionNameId;
+			m_patternTermFeeder->defineSymbol( id, regexid, name);
+		}
+		return id;
+	}
+	else
+	{
+		throw strus::runtime_error(_TXT("internal: no lexer or term feeder defined"));
+	}
 }
 
 const char* PatternMatcherProgramParser::getSymbolRegexId( unsigned int id) const
