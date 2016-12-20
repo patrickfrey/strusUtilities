@@ -396,7 +396,7 @@ static void inspectFeatureVector( const strus::VectorStorageClientInterface* vsm
 			std::vector<double> vec = vsmodel->featureVector( fi);
 			if (!vec.empty())
 			{
-				std::cout << fi << ":";
+				std::cout << fi << " ";
 				printResultVector( vec);
 			}
 		}
@@ -498,7 +498,7 @@ static void inspectConceptFeatures( const strus::VectorStorageClientInterface* v
 		{
 			std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, ci);
 			if (far.empty()) continue;
-			std::cout << ci << ": ";
+			std::cout << ci << " ";
 			printResultFeatures( vsmodel, far, mode, true);
 		}
 	}
