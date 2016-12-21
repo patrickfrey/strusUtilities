@@ -384,23 +384,28 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 			{
 				case PatternMatcherInstanceInterface::OpSequence:
 					exprinfo.minrange += argexprinfo.minrange;
+					exprinfo.maxrange += argexprinfo.maxrange;
 					break;
 				case PatternMatcherInstanceInterface::OpSequenceImm:
 					exprinfo.minrange += argexprinfo.minrange;
+					exprinfo.maxrange += argexprinfo.maxrange;
 					break;
 				case PatternMatcherInstanceInterface::OpSequenceStruct:
 					if (nofArguments)
 					{
 						exprinfo.minrange += argexprinfo.minrange;
+						exprinfo.maxrange += argexprinfo.maxrange;
 					}
 					break;
 				case PatternMatcherInstanceInterface::OpWithin:
 					exprinfo.minrange += argexprinfo.minrange;
+					exprinfo.maxrange += argexprinfo.maxrange;
 					break;
 				case PatternMatcherInstanceInterface::OpWithinStruct:
 					if (nofArguments)
 					{
 						exprinfo.minrange += argexprinfo.minrange;
+						exprinfo.maxrange += argexprinfo.maxrange;
 					}
 					break;
 				case PatternMatcherInstanceInterface::OpAny:
@@ -408,11 +413,19 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 					{
 						exprinfo.minrange = argexprinfo.minrange;
 					}
+					else if (exprinfo.maxrange > argexprinfo.maxrange)
+					{
+						exprinfo.maxrange = argexprinfo.maxrange;
+					}
 					break;
 				case PatternMatcherInstanceInterface::OpAnd:
 					if (exprinfo.minrange > argexprinfo.minrange)
 					{
 						exprinfo.minrange = argexprinfo.minrange;
+					}
+					else if (exprinfo.maxrange > argexprinfo.maxrange)
+					{
+						exprinfo.maxrange = argexprinfo.maxrange;
 					}
 					break;
 			}
@@ -475,7 +488,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 			case PatternMatcherInstanceInterface::OpAnd:
 				if (range == 0)
 				{
-					throw strus::runtime_error(_TXT("position range span must be specified for one of the operators %s"), "{'any','and','within','within_struct','sequence','sequence_struct'}");
+					range = exprinfo.maxrange;
 				}
 				else if (range < exprinfo.minrange)
 				{

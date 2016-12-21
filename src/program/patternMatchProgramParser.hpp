@@ -60,12 +60,13 @@ public:
 private:
 	struct SubExpressionInfo
 	{
-		explicit SubExpressionInfo( unsigned int minrange_=0)
-			:minrange(minrange_){}
+		explicit SubExpressionInfo( unsigned int minrange_=0,unsigned int maxrange_=0)
+			:minrange(minrange_),maxrange(maxrange_){}
 		SubExpressionInfo( const SubExpressionInfo& o)
-			:minrange(o.minrange){}
+			:minrange(o.minrange),maxrange(o.maxrange){}
 
 		unsigned int minrange;
+		unsigned int maxrange;
 	};
 
 	uint32_t getOrCreateSymbol( unsigned int regexid, const std::string& name);
