@@ -1039,7 +1039,7 @@ static void parseQueryFeatureDef(
 	featuredef.release();
 }
 
-static FeatureClass parseFeatureClassDef( char const*& src)
+static FeatureClass parseFeatureClassDef( char const*& src, std::string& domainid)
 {
 	FeatureClass rt = FeatSearchIndexTerm;
 	if (isOpenSquareBracket( *src))
@@ -1050,6 +1050,10 @@ static FeatureClass parseFeatureClassDef( char const*& src)
 			throw strus::runtime_error( _TXT("feature class identifier expected after open square bracket '['"));
 		}
 		rt = featureClassFromName( parse_IDENTIFIER( src));
+		if (rt == FeatPatternMatch && isAlnum(*src))
+		{
+			domainid = parse_IDENTIFIER( src);
+		}
 		if (!isCloseSquareBracket( *src))
 		{
 			throw strus::runtime_error( _TXT("close square bracket ']' expected to close feature class section definition"));
@@ -1070,6 +1074,7 @@ template <class AnalyzerInterface>
 static void parseAnalyzerPatternMatchProgramDef(
 		AnalyzerInterface& analyzer,
 		const TextProcessorInterface* textproc,
+		const std::string& patternModuleName,
 		const std::string& patternTypeName,
 		char const*& src,
 		ErrorBufferInterface* errorhnd)
@@ -1087,13 +1092,6 @@ static void parseAnalyzerPatternMatchProgramDef(
 			throw strus::runtime_error(_TXT("expected close curly bracket '}' at end of pattern lexer selection expressions"));
 		}
 		(void)parse_OPERATOR( src);
-	}
-	std::string pmdomain;
-	if (isAt( *src))
-	{
-		(void)parse_OPERATOR( src);
-		if (!isAlpha(*src)) throw strus::runtime_error(_TXT("expected identifier (pattern matching module specifier) after at '@'"));
-		pmdomain = parse_IDENTIFIER( src);
 	}
 	std::vector<std::pair<std::string,std::string> > ptsources;
 	for(;;)
@@ -1115,7 +1113,7 @@ static void parseAnalyzerPatternMatchProgramDef(
 	}
 	if (selectexprlist.empty())
 	{
-		const PatternMatcherInterface* matcher = textproc->getPatternMatcher( pmdomain);
+		const PatternMatcherInterface* matcher = textproc->getPatternMatcher( patternModuleName);
 		const PatternTermFeederInterface* feeder = textproc->getPatternTermFeeder();
 		PatternMatcherProgram result;
 		if (!feeder || !matcher || !loadPatternMatcherProgramForAnalyzerOutput(
@@ -1139,8 +1137,8 @@ static void parseAnalyzerPatternMatchProgramDef(
 	}
 	else
 	{
-		const PatternLexerInterface* lexer = textproc->getPatternLexer( pmdomain);
-		const PatternMatcherInterface* matcher = textproc->getPatternMatcher( pmdomain);
+		const PatternLexerInterface* lexer = textproc->getPatternLexer( patternModuleName);
+		const PatternMatcherInterface* matcher = textproc->getPatternMatcher( patternModuleName);
 		PatternMatcherProgram result;
 		if (!lexer || !matcher || !loadPatternMatcherProgram( result, lexer, matcher, ptsources, errorhnd))
 		{
@@ -1226,11 +1224,12 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			}
 		}
 		FeatureClass featclass = FeatSearchIndexTerm;
+		std::string featclassid;
 		while (*src)
 		{
 			if (isOpenSquareBracket( *src))
 			{
-				featclass = parseFeatureClassDef( src);
+				featclass = parseFeatureClassDef( src, featclassid);
 			}
 			if (!isAlnum(*src))
 			{
@@ -1279,7 +1278,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			else if (featclass == FeatPatternMatch)
 			{
 				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in pattern match section"));
-				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, identifier, src, errorhnd);
+				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, featclassid, identifier, src, errorhnd);
 			}
 			else switch (statementType)
 			{
@@ -1343,11 +1342,12 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			}
 		}
 		FeatureClass featclass = FeatSearchIndexTerm;
+		std::string featclassid;
 		while (*src)
 		{
 			if (isOpenSquareBracket( *src))
 			{
-				featclass = parseFeatureClassDef( src);
+				featclass = parseFeatureClassDef( src, featclassid);
 			}
 			if (!isAlnum(*src))
 			{
@@ -1381,7 +1381,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			else if (featclass == FeatPatternMatch)
 			{
 				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in pattern match section"));
-				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, identifier, src, errorhnd);
+				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, featclassid, identifier, src, errorhnd);
 			}
 			else switch (statementType)
 			{
