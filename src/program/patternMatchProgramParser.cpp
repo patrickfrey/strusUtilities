@@ -465,7 +465,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 		while (isComma( *si));
 		if (!isCloseOvalBracket( *si))
 		{
-			throw strus::runtime_error(_TXT("close bracket ')' expexted at end of join operation expression"));
+			throw strus::runtime_error(_TXT("close bracket ')' expected at end of join operation expression"));
 		}
 		(void)parse_OPERATOR( si);
 		switch (operation)
