@@ -141,6 +141,26 @@ static void printResultFeatures( const strus::VectorStorageClientInterface* vsmo
 	std::cout << std::endl;
 }
 
+static void printResultFeaturesWithWeights( const strus::VectorStorageClientInterface* vsmodel, const std::vector<strus::VectorStorageSearchInterface::Result>& res, FeatureResultPrintMode mode)
+{
+	std::vector<strus::VectorStorageSearchInterface::Result>::const_iterator ri = res.begin(), re = res.end();
+	for (;ri != re; ++ri)
+	{
+		if (mode == PrintIndex || mode == PrintIndexName)
+		{
+			std::cout << ri->featidx();
+			if (mode == PrintIndexName) std::cout << ":";
+		}
+		if (mode == PrintName || mode == PrintIndexName)
+		{
+			std::cout << vsmodel->featureName( ri->featidx());
+		}
+		std::ostringstream weightbuf;
+		weightbuf << std::fixed << std::setprecision(6) << ri->weight();
+		std::cout << " " << weightbuf.str() << std::endl;
+	}
+}
+
 static std::vector<double> parseNextVectorOperand( const strus::VectorStorageClientInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<double> rt;
@@ -259,7 +279,7 @@ private:
 	std::vector<strus::VectorStorageSearchInterface::Result> m_feats;
 };
 
-static void inspectVectorOperations( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration)
+static void inspectVectorOperations( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration, bool withWeights)
 {
 	if (inspectargsize == 0) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
 	std::size_t argidx=0;
@@ -332,12 +352,19 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 			std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
 		}
 	}
-	std::vector<strus::VectorStorageSearchInterface::Result>::const_iterator ri = results.begin(), re = results.end();
-	for (; ri != re; ++ri)
+	if (withWeights)
 	{
-		feats.push_back( ri->featidx());
+		printResultFeaturesWithWeights( vsmodel, results, mode);
 	}
-	printResultFeatures( vsmodel, feats, mode, false);
+	else
+	{
+		std::vector<strus::VectorStorageSearchInterface::Result>::const_iterator ri = results.begin(), re = results.end();
+		for (; ri != re; ++ri)
+		{
+			feats.push_back( ri->featidx());
+		}
+		printResultFeatures( vsmodel, feats, mode, false);
+	}
 }
 
 // Inspect strus::VectorStorageClientInterface::conceptClassNames()
@@ -821,6 +848,8 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"opfeat\"  or \"opfeatname\" { <expr> }" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take an arithmetic expression of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "               = " << _TXT("Return a list of features found.") << std::endl;
+			std::cout << "            \"opfeatw\"  or \"opfeatwname\" { <expr> }" << std::endl;
+			std::cout << "               = " << _TXT("same as \"opfeat\", resp. \"opfeatname\" but print also the result weights.") << std::endl;
 			std::cout << "            \"nofcon\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of concepts defined.") << std::endl;
 			std::cout << "            \"noffeat\"" << std::endl;
@@ -976,11 +1005,19 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeat"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "opfeatw"))
+		{
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeatname"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "opfeatwname"))
+		{
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
 		{
