@@ -274,7 +274,10 @@ bool PatternMatcherProgramParser::compile()
 		}
 		bool rt = true;
 		rt &= m_patternMatcher->compile( m_patternMatcherOptions);
-		rt &= m_patternLexer->compile( m_patternLexerOptions);
+		if (m_patternLexer.get())
+		{
+			rt &= m_patternLexer->compile( m_patternLexerOptions);
+		}
 		return rt;
 	}
 	catch (const std::runtime_error& e)
