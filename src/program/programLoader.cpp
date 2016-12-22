@@ -804,9 +804,11 @@ static void parseDocumentPatternFeatureDef(
 	if (!isAlpha(*src)) throw strus::runtime_error(_TXT("identifier expected in pattern matcher feature definition after left arrow"));
 	std::string patternTypeName = parse_IDENTIFIER(src);
 
-	// [2] Parse normalizer:
-	featuredef.parseNormalizer( src, textproc);
-
+	// [2] Parse normalizer, if defined:
+	if (!isSemiColon(*src) && !isOpenCurlyBracket(*src))
+	{
+		featuredef.parseNormalizer( src, textproc);
+	}
 	// [3] Parse feature options, if defined:
 	analyzer::FeatureOptions featopt( parseFeatureOptions( src));
 
@@ -868,9 +870,11 @@ static void parseQueryPatternFeatureDef(
 	if (!isAlpha(*src)) throw strus::runtime_error(_TXT("identifier expected in pattern matcher feature definition after left arrow"));
 	std::string patternTypeName = parse_IDENTIFIER(src);
 
-	// [2] Parse normalizer:
-	featuredef.parseNormalizer( src, textproc);
-
+	// [2] Parse normalizer, if defined:
+	if (!isSemiColon(*src))
+	{
+		featuredef.parseNormalizer( src, textproc);
+	}
 	switch (featureClass)
 	{
 		case FeatSearchIndexTerm:
