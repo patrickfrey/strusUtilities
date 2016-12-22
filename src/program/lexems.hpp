@@ -135,7 +135,7 @@ static inline bool isStringQuote( char ch)
 }
 static inline bool isSpace( char ch)
 {
-	return ch == ' ' || ch == '\t' || ch == '\n';
+	return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
 }
 static inline bool isCompareOperator( const char* si)
 {
@@ -143,7 +143,11 @@ static inline bool isCompareOperator( const char* si)
 }
 static inline void skipToEoln( char const*& src)
 {
-	while (*src && *src != '\n') ++src;
+	while (*src && *src != '\n')
+	{
+		if (*src == '\r' && src[1] != '\n') break;
+		++src;
+	}
 }
 static inline void skipSpaces( char const*& src)
 {
@@ -168,7 +172,7 @@ bool isEqual( const std::string& id, const char* idstr);
 std::string parse_IDENTIFIER( char const*& src);
 std::string parse_TEXTWORD( char const*& src);
 std::string parse_STRING( char const*& src);
-std::string parse_STRING_nonesc( char const*& src);
+std::string parse_STRING_noskip( char const*& src);
 std::string parse_REGEX( char const*& src);
 std::string parse_PATH( char const*& src);
 unsigned int parse_UNSIGNED( char const*& src);

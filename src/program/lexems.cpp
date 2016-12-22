@@ -81,21 +81,27 @@ std::string parser::parse_PATH( char const*& src)
 	return rt;
 }
 
-std::string parser::parse_STRING( char const*& src)
+std::string parser::parse_STRING_noskip( char const*& src)
 {
 	std::string rt;
 	char eb = *src++;
 	while (*src != eb)
 	{
-		if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
+		if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string"));
 		if (*src == '\\')
 		{
 			src++;
-			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
+			if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string"));
 		}
 		rt.push_back( *src++);
 	}
 	++src;
+	return rt;
+}
+
+std::string parser::parse_STRING( char const*& src)
+{
+	std::string rt = parse_STRING_noskip( src);
 	skipSpaces( src);
 	return rt;
 }
@@ -106,11 +112,11 @@ std::string parser::parse_REGEX( char const*& src)
 	char eb = *src++;
 	while (*src != eb)
 	{
-		if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
+		if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
 		if (*src == '\\')
 		{
 			rt.push_back( *src++);
-			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
+			if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
 		}
 		rt.push_back( *src++);
 	}

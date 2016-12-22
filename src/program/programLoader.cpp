@@ -1172,14 +1172,17 @@ static void expandIncludes(
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
-	skipSpaces(src);
+	while (isSpace( *src)) ++src;
+
 	while (*src == '#' && std::memcmp( src, "#include", 8) == 0 && isSpace(src[8]))
 	{
 		src+= 8;
-		skipSpaces(src);
-		std::string filename = isStringQuote(*src) ? parse_STRING( src) : parse_PATH( src);
+		while (isSpace( *src)) ++src;
 
-		if (filename.empty()) throw strus::runtime_error(_TXT("failed to parse include file path"));
+		if (!isStringQuote(*src)) throw strus::runtime_error(_TXT("string expected as include file path"));
+		std::string filename = parse_STRING_noskip( src);
+
+		if (filename.empty()) throw strus::runtime_error(_TXT("include file name is empty"));
 		std::string filepath = textproc->getResourcePath( filename);
 		if (filepath.empty()) throw strus::runtime_error(_TXT("failed to find include file path '%s': %s"), filename.c_str(), errorhnd->fetchError());
 
@@ -1194,7 +1197,7 @@ static void expandIncludes(
 
 			contents.push_back( std::pair<std::string,std::string>( filename, include_source));
 		}
-		skipSpaces(src);
+		while (isSpace( *src)) ++src;
 	}
 }
 
@@ -1206,7 +1209,6 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
-	skipSpaces(src);
 	try
 	{
 		if (allowIncludes)
@@ -1229,6 +1231,8 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 		}
 		FeatureClass featclass = FeatSearchIndexTerm;
 		std::string featclassid;
+
+		skipSpaces(src);
 		while (*src)
 		{
 			if (isOpenSquareBracket( *src))
@@ -1324,7 +1328,6 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
-	skipSpaces(src);
 	try
 	{
 		if (allowIncludes)
@@ -1347,6 +1350,8 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 		}
 		FeatureClass featclass = FeatSearchIndexTerm;
 		std::string featclassid;
+
+		skipSpaces(src);
 		while (*src)
 		{
 			if (isOpenSquareBracket( *src))
