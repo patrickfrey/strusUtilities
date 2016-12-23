@@ -2340,7 +2340,7 @@ static void loadVectorStorageVectors_word2vecBin(
 			unsigned int ii = 0;
 			for (; ii < vecsize; ii++)
 			{
-				ByteOrder<float>::net_value_type val;
+				typename ByteOrder<float>::net_value_type val;
 #ifdef STRUS_LOWLEVEL_DEBUG
 				print_value_seq( si, sizeof( float));
 #endif
