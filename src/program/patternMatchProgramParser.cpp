@@ -364,6 +364,7 @@ unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string
 void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo)
 {
 	exprinfo.minrange = 0;
+	exprinfo.maxrange = 0;
 	if (isOpenOvalBracket( *si))
 	{
 		JoinOperation operation = joinOperation( name);
@@ -416,17 +417,17 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 					{
 						exprinfo.minrange = argexprinfo.minrange;
 					}
-					else if (exprinfo.maxrange > argexprinfo.maxrange)
+					if (nofArguments == 0 || exprinfo.maxrange < argexprinfo.maxrange)
 					{
 						exprinfo.maxrange = argexprinfo.maxrange;
 					}
 					break;
 				case PatternMatcherInstanceInterface::OpAnd:
-					if (exprinfo.minrange > argexprinfo.minrange)
+					if (nofArguments == 0 || exprinfo.minrange > argexprinfo.minrange)
 					{
 						exprinfo.minrange = argexprinfo.minrange;
 					}
-					else if (exprinfo.maxrange > argexprinfo.maxrange)
+					if (nofArguments == 0 || exprinfo.maxrange < argexprinfo.maxrange)
 					{
 						exprinfo.maxrange = argexprinfo.maxrange;
 					}
@@ -534,6 +535,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 			m_patternMatcher->pushPattern( name);
 		}
 		exprinfo.minrange = 1;
+		exprinfo.maxrange = 1;
 	}
 }
 
