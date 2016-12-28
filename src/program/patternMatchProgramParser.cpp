@@ -340,7 +340,7 @@ const char* PatternMatcherProgramParser::getSymbolRegexId( unsigned int id) cons
 	return m_regexNameSymbolTab.key( m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1]);
 }
 
-void PatternMatcherProgramParser::defineAnalyzerTermType( const std::string& type)
+unsigned int PatternMatcherProgramParser::defineAnalyzerTermType( const std::string& type)
 {
 	unsigned int typid = m_regexNameSymbolTab.getOrCreate( type);
 	if (typid == 0)
@@ -355,9 +355,10 @@ void PatternMatcherProgramParser::defineAnalyzerTermType( const std::string& typ
 	{
 		m_patternTermFeeder->defineLexem( typid, type);
 	}
+	return typid;
 }
 
-unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string& type)
+unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string& type) const
 {
 	return m_regexNameSymbolTab.get( type);
 }
@@ -510,31 +511,49 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 	}
 	else
 	{
-		unsigned int id = m_patternLexer.get()
-				? m_regexNameSymbolTab.get( name)
-				: getAnalyzerTermType( name);
-		if (id)
+		unsigned int id;
+		if (isStringQuote(*si))
 		{
-			if (isStringQuote(*si))
+			if (m_patternLexer.get())
 			{
-				std::string symbol( parse_STRING( si));
-				id = getOrCreateSymbol( id, symbol);
+				id = m_regexNameSymbolTab.get( name);
+				if (!id) throw strus::runtime_error(_TXT("undefined lexem '%s'"), name.c_str());
 			}
-			m_patternMatcher->pushTerm( id);
+			else
+			{
+				id = defineAnalyzerTermType( name);
+			}
+			std::string symbol( parse_STRING( si));
+			id = getOrCreateSymbol( id, symbol);
 		}
 		else
 		{
-			id = m_patternNameSymbolTab.get( name);
-			if (!id)
+			if (m_patternLexer.get())
 			{
-				id = m_patternNameSymbolTab.getOrCreate( name);
-				if (id == 0)
-				{
-					throw strus::runtime_error(_TXT("failed to define pattern name symbol"));
-				}
-				m_unresolvedPatternNameSet.insert( id);
+				id = m_regexNameSymbolTab.get( name);
 			}
-			m_patternMatcher->pushPattern( name);
+			else
+			{
+				id = getAnalyzerTermType( name);
+			}
+			if (id)
+			{
+				m_patternMatcher->pushTerm( id);
+			}
+			else
+			{
+				id = m_patternNameSymbolTab.get( name);
+				if (!id)
+				{
+					id = m_patternNameSymbolTab.getOrCreate( name);
+					if (id == 0)
+					{
+						throw strus::runtime_error(_TXT("failed to define pattern name symbol"));
+					}
+					m_unresolvedPatternNameSet.insert( id);
+				}
+				m_patternMatcher->pushPattern( name);
+			}
 		}
 		exprinfo.minrange = 1;
 		exprinfo.maxrange = 1;

@@ -71,8 +71,8 @@ private:
 
 	uint32_t getOrCreateSymbol( unsigned int regexid, const std::string& name);
 	const char* getSymbolRegexId( unsigned int id) const;
-	void defineAnalyzerTermType( const std::string& type);
-	unsigned int getAnalyzerTermType( const std::string& type);
+	unsigned int defineAnalyzerTermType( const std::string& type);
+	unsigned int getAnalyzerTermType( const std::string& type) const;
 	void loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo);
 	void loadExpression( char const*& si, SubExpressionInfo& exprinfo);
 	void loadOption( char const*& si);
