@@ -353,7 +353,7 @@ unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string
 	{
 		throw strus::runtime_error(_TXT("too many term types defined: %u"), typid);
 	}
-	if (!m_regexNameSymbolTab.isNew( typid))
+	if (m_regexNameSymbolTab.isNew( typid))
 	{
 		m_patternTermFeeder->defineLexem( typid, type);
 	}
