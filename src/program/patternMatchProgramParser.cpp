@@ -92,20 +92,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				(void)parse_OPERATOR( si);
 				visible = false;
 			}
-			if (m_patternTermFeeder.get() && isAssign(*si))
-			{
-				(void)parse_OPERATOR( si);
-				if (!isAlpha(*si)) throw strus::runtime_error(_TXT("feature type expected after colon ':' delaring an unused lexem that contributes only to position counting"));
-				std::string name = parse_IDENTIFIER( si);
-				(void)getAnalyzerTermType( name);
-
-				if (!isSemiColon(*si))
-				{
-					throw strus::runtime_error(_TXT("semicolon ';' expected at end of rule"));
-				}
-				(void)parse_OPERATOR(si);
-			}
-			else if (isAlpha(*si) || isStringQuote(*si))
+			if (isAlpha(*si) || isStringQuote(*si))
 			{
 				bool nameIsString = isStringQuote(*si);
 				std::string name = nameIsString ? parse_STRING( si) : parse_IDENTIFIER( si);
@@ -121,66 +108,73 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					level = parse_UNSIGNED( si);
 					has_level = true;
 				}
-				if (m_patternLexer.get() && isColon( *si))
+				if (isColon( *si))
 				{
-					//... lexem expression declaration
-					if (nameIsString)
+					if (m_patternLexer.get())
 					{
-						throw strus::runtime_error(_TXT("string not allowed as lexem type"));
-					}
-					if (!visible)
-					{
-						throw strus::runtime_error(_TXT("unexpected colon ':' after dot '.' followed by an identifier, that starts an token pattern declaration marked as private (invisible in output)"));
-					}
-					unsigned int nameid = m_regexNameSymbolTab.getOrCreate( name);
-					if (nameid == 0)
-					{
-						throw strus::runtime_error(_TXT("failed to define lexem name symbol"));
-					}
-					if (nameid > MaxRegularExpressionNameId)
-					{
-						throw strus::runtime_error(_TXT("too many regular expression tokens defined: %u"), nameid);
-					}
-					std::string regex;
-					do
-					{
-						(void)parse_OPERATOR(si);
-
-						//... lexem pattern def -> name : regex ;
-						if ((unsigned char)*si > 32)
+						//... lexem expression declaration
+						if (nameIsString)
 						{
-							regex = parse_REGEX( si);
+							throw strus::runtime_error(_TXT("string not allowed as lexem type"));
 						}
-						else
+						if (!visible)
 						{
-							throw strus::runtime_error(_TXT("regular expression definition (inside chosen characters) expected after colon ':'"));
+							throw strus::runtime_error(_TXT("unexpected colon ':' after dot '.' followed by an identifier, that starts an token pattern declaration marked as private (invisible in output)"));
 						}
-						unsigned int resultIndex = 0;
-						if (isOpenSquareBracket(*si))
+						unsigned int nameid = m_regexNameSymbolTab.getOrCreate( name);
+						if (nameid == 0)
+						{
+							throw strus::runtime_error(_TXT("failed to define lexem name symbol"));
+						}
+						if (nameid > MaxRegularExpressionNameId)
+						{
+							throw strus::runtime_error(_TXT("too many regular expression tokens defined: %u"), nameid);
+						}
+						std::string regex;
+						do
 						{
 							(void)parse_OPERATOR(si);
-							resultIndex = parse_UNSIGNED( si);
-							if (!isOpenSquareBracket(*si))
+	
+							//... lexem pattern def -> name : regex ;
+							if ((unsigned char)*si > 32)
 							{
-								throw strus::runtime_error(_TXT("close square bracket ']' expected at end of result index definition"));
+								regex = parse_REGEX( si);
 							}
-							(void)parse_OPERATOR(si);
+							else
+							{
+								throw strus::runtime_error(_TXT("regular expression definition (inside chosen characters) expected after colon ':'"));
+							}
+							unsigned int resultIndex = 0;
+							if (isOpenSquareBracket(*si))
+							{
+								(void)parse_OPERATOR(si);
+								resultIndex = parse_UNSIGNED( si);
+								if (!isOpenSquareBracket(*si))
+								{
+									throw strus::runtime_error(_TXT("close square bracket ']' expected at end of result index definition"));
+								}
+								(void)parse_OPERATOR(si);
+							}
+							analyzer::PositionBind posbind = analyzer::BindContent;
+							if (isLeftArrow(si))
+							{
+								si += 2; skipSpaces( si); //....parse_OPERATOR
+								posbind = analyzer::BindPredecessor;
+							}
+							else if (isRightArrow(si))
+							{
+								si += 2; skipSpaces( si); //....parse_OPERATOR
+								posbind = analyzer::BindSuccessor;
+							}
+							m_patternLexer->defineLexem(
+								nameid, regex, resultIndex, level, posbind);
 						}
-						analyzer::PositionBind posbind = analyzer::BindContent;
-						if (isLeftArrow(si))
-						{
-							si += 2; skipSpaces( si); //....parse_OPERATOR
-							posbind = analyzer::BindPredecessor;
-						}
-						else if (isRightArrow(si))
-						{
-							si += 2; skipSpaces( si); //....parse_OPERATOR
-							posbind = analyzer::BindSuccessor;
-						}
-						m_patternLexer->defineLexem(
-							nameid, regex, resultIndex, level, posbind);
+						while (isOr(*si));
 					}
-					while (isOr(*si));
+					else if (m_patternTermFeeder.get())
+					{
+						throw strus::runtime_error(_TXT("pattern analyzer terms are defined by option %lexem type and not with id : regex"));
+					}
 				}
 				else if (isAssign(*si))
 				{
@@ -346,7 +340,7 @@ const char* PatternMatcherProgramParser::getSymbolRegexId( unsigned int id) cons
 	return m_regexNameSymbolTab.key( m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1]);
 }
 
-unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string& type)
+void PatternMatcherProgramParser::defineAnalyzerTermType( const std::string& type)
 {
 	unsigned int typid = m_regexNameSymbolTab.getOrCreate( type);
 	if (typid == 0)
@@ -361,7 +355,11 @@ unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string
 	{
 		m_patternTermFeeder->defineLexem( typid, type);
 	}
-	return typid;
+}
+
+unsigned int PatternMatcherProgramParser::getAnalyzerTermType( const std::string& type)
+{
+	return m_regexNameSymbolTab.get( type);
 }
 
 
@@ -582,6 +580,7 @@ void PatternMatcherProgramParser::loadOption( char const*& si)
 {
 	if (isAlpha(*si))
 	{
+		bool found = false;
 		std::string name = parse_IDENTIFIER( si);
 		std::vector<std::string>::const_iterator
 			oi = m_patternMatcherOptionNames.begin(),
@@ -597,6 +596,7 @@ void PatternMatcherProgramParser::loadOption( char const*& si)
 				{
 					double value = parse_FLOAT( si);
 					m_patternMatcherOptions( name, value);
+					found = true;
 				}
 				else
 				{
@@ -616,8 +616,22 @@ void PatternMatcherProgramParser::loadOption( char const*& si)
 		if (oi != oe)
 		{
 			m_patternLexerOptions( name);
+			found = true;
 		}
-		else
+		if (m_patternTermFeeder.get())
+		{
+			if (utils::caseInsensitiveEquals( name, "lexem"))
+			{
+				std::string lexemid = parse_IDENTIFIER( si);
+				if (lexemid.empty())
+				{
+					throw strus::runtime_error(_TXT("expected identifier after '%s' option"), name.c_str());
+				}
+				defineAnalyzerTermType( lexemid);
+				found = true;
+			}
+		}
+		if (!found)
 		{
 			throw strus::runtime_error(_TXT("unknown option: '%s'"), name.c_str());
 		}
