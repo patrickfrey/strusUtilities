@@ -625,12 +625,12 @@ void PatternMatcherProgramParser::loadOption( char const*& si)
 				}
 				else
 				{
-					throw strus::runtime_error(_TXT("expected number as value of token pattern match option declaration"));
+					m_patternMatcherOptions( name, 0.0);
 				}
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("expected assignment operator in token pattern match option declaration"));
+				m_patternMatcherOptions( name, 0.0);
 			}
 			return;
 		}
