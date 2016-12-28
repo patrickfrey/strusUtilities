@@ -529,6 +529,10 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 			}
 			std::string symbol( parse_STRING( si));
 			id = getOrCreateSymbol( id, symbol);
+			if (id)
+			{
+				m_patternMatcher->pushTerm( id);
+			}
 		}
 		else
 		{
