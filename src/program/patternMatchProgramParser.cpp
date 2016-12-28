@@ -212,6 +212,10 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					throw strus::runtime_error(_TXT("semicolon ';' expected at end of rule"));
 				}
 				(void)parse_OPERATOR(si);
+				if (m_errorhnd->hasError())
+				{
+					throw strus::runtime_error(_TXT("error in rule definition"));
+				}
 			}
 			else
 			{
