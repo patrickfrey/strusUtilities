@@ -2639,7 +2639,7 @@ DLL_PUBLIC bool strus::loadPatternMatcherProgramForAnalyzerOutput(
 		}
 		if (!program.compile())
 		{
-			errorhnd->explain(_TXT("failed to compile pattern match program for analyzer output"));
+			errorhnd->explain(_TXT("failed to compile pattern match program for analyzer output: %s"));
 			return false;
 		}
 		program.fetchResult( result);
