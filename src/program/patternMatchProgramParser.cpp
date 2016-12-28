@@ -109,6 +109,10 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 			{
 				bool nameIsString = isStringQuote(*si);
 				std::string name = nameIsString ? parse_STRING( si) : parse_IDENTIFIER( si);
+				if (name.empty())
+				{
+					throw strus::runtime_error(_TXT("pattern name is empty"));
+				}
 				unsigned int level = 0;
 				bool has_level = false;
 				if (isExp(*si))
