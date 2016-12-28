@@ -13,6 +13,7 @@
 #include "strus/patternMatcherInterface.hpp"
 #include "strus/patternLexerInterface.hpp"
 #include "strus/patternTermFeederInterface.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/internationalization.hpp"
 #include "private/utils.hpp"
 #include "lexems.hpp"
@@ -68,7 +69,7 @@ void PatternMatcherProgramParser::fetchResult( PatternMatcherProgram& result)
 	std::vector<std::string> regexidmap;
 	SymbolTable::const_inv_iterator si = m_regexNameSymbolTab.inv_begin(), se = m_regexNameSymbolTab.inv_end();
 	for (; si != se; ++si) regexidmap.push_back( *si);
-	result.init( m_patternLexer.release(), m_patternTermFeeder.release(), m_patternMatcher.release(), regexidmap, m_symbolRegexIdList);
+	result.init( m_patternLexer.release(), m_patternTermFeeder.release(), m_patternMatcher.release(), regexidmap, m_symbolRegexIdList, m_warnings);
 }
 
 bool PatternMatcherProgramParser::load( const std::string& source)
@@ -268,11 +269,8 @@ bool PatternMatcherProgramParser::compile()
 				ue = m_unresolvedPatternNameSet.end();
 			for (std::size_t uidx=0; ui != ue && uidx<10; ++ui,++uidx)
 			{
-				if (uidx) unresolved << ", ";
-				unresolved << "'" << m_patternNameSymbolTab.key(*ui) << "'";
+				m_warnings.push_back( string_format( _TXT("unresolved pattern reference '%s'"), m_patternNameSymbolTab.key(*ui)));
 			}
-			std::string unresolvedstr( unresolved.str());
-			throw strus::runtime_error(_TXT("unresolved pattern references: %s"), unresolvedstr.c_str());
 		}
 		bool rt = true;
 		rt &= m_patternMatcher->compile( m_patternMatcherOptions);

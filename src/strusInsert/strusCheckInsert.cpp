@@ -363,6 +363,7 @@ int main( int argc_, const char* argv_[])
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
+		std::cerr << analyzerMap.warnings();
 
 		strus::FileCrawler fileCrawler( datapath, notificationInterval, nofThreads*5+5, fileext);
 		std::auto_ptr<boost::thread> fileCrawlerThread(

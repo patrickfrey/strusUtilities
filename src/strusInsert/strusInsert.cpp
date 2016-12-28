@@ -382,6 +382,7 @@ int main( int argc_, const char* argv_[])
 		}
 		// Load analyzer program(s):
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
+		std::cerr << analyzerMap.warnings();
 
 		// Start inserter process:
 		strus::utils::ScopedPtr<strus::CommitQueue>

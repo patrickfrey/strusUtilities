@@ -40,6 +40,8 @@ public:
 		return m_documentClass;
 	}
 
+	std::string warnings() const			{return m_warnings.str();}
+
 	const DocumentAnalyzerInterface* get( const analyzer::DocumentClass& dclass);
 
 private:
@@ -61,6 +63,7 @@ private:
 	std::string m_defaultSegmenterName;
 	const strus::SegmenterInterface* m_defaultSegmenter;
 	const strus::AnalyzerObjectBuilderInterface* m_builder;
+	std::ostringstream m_warnings;
 	ErrorBufferInterface* m_errorhnd;
 };
 

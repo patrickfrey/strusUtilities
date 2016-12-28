@@ -84,6 +84,7 @@ bool loadDocumentAnalyzerProgram(
 		const TextProcessorInterface* textproc,
 		const std::string& source,
 		bool allowIncludes,
+		std::ostream& warnings,
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Load a query analyzer program from source
@@ -100,6 +101,7 @@ bool loadQueryAnalyzerProgram(
 		const TextProcessorInterface* textproc,
 		const std::string& source,
 		bool allowIncludes,
+		std::ostream& warnings,
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Description of one element of an analyzer map
@@ -269,11 +271,13 @@ public:
 		PatternTermFeederInstanceInterface* termFeeder_,
 		PatternMatcherInstanceInterface* matcher_,
 		const std::vector<std::string>& regexidmap_,
-		const std::vector<uint32_t>& symbolRegexIdList_);
+		const std::vector<uint32_t>& symbolRegexIdList_,
+		const std::vector<std::string>& warnings_);
 
 	PatternLexerInstanceInterface* fetchLexer();
 	PatternTermFeederInstanceInterface* fetchTermFeeder();
 	PatternMatcherInstanceInterface* fetchMatcher();
+	const std::vector<std::string>& warnings() const	{return m_warnings;}
 
 	const char* tokenName( unsigned int id) const;
 
@@ -283,6 +287,7 @@ private:
 	PatternMatcherInstanceInterface* m_matcher;
 	std::vector<std::string> m_regexidmap;
 	std::vector<uint32_t> m_symbolRegexIdList;
+	std::vector<std::string> m_warnings;
 };
 
 /// \brief Loads and compiles a list of pattern matcher programs from source and instruments a lexer and a matcher instance with it

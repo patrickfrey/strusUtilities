@@ -377,7 +377,7 @@ int main( int argc, const char* argv[])
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
-		if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, errorBuffer.get()))
+		if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
 		{
 			throw strus::runtime_error( _TXT("failed to load analyzer program %s"), analyzerprg.c_str());
 		}

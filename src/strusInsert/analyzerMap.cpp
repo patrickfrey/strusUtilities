@@ -108,7 +108,7 @@ void AnalyzerMap::defineAnalyzerProgramSource(
 
 	std::string mimeType = segmenter->mimeType();
 	const strus::TextProcessorInterface* textproc = m_builder->getTextProcessor();
-	if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, m_errorhnd))
+	if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, m_warnings, m_errorhnd))
 	{
 		throw strus::runtime_error( _TXT("failed to load analyzer configuration program"));
 	}

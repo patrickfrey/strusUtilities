@@ -1081,6 +1081,7 @@ static void parseAnalyzerPatternMatchProgramDef(
 		const std::string& patternModuleName,
 		const std::string& patternTypeName,
 		char const*& src,
+		std::ostream& warnings,
 		ErrorBufferInterface* errorhnd)
 {
 	std::vector<std::string> selectexprlist;
@@ -1124,6 +1125,11 @@ static void parseAnalyzerPatternMatchProgramDef(
 				result, feeder, matcher, ptsources, errorhnd))
 		{
 			throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
+		}
+		std::vector<std::string>::const_iterator wi = result.warnings().begin(), we = result.warnings().begin();
+		for (; wi != we; ++wi)
+		{
+			warnings << *wi << std::endl;
 		}
 		std::auto_ptr<PatternTermFeederInstanceInterface> feederctx( result.fetchTermFeeder());
 		std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( result.fetchMatcher());
@@ -1206,6 +1212,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 		const TextProcessorInterface* textproc,
 		const std::string& source,
 		bool allowIncludes,
+		std::ostream& warnings,
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
@@ -1223,7 +1230,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			{
 				if (!strus::loadDocumentAnalyzerProgram(
 						analyzer, textproc, ci->second,
-						false/*!allowIncludes*/, errorhnd))
+						false/*!allowIncludes*/, warnings, errorhnd))
 				{
 					throw strus::runtime_error(_TXT("failed to load include file '%s': %s"), ci->first.c_str(), errorhnd->fetchError());
 				}
@@ -1286,7 +1293,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			else if (featclass == FeatPatternMatch)
 			{
 				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in pattern match section"));
-				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, featclassid, identifier, src, errorhnd);
+				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, featclassid, identifier, src, warnings, errorhnd);
 			}
 			else switch (statementType)
 			{
@@ -1325,6 +1332,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 		const TextProcessorInterface* textproc,
 		const std::string& source,
 		bool allowIncludes,
+		std::ostream& warnings,
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
@@ -1342,7 +1350,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			{
 				if (!strus::loadQueryAnalyzerProgram(
 						analyzer, qdescr, textproc, ci->second,
-						false/*!allowIncludes*/, errorhnd))
+						false/*!allowIncludes*/, warnings, errorhnd))
 				{
 					throw strus::runtime_error(_TXT("failed to load include file '%s': %s"), ci->first.c_str(), errorhnd->fetchError());
 				}
@@ -1390,7 +1398,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			else if (featclass == FeatPatternMatch)
 			{
 				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in pattern match section"));
-				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, featclassid, identifier, src, errorhnd);
+				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, featclassid, identifier, src, warnings, errorhnd);
 			}
 			else switch (statementType)
 			{
@@ -2537,13 +2545,15 @@ DLL_PUBLIC void PatternMatcherProgram::init(
 		PatternTermFeederInstanceInterface* termFeeder_,
 		PatternMatcherInstanceInterface* matcher_,
 		const std::vector<std::string>& regexidmap_,
-		const std::vector<uint32_t>& symbolRegexIdList_)
+		const std::vector<uint32_t>& symbolRegexIdList_,
+		const std::vector<std::string>& warnings_)
 {
 	m_lexer = lexer_;
 	m_termFeeder = termFeeder_;
 	m_matcher = matcher_;
 	m_regexidmap = regexidmap_;
 	m_symbolRegexIdList = symbolRegexIdList_;
+	m_warnings = warnings_;
 }
 
 DLL_PUBLIC PatternLexerInstanceInterface* PatternMatcherProgram::fetchLexer()

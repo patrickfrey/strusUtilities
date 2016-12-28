@@ -56,6 +56,7 @@ public:
 	void fetchResult( PatternMatcherProgram& result);
 	bool load( const std::string& source);
 	bool compile();
+	const std::vector<std::string>& warnings() const	{return m_warnings;}
 
 private:
 	struct SubExpressionInfo
@@ -90,6 +91,7 @@ private:
 	SymbolTable m_patternNameSymbolTab;
 	std::vector<uint32_t> m_symbolRegexIdList;
 	std::set<uint32_t> m_unresolvedPatternNameSet;
+	std::vector<std::string> m_warnings;
 };
 
 }//namespace
