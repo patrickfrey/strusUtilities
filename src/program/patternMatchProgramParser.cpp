@@ -546,6 +546,10 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 void PatternMatcherProgramParser::loadExpression( char const*& si, SubExpressionInfo& exprinfo)
 {
 	std::string name = parse_IDENTIFIER( si);
+	if (name.empty())
+	{
+		throw strus::runtime_error(_TXT("name in expression is empty"));
+	}
 	if (isAssign(*si))
 	{
 		(void)parse_OPERATOR( si);
