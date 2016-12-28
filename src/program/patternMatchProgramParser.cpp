@@ -268,7 +268,7 @@ bool PatternMatcherProgramParser::compile()
 				ue = m_unresolvedPatternNameSet.end();
 			for (std::size_t uidx=0; ui != ue && uidx<10; ++ui,++uidx)
 			{
-				if (!uidx) unresolved << ", ";
+				if (uidx) unresolved << ", ";
 				unresolved << "'" << m_patternNameSymbolTab.key(*ui) << "'";
 			}
 			std::string unresolvedstr( unresolved.str());
