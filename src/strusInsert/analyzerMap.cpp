@@ -19,10 +19,14 @@
 using namespace strus;
 
 AnalyzerMap::AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const analyzer::DocumentClass& documentClass_, const std::string& defaultSegmenterName_, ErrorBufferInterface* errorhnd_)
-	:m_map(),m_documentClass(documentClass_),m_defaultAnalyzerProgramSource(),m_defaultSegmenterName(defaultSegmenterName_)
-	,m_defaultSegmenter(defaultSegmenterName_.empty()?0:builder_->getSegmenter( defaultSegmenterName_))
+	:m_map(),m_documentClass(documentClass_),m_defaultSegmenterName(defaultSegmenterName_)
+	,m_defaultSegmenter(builder_->getSegmenter( defaultSegmenterName_))
 	,m_builder(builder_),m_errorhnd(errorhnd_)
 {
+	if (!m_defaultSegmenter)
+	{
+		throw strus::runtime_error(_TXT("failed to create default segmenter"));
+	}
 	defineDefaultProgram( prgfile_);
 }
 
@@ -38,7 +42,7 @@ void AnalyzerMap::defineProgram(
 
 	if (strus::isAnalyzerMapSource( programSource, m_errorhnd))
 	{
-			throw strus::runtime_error( _TXT("analyzer map loaded instead of analyzer program"));
+		throw strus::runtime_error( _TXT("analyzer map loaded instead of analyzer program"));
 	}
 	if (m_errorhnd->hasError())
 	{
@@ -89,11 +93,7 @@ void AnalyzerMap::defineDefaultProgram(
 		{
 			throw strus::runtime_error(_TXT("error detecting analyzer configuration file type"));
 		}
-		m_defaultAnalyzerProgramSource = programSource;
-		if (m_defaultSegmenter)
-		{
-			defineAnalyzerProgramSource( ""/*scheme*/, m_defaultSegmenter, m_defaultAnalyzerProgramSource);
-		}
+		defineAnalyzerProgramSource( ""/*scheme*/, m_defaultSegmenter, programSource);
 	}
 }
 
@@ -129,7 +129,7 @@ void AnalyzerMap::defineAnalyzerProgramSource(
 	defineAnalyzerProgramSource( scheme, segmenter, analyzerProgramSource);
 }
 
-const DocumentAnalyzerInterface* AnalyzerMap::get( const analyzer::DocumentClass& dclass)
+const DocumentAnalyzerInterface* AnalyzerMap::get( const analyzer::DocumentClass& dclass) const
 {
 	const DocumentAnalyzerInterface* rt = 0;
 	if (dclass.scheme().empty())
@@ -147,25 +147,10 @@ const DocumentAnalyzerInterface* AnalyzerMap::get( const analyzer::DocumentClass
 		di = m_map.find( altkey);
 		if (di != m_map.end()) rt = di->second.get();
 	}
-	if (!rt && !m_defaultAnalyzerProgramSource.empty())
+	if (!rt)
 	{
-		const SegmenterInterface* segmenter;
-		if (m_defaultSegmenter && 0==std::strcmp( m_defaultSegmenter->mimeType(), dclass.mimeType().c_str()))
-		{
-			segmenter = m_defaultSegmenter;
-		}
-		else
-		{
-			segmenter = m_builder->findMimeTypeSegmenter( dclass.mimeType());
-		}
-		if (segmenter)
-		{
-			defineAnalyzerProgramSource( ""/*scheme*/, segmenter, m_defaultAnalyzerProgramSource);
-			std::string key( dclass.mimeType());
-			Map::const_iterator di = m_map.find( key);
-			if (di == m_map.end()) throw strus::runtime_error(_TXT("failed to declare default analyzer program source on demand"));
-			rt = di->second.get();
-		}
+		std::string key( dclass.mimeType() + ":" + dclass.scheme());
+		throw strus::runtime_error(_TXT("could not find analyzer for this type of document: %s"), key.c_str());
 	}
 	return rt;
 }

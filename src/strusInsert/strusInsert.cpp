@@ -395,7 +395,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
-				storage.get(), textproc, analyzerMap, commitQue.get(),
+				storage.get(), textproc, &analyzerMap, commitQue.get(),
 				&fileCrawler, transactionSize, verbose, errorBuffer.get());
 			inserter.run();
 		}
@@ -407,7 +407,7 @@ int main( int argc_, const char* argv_[])
 			{
 				processorList.push_back(
 					new strus::InsertProcessor(
-						storage.get(), textproc, analyzerMap, commitQue.get(),
+						storage.get(), textproc, &analyzerMap, commitQue.get(),
 						&fileCrawler, transactionSize, verbose, errorBuffer.get()));
 			}
 			{

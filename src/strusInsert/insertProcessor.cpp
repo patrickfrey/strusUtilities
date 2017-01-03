@@ -34,7 +34,7 @@ using namespace strus;
 InsertProcessor::InsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
-		const AnalyzerMap& analyzerMap_,
+		const AnalyzerMap* analyzerMap_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
 		unsigned int transactionSize_,
@@ -81,7 +81,7 @@ void InsertProcessor::run()
 				{
 					strus::InputStream input( *fitr);
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
-					if (m_analyzerMap.documentClass().mimeType().empty())
+					if (m_analyzerMap->documentClass().mimeType().empty())
 					{
 						// Read the input file to analyze and detect its document type:
 						char hdrbuf[ 1024];
@@ -97,7 +97,7 @@ void InsertProcessor::run()
 							std::cerr << string_format( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 							continue;
 						}
-						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( dclass);
+						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( dclass);
 						if (!analyzer)
 						{
 							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
@@ -107,13 +107,13 @@ void InsertProcessor::run()
 					}
 					else
 					{
-						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap.get( m_analyzerMap.documentClass());
+						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( m_analyzerMap->documentClass());
 						if (!analyzer)
 						{
-							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), m_analyzerMap.documentClass().mimeType().c_str(), m_analyzerMap.documentClass().scheme().c_str()) << std::endl; 
+							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), m_analyzerMap->documentClass().mimeType().c_str(), m_analyzerMap->documentClass().scheme().c_str()) << std::endl; 
 							continue;
 						}
-						analyzerContext.reset( analyzer->createContext( m_analyzerMap.documentClass()));
+						analyzerContext.reset( analyzer->createContext( m_analyzerMap->documentClass()));
 					}
 					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
 

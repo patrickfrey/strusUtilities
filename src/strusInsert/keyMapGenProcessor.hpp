@@ -63,7 +63,7 @@ class KeyMapGenProcessor
 public:
 	KeyMapGenProcessor(
 			const TextProcessorInterface* textproc_,
-			const AnalyzerMap& analyzerMap_,
+			const AnalyzerMap* analyzerMap_,
 			KeyMapGenResultList* que_,
 			FileCrawlerInterface* crawler_,
 			ErrorBufferInterface* errorhnd_);
@@ -75,7 +75,7 @@ public:
 
 private:
 	const TextProcessorInterface* m_textproc;
-	AnalyzerMap m_analyzerMap;
+	const AnalyzerMap* m_analyzerMap;
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
 	utils::AtomicBool m_terminated;

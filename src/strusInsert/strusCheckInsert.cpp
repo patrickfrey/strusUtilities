@@ -372,7 +372,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::CheckInsertProcessor checker(
-				storage.get(), textproc, analyzerMap, &fileCrawler, logfile, errorBuffer.get());
+				storage.get(), textproc, &analyzerMap, &fileCrawler, logfile, errorBuffer.get());
 			checker.run();
 		}
 		else
@@ -383,7 +383,7 @@ int main( int argc_, const char* argv_[])
 			{
 				processorList.push_back(
 					new strus::CheckInsertProcessor(
-						storage.get(), textproc, analyzerMap,
+						storage.get(), textproc, &analyzerMap,
 						&fileCrawler, logfile, errorBuffer.get()));
 			}
 			{

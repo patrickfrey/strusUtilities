@@ -30,7 +30,7 @@ public:
 	CheckInsertProcessor(
 			StorageClientInterface* storage_,
 			const TextProcessorInterface* textproc_,
-			const AnalyzerMap& analyzerMap_,
+			const AnalyzerMap* analyzerMap_,
 			FileCrawlerInterface* crawler_,
 			const std::string& logfile_,
 			ErrorBufferInterface* errorhnd_);
@@ -43,7 +43,7 @@ public:
 private:
 	StorageClientInterface* m_storage;
 	const TextProcessorInterface* m_textproc;
-	AnalyzerMap m_analyzerMap;
+	const AnalyzerMap* m_analyzerMap;
 	FileCrawlerInterface* m_crawler;
 	utils::AtomicBool m_terminated;
 	std::string m_logfile;

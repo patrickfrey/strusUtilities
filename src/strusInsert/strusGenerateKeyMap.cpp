@@ -275,7 +275,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
-				textproc, analyzerMap, &resultList, &fileCrawler, errorBuffer.get());
+				textproc, &analyzerMap, &resultList, &fileCrawler, errorBuffer.get());
 			processor.run();
 		}
 		else
@@ -285,7 +285,7 @@ int main( int argc_, const char* argv_[])
 			{
 				processorList.push_back(
 					new strus::KeyMapGenProcessor(
-						textproc, analyzerMap, &resultList, &fileCrawler, errorBuffer.get()));
+						textproc, &analyzerMap, &resultList, &fileCrawler, errorBuffer.get()));
 			}
 			{
 				boost::thread_group tgroup;

@@ -25,26 +25,23 @@ class AnalyzerMap
 {
 public:
 	AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const analyzer::DocumentClass& documentClass_, const std::string& defaultSegmenter_, ErrorBufferInterface* errorhnd_);
-	AnalyzerMap( const AnalyzerMap& o)
-		:m_map(o.m_map),m_documentClass(o.m_documentClass),m_defaultAnalyzerProgramSource(o.m_defaultAnalyzerProgramSource)
-		,m_defaultSegmenterName(o.m_defaultSegmenterName),m_defaultSegmenter(o.m_defaultSegmenter)
-		,m_builder(o.m_builder),m_errorhnd(o.m_errorhnd){}
 
-	void defineProgram(
-			const std::string& scheme,
-			const std::string& segmenter,
-			const std::string& prgfile);
+	std::string warnings() const			{return m_warnings.str();}
+
+	const DocumentAnalyzerInterface* get( const analyzer::DocumentClass& dclass) const;
 
 	const strus::analyzer::DocumentClass& documentClass() const
 	{
 		return m_documentClass;
 	}
 
-	std::string warnings() const			{return m_warnings.str();}
-
-	const DocumentAnalyzerInterface* get( const analyzer::DocumentClass& dclass);
-
 private:
+	AnalyzerMap( const AnalyzerMap&){}		//... non copyable
+
+	void defineProgram(
+			const std::string& scheme,
+			const std::string& segmenter,
+			const std::string& prgfile);
 	void defineDefaultProgram(
 			const std::string& prgfile);
 	void defineAnalyzerProgramSource(
@@ -59,7 +56,6 @@ private:
 	typedef std::map<std::string,utils::SharedPtr<DocumentAnalyzerInterface> > Map;
 	Map m_map;
 	analyzer::DocumentClass m_documentClass;
-	std::string m_defaultAnalyzerProgramSource;
 	std::string m_defaultSegmenterName;
 	const strus::SegmenterInterface* m_defaultSegmenter;
 	const strus::AnalyzerObjectBuilderInterface* m_builder;
