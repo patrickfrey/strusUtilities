@@ -233,7 +233,7 @@ void InsertProcessor::run()
 							// Finish document completed:
 							storagedoc->done();
 							docCount++;
-	
+
 							if (docCount == m_transactionSize && docCount && !m_terminated)
 							{
 								m_commitque->pushTransaction( transaction.get());
