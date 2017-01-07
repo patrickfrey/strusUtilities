@@ -860,7 +860,8 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"attributes\""<< std::endl;
 			std::cout << "               = " << _TXT("Get the implemented <name> arguments for the command 'attribute'.") << std::endl;
 			std::cout << "            \"config\"" << std::endl;
-			std::cout << "               = " << _TXT("Get the configuration the VSM repository was created with.") << std::endl;
+			std::cout << "               = " << _TXT("Get the configuration the vector storage.") << std::endl;
+			std::cout << "                 " << _TXT("Select the vector storage type with the parameter 'storage'.") << std::endl;
 			std::cout << "            \"dump\" [ <dbprefix> ]" << std::endl;
 			std::cout << "               = " << _TXT("Dump the contents of the VSM repository.") << std::endl;
 			std::cout << "                 " << _TXT("The optional parameter <dbprefix> selects a specific block type.") << std::endl;
@@ -930,10 +931,10 @@ int main( int argc, const char* argv[])
 		}
 		// Create objects:
 		std::string modelname;
-		if (!strus::extractStringFromConfigString( modelname, config, "model", errorBuffer.get()))
+		if (!strus::extractStringFromConfigString( modelname, config, "storage", errorBuffer.get()))
 		{
 			modelname = DEFAULT_VECTOR_MODEL;
-			if (errorBuffer->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
+			if (errorBuffer->hasError()) throw strus::runtime_error("failed get vector space storage type from configuration");
 		}
 		bool doMeasureDuration = opt( "time");
 		unsigned int maxNofRanks = 20;

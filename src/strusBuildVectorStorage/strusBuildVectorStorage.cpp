@@ -228,6 +228,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-s|--config <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector space model configuration string as <CONFIG>") << std::endl;
 			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
+			std::cout << "    " << _TXT("Select the vector storage type with the parameter 'storage'.") << std::endl;
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector space model configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
@@ -269,10 +270,10 @@ int main( int argc, const char* argv[])
 		}
 		// Create objects:
 		std::string modelname;
-		if (!strus::extractStringFromConfigString( modelname, config, "model", errorBuffer.get()))
+		if (!strus::extractStringFromConfigString( modelname, config, "storage", errorBuffer.get()))
 		{
 			modelname = DEFAULT_VECTOR_MODEL;
-			if (errorBuffer->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
+			if (errorBuffer->hasError()) throw strus::runtime_error("failed get vector space storage type from configuration");
 		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());

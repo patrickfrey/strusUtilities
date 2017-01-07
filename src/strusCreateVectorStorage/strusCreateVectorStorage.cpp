@@ -172,6 +172,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-s|--config <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector storage configuration string as <CONFIG>") << std::endl;
 			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
+			std::cout << "    " << _TXT("Select the vector storage type with the parameter 'storage'.") << std::endl;
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
@@ -221,7 +222,7 @@ int main( int argc, const char* argv[])
 		if (!strus::extractStringFromConfigString( storagename, config, "storage", errorBuffer.get()))
 		{
 			storagename = DEFAULT_STORAGE_NAME;
-			if (errorBuffer->hasError()) throw strus::runtime_error("failed to parse vector storage type name from configuration");
+			if (errorBuffer->hasError()) throw strus::runtime_error("failed get vector space storage type from configuration");
 		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
