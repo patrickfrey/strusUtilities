@@ -22,6 +22,7 @@
 #include "strus/versionBase.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/reference.hpp"
+#include "strus/constants.hpp"
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"

@@ -19,6 +19,7 @@
 #include "strus/versionBase.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/reference.hpp"
+#include "strus/constants.hpp"
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
@@ -132,9 +133,9 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		if (!moduleLoader->loadModule( Constants::standard_vector_storage_module()))
+		if (!moduleLoader->loadModule( strus::Constants::standard_vector_storage_module()))
 		{
-			std::cerr << _TXT("failed to load module ") << "'" << Constants::standard_vector_storage_module() << "': " << errorBuffer->fetchError() << std::endl;
+			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_vector_storage_module() << "': " << errorBuffer->fetchError() << std::endl;
 		}
 		if (opt("license"))
 		{

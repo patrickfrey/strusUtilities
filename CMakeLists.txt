@@ -36,6 +36,13 @@ configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities.dsc.in"  "${PROJE
 configure_file( "${PROJECT_SOURCE_DIR}/dist/redhat/strusutilities.spec.in"  "${PROJECT_SOURCE_DIR}/dist/redhat/strusutilities.spec"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/tests/scripts/ENV.in"  "${PROJECT_SOURCE_DIR}/tests/scripts/ENV"  @ONLY )
 
+IF (WITH_STRUS_VECTOR STREQUAL "YES")
+MESSAGE( STATUS  "Tests for strusVector enabled." )
+ENDIF (WITH_STRUS_VECTOR STREQUAL "YES")
+IF (WITH_STRUS_PATTERN STREQUAL "YES")
+MESSAGE( STATUS  "Tests for strusPattern enabled." )
+ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
+
 enable_testing()
 
 # Subdirectories:
