@@ -2402,6 +2402,7 @@ static void loadVectorStorageVectors_word2vecBin(
 		{
 			throw strus::runtime_error(_TXT("collection size does not match"));
 		}
+		vsmbuilder->done();
 	}
 	catch (const std::runtime_error& err)
 	{
@@ -2493,6 +2494,7 @@ static void loadVectorStorageVectors_word2vecText(
 		{
 			throw strus::runtime_error(_TXT("failed to read from word2vec file '%s': %s"), vectorfile.c_str(), ::strerror(infile.error()));
 		}
+		vsmbuilder->done();
 	}
 	catch (const std::runtime_error& err)
 	{
