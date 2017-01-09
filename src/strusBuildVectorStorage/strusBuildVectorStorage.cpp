@@ -35,7 +35,7 @@
 #include <stdexcept>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE		"modstrus_storage_vectorspace_std"
+#define DEFAULT_LOAD_MODULE		"modstrus_storage_vector_std"
 #define DEFAULT_VECTOR_MODEL		"vector_std"
 #define DEFAULT_MAX_NOF_THREADS		16
 
@@ -222,7 +222,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>.") << std::endl;
-			std::cout << "    " << _TXT("The module modstrus_storage_vectorspace is implicitely defined") << std::endl;
+			std::cout << "    " << _TXT("The module modstrus_storage_vector is implicitely defined") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-s|--config <CONFIG>" << std::endl;
