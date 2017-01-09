@@ -35,8 +35,6 @@
 #include <stdexcept>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE		"modstrus_storage_vector_std"
-#define DEFAULT_VECTOR_MODEL		"vector_std"
 #define DEFAULT_MAX_NOF_THREADS		16
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
@@ -49,7 +47,7 @@ static void printBuilderCommands( std::ostream& out, const strus::ModuleLoaderIn
 		std::string modelname;
 		if (!strus::extractStringFromConfigString( modelname, configstr, "model", errorhnd))
 		{
-			modelname = DEFAULT_VECTOR_MODEL;
+			modelname = strus::Constants::standard_vector_storage();
 			if (errorhnd->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
 		}
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
@@ -134,9 +132,9 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		if (!moduleLoader->loadModule( DEFAULT_LOAD_MODULE))
+		if (!moduleLoader->loadModule( Constants::standard_vector_storage_module()))
 		{
-			std::cerr << _TXT("failed to load module ") << "'" << DEFAULT_LOAD_MODULE << "': " << errorBuffer->fetchError() << std::endl;
+			std::cerr << _TXT("failed to load module ") << "'" << Constants::standard_vector_storage_module() << "': " << errorBuffer->fetchError() << std::endl;
 		}
 		if (opt("license"))
 		{
@@ -272,7 +270,7 @@ int main( int argc, const char* argv[])
 		std::string modelname;
 		if (!strus::extractStringFromConfigString( modelname, config, "storage", errorBuffer.get()))
 		{
-			modelname = DEFAULT_VECTOR_MODEL;
+			modelname = strus::Constants::standard_vector_storage();
 			if (errorBuffer->hasError()) throw strus::runtime_error("failed get vector space storage type from configuration");
 		}
 		std::string dbname;

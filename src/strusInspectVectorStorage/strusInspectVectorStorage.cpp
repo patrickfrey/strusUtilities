@@ -44,8 +44,6 @@
 #include <boost/bind.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE   "modstrus_storage_vector_std"
-#define DEFAULT_VECTOR_MODEL  "vector_std"
 #define FEATNUM_PREFIX_CHAR   '%'
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
@@ -744,9 +742,9 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		if (!moduleLoader->loadModule( DEFAULT_LOAD_MODULE))
+		if (!moduleLoader->loadModule( strus::Constants::standard_vector_storage_module()))
 		{
-			std::cerr << _TXT("failed to load module ") << "'" << DEFAULT_LOAD_MODULE << "': " << errorBuffer->fetchError() << std::endl;
+			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_vector_storage_module() << "': " << errorBuffer->fetchError() << std::endl;
 		}
 		if (opt("license"))
 		{
@@ -933,7 +931,7 @@ int main( int argc, const char* argv[])
 		std::string modelname;
 		if (!strus::extractStringFromConfigString( modelname, config, "storage", errorBuffer.get()))
 		{
-			modelname = DEFAULT_VECTOR_MODEL;
+			modelname = strus::Constants::standard_vector_storage();
 			if (errorBuffer->hasError()) throw strus::runtime_error("failed get vector space storage type from configuration");
 		}
 		bool doMeasureDuration = opt( "time");

@@ -35,8 +35,6 @@
 #include <stdexcept>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE   "modstrus_storage_vector_std"
-#define DEFAULT_STORAGE_NAME  "vector_std"
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
@@ -85,9 +83,9 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		if (!moduleLoader->loadModule( DEFAULT_LOAD_MODULE))
+		if (!moduleLoader->loadModule( Constants::standard_vector_storage_module()))
 		{
-			std::cerr << _TXT("failed to load module ") << "'" << DEFAULT_LOAD_MODULE << "': " << errorBuffer->fetchError() << std::endl;
+			std::cerr << _TXT("failed to load module ") << "'" << Constants::standard_vector_storage_module() << "': " << errorBuffer->fetchError() << std::endl;
 		}
 		if (opt("license"))
 		{
@@ -221,7 +219,7 @@ int main( int argc, const char* argv[])
 		std::string storagename;
 		if (!strus::extractStringFromConfigString( storagename, config, "storage", errorBuffer.get()))
 		{
-			storagename = DEFAULT_STORAGE_NAME;
+			storagename = strus::Constants::standard_vector_storage();
 			if (errorBuffer->hasError()) throw strus::runtime_error("failed get vector space storage type from configuration");
 		}
 		std::string dbname;

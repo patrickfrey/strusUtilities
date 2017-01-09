@@ -11,6 +11,7 @@
 #include "strus/lib/markup_std.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/constants.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
@@ -54,7 +55,6 @@
 #include <boost/thread/mutex.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
-#define DEFAULT_LOAD_MODULE "modstrus_analyzer_pattern"
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
@@ -618,9 +618,9 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-		if (!moduleLoader->loadModule( DEFAULT_LOAD_MODULE))
+		if (!moduleLoader->loadModule( strus::Constants::standard_pattern_matcher_module()))
 		{
-			std::cerr << _TXT("failed to load module ") << "'" << DEFAULT_LOAD_MODULE << "': " << g_errorBuffer->fetchError() << std::endl;
+			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_pattern_matcher_module() << "': " << g_errorBuffer->fetchError() << std::endl;
 		}
 		if (opt("license"))
 		{
@@ -725,8 +725,8 @@ int main( int argc, const char* argv[])
 		std::string mimetype;
 		std::string encoding;
 		std::vector<std::string> expressions;
-		std::string matcher("std");
-		std::string lexer("std");
+		std::string matcher( strus::Constants::standard_pattern_matcher());
+		std::string lexer( strus::Constants::standard_pattern_matcher());
 		std::vector<std::string> programfiles;
 		bool printTokens = false;
 		std::map<std::string,int> markups;
