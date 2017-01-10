@@ -14,6 +14,7 @@
 #include "strus/patternLexerInterface.hpp"
 #include "strus/patternTermFeederInterface.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/utf8.hpp"
 #include "private/internationalization.hpp"
 #include "private/utils.hpp"
 #include "lexems.hpp"
@@ -38,6 +39,7 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	,m_patternTermFeeder()
 	,m_regexNameSymbolTab()
 	,m_patternNameSymbolTab()
+	,m_lexemSymbolTab()
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
@@ -58,6 +60,7 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	,m_patternTermFeeder(tfm->createInstance())
 	,m_regexNameSymbolTab()
 	,m_patternNameSymbolTab()
+	,m_lexemSymbolTab()
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
@@ -127,7 +130,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 						{
 							throw strus::runtime_error(_TXT("failed to define lexem name symbol"));
 						}
-						if (nameid > MaxRegularExpressionNameId)
+						if (nameid > MaxPatternTermNameId)
 						{
 							throw strus::runtime_error(_TXT("too many regular expression tokens defined: %u"), nameid);
 						}
@@ -309,37 +312,41 @@ static JoinOperation joinOperation( const std::string& name)
 
 uint32_t PatternMatcherProgramParser::getOrCreateSymbol( unsigned int regexid, const std::string& name)
 {
-	if (m_patternLexer.get())
+	char regexidbuf[ 16];
+	std::size_t regexidsize = utf8encode( regexidbuf, regexid+1);
+	std::string symkey( regexidbuf, regexidsize);
+	symkey.append( name);
+	uint32_t symid = m_lexemSymbolTab.getOrCreate( symkey) + MaxPatternTermNameId;
+	if (m_lexemSymbolTab.isNew())
 	{
-		unsigned int id = m_patternLexer->getSymbol( regexid, name);
-		if (!id)
+		m_symbolRegexIdList.push_back( regexid);
+		if ((std::size_t)( symid - MaxPatternTermNameId) != m_symbolRegexIdList.size())
 		{
-			m_symbolRegexIdList.push_back( regexid);
-			id = m_symbolRegexIdList.size() + MaxRegularExpressionNameId;
-			m_patternLexer->defineSymbol( id, regexid, name);
+			throw strus::runtime_error(_TXT("internal: inconsisteny in lexem symbol map"));
 		}
-		return id;
-	}
-	else if (m_patternTermFeeder.get())
-	{
-		unsigned int id = m_patternTermFeeder->getSymbol( regexid, name);
-		if (!id)
+		if (m_patternLexer.get())
 		{
-			m_symbolRegexIdList.push_back( regexid);
-			id = m_symbolRegexIdList.size() + MaxRegularExpressionNameId;
-			m_patternTermFeeder->defineSymbol( id, regexid, name);
+			m_patternLexer->defineSymbol( symid, regexid, name);
 		}
-		return id;
+		else if (m_patternTermFeeder.get())
+		{
+			m_patternTermFeeder->defineSymbol( symid, regexid, name);
+		}
+		else
+		{
+			throw strus::runtime_error(_TXT("internal: no lexer or term feeder defined"));
+		}
 	}
-	else
-	{
-		throw strus::runtime_error(_TXT("internal: no lexer or term feeder defined"));
-	}
+	return symid;
 }
 
 const char* PatternMatcherProgramParser::getSymbolRegexId( unsigned int id) const
 {
-	return m_regexNameSymbolTab.key( m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1]);
+	const char* symkey = m_lexemSymbolTab.key( id);
+	unsigned int symkeyhdrlen = utf8charlen( *symkey);
+	if (!symkeyhdrlen) throw strus::runtime_error(_TXT("illegal key in pattern lexem symbol table"));
+	int regexid = utf8decode( symkey, symkeyhdrlen) - 1;
+	return m_regexNameSymbolTab.key( regexid);
 }
 
 unsigned int PatternMatcherProgramParser::defineAnalyzerTermType( const std::string& type)
@@ -349,7 +356,7 @@ unsigned int PatternMatcherProgramParser::defineAnalyzerTermType( const std::str
 	{
 		throw strus::runtime_error(_TXT("failed to define term type symbol"));
 	}
-	if (typid > MaxRegularExpressionNameId)
+	if (typid > MaxPatternTermNameId)
 	{
 		throw strus::runtime_error(_TXT("too many term types defined: %u"), typid);
 	}
