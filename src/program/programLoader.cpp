@@ -2581,9 +2581,9 @@ DLL_PUBLIC PatternMatcherInstanceInterface* PatternMatcherProgram::fetchMatcher(
 
 DLL_PUBLIC const char* PatternMatcherProgram::tokenName( unsigned int id) const
 {
-	if (id >= MaxRegularExpressionNameId)
+	if (id >= MaxPatternTermNameId)
 	{
-		id = m_symbolRegexIdList[ id - MaxRegularExpressionNameId -1];
+		id = m_symbolRegexIdList[ id - MaxPatternTermNameId -1];
 	}
 	return m_regexidmap[ id-1].c_str();
 }

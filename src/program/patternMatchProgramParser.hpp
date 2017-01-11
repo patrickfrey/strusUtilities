@@ -36,7 +36,7 @@ class ErrorBufferInterface;
 /// \brief Forward declaration
 class PatternMatcherProgram;
 
-enum {MaxRegularExpressionNameId=(1<<24)};
+enum {MaxPatternTermNameId=(1<<24)};
 
 class PatternMatcherProgramParser
 {
@@ -89,6 +89,7 @@ private:
 	Reference<PatternTermFeederInstanceInterface> m_patternTermFeeder;
 	SymbolTable m_regexNameSymbolTab;
 	SymbolTable m_patternNameSymbolTab;
+	SymbolTable m_lexemSymbolTab;
 	std::vector<uint32_t> m_symbolRegexIdList;
 	std::set<uint32_t> m_unresolvedPatternNameSet;
 	std::vector<std::string> m_warnings;
