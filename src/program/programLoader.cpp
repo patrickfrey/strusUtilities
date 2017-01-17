@@ -1914,11 +1914,30 @@ static Index parseDocno( StorageClientInterface& storage, char const*& itr)
 	else
 	{
 		std::string docid;
-		for (; isSpace(*itr); ++itr)
+		for (; !isSpace(*itr); ++itr)
 		{
 			docid.push_back( *itr);
 		}
+		skipSpaces( itr);
 		return storage.documentNumber( docid);
+	}
+}
+
+static std::string parseDocKey( char const*& itr)
+{
+	if (isStringQuote(*itr))
+	{
+		return parse_STRING(itr);
+	}
+	else
+	{
+		std::string id;
+		for (; !isSpace(*itr); ++itr)
+		{
+			id.push_back( *itr);
+		}
+		skipSpaces( itr);
+		return id;
 	}
 }
 
@@ -1999,9 +2018,61 @@ enum StorageValueType
 	StorageUserRights
 };
 
+static bool updateStorageValue(
+		StorageTransactionInterface* transaction,
+		const Index& docno,
+		const std::string& elementName,
+		StorageValueType valueType,
+		const char* value)
+{
+	char const* itr = value;
+	switch (valueType)
+	{
+		case StorageValueMetaData:
+		{
+			NumericVariant val( parseNumericValue( itr));
+			storeMetaDataValue( *transaction, docno, elementName, val);
+			return true;
+		}
+		case StorageValueAttribute:
+		{
+			std::string val;
+			if (isTextChar( *itr))
+			{
+				val = parse_TEXTWORD( itr);
+			}
+			else if (isStringQuote( *itr))
+			{
+				val = parse_STRING( itr);
+			}
+			else
+			{
+				val = std::string( itr);
+				itr = std::strchr( itr, '\0');
+			}
+			storeAttributeValue( *transaction, docno, elementName, val);
+			return true;
+		}
+		case StorageUserRights:
+		{
+			std::string val( itr);
+			itr = std::strchr( itr, '\0');
+			storeUserRights( *transaction, docno, val);
+			return true;
+		}
+	}
+	if (*itr)
+	{
+		throw strus::runtime_error( _TXT("extra characters after value assignment"));
+	}
+	return false;
+}
+
+typedef std::multimap<std::string,strus::Index> KeyDocnoMap;
 static unsigned int loadStorageValues(
 		StorageClientInterface& storage,
 		const std::string& elementName,
+		const KeyDocnoMap* attributemapref,
 		const std::string& file,
 		StorageValueType valueType,
 		unsigned int commitsize)
@@ -2020,50 +2091,28 @@ static unsigned int loadStorageValues(
 		for (; stream.readLine( line, sizeof(line)); ++linecnt)
 		{
 			char const* itr = line;
-			Index docno = parseDocno( storage, itr);
-
-			if (!docno) continue;
-			switch (valueType)
+			if (attributemapref)
 			{
-				case StorageValueMetaData:
+				std::string attr = parseDocKey( itr);
+				std::pair<KeyDocnoMap::const_iterator,KeyDocnoMap::const_iterator>
+					range = attributemapref->equal_range( attr);
+				KeyDocnoMap::const_iterator ki = range.first, ke = range.second;
+				for (; ki != ke; ++ki)
 				{
-					NumericVariant val( parseNumericValue( itr));
-					storeMetaDataValue( *transaction, docno, elementName, val);
-					rt += 1;
-					break;
-				}
-				case StorageValueAttribute:
-				{
-					std::string val;
-					if (isTextChar( *itr))
+					if (updateStorageValue( transaction.get(), ki->second, elementName, valueType, itr))
 					{
-						val = parse_TEXTWORD( itr);
+						rt += 1;
 					}
-					else if (isStringQuote( *itr))
-					{
-						val = parse_STRING( itr);
-					}
-					else
-					{
-						val = std::string( itr);
-						itr = std::strchr( itr, '\0');
-					}
-					storeAttributeValue( *transaction, docno, elementName, val);
-					rt += 1;
-					break;
-				}
-				case StorageUserRights:
-				{
-					std::string val( itr);
-					itr = std::strchr( itr, '\0');
-					storeUserRights( *transaction, docno, val);
-					rt += 1;
-					break;
 				}
 			}
-			if (*itr)
+			else
 			{
-				throw strus::runtime_error( _TXT("extra characters after value assignment"));
+				Index docno = parseDocno( storage, itr);
+				if (!docno) continue;
+				if (updateStorageValue( transaction.get(), docno, elementName, valueType, itr))
+				{
+					rt += 1;
+				}
 			}
 			if (++commitcnt == commitsize)
 			{
@@ -2102,13 +2151,14 @@ static unsigned int loadStorageValues(
 DLL_PUBLIC unsigned int strus::loadDocumentMetaDataAssignments(
 		StorageClientInterface& storage,
 		const std::string& metadataName,
+		const std::multimap<std::string,strus::Index>* attributemapref,
 		const std::string& file,
 		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd)
 {
 	try
 	{
-		return loadStorageValues( storage, metadataName, file, StorageValueMetaData, commitsize);
+		return loadStorageValues( storage, metadataName, attributemapref, file, StorageValueMetaData, commitsize);
 	}
 	catch (const std::bad_alloc&)
 	{
@@ -2126,13 +2176,14 @@ DLL_PUBLIC unsigned int strus::loadDocumentMetaDataAssignments(
 DLL_PUBLIC unsigned int strus::loadDocumentAttributeAssignments(
 		StorageClientInterface& storage,
 		const std::string& attributeName,
+		const std::multimap<std::string,strus::Index>* attributemapref,
 		const std::string& file,
 		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd)
 {
 	try
 	{
-		return loadStorageValues( storage, attributeName, file, StorageValueAttribute, commitsize);
+		return loadStorageValues( storage, attributeName, attributemapref, file, StorageValueAttribute, commitsize);
 	}
 	catch (const std::bad_alloc&)
 	{
@@ -2149,13 +2200,14 @@ DLL_PUBLIC unsigned int strus::loadDocumentAttributeAssignments(
 
 DLL_PUBLIC unsigned int strus::loadDocumentUserRightsAssignments(
 		StorageClientInterface& storage,
+		const std::multimap<std::string,strus::Index>* attributemapref,
 		const std::string& file,
 		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd)
 {
 	try
 	{
-		return loadStorageValues( storage, std::string(), file, StorageUserRights, commitsize);
+		return loadStorageValues( storage, std::string(), attributemapref, file, StorageUserRights, commitsize);
 	}
 	catch (const std::bad_alloc&)
 	{

@@ -10,6 +10,7 @@
 #ifndef _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #include "strus/analyzer/documentClass.hpp"
+#include "strus/index.hpp"
 #include "strus/base/stdint.h"
 #include <string>
 #include <vector>
@@ -200,6 +201,7 @@ bool scanNextProgram(
 /// \brief Load some meta data assignments for a storage from a stream
 /// \param[in,out] storage the storage to instrument
 /// \param[in] metadataName name of the meta data field to assign
+/// \param[in] attributemapref map that maps the update key to a list of document numbers to update (NULL, if the docid or docno is the key)
 /// \param[in] file the file to read from
 /// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
@@ -207,6 +209,7 @@ bool scanNextProgram(
 unsigned int loadDocumentMetaDataAssignments(
 		StorageClientInterface& storage,
 		const std::string& metadataName,
+		const std::multimap<std::string,strus::Index>* attributemapref,
 		const std::string& file,
 		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd);
@@ -214,6 +217,7 @@ unsigned int loadDocumentMetaDataAssignments(
 /// \brief Load some attribute assignments for a storage from a stream
 /// \param[in,out] storage the storage to instrument
 /// \param[in] attributeName name of the attribute to assign
+/// \param[in] attributemapref map that maps the update key to a list of document numbers to update (NULL, if the docid or docno is the key)
 /// \param[in] file the file to read from
 /// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
@@ -221,18 +225,21 @@ unsigned int loadDocumentMetaDataAssignments(
 unsigned int loadDocumentAttributeAssignments(
 		StorageClientInterface& storage,
 		const std::string& attributeName,
+		const std::multimap<std::string,strus::Index>* attributemapref,
 		const std::string& file,
 		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Load some user rights assignments for a storage from a stream
 /// \param[in,out] storage the storage to instrument
+/// \param[in] attributemapref map that maps the update key to a list of document numbers to update (NULL, if the docid or docno is the key)
 /// \param[in] file the file to read from
 /// \param[in] commitsize number of documents to update until an implicit commit is called (0 => no implicit commit)
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return the number of documents (non distinct) updated
 unsigned int loadDocumentUserRightsAssignments(
 		StorageClientInterface& storage,
+		const std::multimap<std::string,strus::Index>* attributemapref,
 		const std::string& file,
 		unsigned int commitsize,
 		ErrorBufferInterface* errorhnd);

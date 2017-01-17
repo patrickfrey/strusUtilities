@@ -20,6 +20,7 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
+#include "strus/attributeReaderInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -39,6 +40,7 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+#include <map>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
@@ -64,6 +66,26 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
+static std::multimap<std::string,strus::Index> loadAttributeDocnoMap(
+		strus::StorageClientInterface* storage, const std::string& attributeName)
+{
+	std::multimap<std::string,strus::Index> rt;
+	std::auto_ptr<strus::AttributeReaderInterface> attributeReader( storage->createAttributeReader());
+	if (!attributeReader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
+	strus::Index ehnd = attributeReader->elementHandle( attributeName.c_str());
+	if (ehnd == 0) throw strus::runtime_error(_TXT("unknown attribute name '%s'"), attributeName.c_str());
+	strus::Index di = 1, de = storage->maxDocumentNumber()+1;
+	for (; di != de; ++di)
+	{
+		attributeReader->skipDoc( di);
+		std::string name = attributeReader->getValue( ehnd);
+		if (!name.empty())
+		{
+			rt.insert( std::pair<std::string,strus::Index>( name, di));
+		}
+	}
+	return rt;
+}
 
 int main( int argc, const char* argv[])
 {
@@ -80,10 +102,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 12,
+				argc, argv, 13,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "c,commit:", "a,attribute:",
+				"r,rpc:", "s,storage:", "c,commit:",
+				"a,attribute:", "x,mapattribute:"
 				"m,metadata:","u,useraccess", "T,trace:");
 		if (opt( "help"))
 		{
@@ -191,6 +214,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("The name of the updated meta data element is <NAME>.") << std::endl;
 			std::cout << "-u|--useraccess" << std::endl;
 			std::cout << "    " << _TXT("The update batch is a list of user right assignments.") << std::endl;
+			std::cout << "-x|--mapattribute <ATTR>" << std::endl;
+			std::cout << "    " << _TXT("The update document is selected by the attribute <ATTR> as key,") << std::endl;
+			std::cout << "    " << _TXT("instead of the document id or document number.") << std::endl;
 			std::cout << "-c|--commit <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as number of updates per transaction (default 10000)") << std::endl;
 			std::cout << "    " << _TXT("If <N> is set to 0 then only one commit is done at the end") << std::endl;
@@ -224,12 +250,18 @@ int main( int argc, const char* argv[])
 		}
 		// Parse arguments:
 		std::string storagecfg;
+		std::multimap<std::string,strus::Index> attributemap;
+		std::multimap<std::string,strus::Index>* attributemapref = 0;
+		std::string mapattribute;
 		if (opt("storage"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
 			storagecfg = opt["storage"];
 		}
-		
+		if (opt("mapattribute"))
+		{
+			mapattribute = opt["mapattribute"];
+		}
 		// Create objects for storage document update:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;
@@ -252,7 +284,11 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
-
+		if (!mapattribute.empty())
+		{
+			attributemap = loadAttributeDocnoMap( storage.get(), mapattribute);
+			attributemapref = &attributemap;
+		}
 		enum UpdateOperation
 		{
 			UpdateOpAttribute,
@@ -294,15 +330,15 @@ int main( int argc, const char* argv[])
 		{
 			case UpdateOpMetadata:
 				nofUpdates = strus::loadDocumentMetaDataAssignments(
-						*storage, elemname, updateBatchPath, transactionSize, errorBuffer.get());
+						*storage, elemname, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 			case UpdateOpAttribute:
 				nofUpdates = strus::loadDocumentAttributeAssignments(
-						*storage, elemname, updateBatchPath, transactionSize, errorBuffer.get());
+						*storage, elemname, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 			case UpdateOpUserAccess:
 				nofUpdates = strus::loadDocumentUserRightsAssignments(
-						*storage, updateBatchPath, transactionSize, errorBuffer.get());
+						*storage, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 		}
 		if (!nofUpdates && errorBuffer->hasError())
