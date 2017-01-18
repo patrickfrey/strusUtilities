@@ -106,7 +106,7 @@ int main( int argc, const char* argv[])
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:",
 				"r,rpc:", "s,storage:", "c,commit:",
-				"a,attribute:", "x,mapattribute:"
+				"a,attribute:", "x,mapattribute:",
 				"m,metadata:","u,useraccess", "T,trace:");
 		if (opt( "help"))
 		{
