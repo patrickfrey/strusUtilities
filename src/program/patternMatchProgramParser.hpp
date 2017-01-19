@@ -79,7 +79,6 @@ private:
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	std::string m_pattermTermFeederLexem;
 	PatternMatcherInstanceInterface* m_patternMatcher;
 	PatternLexerInstanceInterface* m_patternLexer;
 	PatternTermFeederInstanceInterface* m_patternTermFeeder;

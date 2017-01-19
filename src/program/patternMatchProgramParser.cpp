@@ -678,7 +678,11 @@ void PatternMatcherProgramParser::loadFeederOption( char const*& si)
 			{
 				throw strus::runtime_error(_TXT("identifier expected as argument of feeder option 'lexem'"));
 			}
-			m_pattermTermFeederLexem = parse_IDENTIFIER( si);
+			std::string lexemid( parse_IDENTIFIER( si));
+			if (!m_regexNameSymbolTab.getOrCreate( lexemid))
+			{
+				throw strus::runtime_error(_TXT("failed to create lexem symbol with FEEDER option 'lexem %s'"), lexemid.c_str());
+			}
 		}
 		else
 		{
