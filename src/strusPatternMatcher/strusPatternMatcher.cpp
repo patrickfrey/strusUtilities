@@ -705,7 +705,7 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		// Parse arguments:
-		std::string inputpath = opt[0];
+		std::string inputpath = opt[ 0];
 		std::string segmentername;
 		std::string fileext;
 		std::string mimetype;

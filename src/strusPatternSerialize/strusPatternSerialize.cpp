@@ -75,21 +75,26 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 13,
+				argc, argv, 10,
 				"h,help", "v,version", "license",
-				"o,output:", "p,program:",
-				"X,lexer:", "Y,matcher:", "F,feeder",
+				"o,output:", "F,feeder",
 				"M,moduledir:", "m,module:", "r,rpc:",
 				"R,resourcedir:", "T,trace:");
 
 		if (opt( "help")) printUsageAndExit = true;
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 0)
+			if (opt.nofargs() > 1)
 			{
 				std::cerr << _TXT("error too many arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
+			}
+			if (opt.nofargs() < 1)
+			{
+				std::cerr << _TXT("error too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface>
@@ -157,8 +162,9 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusPatternSerialize [options]" << std::endl;
-			std::cout << _TXT("description: Loads a pattern matcher program source and outputs its serialization.") << std::endl;
+			std::cout << _TXT("usage:") << " strusPatternSerialize [options] <program>" << std::endl;
+			std::cout << _TXT("description: Loads a pattern matcher program source in file <program>") << std::endl;
+			std::cout << _TXT("    and outputs its serialization.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -173,16 +179,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
-			std::cout << "-X|--lexer <LX>" << std::endl;
-			std::cout << "    " << _TXT("Use pattern lexer named <LX>") << std::endl;
-			std::cout << "    " << _TXT("Default is 'std'") << std::endl;
-			std::cout << "-Y|--matcher <PT>" << std::endl;
-			std::cout << "    " << _TXT("Use pattern lexer named <PT>") << std::endl;
-			std::cout << "    " << _TXT("Default is 'std'") << std::endl;
 			std::cout << "-F|--feeder" << std::endl;
-			std::cout << "    " << _TXT("Use pattern matching with term feeder instead of lexer") << std::endl;
-			std::cout << "-p|--program <PRG>" << std::endl;
-			std::cout << "    " << _TXT("Load program <PRG> with patterns to process") << std::endl;
+			std::cout << "    " << _TXT("Assume program with feeder (post analyzer processing)") << std::endl;
 			std::cout << "-o|--output <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Write output to file <FILE>.") << std::endl;
 			std::cout << "    " << _TXT("Do text output to stdout if not specified.") << std::endl;
@@ -194,24 +192,9 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		// Parse arguments:
-		std::string matcher( strus::Constants::standard_pattern_matcher());
-		std::string lexer( strus::Constants::standard_pattern_matcher());
-		std::string programfile;
+		std::string programfile = opt[ 0];
 		std::string outputfile;
 		bool use_feeder = opt( "feeder");
-
-		if (opt( "matcher"))
-		{
-			matcher = opt[ "matcher"];
-		}
-		if (opt( "lexer"))
-		{
-			lexer = opt[ "lexer"];
-		}
-		if (opt( "program"))
-		{
-			programfile = opt[ "program"];
-		}
 		if (opt( "output"))
 		{
 			outputfile = opt[ "output"];
