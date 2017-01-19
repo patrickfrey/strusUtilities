@@ -2604,7 +2604,6 @@ DLL_PUBLIC bool strus::loadPatternMatcherProgramWithLexer(
 		ErrorBufferInterface* errorhnd,
 		std::vector<std::string>& warnings)
 {
-	const char* prgname = "";
 	try
 	{
 		if (errorhnd->hasError()) throw std::runtime_error(_TXT("called load patter matcher program with error"));
@@ -2630,12 +2629,12 @@ DLL_PUBLIC bool strus::loadPatternMatcherProgramWithLexer(
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("failed to load pattern match program '%s': %s"), prgname, e.what());
+		errorhnd->report( _TXT("failed to load pattern match program: %s"), e.what());
 		return false;
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading pattern match program '%s'"), prgname);
+		errorhnd->report( _TXT("out of memory loading pattern match program"));
 		return false;
 	}
 }

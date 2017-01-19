@@ -292,6 +292,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("uncaught error in pattern serialize"));
 		}
+		serializer->close();
 		std::cerr << _TXT("OK done") << std::endl;
 		return 0;
 	}

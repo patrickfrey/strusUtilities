@@ -82,27 +82,30 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				}
 				else if (id == 0)
 				{
-					do
+					for (;;)
 					{
 						loadLexerOption( si);
+						if (!isComma(*si)) break;
+						parse_OPERATOR( si);
 					}
-					while (isComma(*si));
 				}
 				else if (id == 1)
 				{
-					do
+					for (;;)
 					{
 						loadMatcherOption( si);
+						if (!isComma(*si)) break;
+						parse_OPERATOR( si);
 					}
-					while (isComma(*si));
 				}
 				else
 				{
-					do
+					for (;;)
 					{
 						loadFeederOption( si);
+						if (!isComma(*si)) break;
+						parse_OPERATOR( si);
 					}
-					while (isComma(*si));
 				}
 				continue;
 			}
