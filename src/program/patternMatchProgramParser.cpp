@@ -26,53 +26,37 @@ using namespace strus;
 using namespace strus::parser;
 
 PatternMatcherProgramParser::PatternMatcherProgramParser(
-		const PatternLexerInterface* crm,
-		const PatternMatcherInterface* tpm,
+		PatternLexerInstanceInterface* crm,
+		PatternMatcherInstanceInterface* tpm,
 		ErrorBufferInterface* errorhnd_)
 	:m_errorhnd(errorhnd_)
-	,m_patternMatcherOptionNames(tpm->getCompileOptions())
-	,m_patternLexerOptionNames(crm->getCompileOptions())
-	,m_patternMatcherOptions()
-	,m_patternLexerOptions()
-	,m_patternMatcher(tpm->createInstance())
-	,m_patternLexer(crm->createInstance())
-	,m_patternTermFeeder()
+	,m_patternMatcher(tpm)
+	,m_patternLexer(crm)
+	,m_patternTermFeeder(0)
 	,m_regexNameSymbolTab()
 	,m_patternNameSymbolTab()
 	,m_lexemSymbolTab()
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
-	if (!m_patternMatcher.get() || !m_patternLexer.get()) throw strus::runtime_error("failed to create pattern matching structures to instrument");
+	if (!m_patternMatcher || !m_patternLexer) throw strus::runtime_error("failed to create pattern matching structures to instrument");
 }
 
 PatternMatcherProgramParser::PatternMatcherProgramParser(
-		const PatternTermFeederInterface* tfm,
-		const PatternMatcherInterface* tpm,
+		PatternTermFeederInstanceInterface* tfm,
+		PatternMatcherInstanceInterface* tpm,
 		ErrorBufferInterface* errorhnd_)
 	:m_errorhnd(errorhnd_)
-	,m_patternMatcherOptionNames(tpm->getCompileOptions())
-	,m_patternLexerOptionNames()
-	,m_patternMatcherOptions()
-	,m_patternLexerOptions()
-	,m_patternMatcher(tpm->createInstance())
-	,m_patternLexer()
-	,m_patternTermFeeder(tfm->createInstance())
+	,m_patternMatcher(tpm)
+	,m_patternLexer(0)
+	,m_patternTermFeeder(tfm)
 	,m_regexNameSymbolTab()
 	,m_patternNameSymbolTab()
 	,m_lexemSymbolTab()
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
-	if (!m_patternMatcher.get() || !m_patternTermFeeder.get()) throw strus::runtime_error("failed to create pattern matching structures to instrument");
-}
-
-void PatternMatcherProgramParser::fetchResult( PatternMatcherProgram& result)
-{
-	std::vector<std::string> regexidmap;
-	SymbolTable::const_inv_iterator si = m_regexNameSymbolTab.inv_begin(), se = m_regexNameSymbolTab.inv_end();
-	for (; si != se; ++si) regexidmap.push_back( *si);
-	result.init( m_patternLexer.release(), m_patternTermFeeder.release(), m_patternMatcher.release(), regexidmap, m_symbolRegexIdList, m_warnings);
+	if (!m_patternMatcher || !m_patternTermFeeder) throw strus::runtime_error("failed to create pattern matching structures to instrument");
 }
 
 bool PatternMatcherProgramParser::load( const std::string& source)
@@ -86,7 +70,40 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 			{
 				//... we got a lexem match option or a token pattern match option
 				(void)parse_OPERATOR( si);
-				loadOption( si);
+				if (!isAlpha(*si))
+				{
+					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%' (option)"));
+				}
+				unsigned int dupf = 0;
+				int id = parse_KEYWORD( dupf, si, 2, "LEXER", "MATCHER", "FEEDER");
+				if (id < 0)
+				{
+					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%' (option)"));
+				}
+				else if (id == 0)
+				{
+					do
+					{
+						loadLexerOption( si);
+					}
+					while (isComma(*si));
+				}
+				else if (id == 1)
+				{
+					do
+					{
+						loadMatcherOption( si);
+					}
+					while (isComma(*si));
+				}
+				else
+				{
+					do
+					{
+						loadFeederOption( si);
+					}
+					while (isComma(*si));
+				}
 				continue;
 			}
 			bool visible = true;
@@ -114,7 +131,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				}
 				if (isColon( *si))
 				{
-					if (m_patternLexer.get())
+					if (m_patternLexer)
 					{
 						//... lexem expression declaration
 						if (nameIsString)
@@ -175,7 +192,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 						}
 						while (isOr(*si));
 					}
-					else if (m_patternTermFeeder.get())
+					else if (m_patternTermFeeder)
 					{
 						throw strus::runtime_error(_TXT("pattern analyzer terms are defined by option %lexem type and not with id : regex"));
 					}
@@ -276,10 +293,10 @@ bool PatternMatcherProgramParser::compile()
 			}
 		}
 		bool rt = true;
-		rt &= m_patternMatcher->compile( m_patternMatcherOptions);
-		if (m_patternLexer.get())
+		rt &= m_patternMatcher->compile();
+		if (m_patternLexer)
 		{
-			rt &= m_patternLexer->compile( m_patternLexerOptions);
+			rt &= m_patternLexer->compile();
 		}
 		return rt;
 	}
@@ -324,11 +341,11 @@ uint32_t PatternMatcherProgramParser::getOrCreateSymbol( unsigned int regexid, c
 		{
 			throw strus::runtime_error(_TXT("internal: inconsisteny in lexem symbol map"));
 		}
-		if (m_patternLexer.get())
+		if (m_patternLexer)
 		{
 			m_patternLexer->defineSymbol( symid, regexid, name);
 		}
-		else if (m_patternTermFeeder.get())
+		else if (m_patternTermFeeder)
 		{
 			m_patternTermFeeder->defineSymbol( symid, regexid, name);
 		}
@@ -523,7 +540,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 		unsigned int id;
 		if (isStringQuote(*si))
 		{
-			if (m_patternLexer.get())
+			if (m_patternLexer)
 			{
 				id = m_regexNameSymbolTab.get( name);
 				if (!id) throw strus::runtime_error(_TXT("undefined lexem '%s'"), name.c_str());
@@ -541,7 +558,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 		}
 		else
 		{
-			if (m_patternLexer.get())
+			if (m_patternLexer)
 			{
 				id = m_regexNameSymbolTab.get( name);
 			}
@@ -608,69 +625,69 @@ void PatternMatcherProgramParser::loadExpression( char const*& si, SubExpression
 	}
 }
 
-void PatternMatcherProgramParser::loadOption( char const*& si)
+void PatternMatcherProgramParser::loadMatcherOption( char const*& si)
 {
 	if (isAlpha(*si))
 	{
-		bool found = false;
 		std::string name = parse_IDENTIFIER( si);
-		std::vector<std::string>::const_iterator
-			oi = m_patternMatcherOptionNames.begin(),
-			oe = m_patternMatcherOptionNames.end();
-		for (; oi != oe && !utils::caseInsensitiveEquals( name, *oi); ++oi){}
-
-		if (oi != oe)
+		if (isAssign(*si))
 		{
-			if (isAssign(*si))
+			(void)parse_OPERATOR( si);
+			if (is_INTEGER(si) || is_FLOAT(si))
 			{
-				(void)parse_OPERATOR( si);
-				if (is_FLOAT(si))
-				{
-					double value = parse_FLOAT( si);
-					m_patternMatcherOptions( name, value);
-					found = true;
-				}
-				else
-				{
-					m_patternMatcherOptions( name, 0.0);
-				}
+				double value = parse_FLOAT( si);
+				m_patternMatcher->defineOption( name, value);
 			}
 			else
 			{
-				m_patternMatcherOptions( name, 0.0);
-			}
-			return;
-		}
-		oi = m_patternLexerOptionNames.begin(),
-		oe = m_patternLexerOptionNames.end();
-		for (; oi != oe && !utils::caseInsensitiveEquals( name, *oi); ++oi){}
-
-		if (oi != oe)
-		{
-			m_patternLexerOptions( name);
-			found = true;
-		}
-		if (m_patternTermFeeder.get())
-		{
-			if (utils::caseInsensitiveEquals( name, "lexem"))
-			{
-				std::string lexemid = parse_IDENTIFIER( si);
-				if (lexemid.empty())
-				{
-					throw strus::runtime_error(_TXT("expected identifier after '%s' option"), name.c_str());
-				}
-				defineAnalyzerTermType( lexemid);
-				found = true;
+				throw strus::runtime_error(_TXT("expected number as matcher option value after assign"));
 			}
 		}
-		if (!found)
+		else
 		{
-			throw strus::runtime_error(_TXT("unknown option: '%s'"), name.c_str());
+			m_patternMatcher->defineOption( name, 0.0);
 		}
 	}
 	else
 	{
-		throw strus::runtime_error(_TXT("identifier expected at start of option declaration"));
+		throw strus::runtime_error(_TXT("identifier expected at start of pattern matcher option declaration"));
+	}
+}
+
+void PatternMatcherProgramParser::loadLexerOption( char const*& si)
+{
+	if (isAlpha(*si))
+	{
+		std::string name = parse_IDENTIFIER( si);
+		m_patternLexer->defineOption( name, 0);
+	}
+	else
+	{
+		throw strus::runtime_error(_TXT("identifier expected at start of pattern lexer option declaration"));
+	}
+}
+
+void PatternMatcherProgramParser::loadFeederOption( char const*& si)
+{
+	if (isAlpha(*si))
+	{
+		std::string name = parse_IDENTIFIER( si);
+		if (isEqual(name,"lexem"))
+		{
+			if (!isAlpha(*si))
+			{
+				throw strus::runtime_error(_TXT("identifier expected as argument of feeder option 'lexem'"));
+			}
+			m_pattermTermFeederLexem = parse_IDENTIFIER( si);
+		}
+		else
+		{
+			throw strus::runtime_error(_TXT("unknown feeder option '%s'"), name.c_str());
+		}
+	}
+	else
+	{
+		throw strus::runtime_error(_TXT("option name expected at start of pattern feeder option declaration"));
 	}
 }
 

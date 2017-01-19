@@ -1,11 +1,11 @@
-1: WORD Islamisten
-2: WORD aus
-3: WORD Deutschland
-4: WORD Zahl
-5: WORD der
-6: WORD IS
-7: DASH -
-8: WORD Reisenden
-9: WORD weiter
-10: WORD gestiegen
+1: 1 Islamisten
+2: 1 aus
+3: 1 Deutschland
+4: 1 Zahl
+5: 1 der
+6: 1 IS
+7: 2 -
+8: 1 Reisenden
+9: 1 weiter
+10: 1 gestiegen
 input.xml:

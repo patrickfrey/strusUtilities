@@ -15,8 +15,6 @@
 #include "strus/reference.hpp"
 #include "strus/base/stdint.h"
 #include "strus/base/symbolTable.hpp"
-#include "strus/analyzer/patternMatcherOptions.hpp"
-#include "strus/analyzer/patternLexerOptions.hpp"
 #include <string>
 #include <vector>
 #include <map>
@@ -26,11 +24,11 @@
 namespace strus {
 
 /// \brief Forward declaration
-class PatternLexerInterface;
+class PatternLexerInstanceInterface;
 /// \brief Forward declaration
-class PatternTermFeederInterface;
+class PatternTermFeederInstanceInterface;
 /// \brief Forward declaration
-class PatternMatcherInterface;
+class PatternMatcherInstanceInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
 /// \brief Forward declaration
@@ -43,17 +41,16 @@ class PatternMatcherProgramParser
 public:
 	/// \brief Constructor
 	PatternMatcherProgramParser(
-			const PatternLexerInterface* crm,
-			const PatternMatcherInterface* tpm,
+			PatternLexerInstanceInterface* crm,
+			PatternMatcherInstanceInterface* tpm,
 			ErrorBufferInterface* errorhnd_);
 
 	/// \brief Constructor
 	PatternMatcherProgramParser(
-			const PatternTermFeederInterface* tfm,
-			const PatternMatcherInterface* tpm,
+			PatternTermFeederInstanceInterface* tfm,
+			PatternMatcherInstanceInterface* tpm,
 			ErrorBufferInterface* errorhnd_);
 
-	void fetchResult( PatternMatcherProgram& result);
 	bool load( const std::string& source);
 	bool compile();
 	const std::vector<std::string>& warnings() const	{return m_warnings;}
@@ -76,17 +73,16 @@ private:
 	unsigned int getAnalyzerTermType( const std::string& type) const;
 	void loadExpressionNode( const std::string& name, char const*& si, SubExpressionInfo& exprinfo);
 	void loadExpression( char const*& si, SubExpressionInfo& exprinfo);
-	void loadOption( char const*& si);
+	void loadMatcherOption( char const*& si);
+	void loadLexerOption( char const*& si);
+	void loadFeederOption( char const*& si);
 
 private:
 	ErrorBufferInterface* m_errorhnd;
-	std::vector<std::string> m_patternMatcherOptionNames;
-	std::vector<std::string> m_patternLexerOptionNames;
-	analyzer::PatternMatcherOptions m_patternMatcherOptions;
-	analyzer::PatternLexerOptions m_patternLexerOptions;
-	Reference<PatternMatcherInstanceInterface> m_patternMatcher;
-	Reference<PatternLexerInstanceInterface> m_patternLexer;
-	Reference<PatternTermFeederInstanceInterface> m_patternTermFeeder;
+	std::string m_pattermTermFeederLexem;
+	PatternMatcherInstanceInterface* m_patternMatcher;
+	PatternLexerInstanceInterface* m_patternLexer;
+	PatternTermFeederInstanceInterface* m_patternTermFeeder;
 	SymbolTable m_regexNameSymbolTab;
 	SymbolTable m_patternNameSymbolTab;
 	SymbolTable m_lexemSymbolTab;

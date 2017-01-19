@@ -7,6 +7,7 @@
  */
 #include "strus/programLoader.hpp"
 #include "lexems.hpp"
+#include "strus/lib/pattern_serialize.hpp"
 #include "strus/constants.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/weightingFunctionInterface.hpp"
@@ -21,6 +22,8 @@
 #include "strus/aggregatorFunctionInstanceInterface.hpp"
 #include "strus/patternLexerInterface.hpp"
 #include "strus/patternLexerInstanceInterface.hpp"
+#include "strus/patternTermFeederInterface.hpp"
+#include "strus/patternTermFeederInstanceInterface.hpp"
 #include "strus/patternMatcherInterface.hpp"
 #include "strus/patternMatcherInstanceInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
@@ -1099,41 +1102,34 @@ static void parseAnalyzerPatternMatchProgramDef(
 		(void)parse_OPERATOR( src);
 	}
 	std::vector<std::pair<std::string,std::string> > ptsources;
-	for(;;)
+	std::string filename = parseSelectorExpression( src);
+	std::string filepath = textproc->getResourcePath( filename);
+	if (filepath.empty() && errorhnd->hasError())
 	{
-		std::string filename = parseSelectorExpression( src);
-		std::string filepath = textproc->getResourcePath( filename);
-		if (filepath.empty() && errorhnd->hasError())
-		{
-			throw strus::runtime_error(_TXT( "failed to evaluate pattern match file path '%s': %s"), filename.c_str(), errorhnd->fetchError());
-		}
-		ptsources.push_back( std::pair<std::string,std::string>( filepath, std::string()));
-		unsigned int ec = readFile( filepath, ptsources.back().second);
-		if (ec)
-		{
-			throw strus::runtime_error(_TXT( "failed to read pattern match file '%s': %s"), filepath.c_str(), ::strerror(ec));
-		}
-		if (!isComma(*src)) break;
-		(void)parse_OPERATOR( src);
+		throw strus::runtime_error(_TXT( "failed to evaluate pattern match file path '%s': %s"), filename.c_str(), errorhnd->fetchError());
+	}
+	std::string source;
+	unsigned int ec = readFile( filepath, source);
+	if (ec)
+	{
+		throw strus::runtime_error(_TXT( "failed to read pattern match file '%s': %s"), filepath.c_str(), ::strerror(ec));
 	}
 	if (selectexprlist.empty())
 	{
 		const PatternMatcherInterface* matcher = textproc->getPatternMatcher( patternModuleName);
 		const PatternTermFeederInterface* feeder = textproc->getPatternTermFeeder();
-		PatternMatcherProgram result;
-		if (!feeder || !matcher || !loadPatternMatcherProgramForAnalyzerOutput(
-				result, feeder, matcher, ptsources, errorhnd))
+		if (!feeder || !matcher)
 		{
 			throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
 		}
-		std::vector<std::string>::const_iterator wi = result.warnings().begin(), we = result.warnings().begin();
-		for (; wi != we; ++wi)
-		{
-			warnings << *wi << std::endl;
-		}
-		std::auto_ptr<PatternTermFeederInstanceInterface> feederctx( result.fetchTermFeeder());
-		std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( result.fetchMatcher());
+		std::auto_ptr<PatternTermFeederInstanceInterface> feederctx( feeder->createInstance());
+		std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( matcher->createInstance());
 		if (!feederctx.get() || !matcherctx.get())
+		{
+			throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
+		}
+		std::vector<std::string> warningslist;
+		if (!loadPatternMatcherProgramWithFeeder( feederctx.get(), matcherctx.get(), source, errorhnd, warningslist))
 		{
 			throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
 		}
@@ -1144,19 +1140,28 @@ static void parseAnalyzerPatternMatchProgramDef(
 		{
 			throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
 		}
+		std::vector<std::string>::const_iterator wi = warningslist.begin(), we = warningslist.end();
+		for (; wi != we; ++wi)
+		{
+			warnings << *wi << std::endl;
+		}
 	}
 	else
 	{
 		const PatternLexerInterface* lexer = textproc->getPatternLexer( patternModuleName);
 		const PatternMatcherInterface* matcher = textproc->getPatternMatcher( patternModuleName);
-		PatternMatcherProgram result;
-		if (!lexer || !matcher || !loadPatternMatcherProgram( result, lexer, matcher, ptsources, errorhnd))
+		std::vector<std::string> warningslist;
+		if (!lexer || !matcher)
 		{
 			throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
 		}
-		std::auto_ptr<PatternLexerInstanceInterface> lexerctx( result.fetchLexer());
-		std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( result.fetchMatcher());
+		std::auto_ptr<PatternLexerInstanceInterface> lexerctx( lexer->createInstance());
+		std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( matcher->createInstance());
 		if (!lexerctx.get() || !matcherctx.get())
+		{
+			throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
+		}
+		if (!loadPatternMatcherProgramWithLexer( lexerctx.get(), matcherctx.get(), source, errorhnd, warningslist))
 		{
 			throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
 		}
@@ -1166,6 +1171,11 @@ static void parseAnalyzerPatternMatchProgramDef(
 		if (errorhnd->hasError())
 		{
 			throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
+		}
+		std::vector<std::string>::const_iterator wi = warningslist.begin(), we = warningslist.end();
+		for (; wi != we; ++wi)
+		{
+			warnings << *wi << std::endl;
 		}
 	}
 }
@@ -2587,86 +2597,35 @@ DLL_PUBLIC bool strus::loadVectorStorageVectors(
 }
 
 
-DLL_PUBLIC PatternMatcherProgram::~PatternMatcherProgram()
-{
-	if (m_lexer) delete m_lexer;
-	if (m_termFeeder) delete m_termFeeder;
-	if (m_matcher) delete m_matcher;
-}
-
-DLL_PUBLIC void PatternMatcherProgram::init(
-		PatternLexerInstanceInterface* lexer_,
-		PatternTermFeederInstanceInterface* termFeeder_,
-		PatternMatcherInstanceInterface* matcher_,
-		const std::vector<std::string>& regexidmap_,
-		const std::vector<uint32_t>& symbolRegexIdList_,
-		const std::vector<std::string>& warnings_)
-{
-	m_lexer = lexer_;
-	m_termFeeder = termFeeder_;
-	m_matcher = matcher_;
-	m_regexidmap = regexidmap_;
-	m_symbolRegexIdList = symbolRegexIdList_;
-	m_warnings = warnings_;
-}
-
-DLL_PUBLIC PatternLexerInstanceInterface* PatternMatcherProgram::fetchLexer()
-{
-	PatternLexerInstanceInterface* rt = m_lexer;
-	m_lexer = 0;
-	return rt;
-}
-
-DLL_PUBLIC PatternTermFeederInstanceInterface* PatternMatcherProgram::fetchTermFeeder()
-{
-	PatternTermFeederInstanceInterface* rt = m_termFeeder;
-	m_termFeeder = 0;
-	return rt;
-}
-
-DLL_PUBLIC PatternMatcherInstanceInterface* PatternMatcherProgram::fetchMatcher()
-{
-	PatternMatcherInstanceInterface* rt = m_matcher;
-	m_matcher = 0;
-	return rt;
-}
-
-DLL_PUBLIC const char* PatternMatcherProgram::tokenName( unsigned int id) const
-{
-	if (id >= MaxPatternTermNameId)
-	{
-		id = m_symbolRegexIdList[ id - MaxPatternTermNameId -1];
-	}
-	return m_regexidmap[ id-1].c_str();
-}
-
-
-DLL_PUBLIC bool strus::loadPatternMatcherProgram(
-		PatternMatcherProgram& result,
-		const PatternLexerInterface* lexer,
-		const PatternMatcherInterface* matcher,
-		const std::vector<std::pair<std::string,std::string> >& sources,
-		ErrorBufferInterface* errorhnd)
+DLL_PUBLIC bool strus::loadPatternMatcherProgramWithLexer(
+		PatternLexerInstanceInterface* lexer,
+		PatternMatcherInstanceInterface* matcher,
+		const std::string& source,
+		ErrorBufferInterface* errorhnd,
+		std::vector<std::string>& warnings)
 {
 	const char* prgname = "";
 	try
 	{
 		if (errorhnd->hasError()) throw std::runtime_error(_TXT("called load patter matcher program with error"));
-		PatternMatcherProgramParser program( lexer, matcher, errorhnd);
-
-		std::vector<std::pair<std::string,std::string> >::const_iterator
-			si = sources.begin(), se = sources.end();
-		for (; si != se; ++si)
+		if (isPatternSerializerContent( source, errorhnd))
 		{
-			prgname = si->first.c_str();
-			if (!program.load( si->second)) throw std::runtime_error( errorhnd->fetchError());
+			return loadPatternMatcherFromSerialization( source, lexer, matcher, errorhnd);
 		}
-		if (!program.compile())
+		else
 		{
-			errorhnd->explain(_TXT("failed to compile pattern match program"));
-			return false;
+			PatternMatcherProgramParser program( lexer, matcher, errorhnd);
+			if (!program.load( source))
+			{
+				throw std::runtime_error( errorhnd->fetchError());
+			}
+			if (!program.compile())
+			{
+				errorhnd->explain(_TXT("failed to compile pattern match program"));
+				return false;
+			}
+			warnings = program.warnings();
 		}
-		program.fetchResult( result);
 		return true;
 	}
 	catch (const std::runtime_error& e)
@@ -2681,42 +2640,43 @@ DLL_PUBLIC bool strus::loadPatternMatcherProgram(
 	}
 }
 
-DLL_PUBLIC bool strus::loadPatternMatcherProgramForAnalyzerOutput(
-		PatternMatcherProgram& result,
-		const PatternTermFeederInterface* termFeeder,
-		const PatternMatcherInterface* matcher,
-		const std::vector<std::pair<std::string,std::string> >& sources,
-		ErrorBufferInterface* errorhnd)
+DLL_PUBLIC bool strus::loadPatternMatcherProgramWithFeeder(
+		PatternTermFeederInstanceInterface* feeder,
+		PatternMatcherInstanceInterface* matcher,
+		const std::string& source,
+		ErrorBufferInterface* errorhnd,
+		std::vector<std::string>& warnings)
 {
-	const char* prgname = "";
 	try
 	{
 		if (errorhnd->hasError()) throw std::runtime_error(_TXT("called load patter matcher program with error"));
-		PatternMatcherProgramParser program( termFeeder, matcher, errorhnd);
-
-		std::vector<std::pair<std::string,std::string> >::const_iterator
-			si = sources.begin(), se = sources.end();
-		for (; si != se; ++si)
+		if (isPatternSerializerContent( source, errorhnd))
 		{
-			prgname = si->first.c_str();
-			if (!program.load( si->second)) throw std::runtime_error( errorhnd->fetchError());
+			return loadPatternMatcherFromSerialization( source, feeder, matcher, errorhnd);
 		}
-		if (!program.compile())
+		else
 		{
-			errorhnd->explain(_TXT("failed to compile pattern match program for analyzer output: %s"));
-			return false;
+			PatternMatcherProgramParser program( feeder, matcher, errorhnd);
+			
+			if (!program.load( source)) throw std::runtime_error( errorhnd->fetchError());
+	
+			if (!program.compile())
+			{
+				errorhnd->explain(_TXT("failed to compile pattern match program for analyzer output: %s"));
+				return false;
+			}
+			warnings = program.warnings();
 		}
-		program.fetchResult( result);
 		return true;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("failed to load pattern match program (for analyzer output) '%s': %s"), prgname, e.what());
+		errorhnd->report( _TXT("failed to load pattern match program (for analyzer output): %s"), e.what());
 		return false;
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading pattern match program (for analyzer output) '%s'"), prgname);
+		errorhnd->report( _TXT("out of memory loading pattern match program (for analyzer output)"));
 		return false;
 	}
 }

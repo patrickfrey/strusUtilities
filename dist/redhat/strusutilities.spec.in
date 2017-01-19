@@ -270,6 +270,7 @@ make test
 %{_bindir}/strusBuildVectorStorage
 %{_bindir}/strusInspectVectorStorage
 %{_bindir}/strusPatternMatcher
+%{_bindir}/strusPatternSerialize
 
 %files devel
 %defattr( -, root, root )

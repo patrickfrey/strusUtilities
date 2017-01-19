@@ -264,66 +264,33 @@ bool loadVectorStorageVectors(
 		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd);
 
-
-/// \brief Result of a loadPatternMatcherProgram call, all structures created and instrumented by the loader
-class PatternMatcherProgram
-{
-public:
-	PatternMatcherProgram()
-		:m_lexer(0),m_termFeeder(0),m_matcher(0){}
-	~PatternMatcherProgram();
-
-	void init( 
-		PatternLexerInstanceInterface* lexer_,
-		PatternTermFeederInstanceInterface* termFeeder_,
-		PatternMatcherInstanceInterface* matcher_,
-		const std::vector<std::string>& regexidmap_,
-		const std::vector<uint32_t>& symbolRegexIdList_,
-		const std::vector<std::string>& warnings_);
-
-	PatternLexerInstanceInterface* fetchLexer();
-	PatternTermFeederInstanceInterface* fetchTermFeeder();
-	PatternMatcherInstanceInterface* fetchMatcher();
-	const std::vector<std::string>& warnings() const	{return m_warnings;}
-
-	const char* tokenName( unsigned int id) const;
-
-private:
-	PatternLexerInstanceInterface* m_lexer;
-	PatternTermFeederInstanceInterface* m_termFeeder;
-	PatternMatcherInstanceInterface* m_matcher;
-	std::vector<std::string> m_regexidmap;
-	std::vector<uint32_t> m_symbolRegexIdList;
-	std::vector<std::string> m_warnings;
-};
-
 /// \brief Loads and compiles a list of pattern matcher programs from source and instruments a lexer and a matcher instance with it
-/// \param[out] result returned structures instrumented
-/// \param[in] lexer lexer class
-/// \param[in] matcher matcher class
-/// \param[in] sources sources to parse
+/// \param[in,out] lexer lexer instance
+/// \param[in,out] matcher matcher instance
+/// \param[in] source source to parse
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
+/// \param[out] warnings warnings occurred
 /// \return true on success
-bool loadPatternMatcherProgram(
-		PatternMatcherProgram& result,
-		const PatternLexerInterface* lexer,
-		const PatternMatcherInterface* matcher,
-		const std::vector<std::pair<std::string,std::string> >& sources,
-		ErrorBufferInterface* errorhnd);
+bool loadPatternMatcherProgramWithLexer(
+		PatternLexerInstanceInterface* lexer,
+		PatternMatcherInstanceInterface* matcher,
+		const std::string& source,
+		ErrorBufferInterface* errorhnd,
+		std::vector<std::string>& warnings);
 
 /// \brief Loads and compiles a list of pattern matcher programs from source and instruments a term feeder for pattern matching as analyzer post processing and a matcher instance
-/// \param[out] result returned structures instrumented
-/// \param[in] termFeeder feeder for analyzer output terms
-/// \param[in] matcher matcher class
-/// \param[in] sources sources to parse
+/// \param[in,out] feeder feeder instance for analyzer output terms
+/// \param[in,out] matcher matcher instance
+/// \param[in] source source to parse
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
+/// \param[out] warnings warnings occurred
 /// \return true on success
-bool loadPatternMatcherProgramForAnalyzerOutput(
-		PatternMatcherProgram& result,
-		const PatternTermFeederInterface* termFeeder,
-		const PatternMatcherInterface* matcher,
-		const std::vector<std::pair<std::string,std::string> >& sources,
-		ErrorBufferInterface* errorhnd);
+bool loadPatternMatcherProgramWithFeeder(
+		PatternTermFeederInstanceInterface* feeder,
+		PatternMatcherInstanceInterface* matcher,
+		const std::string& source,
+		ErrorBufferInterface* errorhnd,
+		std::vector<std::string>& warnings);
 
 }//namespace
 #endif

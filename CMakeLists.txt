@@ -24,6 +24,22 @@ find_strus_package( trace )
 find_strus_package( module )
 find_strus_package( rpc )
 
+IF (WITH_STRUS_VECTOR STREQUAL "YES")
+set( STRUS_VECTOR_STD_ENABLED 1 )
+MESSAGE( STATUS  "Standard module and tests for strusVector enabled." )
+ELSE (WITH_STRUS_VECTOR STREQUAL "YES")
+set( STRUS_VECTOR_STD_ENABLED 0 )
+MESSAGE( STATUS  "Standard module and tests for strusVector not enabled (WITH_STRUS_VECTOR != 'YES')." )
+ENDIF (WITH_STRUS_VECTOR STREQUAL "YES")
+
+IF (WITH_STRUS_PATTERN STREQUAL "YES")
+set( STRUS_PATTERN_STD_ENABLED 1 )
+MESSAGE( STATUS  "Standard module and tests for strusPattern enabled." )
+ELSE (WITH_STRUS_PATTERN STREQUAL "YES")
+set( STRUS_PATTERN_STD_ENABLED 0 )
+MESSAGE( STATUS  "Standard module and tests for strusPattern not enabled (WITH_STRUS_PATTERN != 'YES')." )
+ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
+
 set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
 configure_file( "${PROJECT_SOURCE_DIR}/include/private/version.hpp.in"  "${PROJECT_SOURCE_DIR}/include/private/version.hpp"  @ONLY )
 
@@ -35,13 +51,6 @@ configure_file( "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD.in"  "${PROJECT_S
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities.dsc"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/redhat/strusutilities.spec.in"  "${PROJECT_SOURCE_DIR}/dist/redhat/strusutilities.spec"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/tests/scripts/ENV.in"  "${PROJECT_SOURCE_DIR}/tests/scripts/ENV"  @ONLY )
-
-IF (WITH_STRUS_VECTOR STREQUAL "YES")
-MESSAGE( STATUS  "Tests for strusVector enabled." )
-ENDIF (WITH_STRUS_VECTOR STREQUAL "YES")
-IF (WITH_STRUS_PATTERN STREQUAL "YES")
-MESSAGE( STATUS  "Tests for strusPattern enabled." )
-ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 
 enable_testing()
 

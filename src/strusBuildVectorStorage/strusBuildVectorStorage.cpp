@@ -133,10 +133,12 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
+#if STRUS_VECTOR_STD_ENABLED
 		if (!moduleLoader->loadModule( strus::Constants::standard_vector_storage_module()))
 		{
 			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_vector_storage_module() << "': " << errorBuffer->fetchError() << std::endl;
 		}
+#endif
 		if (opt("license"))
 		{
 			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
@@ -146,7 +148,7 @@ int main( int argc, const char* argv[])
 			{
 				std::cout << *ti << std::endl;
 			}
-			std::cerr << std::endl;
+			std::cout << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		if (opt( "version"))

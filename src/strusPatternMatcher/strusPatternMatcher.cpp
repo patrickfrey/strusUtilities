@@ -97,7 +97,6 @@ class GlobalContext
 {
 public:
 	explicit GlobalContext(
-			const strus::PatternMatcherProgram* program_,
 			const strus::PatternMatcherInstanceInterface* ptinst_,
 			const strus::PatternLexerInstanceInterface* crinst_,
 			const strus::TextProcessorInterface* textproc_,
@@ -110,8 +109,7 @@ public:
 			const std::map<std::string,int>& markups_,
 			const std::string& resultMarker_,
 			bool printTokens_)
-		:m_program(program_)
-		,m_ptinst(ptinst_)
+		:m_ptinst(ptinst_)
 		,m_crinst(crinst_)
 		,m_textproc(textproc_)
 		,m_segmenterName(segmenterName_)
@@ -166,7 +164,6 @@ public:
 	const strus::PatternLexerInstanceInterface* PatternLexerInstance() const	{return m_crinst;}
 
 	bool printTokens() const							{return m_printTokens;}
-	const char* tokenName( unsigned int id) const					{return m_program->tokenName( id);}
 
 	void fetchError()
 	{
@@ -207,7 +204,6 @@ public:
 
 private:
 	boost::mutex m_mutex;
-	const strus::PatternMatcherProgram* m_program;
 	const strus::PatternMatcherInstanceInterface* m_ptinst;
 	const strus::PatternLexerInstanceInterface* m_crinst;
 	const strus::TextProcessorInterface* m_textproc;
@@ -414,7 +410,7 @@ public:
 					ti->setOrdpos( ti->ordpos() + ordposOffset);
 					if (m_globalContext->printTokens())
 					{
-						std::cout << ti->ordpos() << ": " << m_globalContext->tokenName(ti->id()) << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+						std::cout << ti->ordpos() << ": " << ti->id() << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
 					}
 					mt->putInput( *ti);
 				}
@@ -618,10 +614,12 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
+#if STRUS_PATTERN_STD_ENABLED
 		if (!moduleLoader->loadModule( strus::Constants::standard_pattern_matcher_module()))
 		{
 			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_pattern_matcher_module() << "': " << g_errorBuffer->fetchError() << std::endl;
 		}
+#endif
 		if (opt("license"))
 		{
 			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
@@ -631,7 +629,7 @@ int main( int argc, const char* argv[])
 			{
 				std::cout << *ti << std::endl;
 			}
-			std::cerr << std::endl;
+			std::cout << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		if (opt( "version"))
@@ -649,18 +647,6 @@ int main( int argc, const char* argv[])
 			{
 				std::cout << *vi << std::endl;
 			}
-			if (!printUsageAndExit) return 0;
-		}
-		if (opt("license"))
-		{
-			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
-			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
-			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
-			for (; ti != te; ++ti)
-			{
-				std::cout << *ti << std::endl;
-			}
-			std::cerr << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		if (printUsageAndExit)
@@ -727,7 +713,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string> expressions;
 		std::string matcher( strus::Constants::standard_pattern_matcher());
 		std::string lexer( strus::Constants::standard_pattern_matcher());
-		std::vector<std::string> programfiles;
+		std::string programfile;
 		bool printTokens = false;
 		std::map<std::string,int> markups;
 		std::string resultmarker;
@@ -768,7 +754,7 @@ int main( int argc, const char* argv[])
 		}
 		if (opt( "program"))
 		{
-			programfiles = opt.list( "program");
+			programfile = opt[ "program"];
 		}
 		if (opt( "markup"))
 		{
@@ -857,34 +843,29 @@ int main( int argc, const char* argv[])
 		if (!pti) throw strus::runtime_error(_TXT("unknown pattern matcher"));
 		const strus::PatternLexerInterface* lxi = textproc->getPatternLexer( lexer);
 		if (!lxi) throw strus::runtime_error(_TXT("unknown pattern lexer"));
+		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pti->createInstance());
+		std::auto_ptr<strus::PatternLexerInstanceInterface> lxinst( lxi->createInstance());
 
-		std::cerr << "loading programs ..." << std::endl;
-		std::vector<std::pair<std::string,std::string> > sources;
-		std::vector<std::string>::const_iterator pi = programfiles.begin(), pe = programfiles.end();
-		for (; pi != pe; ++pi)
-		{
-			std::string programsrc;
-			unsigned int ec = strus::readFile( *pi, programsrc);
-			if (ec)
-			{
-				throw strus::runtime_error(_TXT("error (%u) reading rule file %s: %s"), ec, pi->c_str(), ::strerror(ec));
-			}
-			sources.push_back( std::pair<std::string,std::string>( *pi, programsrc));
-		}
-		strus::PatternMatcherProgram ptstruct;
-		if (!loadPatternMatcherProgram( ptstruct, lxi, pti, sources, g_errorBuffer))
+		std::cerr << "load program ..." << std::endl;
+		std::string programsrc;
+		unsigned int ec = strus::readFile( programfile, programsrc);
+		if (ec) throw strus::runtime_error(_TXT("error (%u) reading rule file %s: %s"), ec, programfile.c_str(), ::strerror(ec));
+		std::vector<std::string> warnings;
+		if (!strus::loadPatternMatcherProgramWithLexer( lxinst.get(), ptinst.get(), programsrc, g_errorBuffer, warnings))
 		{
 			throw strus::runtime_error(_TXT("failed to load program"));
 		}
-		std::auto_ptr<strus::PatternLexerInstanceInterface> lxinst( ptstruct.fetchLexer());
-		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( ptstruct.fetchMatcher());
-
+		std::vector<std::string>::const_iterator wi = warnings.begin(), we = warnings.end();
+		for (; wi != we; ++wi)
+		{
+			std::cerr << "warning: " << *we << std::endl;
+		}
 		if (expressions.empty())
 		{
 			expressions.push_back( "//()");
 		}
 		GlobalContext globalContext(
-				&ptstruct, ptinst.get(), lxinst.get(), textproc, segmentername,
+				ptinst.get(), lxinst.get(), textproc, segmentername,
 				expressions, inputpath, fileext, mimetype, encoding,
 				markups, resultmarker, printTokens);
 

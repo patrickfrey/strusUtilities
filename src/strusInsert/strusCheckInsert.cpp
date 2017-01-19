@@ -140,7 +140,7 @@ int main( int argc_, const char* argv_[])
 			{
 				std::cout << *ti << std::endl;
 			}
-			std::cerr << std::endl;
+			std::cout << std::endl;
 			if (!printUsageAndExit) return 0;
 		}
 		if (opt( "version"))
