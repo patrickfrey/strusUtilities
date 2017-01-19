@@ -75,7 +75,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%' (option)"));
 				}
 				unsigned int dupf = 0;
-				int id = parse_KEYWORD( dupf, si, 2, "LEXER", "MATCHER", "FEEDER");
+				int id = parse_KEYWORD( dupf, si, 3, "LEXER", "MATCHER", "FEEDER");
 				if (id < 0)
 				{
 					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%' (option)"));
