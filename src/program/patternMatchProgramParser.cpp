@@ -82,6 +82,10 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				}
 				else if (id == 0)
 				{
+					if (!m_patternLexer)
+					{
+						throw strus::runtime_error(_TXT("defined 'LEXER' option without feeder defined"));
+					}
 					for (;;)
 					{
 						loadLexerOption( si);
@@ -100,6 +104,10 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				}
 				else
 				{
+					if (!m_patternTermFeeder)
+					{
+						throw strus::runtime_error(_TXT("defined 'FEEDER' option without feeder defined"));
+					}
 					for (;;)
 					{
 						loadFeederOption( si);
