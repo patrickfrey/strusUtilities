@@ -10,7 +10,7 @@
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/vectorStorageInterface.hpp"
-#include "strus/vectorStorageBuilderInterface.hpp"
+#include "strus/vectorStorageClientInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -39,40 +39,6 @@
 #define DEFAULT_MAX_NOF_THREADS		16
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
-
-static void printBuilderCommands( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
-{
-	try
-	{
-		std::string configstr( config);
-		std::string modelname;
-		if (!strus::extractStringFromConfigString( modelname, configstr, "model", errorhnd))
-		{
-			modelname = strus::Constants::standard_vector_storage();
-			if (errorhnd->hasError()) throw strus::runtime_error("failed to parse vector space model from configuration");
-		}
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
-			storageBuilder( moduleLoader->createStorageObjectBuilder());
-		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
-
-		const strus::VectorStorageInterface* vsi = storageBuilder->getVectorStorage( modelname);
-		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
-	
-		std::vector<std::string> cmds = vsi->builderCommands();
-		std::vector<std::string>::const_iterator ci = cmds.begin(), ce = cmds.end();
-		for (; ci != ce; ++ci)
-		{
-			out << "  " << *ci << ":\t" << vsi->builderCommandDescription( *ci) << std::endl;
-		}
-	}
-	catch (const std::runtime_error& err)
-	{
-		std::string msg;
-		if (errorhnd->hasError()) msg.append( errorhnd->fetchError());
-		errorhnd->report( _TXT("cannot list builder commands in usage: %s %s"), msg.c_str(), err.what()); 
-	}
-}
-
 
 int main( int argc, const char* argv[])
 {
@@ -168,19 +134,15 @@ int main( int argc, const char* argv[])
 			}
 			if (!printUsageAndExit) return 0;
 		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 1)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
-		}
-		std::string command;
+		std::string commands;
 		if (opt.nofargs() > 0)
 		{
-			command = opt[0];
+			std::size_t ci = 0, ce = opt.nofargs();
+			for (; ci != ce; ++ci)
+			{
+				if (!commands.empty()) commands.push_back(';');
+				commands.append( opt[ci]);
+			}
 		}
 		std::string config;
 		int nof_config = 0;
@@ -210,10 +172,8 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusBuildVsm [options] <command>" << std::endl;
-			std::cout << _TXT("description: Executes a vector space model builder command.") << std::endl;
-			std::cout << _TXT("commands:") << std::endl;
-			printBuilderCommands( std::cout, moduleLoader.get(), config, g_errorBuffer);
+			std::cout << _TXT("usage:") << " strusBuildVectorStorage [options] { <commands> }" << std::endl;
+			std::cout << _TXT("description: Executes a list of vector builder command.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -285,12 +245,9 @@ int main( int argc, const char* argv[])
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
-		std::auto_ptr<strus::VectorStorageBuilderInterface> builder( vsi->createBuilder( config, dbi));
-		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector space model builder"));
-
-		if (!builder->run( command))
+		if (!vsi->runBuild( commands, config, dbi))
 		{
-			throw strus::runtime_error(_TXT("execute VSM command '%s' failed"), command.c_str());
+			throw strus::runtime_error(_TXT("execute vector storage build commands '%s' failed"), commands.c_str());
 		}
 		if (errorBuffer->hasError())
 		{

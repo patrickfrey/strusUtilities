@@ -10,7 +10,8 @@
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/vectorStorageInterface.hpp"
-#include "strus/vectorStorageBuilderInterface.hpp"
+#include "strus/vectorStorageClientInterface.hpp"
+#include "strus/vectorStorageTransactionInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -156,7 +157,7 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusCreateVsm [options]" << std::endl;
+			std::cout << _TXT("usage:") << " strusCreateVectorStorage [options]" << std::endl;
 			std::cout << _TXT("description: Creates a vector storage with all vectors inserted.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
@@ -235,13 +236,13 @@ int main( int argc, const char* argv[])
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
 		if (!vsi->createStorage( config, dbi)) throw strus::runtime_error(_TXT("failed to create vector storage"));
-		std::auto_ptr<strus::VectorStorageBuilderInterface> builder( vsi->createBuilder( config, dbi));
-		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create vector storage builder"));
+		std::auto_ptr<strus::VectorStorageClientInterface> storage( vsi->createClient( config, dbi));
+		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create vector storage builder"));
 
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::loadVectorStorageVectors( builder.get(), *fi, g_errorBuffer))
+			if (!strus::loadVectorStorageVectors( storage.get(), *fi, g_errorBuffer))
 			{
 				throw strus::runtime_error(_TXT("failed to load input"));
 			}

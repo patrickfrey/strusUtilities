@@ -37,7 +37,8 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/storageDocumentUpdateInterface.hpp"
-#include "strus/vectorStorageBuilderInterface.hpp"
+#include "strus/vectorStorageClientInterface.hpp"
+#include "strus/vectorStorageTransactionInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
 #include "strus/analyzer/documentClass.hpp"
@@ -2340,13 +2341,16 @@ static void print_value_seq( const void* sq, unsigned int sqlen)
 #endif
 
 static void loadVectorStorageVectors_word2vecBin( 
-		VectorStorageBuilderInterface* vsmbuilder,
+		VectorStorageClientInterface* client,
 		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd)
 {
 	unsigned int linecnt = 0;
 	try
 	{
+		Reference<VectorStorageTransactionInterface> transaction( client->createTransaction());
+		if (!transaction.get()) throw strus::runtime_error(_TXT("create transaction failed"));
+
 		InputStream infile( vectorfile);
 		if (infile.error())
 		{
@@ -2387,7 +2391,7 @@ static void loadVectorStorageVectors_word2vecBin(
 		char* linebuf = (char*)std::malloc( linebufsize);
 		charp_scope linebuf_scope( linebuf);
 	
-		// Parse vector by vector and add them to the builder till EOF:
+		// Parse vector by vector and add them to the transaction till EOF:
 		size = infile.readAhead( linebuf, linebufsize);
 		while (size)
 		{
@@ -2440,7 +2444,7 @@ static void loadVectorStorageVectors_word2vecBin(
 					throw strus::runtime_error( _TXT("illegal value in vector: %f %f"), *vi, len);
 				}
 			}
-			vsmbuilder->addFeature( std::string(term, termsize), vec);
+			transaction->addFeature( std::string(term, termsize), vec);
 			if (errorhnd->hasError())
 			{
 				throw strus::runtime_error(_TXT("add vector failed: %s"), errorhnd->fetchError());
@@ -2464,7 +2468,10 @@ static void loadVectorStorageVectors_word2vecBin(
 		{
 			throw strus::runtime_error(_TXT("collection size does not match"));
 		}
-		vsmbuilder->done();
+		if (!transaction->commit())
+		{
+			throw strus::runtime_error(_TXT("vector storage transaction failed: %s"), errorhnd->fetchError());
+		}
 	}
 	catch (const std::runtime_error& err)
 	{
@@ -2473,13 +2480,15 @@ static void loadVectorStorageVectors_word2vecBin(
 }
 
 static void loadVectorStorageVectors_word2vecText( 
-		VectorStorageBuilderInterface* vsmbuilder,
+		VectorStorageClientInterface* client,
 		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd)
 {
 	unsigned int linecnt = 0;
 	try
 	{
+		Reference<VectorStorageTransactionInterface> transaction( client->createTransaction());
+		if (!transaction.get()) throw strus::runtime_error(_TXT("create transaction failed"));
 		InputStream infile( vectorfile);
 		if (infile.error())
 		{
@@ -2546,7 +2555,7 @@ static void loadVectorStorageVectors_word2vecText(
 					throw strus::runtime_error( _TXT("illegal value in vector: %f %f"), *vi, len);
 				}
 			}
-			vsmbuilder->addFeature( std::string(term, termsize), vec);
+			transaction->addFeature( std::string(term, termsize), vec);
 			if (errorhnd->hasError())
 			{
 				throw strus::runtime_error(_TXT("add vector failed: %s"), errorhnd->fetchError());
@@ -2556,7 +2565,10 @@ static void loadVectorStorageVectors_word2vecText(
 		{
 			throw strus::runtime_error(_TXT("failed to read from word2vec file '%s': %s"), vectorfile.c_str(), ::strerror(infile.error()));
 		}
-		vsmbuilder->done();
+		if (!transaction->commit())
+		{
+			throw strus::runtime_error(_TXT("vector storage transaction failed: %s"), errorhnd->fetchError());
+		}
 	}
 	catch (const std::runtime_error& err)
 	{
@@ -2565,7 +2577,7 @@ static void loadVectorStorageVectors_word2vecText(
 }
 
 DLL_PUBLIC bool strus::loadVectorStorageVectors( 
-		VectorStorageBuilderInterface* vsmbuilder,
+		VectorStorageClientInterface* client,
 		const std::string& vectorfile,
 		ErrorBufferInterface* errorhnd)
 {
@@ -2575,14 +2587,14 @@ DLL_PUBLIC bool strus::loadVectorStorageVectors(
 		if (isTextFile( vectorfile))
 		{
 			filetype = "word2vec text file";
-			loadVectorStorageVectors_word2vecText( vsmbuilder, vectorfile, errorhnd);
+			loadVectorStorageVectors_word2vecText( client, vectorfile, errorhnd);
 		}
 		else
 		{
 			filetype = "word2vec binary file";
-			loadVectorStorageVectors_word2vecBin( vsmbuilder, vectorfile, errorhnd);
+			loadVectorStorageVectors_word2vecBin( client, vectorfile, errorhnd);
 		}
-		return vsmbuilder->done();
+		return true;
 	}
 	catch (const std::bad_alloc&)
 	{
