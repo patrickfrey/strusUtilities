@@ -444,7 +444,9 @@ public:
 		{
 			std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
 			std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
-			out << ri->name() << " [" << ri->ordpos() << ", " << start_segpos << "|" << ri->start_origpos() << " .. " << end_segpos << "|" << ri->end_origpos() << "]:";
+			out << ri->name() << " [" << ri->start_ordpos() << ".." << ri->end_ordpos()
+				<< ", " << start_segpos << "|" << ri->start_origpos() << " .. "
+				<< end_segpos << "|" << ri->end_origpos() << "]:";
 			std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
 
@@ -452,7 +454,7 @@ public:
 			{
 				start_segpos = segmentposmap[ ei->start_origseg()].segpos;
 				end_segpos = segmentposmap[ ei->end_origseg()].segpos;
-				out << " " << ei->name() << " [" << ei->ordpos()
+				out << " " << ei->name() << " [" << ei->start_ordpos() << ".." << ei->end_ordpos()
 						<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
 				std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
 				std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
