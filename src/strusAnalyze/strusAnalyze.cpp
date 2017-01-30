@@ -53,6 +53,7 @@ struct TermOrder
 	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
 	{
 		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
+		if (aa.len() != bb.len()) return (aa.len() < bb.len());
 		int cmp;
 		cmp = aa.type().compare( bb.type());
 		if (cmp != 0) return (cmp < 0);
@@ -133,7 +134,7 @@ static void filterTerms( std::vector<strus::analyzer::Term>& termar, const DumpC
 			}
 			else
 			{
-				termar.push_back( strus::analyzer::Term( ti->type(), dci->second, ti->pos()));
+				termar.push_back( strus::analyzer::Term( ti->type(), dci->second, ti->pos(), ti->len()));
 			}
 		}
 	}
@@ -432,11 +433,11 @@ int main( int argc, const char* argv[])
 						{
 							if (dci->second.empty())
 							{
-								termar.push_back( strus::analyzer::Term( mi->name(), mi->value().tostring().c_str(), 0));
+								termar.push_back( strus::analyzer::Term( mi->name(), mi->value().tostring().c_str(), 0/*pos*/, 0/*len*/));
 							}
 							else
 							{
-								termar.push_back( strus::analyzer::Term( mi->name(), dci->second, 0));
+								termar.push_back( strus::analyzer::Term( mi->name(), dci->second, 0/*pos*/, 0/*len*/));
 							}
 						}
 					}
@@ -449,11 +450,11 @@ int main( int argc, const char* argv[])
 						{
 							if (dci->second.empty())
 							{
-								termar.push_back( strus::analyzer::Term( ai->name(), ai->value(), 0));
+								termar.push_back( strus::analyzer::Term( ai->name(), ai->value(), 0/*pos*/, 0/*len*/));
 							}
 							else
 							{
-								termar.push_back( strus::analyzer::Term( ai->name(), dci->second, 0));
+								termar.push_back( strus::analyzer::Term( ai->name(), dci->second, 0/*pos*/, 0/*len*/));
 							}
 						}
 					}
@@ -485,7 +486,7 @@ int main( int argc, const char* argv[])
 					std::cout << std::endl << _TXT("search index terms:") << std::endl;
 					for (; ti != te; ++ti)
 					{
-						std::cout << ti->pos()
+						std::cout << ti->pos() << ":" << ti->len()
 							  << " " << ti->type()
 							  << " '" << ti->value() << "'"
 							  << std::endl;
