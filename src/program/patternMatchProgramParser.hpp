@@ -85,6 +85,7 @@ private:
 	SymbolTable m_regexNameSymbolTab;
 	SymbolTable m_patternNameSymbolTab;
 	SymbolTable m_lexemSymbolTab;
+	std::map<uint32_t,unsigned int> m_patternLengthMap;
 	std::vector<uint32_t> m_symbolRegexIdList;
 	std::set<uint32_t> m_unresolvedPatternNameSet;
 	std::vector<std::string> m_warnings;

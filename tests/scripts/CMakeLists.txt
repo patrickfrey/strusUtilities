@@ -7,6 +7,7 @@ IF (WITH_STRUS_PATTERN STREQUAL "YES")
 add_test( TestPatternMatch1  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch1 )
 add_test( TestPatternMatch2  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch2 )
 add_test( TestPatternMatch3  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch3 )
+add_test( TestPatternMatch4  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch4 )
 ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 
 

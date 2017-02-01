@@ -1,0 +1,25 @@
+%MATCHER exclusive
+
+WORD ^1		:/\b\w+\b/;
+
+._A_A		= sequence_imm( WORD "A", WORD "A" );
+._A_B		= sequence_imm( WORD "A", WORD "B" );
+._Z_A		= sequence_imm( WORD "Z", WORD "A" );
+._Z_B		= sequence_imm( WORD "Z", WORD "B" );
+._C_D		= sequence_imm( WORD "C", WORD "D" );
+._C_D_D		= sequence_imm( WORD "C", WORD "D", WORD "D" );
+._C_C		= sequence_imm( WORD "C", WORD "C" );
+Co_A_A_A_B	= sequence_imm( _A_A, WORD "A", WORD "B" );
+Co_A_A_B_C	= sequence_imm( _A_A, WORD "B", WORD "C" );
+Co_A_B_C	= sequence_imm( _A_B, WORD "C" );
+Co_A_B_C_D	= sequence_imm( _A_B, _C_D );
+Co_A_B_C_C	= sequence_imm( _A_B, _C_C );
+Co_A_B		= sequence_imm( WORD "A", WORD "B" );
+Co_Z_A_A_B	= sequence_imm( _Z_A, WORD "A", WORD "B" );
+Co_Z_A_B_C	= sequence_imm( _Z_A, WORD "B", WORD "C" );
+Co_Z_B_C	= sequence_imm( _Z_B, WORD "C" );
+Co_Z_B_C_D_D_E	= sequence_imm( _Z_B, _C_D_D, WORD "E" | 8 );
+Co_Z_B_C_C	= sequence_imm( _Z_B, _C_C );
+Co_Z_B		= sequence_imm( WORD "Z", WORD "B" );
+
+

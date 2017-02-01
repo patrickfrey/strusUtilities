@@ -1,0 +1,1 @@
+StrusPatternMatcher  -m modstrus_analyzer_pattern -p program.rul input.xml 

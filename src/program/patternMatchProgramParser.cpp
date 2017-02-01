@@ -36,6 +36,7 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	,m_regexNameSymbolTab()
 	,m_patternNameSymbolTab()
 	,m_lexemSymbolTab()
+	,m_patternLengthMap()
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
@@ -230,6 +231,15 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 						if (ui != m_unresolvedPatternNameSet.end())
 						{
 							m_unresolvedPatternNameSet.erase( ui);
+						}
+						std::map<uint32_t,unsigned int>::iterator li = m_patternLengthMap.find( nameid);
+						if (li != m_patternLengthMap.end())
+						{
+							li->second = std::max( li->second, exprinfo.maxrange);
+						}
+						else
+						{
+							m_patternLengthMap[ nameid] = exprinfo.maxrange;
 						}
 						m_patternMatcher->definePattern( name, visible);
 					}
@@ -512,6 +522,10 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 			throw strus::runtime_error(_TXT("close bracket ')' expected at end of join operation expression"));
 		}
 		(void)parse_OPERATOR( si);
+		if (range == 0 && exprinfo.maxrange == 0)
+		{
+			throw strus::runtime_error(_TXT("cannot evaluate length of expression, range has to be specified here"));
+		}
 		switch (operation)
 		{
 			case PatternMatcherInstanceInterface::OpSequenceImm:
@@ -565,6 +579,8 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 			if (id)
 			{
 				m_patternMatcher->pushTerm( id);
+				exprinfo.minrange = 1;
+				exprinfo.maxrange = 1;
 			}
 		}
 		else
@@ -580,6 +596,8 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 			if (id)
 			{
 				m_patternMatcher->pushTerm( id);
+				exprinfo.minrange = 1;
+				exprinfo.maxrange = 1;
 			}
 			else
 			{
@@ -592,12 +610,22 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 						throw strus::runtime_error(_TXT("failed to define pattern name symbol"));
 					}
 					m_unresolvedPatternNameSet.insert( id);
+					exprinfo.minrange = 0;
+					exprinfo.maxrange = 0;
+				}
+				else
+				{
+					std::map<uint32_t,unsigned int>::const_iterator li = m_patternLengthMap.find( id);
+					if (li == m_patternLengthMap.end())
+					{
+						throw strus::runtime_error( _TXT("cannot evaluate length of pattern"));
+					}
+					exprinfo.minrange = li->second;
+					exprinfo.maxrange = li->second;
 				}
 				m_patternMatcher->pushPattern( name);
 			}
 		}
-		exprinfo.minrange = 1;
-		exprinfo.maxrange = 1;
 	}
 }
 
