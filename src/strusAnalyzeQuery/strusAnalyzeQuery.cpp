@@ -85,14 +85,14 @@ public:
 
 	virtual ~Query(){}
 
-	virtual void pushTerm( const std::string& type_, const std::string& value_)
+	virtual void pushTerm( const std::string& type_, const std::string& value_, const strus::Index& length_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::string_format( _TXT("called pushTerm %s '%s'"), type_.c_str(), value_.c_str()) << std::endl;
+		std::cerr << strus::string_format( _TXT("called pushTerm %s '%s' [%u]"), type_.c_str(), value_.c_str(), (unsigned int)length_) << std::endl;
 		printState( std::cerr);
 #endif
 		m_stack.push_back( m_tree.size());
-		m_terms.push_back( Term( type_, value_));
+		m_terms.push_back( Term( type_, value_, length_));
 		m_tree.push_back( TreeNode( (int)m_terms.size()));
 	}
 
@@ -211,7 +211,7 @@ public:
 		print_number( valbuf, sizeof(valbuf), stats_.documentFrequency());
 		std::cerr << strus::string_format( _TXT("called defineTermStatistics %s '%s' = %s"), type.c_str(), value.c_str(), valbuf) << std::endl;
 #endif
-		m_termstats[ Term( type, value)] = stats_;
+		m_termstats[ TermKey( type, value)] = stats_;
 	}
 
 	virtual void defineGlobalStatistics(
@@ -314,7 +314,7 @@ public:
 			}
 			out << std::endl;
 		}
-		std::map<Term,strus::TermStatistics>::const_iterator ti=m_termstats.begin(), te=m_termstats.end();
+		std::map<TermKey,strus::TermStatistics>::const_iterator ti=m_termstats.begin(), te=m_termstats.end();
 		if (ti != te)
 		{
 			out << _TXT("Term statistics:") << std::endl;
@@ -396,16 +396,16 @@ private:
 	}
 
 private:
-	class Term
+	class TermKey
 	{
 	public:
-		Term(){}
-		Term( const std::string& type_, const std::string& value_)
+		TermKey(){}
+		TermKey( const std::string& type_, const std::string& value_)
 			:type(type_),value(value_){}
-		Term( const Term& o)
+		TermKey( const TermKey& o)
 			:type(o.type),value(o.value){}
 
-		bool operator<( const Term& o) const
+		bool operator<( const TermKey& o) const
 		{
 			int cmpres;
 			if (type.size() != o.type.size()) return type.size() < o.type.size();
@@ -418,6 +418,21 @@ private:
 	public:
 		std::string type;
 		std::string value;
+	};
+
+	class Term
+	{
+	public:
+		Term(){}
+		Term( const std::string& type_, const std::string& value_, const strus::Index& length_)
+			:type(type_),value(value_),length(length_){}
+		Term( const Term& o)
+			:type(o.type),value(o.value),length(o.length){}
+
+	public:
+		std::string type;
+		std::string value;
+		strus::Index length;
 	};
 
 	struct DocField
@@ -501,7 +516,7 @@ private:
 	std::vector<std::string> m_users;
 	std::vector<strus::Index> m_evalset_docnolist;
 	strus::GlobalStatistics m_globstats;
-	std::map<Term,strus::TermStatistics> m_termstats;
+	std::map<TermKey,strus::TermStatistics> m_termstats;
 	bool m_evalset_defined;
 };
 

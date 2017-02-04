@@ -132,7 +132,7 @@ void QueryStruct::translate( QueryInterface& query, const QueryProcessorInterfac
 			case analyzer::Query::Instruction::PushSearchIndexTerm:
 			{
 				const analyzer::Term& term = queryana.searchIndexTerm( ii->idx());
-				query.pushTerm( term.type(), term.value());
+				query.pushTerm( term.type(), term.value(), term.len());
 				break;
 			}
 			case analyzer::Query::Instruction::Operator:
