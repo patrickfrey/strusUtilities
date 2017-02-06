@@ -12,7 +12,6 @@
 #include <boost/scoped_ptr.hpp>
 #include <stdint.h>	///... Needed by <boost/atomic.hpp> (!)
 #include <boost/atomic.hpp>
-#include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp> 
 
@@ -21,9 +20,11 @@ namespace utils {
 
 std::string tolower( const std::string& val);
 std::string trim( const std::string& val);
+std::string unescape( const std::string& val);
 bool caseInsensitiveEquals( const std::string& val1, const std::string& val2);
 bool caseInsensitiveStartsWith( const std::string& val, const std::string& prefix);
 int toint( const std::string& val);
+double tofloat( const std::string& val);
 std::string tostring( int val);
 
 template <class X>
@@ -59,21 +60,6 @@ typedef boost::mutex Mutex;
 typedef boost::mutex::scoped_lock ScopedLock;
 typedef boost::unique_lock<boost::mutex> UniqueLock;
 typedef boost::condition_variable ConditionVariable;
-
-template <class Task>
-class Thread
-	:public boost::thread
-{
-public:
-	explicit Thread( Task* task)
-		:boost::thread( boost::bind( &Task::run, task))
-	{}
-};
-
-typedef boost::thread_group ThreadGroup;
-
-std::string string_sprintf( const char* format, ...);
-
 
 }} //namespace
 #endif

@@ -17,17 +17,23 @@
 using namespace strus;
 using namespace strus::parser;
 
-bool parser::is_INTEGER( const char* src)
+bool parser::is_UNSIGNED( const char* src)
 {
 	char const* cc = src;
-	if (isMinus(*cc))
-	{
-		++cc;
-	}
 	if (!isDigit( *cc)) return false;
 	for (++cc; isDigit( *cc); ++cc){}
 	if (*cc == '.' || isAlnum(*cc)) return false;
 	return true;
+}
+
+bool parser::is_INTEGER( const char* src)
+{
+	char const* cc = src;
+	if (isDash(*cc))
+	{
+		++cc;
+	}
+	return is_UNSIGNED( cc);
 }
 
 bool parser::is_FLOAT( const char* src)
@@ -70,22 +76,47 @@ std::string parser::parse_TEXTWORD( char const*& src)
 std::string parser::parse_PATH( char const*& src)
 {
 	std::string rt;
-	while (isTextChar( *src) || *src == '/' || *src == '-') rt.push_back( *src++);
+	while (isTextChar( *src) || *src == '.' || *src == '/' || *src == '-') rt.push_back( *src++);
 	skipSpaces( src);
 	return rt;
 }
 
-std::string parser::parse_STRING( char const*& src)
+std::string parser::parse_STRING_noskip( char const*& src)
 {
 	std::string rt;
 	char eb = *src++;
 	while (*src != eb)
 	{
-		if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
+		if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string"));
 		if (*src == '\\')
 		{
 			src++;
-			if (*src == '\0' || *src == '\n') throw strus::runtime_error(_TXT("unterminated string"));
+			if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string"));
+		}
+		rt.push_back( *src++);
+	}
+	++src;
+	return rt;
+}
+
+std::string parser::parse_STRING( char const*& src)
+{
+	std::string rt = parse_STRING_noskip( src);
+	skipSpaces( src);
+	return rt;
+}
+
+std::string parser::parse_REGEX( char const*& src)
+{
+	std::string rt;
+	char eb = *src++;
+	while (*src != eb)
+	{
+		if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
+		if (*src == '\\')
+		{
+			rt.push_back( *src++);
+			if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string %c...%c"), eb, eb);
 		}
 		rt.push_back( *src++);
 	}
@@ -115,25 +146,24 @@ unsigned int parser::parse_UNSIGNED1( char const*& src)
 	return rt;
 }
 
-float parser::parse_FLOAT( char const*& src)
+double parser::parse_FLOAT( char const*& src)
 {
-	unsigned int digitsAllowed = 9;
-	float rt = 0.0;
+	bool sign = false;
+	double rt = 0.0;
 	if (*src == '-')
 	{
 		++src;
-		rt = -1.0;
+		sign = true;
 	}
-	while (isDigit( *src) && digitsAllowed)
+	while (isDigit( *src))
 	{
 		rt = (rt * 10.0) + (*src - '0');
 		++src;
-		--digitsAllowed;
 	}
 	if (isDot( *src))
 	{
-		float div = 1.0;
 		++src;
+		double div = 1.0;
 		while (isDigit( *src))
 		{
 			div /= 10.0;
@@ -141,12 +171,29 @@ float parser::parse_FLOAT( char const*& src)
 			++src;
 		}
 	}
-	if (!digitsAllowed)
+	if (*src == 'E')
 	{
-		throw strus::runtime_error(_TXT("floating point number out of range"));
+		++src;
+		int exp = parse_INTEGER( src);
+		if (exp > 0)
+		{
+			while (exp > 0)
+			{
+				rt *= 10;
+				exp -= 1;
+			}
+		}
+		else
+		{
+			while (exp < 0)
+			{
+				rt /= 10;
+				exp += 1;
+			}
+		}
 	}
 	skipSpaces( src);
-	return rt;
+	return sign?-rt:rt;
 }
 
 char parser::parse_OPERATOR( char const*& src)
@@ -260,5 +307,52 @@ int parser::parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsig
 	}
 	duplicateflags |= (1 << ii);
 	return ii;
+}
+
+MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( const char*& si)
+{
+	if (si[0] == '<')
+	{
+		if (si[1] == '=')
+		{
+			si += 2;
+			return MetaDataRestrictionInterface::CompareLessEqual;
+		}
+		else
+		{
+			si += 1;
+			return MetaDataRestrictionInterface::CompareLess;
+		}
+	}
+	else if (si[0] == '>')
+	{
+		if (si[1] == '=')
+		{
+			si += 2;
+			return MetaDataRestrictionInterface::CompareGreaterEqual;
+		}
+		else
+		{
+			si += 1;
+			return MetaDataRestrictionInterface::CompareGreater;
+		}
+	}
+	else if (si[0] == '!')
+	{
+		if (si[1] == '=')
+		{
+			si += 2;
+			return MetaDataRestrictionInterface::CompareNotEqual;
+		}
+	}
+	else if (si[0] == '=')
+	{
+		if (si[1] == '=')
+		{
+			si += 2;
+			return MetaDataRestrictionInterface::CompareEqual;
+		}
+	}
+	throw strus::runtime_error( _TXT( "unknown compare operator"));
 }
 

@@ -8,7 +8,7 @@
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/reference.hpp"
-#include "strus/documentClass.hpp"
+#include "strus/analyzer/documentClass.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
@@ -27,8 +27,9 @@
 #include "strus/analyzer/term.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/string_format.hpp"
+#include "strus/base/inputStream.hpp"
 #include "private/programOptions.hpp"
-#include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -87,36 +88,12 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 12,
-				"h,help", "v,version", "s,segmenter:", "e,expression:",
+				argc, argv, 13,
+				"h,help", "v,version", "license",
+				"s,segmenter:", "e,expression:",
 				"m,module:", "M,moduledir:", "P,prefix:", "i,index",
 				"p,position", "q,quot:", "E,esceol", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 1)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			if (opt.nofargs() < 1)
-			{
-				std::cerr << _TXT("too few arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
-		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -141,6 +118,50 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cout << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() > 1)
+			{
+				std::cerr << _TXT("too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 1)
+			{
+				std::cerr << _TXT("too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusSegment [options] <document>" << std::endl;
@@ -152,6 +173,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -172,6 +195,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Escape end of line with space") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
@@ -250,7 +274,11 @@ int main( int argc, const char* argv[])
 		strus::InputStream input( docpath);
 		char hdrbuf[ 1024];
 		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
-		strus::DocumentClass dclass;
+		if (input.error())
+		{
+			throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+		}
+		strus::analyzer::DocumentClass dclass;
 		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 		{
 			throw strus::runtime_error(_TXT("failed to detect document class")); 
@@ -267,12 +295,15 @@ int main( int argc, const char* argv[])
 		while (!eof)
 		{
 			std::size_t readsize = input.read( buf, sizeof(buf));
-			if (!readsize)
+			if (readsize < sizeof(buf))
 			{
+				if (input.error())
+				{
+					throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+				}
 				eof = true;
-				continue;
 			}
-			segmenterContext->putInput( buf, readsize, readsize != SegmenterBufSize);
+			segmenterContext->putInput( buf, readsize, eof);
 
 			// Segment the input:
 			int segid;

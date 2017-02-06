@@ -11,6 +11,7 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -22,7 +23,7 @@
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
-#include "strus/base/snprintf.h"
+#include "strus/base/string_format.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -35,19 +36,6 @@
 #include <stdexcept>
 #include <memory>
 
-struct TermOrder
-{
-	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
-	{
-		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
-		int cmp;
-		cmp = aa.type().compare( bb.type());
-		if (cmp != 0) return (cmp < 0);
-		cmp = aa.value().compare( bb.value());
-		if (cmp != 0) return (cmp < 0);
-		return false;
-	}
-};
 
 int main( int argc, const char* argv[])
 {
@@ -63,36 +51,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 10,
-				"h,help", "v,version", "t,tokenizer:", "n,normalizer:",
+				argc, argv, 11,
+				"h,help", "v,version", "license", "t,tokenizer:", "n,normalizer:",
 				"m,module:", "M,moduledir:", "q,quot:", "p,plain",
 				"R,resourcedir:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 1)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			if (opt.nofargs() < 1)
-			{
-				std::cerr << _TXT("too few arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
-		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 
@@ -118,6 +81,50 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cout << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() > 1)
+			{
+				std::cerr << _TXT("too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 1)
+			{
+				std::cerr << _TXT("too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusAnalyze [options] <phrasepath>" << std::endl;
@@ -129,6 +136,8 @@ int main( int argc, const char* argv[])
 			std::cout << "   " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -145,6 +154,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Do not print position and define default quotes as empty") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -217,9 +227,7 @@ int main( int argc, const char* argv[])
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// Create phrase type (tokenizer and normalizer):
-		std::string phraseType;
-		if (!strus::loadQueryAnalyzerPhraseType(
-				*analyzer, textproc, phraseType, "", normalizer, tokenizer, errorBuffer.get()))
+		if (!loadPhraseAnalyzer( *analyzer, textproc, normalizer, tokenizer, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load analyze phrase type"));
 		}
@@ -238,21 +246,26 @@ int main( int argc, const char* argv[])
 		}
 
 		// Analyze the phrase and print the result:
-		std::vector<strus::analyzer::Term> terms
-			= analyzer->analyzePhrase( phraseType, phrase);
-
-		std::sort( terms.begin(), terms.end(), TermOrder());
-
-		std::vector<strus::analyzer::Term>::const_iterator
-			ti = terms.begin(), te = terms.end();
-
-		for (; ti != te; ++ti)
+		std::auto_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
+		if (!qryanactx.get()) throw strus::runtime_error(_TXT("failed to create query analyzer context"));
+	
+		qryanactx->putField( 1, "", phrase);
+		strus::analyzer::Query qry = qryanactx->analyze();
+		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("query analysis failed"));
+		std::vector<strus::analyzer::Term> terms;
+		std::vector<strus::analyzer::Query::Instruction>::const_iterator
+			ii = qry.instructions().begin(), ie = qry.instructions().end();
+		for (; ii != ie; ++ii)
 		{
-			if (!resultPlain)
+			if (ii->opCode() == strus::analyzer::Query::Instruction::PushSearchIndexTerm)
 			{
-				std::cout << ti->pos() << " ";
+				const strus::analyzer::Term& term = qry.searchIndexTerm( ii->idx());
+				if (!resultPlain)
+				{
+					std::cout << term.pos() << " ";
+				}
+				std::cout << resultQuot << term.value() << resultQuot << std::endl;
 			}
-			std::cout << resultQuot << ti->value() << resultQuot << std::endl;
 		}
 		if (errorBuffer->hasError())
 		{

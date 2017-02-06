@@ -1,0 +1,12 @@
+diff -rauN strusutilities-0.12.0/cmake/build_rules.cmake strusutilities-0.12.0-centos5-long-long-patch/cmake/build_rules.cmake
+--- strusutilities-0.12.0/cmake/build_rules.cmake	2016-11-22 09:10:20.000000000 +0100
++++ strusutilities-0.12.0-centos5-long-long-patch/cmake/build_rules.cmake	2016-11-22 09:11:16.664959108 +0100
+@@ -13,7 +13,7 @@
+ 
+ if(CMAKE_COMPILER_IS_GNUCXX)
+ set( STRUS_OPTIMIZATION_LEVEL "3" )
+-set( CMAKE_CXX_FLAGS "-std=c++98  -Wall -pedantic -g -Wfatal-errors -fvisibility=hidden -fPIC -O${STRUS_OPTIMIZATION_LEVEL}" )
++set( CMAKE_CXX_FLAGS "-std=c++98  -Wall -pedantic -g -Wno-long-long -fvisibility=hidden -fPIC -O${STRUS_OPTIMIZATION_LEVEL}" )
+ set( CMAKE_C_FLAGS "-std=c99 -Wall -pedantic -Wfatal-errors -fPIC -O${STRUS_OPTIMIZATION_LEVEL}" )
+ endif()
+ if(CMAKE_CXX_COMPILER MATCHES ".*clang")

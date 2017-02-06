@@ -16,6 +16,7 @@
 #include "strus/segmenterInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/base/fileio.hpp"
+#include "strus/base/string_format.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionModule.hpp"
@@ -31,13 +32,13 @@
 #include "private/traceUtils.hpp"
 #include "fileCrawler.hpp"
 #include "keyMapGenProcessor.hpp"
-#include "thread.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
 #include <memory>
-
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
 int main( int argc_, const char* argv_[])
 {
@@ -53,9 +54,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 12,
-				"h,help", "t,threads:", "u,unit:",
-				"n,results:", "v,version", "m,module:", "x,extension:",
+				argc_, argv_, 13,
+				"h,help",  "v,version", "license",
+				"t,threads:", "u,unit:",
+				"n,results:","m,module:", "x,extension:",
 				"s,segmenter:", "D,contenttype:", "M,moduledir:", "R,resourcedir:",
 				"T,trace:");
 
@@ -65,31 +67,6 @@ int main( int argc_, const char* argv_[])
 			nofThreads = opt.asUint( "threads");
 		}
 		if (opt( "help")) printUsageAndExit = true;
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 2)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			if (opt.nofargs() < 2)
-			{
-				std::cerr << _TXT("too few arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
-		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -114,7 +91,50 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
-
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cout << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() > 2)
+			{
+				std::cerr << _TXT("too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 2)
+			{
+				std::cerr << _TXT("too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusGenerateKeyMap [options] <program> <docpath>" << std::endl;
@@ -128,6 +148,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -148,6 +170,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Set <N> as number of elements in the key map generated") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 
@@ -234,46 +257,46 @@ int main( int argc_, const char* argv_[])
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
 		// [2] Load analyzer program(s):
-		strus::DocumentClass documentClass;
+		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
+		std::cerr << analyzerMap.warnings();
 
 		strus::KeyMapGenResultList resultList;
-		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler(
-				datapath, unitSize, nofThreads*5+5, fileext);
+		strus::FileCrawler fileCrawler( datapath, unitSize, nofThreads*5+5, fileext);
 
 		// [3] Start threads:
-		std::auto_ptr< strus::Thread< strus::FileCrawler> >
-			fileCrawlerThread(
-				new strus::Thread< strus::FileCrawler >( fileCrawler,
-					"filecrawler"));
-		std::cout.flush();
-		fileCrawlerThread->start();
+		std::auto_ptr<boost::thread> fileCrawlerThread(
+			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));
 
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
-				textproc, analyzerMap, &resultList, fileCrawler, errorBuffer.get());
+				textproc, &analyzerMap, &resultList, &fileCrawler, errorBuffer.get());
 			processor.run();
 		}
 		else
 		{
-			std::auto_ptr< strus::ThreadGroup< strus::KeyMapGenProcessor > >
-				processors( new strus::ThreadGroup<strus::KeyMapGenProcessor>( "keymapgen"));
-
+			std::vector<strus::Reference<strus::KeyMapGenProcessor> > processorList;
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)
 			{
-				processors->start(
+				processorList.push_back(
 					new strus::KeyMapGenProcessor(
-						textproc, analyzerMap, &resultList, fileCrawler, errorBuffer.get()));
+						textproc, &analyzerMap, &resultList, &fileCrawler, errorBuffer.get()));
 			}
-			processors->wait_termination();
+			{
+				boost::thread_group tgroup;
+				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				{
+					tgroup.create_thread( boost::bind( &strus::KeyMapGenProcessor::run, processorList[ti].get()));
+				}
+				tgroup.join_all();
+			}
 		}
-		fileCrawlerThread->wait_termination();
+		fileCrawlerThread->join();
 
 		// [3] Final merge:
 		std::cerr << std::endl << _TXT("merging results:") << std::endl;

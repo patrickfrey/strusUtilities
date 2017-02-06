@@ -18,6 +18,7 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
@@ -29,6 +30,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
+#include "strus/base/string_format.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -52,13 +54,18 @@
 
 #undef STRUS_LOWLEVEL_DEBUG
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
+	std::string configstr( config);
+	std::string dbname;
+	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
+	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
+
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
-	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
@@ -93,37 +100,12 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 13,
-				"h,help", "Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
-				"D,time", "v,version", "m,module:", "M,moduledir:", "R,resourcedir:",
-				"s,storage:", "r,rpc:", "T,trace:");
+				argc_, argv_, 15,
+				"h,help", "v,version", "license",
+				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
+				"D,time", "m,module:", "M,moduledir:", "R,resourcedir:",
+				"s,storage:", "r,rpc:", "T,trace:", "V,verbose");
 		if (opt( "help")) printUsageAndExit = true;
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 3)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			if (opt.nofargs() < 3)
-			{
-				std::cerr << _TXT("too few arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
-		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -150,7 +132,51 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
-
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cout << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() > 3)
+			{
+				std::cerr << _TXT("too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 3)
+			{
+				std::cerr << _TXT("too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusQuery [options] <anprg> <qeprg> <query>" << std::endl;
@@ -163,6 +189,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			if (!opt("rpc"))
@@ -190,11 +218,15 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
+			std::cout << "-V|--verbose" << std::endl;
+			std::cout << "    " << _TXT("Verbose mode: Print some info like query analysis") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
 		bool quiet = opt( "quiet");
-		bool measureDuration = opt( "time");
+		bool doMeasureDuration = opt( "time");
+		bool verbose = opt("verbose");
 		std::string username;
 		std::size_t nofRanks = 20;
 		std::size_t firstRank = 0;
@@ -315,7 +347,8 @@ int main( int argc_, const char* argv_[])
 		ec = strus::readFile( analyzerprg, analyzerProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
 
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer.get()))
+		strus::QueryDescriptors querydescr;
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query analyzer program"));
 		}
@@ -324,7 +357,7 @@ int main( int argc_, const char* argv_[])
 		ec = strus::readFile( queryprg, qevalProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load query eval program %s (errno %u)"), queryprg.c_str(), ec);
 
-		if (!strus::loadQueryEvalProgram( *qeval, qproc, qevalProgramSource, errorBuffer.get()))
+		if (!strus::loadQueryEvalProgram( *qeval, querydescr, qproc, qevalProgramSource, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query evaluation program"));
 		}
@@ -341,10 +374,18 @@ int main( int argc_, const char* argv_[])
 			ec = strus::readFile( querypath, querystring);
 			if (ec) throw strus::runtime_error(_TXT("failed to read query string from file %s (errno %u)"), querypath.c_str(), ec);
 		}
-
+		if (verbose)
+		{
+			std::cerr << "Query context:" << std::endl;
+			std::cerr << "Default field type: " << querydescr.defaultFieldType << std::endl;
+			std::cerr << "Selection feature set: " << querydescr.selectionFeatureSet << std::endl;
+			std::cerr << "Weighting feature set: " << querydescr.weightingFeatureSet << std::endl;
+			std::cerr << "Part of features weighted in selection: " << querydescr.defaultSelectionTermPart << std::endl;
+			std::cerr << "Default selection join operator: " << querydescr.defaultSelectionJoin << std::endl;
+		}
 		unsigned int nofQueries = 0;
 		double startTime = 0.0;
-		if (measureDuration)
+		if (doMeasureDuration)
 		{
 			startTime = getTimeStamp();
 		}
@@ -357,30 +398,34 @@ int main( int argc_, const char* argv_[])
 				qeval->createQuery( storage.get()));
 			if (!query.get()) throw strus::runtime_error(_TXT("failed to create query object"));
 
-			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, errorBuffer.get()))
+			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, querydescr, errorBuffer.get()))
 			{
 				throw strus::runtime_error(_TXT("failed to load query from source"));
 			}
-
 			query->setMaxNofRanks( nofRanks);
 			query->setMinRank( firstRank);
 			if (!username.empty())
 			{
 				query->addUserName( username);
 			}
+			if (verbose)
+			{
+				std::cerr << "Query:" << std::endl;
+				std::cerr << query->tostring() << std::endl;
+			}
 			strus::QueryResult result = query->evaluate();
 
 			if (!quiet)
 			{
-				std::cout << strus::utils::string_sprintf( _TXT("evaluated till pass %u, got %u ranks (%u without restrictions applied):"), result.evaluationPass(), result.nofDocumentsRanked(), result.nofDocumentsVisited()) << std::endl;
-				std::cout << strus::utils::string_sprintf( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
+				std::cout << strus::string_format( _TXT("evaluated till pass %u, got %u ranks (%u without restrictions applied):"), result.evaluationPass(), result.nofDocumentsRanked(), result.nofDocumentsVisited()) << std::endl;
+				std::cout << strus::string_format( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
 			}
 			std::vector<strus::ResultDocument>::const_iterator wi = result.ranks().begin(), we = result.ranks().end();
 			if (!quiet)
 			{
 				for (int widx=1; wi != we; ++wi,++widx)
 				{
-					std::cout << strus::utils::string_sprintf( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
+					std::cout << strus::string_format( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
 					std::vector<strus::SummaryElement>::const_iterator
 						ai = wi->summaryElements().begin(),
 						ae = wi->summaryElements().end();
@@ -397,11 +442,11 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
-		if (measureDuration)
+		if (doMeasureDuration)
 		{
 			double endTime = getTimeStamp();
 			double duration = endTime - startTime;
-			std::cerr << strus::utils::string_sprintf( _TXT("evaluated %u queries in %.4f seconds"), nofQueries, duration) << std::endl;
+			std::cerr << strus::string_format( _TXT("evaluated %u queries in %.4f seconds"), nofQueries, duration) << std::endl;
 		}
 		if (errorBuffer->hasError())
 		{

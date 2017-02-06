@@ -20,6 +20,7 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
+#include "strus/attributeReaderInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -31,22 +32,28 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
+#include "strus/base/string_format.hpp"
 #include "private/version.hpp"
-#include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+#include <map>
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
+	std::string configstr( config);
+	std::string dbname;
+	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
+	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
+
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
-	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
@@ -59,6 +66,26 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
+static std::multimap<std::string,strus::Index> loadAttributeDocnoMap(
+		strus::StorageClientInterface* storage, const std::string& attributeName)
+{
+	std::multimap<std::string,strus::Index> rt;
+	std::auto_ptr<strus::AttributeReaderInterface> attributeReader( storage->createAttributeReader());
+	if (!attributeReader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
+	strus::Index ehnd = attributeReader->elementHandle( attributeName.c_str());
+	if (ehnd == 0) throw strus::runtime_error(_TXT("unknown attribute name '%s'"), attributeName.c_str());
+	strus::Index di = 1, de = storage->maxDocumentNumber()+1;
+	for (; di != de; ++di)
+	{
+		attributeReader->skipDoc( di);
+		std::string name = attributeReader->getValue( ehnd);
+		if (!name.empty())
+		{
+			rt.insert( std::pair<std::string,strus::Index>( name, di));
+		}
+	}
+	return rt;
+}
 
 int main( int argc, const char* argv[])
 {
@@ -75,38 +102,15 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 11,
-				"h,help", "v,version", "m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "c,commit:", "a,attribute:",
+				argc, argv, 13,
+				"h,help", "v,version", "license",
+				"m,module:", "M,moduledir:",
+				"r,rpc:", "s,storage:", "c,commit:",
+				"a,attribute:", "x,mapattribute:",
 				"m,metadata:","u,useraccess", "T,trace:");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
-		}
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() < 1)
-			{
-				std::cerr << _TXT("too few arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			if (opt.nofargs() > 1)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -132,6 +136,50 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cout << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() < 1)
+			{
+				std::cerr << _TXT("too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() > 1)
+			{
+				std::cerr << _TXT("too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusUpdateStorage [options] <updatefile>" << std::endl;
@@ -143,6 +191,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -164,6 +214,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("The name of the updated meta data element is <NAME>.") << std::endl;
 			std::cout << "-u|--useraccess" << std::endl;
 			std::cout << "    " << _TXT("The update batch is a list of user right assignments.") << std::endl;
+			std::cout << "-x|--mapattribute <ATTR>" << std::endl;
+			std::cout << "    " << _TXT("The update document is selected by the attribute <ATTR> as key,") << std::endl;
+			std::cout << "    " << _TXT("instead of the document id or document number.") << std::endl;
 			std::cout << "-c|--commit <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as number of updates per transaction (default 10000)") << std::endl;
 			std::cout << "    " << _TXT("If <N> is set to 0 then only one commit is done at the end") << std::endl;
@@ -171,6 +224,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Write the last error occurred to <FILE> in case of an exception")  << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -196,12 +250,18 @@ int main( int argc, const char* argv[])
 		}
 		// Parse arguments:
 		std::string storagecfg;
+		std::multimap<std::string,strus::Index> attributemap;
+		std::multimap<std::string,strus::Index>* attributemapref = 0;
+		std::string mapattribute;
 		if (opt("storage"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
 			storagecfg = opt["storage"];
 		}
-		
+		if (opt("mapattribute"))
+		{
+			mapattribute = opt["mapattribute"];
+		}
 		// Create objects for storage document update:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;
@@ -224,7 +284,11 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
-
+		if (!mapattribute.empty())
+		{
+			attributemap = loadAttributeDocnoMap( storage.get(), mapattribute);
+			attributemapref = &attributemap;
+		}
 		enum UpdateOperation
 		{
 			UpdateOpAttribute,
@@ -266,22 +330,22 @@ int main( int argc, const char* argv[])
 		{
 			case UpdateOpMetadata:
 				nofUpdates = strus::loadDocumentMetaDataAssignments(
-						*storage, elemname, updateBatchPath, transactionSize, errorBuffer.get());
+						*storage, elemname, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 			case UpdateOpAttribute:
 				nofUpdates = strus::loadDocumentAttributeAssignments(
-						*storage, elemname, updateBatchPath, transactionSize, errorBuffer.get());
+						*storage, elemname, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 			case UpdateOpUserAccess:
 				nofUpdates = strus::loadDocumentUserRightsAssignments(
-						*storage, updateBatchPath, transactionSize, errorBuffer.get());
+						*storage, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 		}
 		if (!nofUpdates && errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("error in update storage"));
 		}
-		std::cerr << strus::utils::string_sprintf( _TXT("done %u update operations"), nofUpdates) << std::endl;
+		std::cerr << strus::string_format( _TXT("done %u update operations"), nofUpdates) << std::endl;
 		if (logfile) fclose( logfile);
 		return 0;
 	}

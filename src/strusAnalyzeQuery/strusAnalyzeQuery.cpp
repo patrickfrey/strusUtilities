@@ -18,6 +18,7 @@
 #include "strus/documentAnalyzerInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/segmenterInterface.hpp"
@@ -33,9 +34,9 @@
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
-#include "strus/documentClass.hpp"
+#include "strus/base/string_format.hpp"
+#include "strus/base/inputStream.hpp"
 #include "private/programOptions.hpp"
-#include "private/inputStream.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -84,23 +85,36 @@ public:
 
 	virtual ~Query(){}
 
-	virtual void pushTerm( const std::string& type_, const std::string& value_)
+	virtual void pushTerm( const std::string& type_, const std::string& value_, const strus::Index& length_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called pushTerm %s '%s'"), type_.c_str(), value_.c_str()) << std::endl;
+		std::cerr << strus::string_format( _TXT("called pushTerm %s '%s' [%u]"), type_.c_str(), value_.c_str(), (unsigned int)length_) << std::endl;
 		printState( std::cerr);
 #endif
 		m_stack.push_back( m_tree.size());
+		m_terms.push_back( Term( type_, value_, length_));
 		m_tree.push_back( TreeNode( (int)m_terms.size()));
-		m_terms.push_back( Term( type_, value_));
+	}
+
+	virtual void pushDocField(
+			const std::string& metadataRangeStart,
+			const std::string& metadataRangeEnd)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::string_format( _TXT("called pushDocField %s : %s"), metadataRangeStart.c_str(), metadataRangeEnd.c_str()) << std::endl;
+		printState( std::cerr);
+#endif
+		m_stack.push_back( m_tree.size());
+		m_docfields.push_back( DocField( metadataRangeStart, metadataRangeEnd));
+		m_tree.push_back( TreeNode( -(int)m_docfields.size()));
 	}
 
 	virtual void pushExpression(
 				const strus::PostingJoinOperatorInterface* operation,
-				std::size_t argc, int range, unsigned int cardinality)
+				unsigned int argc, int range, unsigned int cardinality)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, (unsigned int)argc, range, cardinality) << std::endl;
+		std::cerr << strus::string_format( _TXT("called pushExpression 0x%lx args %u range %d cardinality %u"), (uintptr_t)operation, (unsigned int)argc, range, cardinality) << std::endl;
 		printState( std::cerr);
 #endif
 		int expridx = m_tree.size();
@@ -141,7 +155,7 @@ public:
 	virtual void attachVariable( const std::string& name_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called attachVariable %s"), name_.c_str()) << std::endl;
+		std::cerr << strus::string_format( _TXT("called attachVariable %s"), name_.c_str()) << std::endl;
 		printState( std::cerr);
 #endif
 		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of variable assignment without term or expression defined"));
@@ -151,7 +165,7 @@ public:
 	virtual void defineFeature( const std::string& set_, double weight_=1.0)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;
+		std::cerr << strus::string_format( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;
 		printState( std::cerr);
 #endif
 		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of feature without term or expression defined"));
@@ -168,7 +182,7 @@ public:
 
 		const char* ng = newGroup?"new group":"";
 		std::cerr
-			<< strus::utils::string_sprintf(_TXT("called addMetaDataRestrictionCondition %s %s %s %s"), 
+			<< strus::string_format(_TXT("called addMetaDataRestrictionCondition %s %s %s %s"), 
 					name.c_str(), Restriction::compareOperatorName(opr), operandstr.c_str(), ng)
 			<< std::endl;
 		printState( std::cerr);
@@ -180,7 +194,7 @@ public:
 			const std::vector<strus::Index>& docnolist_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called addDocumentEvaluationSet %u"), (unsigned int)docnolist_.size()) << std::endl;
+		std::cerr << strus::string_format( _TXT("called addDocumentEvaluationSet %u"), (unsigned int)docnolist_.size()) << std::endl;
 #endif
 		m_evalset_docnolist.insert( m_evalset_docnolist.end(), docnolist_.begin(), docnolist_.end());
 		std::sort( m_evalset_docnolist.begin(), m_evalset_docnolist.end());
@@ -195,9 +209,9 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		char valbuf[ 64];
 		print_number( valbuf, sizeof(valbuf), stats_.documentFrequency());
-		std::cerr << strus::utils::string_sprintf( _TXT("called defineTermStatistics %s '%s' = %s"), type.c_str(), value.c_str(), valbuf) << std::endl;
+		std::cerr << strus::string_format( _TXT("called defineTermStatistics %s '%s' = %s"), type.c_str(), value.c_str(), valbuf) << std::endl;
 #endif
-		m_termstats[ Term( type, value)] = stats_;
+		m_termstats[ TermKey( type, value)] = stats_;
 	}
 
 	virtual void defineGlobalStatistics(
@@ -206,7 +220,7 @@ public:
 #ifdef STRUS_LOWLEVEL_DEBUG
 		char valbuf[ 64];
 		print_number( valbuf, sizeof(valbuf), stats_.nofDocumentsInserted());
-		std::cerr << strus::utils::string_sprintf( _TXT("called defineGlobalStatistics %s"), valbuf) << std::endl;
+		std::cerr << strus::string_format( _TXT("called defineGlobalStatistics %s"), valbuf) << std::endl;
 #endif
 		m_globstats = stats_;
 	}
@@ -214,7 +228,7 @@ public:
 	virtual void setMaxNofRanks( std::size_t maxNofRanks_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT("called setMaxNofRanks %u"), (unsigned int)maxNofRanks_) << std::endl;
+		std::cerr << strus::string_format( _TXT("called setMaxNofRanks %u"), (unsigned int)maxNofRanks_) << std::endl;
 #endif
 		m_maxNofRanks = maxNofRanks_;
 	}
@@ -222,7 +236,7 @@ public:
 	virtual void setMinRank( std::size_t minRank_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT( "called setMinRank %u"), (unsigned int)minRank_) << std::endl;
+		std::cerr << strus::string_format( _TXT( "called setMinRank %u"), (unsigned int)minRank_) << std::endl;
 #endif
 		m_minRank = minRank_;
 	}
@@ -230,7 +244,7 @@ public:
 	virtual void addUserName( const std::string& username_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT( "called addUserName %s"), username_.c_str()) << std::endl;
+		std::cerr << strus::string_format( _TXT( "called addUserName %s"), username_.c_str()) << std::endl;
 #endif
 		m_users.push_back( username_);
 	}
@@ -238,13 +252,18 @@ public:
 	virtual void setWeightingVariableValue( const std::string& name, double value)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::utils::string_sprintf( _TXT( "called setWeightingFormulaVariableValue %s %g"), name.c_str(), value) << std::endl;
+		std::cerr << strus::string_format( _TXT( "called setWeightingFormulaVariableValue %s %g"), name.c_str(), value) << std::endl;
 #endif
 	}
 
 	virtual strus::QueryResult evaluate()
 	{
 		return strus::QueryResult();
+	}
+
+	virtual std::string tostring() const
+	{
+		return std::string();
 	}
 
 	void check() const
@@ -263,7 +282,7 @@ public:
 			out << _TXT("Features:") << std::endl;
 			for (; fi != fe; ++fi)
 			{
-				out << strus::utils::string_sprintf( _TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
+				out << strus::string_format( _TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
 				print_expression( out, 1, fi->expression);
 			}
 		}
@@ -273,7 +292,7 @@ public:
 			out << _TXT("Restrictions:") << std::endl;
 			for (; ri != re; ++ri)
 			{
-				out << strus::utils::string_sprintf( _TXT("restriction %s %s '%s'"), ri->name.c_str(), ri->oprname(), ri->operand.tostring().c_str()) << std::endl;
+				out << strus::string_format( _TXT("restriction %s %s '%s'"), ri->name.c_str(), ri->oprname(), ri->operand.tostring().c_str()) << std::endl;
 			}
 		}
 		std::vector<std::string>::const_iterator ui = m_users.begin(), ue = m_users.end();
@@ -282,7 +301,7 @@ public:
 			out << _TXT("Allowed:") << std::endl;
 			for (; ui != ue; ++ui)
 			{
-				out << strus::utils::string_sprintf(_TXT("user '%s'"), ui->c_str()) << std::endl;
+				out << strus::string_format(_TXT("user '%s'"), ui->c_str()) << std::endl;
 			}
 		}
 		if (m_evalset_defined)
@@ -295,7 +314,7 @@ public:
 			}
 			out << std::endl;
 		}
-		std::map<Term,strus::TermStatistics>::const_iterator ti=m_termstats.begin(), te=m_termstats.end();
+		std::map<TermKey,strus::TermStatistics>::const_iterator ti=m_termstats.begin(), te=m_termstats.end();
 		if (ti != te)
 		{
 			out << _TXT("Term statistics:") << std::endl;
@@ -303,7 +322,7 @@ public:
 			{
 				char valbuf[ 64];
 				print_number( valbuf, sizeof(valbuf), ti->second.documentFrequency());
-				out << strus::utils::string_sprintf( _TXT("stats %s '%s' = %s"), ti->first.type.c_str(), ti->first.value.c_str(), valbuf) << std::endl;
+				out << strus::string_format( _TXT("stats %s '%s' = %s"), ti->first.type.c_str(), ti->first.value.c_str(), valbuf) << std::endl;
 			}
 		}
 		if (m_globstats.nofDocumentsInserted() >= 0)
@@ -314,7 +333,7 @@ public:
 				out << _TXT("Global statistics:") << std::endl;
 				char valbuf[ 64];
 				print_number( valbuf, sizeof(valbuf), m_globstats.nofDocumentsInserted());
-				out << strus::utils::string_sprintf( _TXT("nof documents inserted: %s"), valbuf) << std::endl;
+				out << strus::string_format( _TXT("nof documents inserted: %s"), valbuf) << std::endl;
 			}
 		}
 	}
@@ -326,14 +345,14 @@ public:
 		std::vector<int>::const_iterator si = m_stack.begin(), se = m_stack.end();
 		for (int sidx=0; si != se; ++si,++sidx)
 		{
-			out << strus::utils::string_sprintf(_TXT("address [%d]"), -(int)(m_stack.size() - sidx)) << std::endl;
+			out << strus::string_format(_TXT("address [%d]"), -(int)(m_stack.size() - sidx)) << std::endl;
 			print_expression( out, 1, *si);
 		}
 		out << _TXT("Features:") << std::endl;
 		std::vector<Feature>::const_iterator fi = m_features.begin(), fe = m_features.end();
 		for (; fi != fe; ++fi)
 		{
-			out << strus::utils::string_sprintf(_TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
+			out << strus::string_format(_TXT("feature '%s' weight=%.4f"), fi->set.c_str(), fi->weight) << std::endl;
 			print_expression( out, 1, fi->expression);
 		}
 	}
@@ -342,7 +361,7 @@ public:
 private:
 	void print_expression( std::ostream& out, std::size_t indent, int treeidx) const
 	{
-		std::string indentstr( indent*3, ' ');
+		std::string indentstr( indent*2, ' ');
 		while (treeidx >= 0)
 		{
 			std::string attr;
@@ -358,26 +377,35 @@ private:
 				out << indentstr << attr << "func[0x" << std::hex << (uintptr_t)nod.func << std::dec << "] range=" << nod.arg << std::endl;
 				print_expression( out, indent+1, nod.child);
 			}
+			else if (nod.arg < 0)
+			{
+				const DocField& docfield = m_docfields[ -nod.arg-1];
+				out << indentstr << attr << "docfield " << docfield.metadataRangeStart << " : " << docfield.metadataRangeEnd << std::endl;
+			}
+			else if (nod.arg > 0)
+			{
+				const Term& term = m_terms[ nod.arg-1];
+				out << indentstr << attr << "term " << term.type << " '" << term.value << "'" << std::endl;
+			}
 			else
 			{
-				const Term& term = m_terms[ nod.arg];
-				out << indentstr << attr << "term " << term.type << " '" << term.value << "'" << std::endl;
+				throw strus::runtime_error(_TXT("illegal node in query tree"));
 			}
 			treeidx = nod.left;
 		}
 	}
 
 private:
-	class Term
+	class TermKey
 	{
 	public:
-		Term(){}
-		Term( const std::string& type_, const std::string& value_)
+		TermKey(){}
+		TermKey( const std::string& type_, const std::string& value_)
 			:type(type_),value(value_){}
-		Term( const Term& o)
+		TermKey( const TermKey& o)
 			:type(o.type),value(o.value){}
 
-		bool operator<( const Term& o) const
+		bool operator<( const TermKey& o) const
 		{
 			int cmpres;
 			if (type.size() != o.type.size()) return type.size() < o.type.size();
@@ -390,6 +418,32 @@ private:
 	public:
 		std::string type;
 		std::string value;
+	};
+
+	class Term
+	{
+	public:
+		Term(){}
+		Term( const std::string& type_, const std::string& value_, const strus::Index& length_)
+			:type(type_),value(value_),length(length_){}
+		Term( const Term& o)
+			:type(o.type),value(o.value),length(o.length){}
+
+	public:
+		std::string type;
+		std::string value;
+		strus::Index length;
+	};
+
+	struct DocField
+	{
+		DocField( const DocField& o)
+			:metadataRangeStart(o.metadataRangeStart),metadataRangeEnd(o.metadataRangeEnd){}
+		DocField( const std::string& start, const std::string& end)
+			:metadataRangeStart(start),metadataRangeEnd(end){}
+
+		std::string metadataRangeStart;		///< metadata element defining the start of the field
+		std::string metadataRangeEnd;		///< metadata element defining the end of the field
 	};
 
 	class TreeNode
@@ -451,6 +505,7 @@ private:
 	};
 
 	std::vector<Term> m_terms;
+	std::vector<DocField> m_docfields;
 	std::vector<TreeNode> m_tree;
 	std::vector<int> m_stack;
 	std::map<int, std::string> m_variables;
@@ -461,7 +516,7 @@ private:
 	std::vector<std::string> m_users;
 	std::vector<strus::Index> m_evalset_docnolist;
 	strus::GlobalStatistics m_globstats;
-	std::map<Term,strus::TermStatistics> m_termstats;
+	std::map<TermKey,strus::TermStatistics> m_termstats;
 	bool m_evalset_defined;
 };
 
@@ -480,35 +535,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 7,
-				"h,help", "v,version", "m,module:", "r,rpc:",
+				argc, argv, 8,
+				"h,help", "v,version", "license", "m,module:", "r,rpc:",
 				"M,moduledir:", "R,resourcedir:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 2)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			if (opt.nofargs() < 2)
-			{
-				std::cerr << _TXT("too few arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
-		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -535,7 +565,50 @@ int main( int argc, const char* argv[])
 				}
 			}
 		}
-
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cout << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() > 2)
+			{
+				std::cerr << _TXT("too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 2)
+			{
+				std::cerr << _TXT("too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
+			}
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusAnalyze [options] <program> <queryfile>" << std::endl;
@@ -547,6 +620,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -557,6 +632,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
@@ -649,7 +725,8 @@ int main( int argc, const char* argv[])
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, errorBuffer.get()))
+		strus::QueryDescriptors querydescr;
+		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
 		{
 			throw strus::runtime_error( _TXT("failed to load query analyze program %s"), analyzerprg.c_str());
 		}
@@ -663,10 +740,13 @@ int main( int argc, const char* argv[])
 		while (!eof)
 		{
 			std::size_t readsize = input.read( buf, sizeof(buf));
-			if (!readsize)
+			if (readsize < sizeof(buf))
 			{
+				if (input.error())
+				{
+					throw strus::runtime_error( _TXT("failed to read query source file '%s': %s"), querypath.c_str(), ::strerror(input.error())); 
+				}
 				eof = true;
-				continue;
 			}
 			querysource.append( buf, readsize);
 		}
@@ -675,7 +755,7 @@ int main( int argc, const char* argv[])
 		Query query;
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
 		if (!queryproc) throw strus::runtime_error(_TXT("failed to get query processor"));
-		if (!strus::loadQuery( query, analyzer.get(), queryproc, querysource, errorBuffer.get()))
+		if (!strus::loadQuery( query, analyzer.get(), queryproc, querysource, querydescr, errorBuffer.get()))
 		{
 			throw strus::runtime_error( _TXT("failed to load query %s"), querypath.c_str());
 		}

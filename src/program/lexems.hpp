@@ -7,6 +7,7 @@
  */
 #ifndef _STRUS_PROGRAM_LEXEMS_HPP_INCLUDED
 #define _STRUS_PROGRAM_LEXEMS_HPP_INCLUDED
+#include "strus/metaDataRestrictionInterface.hpp"
 #include <string>
 
 namespace strus {
@@ -51,6 +52,14 @@ static inline bool isTextChar( char ch)
 static inline bool isAssign( char ch)
 {
 	return ch == '=';
+}
+static inline bool isDash( char ch)
+{
+	return ch == '-';
+}
+static inline bool isAt( char ch)
+{
+	return (ch == '@');
 }
 static inline bool isColon( char ch)
 {
@@ -100,9 +109,21 @@ static inline bool isCloseAngleBracket( char ch)
 {
 	return ch == '>';
 }
+static inline bool isLeftArrow( const char* si)
+{
+	return si[0] == '<' && si[1] == '-';
+}
+static inline bool isRightArrow( const char* si)
+{
+	return si[0] == '-' && si[1] == '>';
+}
 static inline bool isAsterisk( char ch)
 {
 	return ch == '*';
+}
+static inline bool isExclamation( char ch)
+{
+	return ch == '!';
 }
 static inline bool isPercent( char ch)
 {
@@ -114,11 +135,19 @@ static inline bool isStringQuote( char ch)
 }
 static inline bool isSpace( char ch)
 {
-	return ch == ' ' || ch == '\t' || ch == '\n';
+	return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n';
+}
+static inline bool isCompareOperator( const char* si)
+{
+	return si[0] == '<' || si[0] == '>' || (si[0] == '!' && si[1] == '=') || (si[0] == '=' && si[1] == '=');
 }
 static inline void skipToEoln( char const*& src)
 {
-	while (*src && *src != '\n') ++src;
+	while (*src && *src != '\n')
+	{
+		if (*src == '\r' && src[1] != '\n') break;
+		++src;
+	}
 }
 static inline void skipSpaces( char const*& src)
 {
@@ -137,19 +166,23 @@ static inline void skipSpaces( char const*& src)
 	}
 }
 bool is_INTEGER( const char* src);
+bool is_UNSIGNED( const char* src);
 bool is_FLOAT( const char* src);
 bool isEqual( const std::string& id, const char* idstr);
 std::string parse_IDENTIFIER( char const*& src);
 std::string parse_TEXTWORD( char const*& src);
 std::string parse_STRING( char const*& src);
+std::string parse_STRING_noskip( char const*& src);
+std::string parse_REGEX( char const*& src);
 std::string parse_PATH( char const*& src);
 unsigned int parse_UNSIGNED( char const*& src);
 unsigned int parse_UNSIGNED1( char const*& src);
-float parse_FLOAT( char const*& src);
+double parse_FLOAT( char const*& src);
 char parse_OPERATOR( char const*& src);
 int parse_INTEGER( char const*& src);
 int parse_KEYWORD( char const*& src, unsigned int nof, ...);
 int parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsigned int nof, ...);
+MetaDataRestrictionInterface::CompareOperator parse_CompareOperator( const char*& si);
 
 }}//namespace
 #endif

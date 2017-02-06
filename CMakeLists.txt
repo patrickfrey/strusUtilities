@@ -6,7 +6,7 @@ include(cmake/install_prefix.cmake)
 # Project globals:
 project( StrusUtilities )
 set( STRUS_MAJOR_VERSION 0 )
-set( STRUS_MINOR_VERSION 10 )
+set( STRUS_MINOR_VERSION 13 )
 set( STRUS_PATCH_VERSION 0 )
 set( STRUS_VERSION ${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}.${STRUS_PATCH_VERSION} )
 
@@ -20,11 +20,27 @@ include( cmake/find_strus_package.cmake )
 find_strus_package( base )
 find_strus_package( core )
 find_strus_package( analyzer )
+find_strus_package( trace )
 find_strus_package( module )
 find_strus_package( rpc )
 
+IF (WITH_STRUS_VECTOR STREQUAL "YES")
+set( STRUS_VECTOR_STD_ENABLED 1 )
+MESSAGE( STATUS  "Standard module and tests for strusVector enabled." )
+ELSE (WITH_STRUS_VECTOR STREQUAL "YES")
+set( STRUS_VECTOR_STD_ENABLED 0 )
+MESSAGE( STATUS  "Standard module and tests for strusVector not enabled (WITH_STRUS_VECTOR != 'YES')." )
+ENDIF (WITH_STRUS_VECTOR STREQUAL "YES")
+
+IF (WITH_STRUS_PATTERN STREQUAL "YES")
+set( STRUS_PATTERN_STD_ENABLED 1 )
+MESSAGE( STATUS  "Standard module and tests for strusPattern enabled." )
+ELSE (WITH_STRUS_PATTERN STREQUAL "YES")
+set( STRUS_PATTERN_STD_ENABLED 0 )
+MESSAGE( STATUS  "Standard module and tests for strusPattern not enabled (WITH_STRUS_PATTERN != 'YES')." )
+ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
+
 set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
-set( CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON )
 configure_file( "${PROJECT_SOURCE_DIR}/include/private/version.hpp.in"  "${PROJECT_SOURCE_DIR}/include/private/version.hpp"  @ONLY )
 
 set( STRUS_GETTEXT_PACKAGE "strus-dom" )	#... 1st parameter of bindtextdomain(...)
@@ -33,14 +49,14 @@ configure_file( "${PROJECT_SOURCE_DIR}/src/utils/internationalization.cpp.in"  "
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/deploy_to_obs.sh.in"  "${PROJECT_SOURCE_DIR}/dist/obs/deploy_to_obs.sh"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD.in"  "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities.dsc"  @ONLY )
-configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities-Debian_7.0.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities-Debian_7.0.dsc"  @ONLY )
-configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities-xUbuntu_12.04.dsc.in"  "${PROJECT_SOURCE_DIR}/dist/obs/strusutilities-xUbuntu_12.04.dsc"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/redhat/strusutilities.spec.in"  "${PROJECT_SOURCE_DIR}/dist/redhat/strusutilities.spec"  @ONLY )
+configure_file( "${PROJECT_SOURCE_DIR}/tests/scripts/ENV.in"  "${PROJECT_SOURCE_DIR}/tests/scripts/ENV"  @ONLY )
 
 enable_testing()
 
 # Subdirectories:
 add_subdirectory( src )
+add_subdirectory( tests )
   
 include( cmake/report_build_settings.cmake )
 

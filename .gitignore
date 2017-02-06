@@ -68,5 +68,17 @@ src/strusUpdateStorage/strusUpdateStorage
 src/strusSegment/strusSegment
 src/strusHelp/strusHelp
 src/strusDeleteDocument/strusDeleteDocument
-
+src/strusVectorSpace/strusVectorSpace
+src/strusCreateVectorStorage/strusCreateVectorStorage
+src/strusBuildVectorStorage/strusBuildVectorStorage
+src/strusInspectVectorStorage/strusInspectVectorStorage
+src/strusPatternMatcher/strusPatternMatcher
+src/strusPatternSerialize/strusPatternSerialize
 .travis.yml
+
+# Generated files for tests:
+tests/scripts/ENV
+tests/scripts/exec
+examples/vector/eigenwords/model.vs
+examples/vector/eigenwords/classes.txt
+examples/vector/eigenwords/features.txt

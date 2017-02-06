@@ -32,7 +32,7 @@ public:
 	InsertProcessor(
 			StorageClientInterface* storage_,
 			const TextProcessorInterface* textproc_,
-			const AnalyzerMap& analyzerMap_,
+			const AnalyzerMap* analyzerMap_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
 			unsigned int transactionSize_,
@@ -47,7 +47,7 @@ public:
 private:
 	StorageClientInterface* m_storage;
 	const TextProcessorInterface* m_textproc;
-	AnalyzerMap m_analyzerMap;
+	const AnalyzerMap* m_analyzerMap;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
 	unsigned int m_transactionSize;

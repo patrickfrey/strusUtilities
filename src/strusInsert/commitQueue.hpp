@@ -33,6 +33,7 @@ public:
 	}
 
 	void pushTransaction( StorageTransactionInterface* transaction);
+	const std::vector<std::string>& errors() const		{return m_errors;}
 
 private:
 	typedef Reference<StorageTransactionInterface> StorageTransactionReference;
@@ -46,6 +47,8 @@ private:
 	unsigned int m_nofOpenTransactions;
 	std::queue<StorageTransactionReference> m_openTransactions;
 	utils::Mutex m_mutex_openTransactions;
+	utils::Mutex m_mutex_errors;
+	std::vector<std::string> m_errors;
 	bool m_verbose;
 	ErrorBufferInterface* m_errorhnd;
 };

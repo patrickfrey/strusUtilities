@@ -29,6 +29,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
+#include "strus/base/string_format.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -45,20 +46,26 @@
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "insertProcessor.hpp"
-#include "thread.hpp"
 #include <iostream>
 #include <sstream>
 #include <memory>
 #include <cstring>
 #include <stdexcept>
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 
-static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& dbcfg, strus::ErrorBufferInterface* errorhnd)
+static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
+	std::string configstr( config);
+	std::string dbname;
+	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
+	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
+
 	std::auto_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
-	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbcfg);
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
@@ -87,12 +94,13 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 17,
-				"h,help", "t,threads:", "c,commit:", "f,fetch:",
-				"v,version", "g,segmenter:", "D,contenttype:", "m,module:",
-				"L,logerror:", "M,moduledir:", "R,resourcedir:", "r,rpc:",
-				"x,extension:", "s,storage:", "S,configfile:", "V,verbose",
-				"T,trace:");
+				argc_, argv_, 18,
+				"h,help", "v,version", "license",
+				"t,threads:", "c,commit:", "f,fetch:",
+				"g,segmenter:", "D,contenttype:", "m,module:",
+				"L,logerror:", "M,moduledir:", "R,resourcedir:",
+				"r,rpc:", "x,extension:", "s,storage:",
+				"S,configfile:", "V,verbose", "T,trace:");
 
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
@@ -105,32 +113,6 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		if (opt( "help")) printUsageAndExit = true;
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 2)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-			if (opt.nofargs() < 2)
-			{
-				std::cerr << _TXT("too few arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
-			}
-		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -155,6 +137,51 @@ int main( int argc_, const char* argv_[])
 				{
 					throw strus::runtime_error(_TXT("error failed to load module %s"), mi->c_str());
 				}
+			}
+		}
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cout << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() > 2)
+			{
+				std::cerr << _TXT("too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+			if (opt.nofargs() < 2)
+			{
+				std::cerr << _TXT("too few arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 2;
 			}
 		}
 		std::string storagecfg;
@@ -187,6 +214,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
 			if (!opt("rpc"))
@@ -224,6 +253,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("verbose output") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -345,57 +375,64 @@ int main( int argc_, const char* argv_[])
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
-		strus::DocumentClass documentClass;
+		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
 		// Load analyzer program(s):
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
+		std::cerr << analyzerMap.warnings();
 
 		// Start inserter process:
 		strus::utils::ScopedPtr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get(), verbose, errorBuffer.get()));
 
-		strus::FileCrawler* fileCrawler
-			= new strus::FileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
-
-		strus::utils::ScopedPtr< strus::Thread< strus::FileCrawler> >
-			fileCrawlerThread(
-				new strus::Thread< strus::FileCrawler >(
-					fileCrawler, "filecrawler"));
-		std::cout.flush();
-		fileCrawlerThread->start();
+		strus::FileCrawler fileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
+		std::auto_ptr<boost::thread> fileCrawlerThread(
+			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));
 
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
-				storage.get(), textproc, analyzerMap, commitQue.get(),
-				fileCrawler, transactionSize, verbose, errorBuffer.get());
+				storage.get(), textproc, &analyzerMap, commitQue.get(),
+				&fileCrawler, transactionSize, verbose, errorBuffer.get());
 			inserter.run();
 		}
 		else
 		{
-			std::auto_ptr< strus::ThreadGroup< strus::InsertProcessor > >
-				inserterThreads(
-					new strus::ThreadGroup<strus::InsertProcessor>( "inserter"));
-
+			std::vector<strus::Reference<strus::InsertProcessor> > processorList;
+			processorList.reserve( nofThreads);
 			for (unsigned int ti = 0; ti<nofThreads; ++ti)
 			{
-				inserterThreads->start(
+				processorList.push_back(
 					new strus::InsertProcessor(
-						storage.get(), textproc, analyzerMap, commitQue.get(),
-						fileCrawler, transactionSize, verbose, errorBuffer.get()));
+						storage.get(), textproc, &analyzerMap, commitQue.get(),
+						&fileCrawler, transactionSize, verbose, errorBuffer.get()));
 			}
-			inserterThreads->wait_termination();
+			{
+				boost::thread_group tgroup;
+				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				{
+					tgroup.create_thread( boost::bind( &strus::InsertProcessor::run, processorList[ti].get()));
+				}
+				tgroup.join_all();
+			}
 		}
-		fileCrawlerThread->wait_termination();
+		fileCrawlerThread->join();
 
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("unhandled error in insert storage"));
 		}
-		std::cerr << std::endl << "done" << std::endl;
+		if (commitQue->errors().size() > 0)
+		{
+			std::cerr << std::endl << "finished, but with " << commitQue->errors().size() << " transactions failed." << std::endl;
+		}
+		else
+		{
+			std::cerr << std::endl << "done" << std::endl;
+		}
 		if (logfile) fclose( logfile);
 		return 0;
 	}

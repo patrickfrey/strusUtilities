@@ -20,9 +20,12 @@
 #include "strus/tokenizerFunctionInterface.hpp"
 #include "strus/normalizerFunctionInterface.hpp"
 #include "strus/aggregatorFunctionInterface.hpp"
+#include "strus/patternLexerInterface.hpp"
+#include "strus/patternMatcherInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/base/cmdLineOpt.hpp"
+#include "strus/base/string_format.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -51,6 +54,8 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 		case strus::TextProcessorInterface::TokenizerFunction: label = _TXT("Tokenizer "); break;
 		case strus::TextProcessorInterface::NormalizerFunction: label = _TXT("Normalizer "); break;
 		case strus::TextProcessorInterface::AggregatorFunction: label = _TXT("Aggregator "); break;
+		case strus::TextProcessorInterface::PatternLexer: label = _TXT("PatternLexer "); break;
+		case strus::TextProcessorInterface::PatternMatcher: label = _TXT("PatternMatcher "); break;
 	};
 	std::vector<std::string> funcs;
 	std::vector<std::string>::const_iterator fi,fe;
@@ -86,6 +91,20 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 			case strus::TextProcessorInterface::AggregatorFunction:
 			{
 				const strus::AggregatorFunctionInterface* func = textproc->getAggregator( *fi);
+				if (!func) break;
+				descr = func->getDescription();
+				break;
+			}
+			case strus::TextProcessorInterface::PatternLexer:
+			{
+				const strus::PatternLexerInterface* func = textproc->getPatternLexer( *fi);
+				if (!func) break;
+				descr = func->getDescription();
+				break;
+			}
+			case strus::TextProcessorInterface::PatternMatcher:
+			{
+				const strus::PatternMatcherInterface* func = textproc->getPatternMatcher( *fi);
 				if (!func) break;
 				descr = func->getDescription();
 				break;
@@ -182,32 +201,12 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 7,
-				"h,help", "v,version", "m,module:",
-				"M,moduledir:", "R,resourcedir:", "r,rpc:",
+				argc_, argv_, 8,
+				"h,help", "v,version", "license",
+				"m,module:", "M,moduledir:", "R,resourcedir:", "r,rpc:",
 				"T,trace:");
 
 		if (opt( "help")) printUsageAndExit = true;
-		if (opt( "version"))
-		{
-			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
-			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
-			if (!printUsageAndExit) return 0;
-		}
-		else if (!printUsageAndExit)
-		{
-			if (opt.nofargs() > 2)
-			{
-				std::cerr << _TXT( "too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
-		}
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -234,7 +233,45 @@ int main( int argc_, const char* argv_[])
 				}
 			}
 		}
-
+		if (opt("license"))
+		{
+			std::vector<std::string> licenses_3rdParty = moduleLoader->get3rdPartyLicenseTexts();
+			std::vector<std::string>::const_iterator ti = licenses_3rdParty.begin(), te = licenses_3rdParty.end();
+			if (ti != te) std::cout << _TXT("3rd party licenses:") << std::endl;
+			for (; ti != te; ++ti)
+			{
+				std::cout << *ti << std::endl;
+			}
+			std::cout << std::endl;
+			if (!printUsageAndExit) return 0;
+		}
+		if (opt( "version"))
+		{
+			std::cout << _TXT("Strus utilities version ") << STRUS_UTILITIES_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus module version ") << STRUS_MODULE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus rpc version ") << STRUS_RPC_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus trace version ") << STRUS_TRACE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus analyzer version ") << STRUS_ANALYZER_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus storage version ") << STRUS_STORAGE_VERSION_STRING << std::endl;
+			std::cout << _TXT("Strus base version ") << STRUS_BASE_VERSION_STRING << std::endl;
+			std::vector<std::string> versions_3rdParty = moduleLoader->get3rdPartyVersionTexts();
+			std::vector<std::string>::const_iterator vi = versions_3rdParty.begin(), ve = versions_3rdParty.end();
+			if (vi != ve) std::cout << _TXT("3rd party versions:") << std::endl;
+			for (; vi != ve; ++vi)
+			{
+				std::cout << *vi << std::endl;
+			}
+			if (!printUsageAndExit) return 0;
+		}
+		else if (!printUsageAndExit)
+		{
+			if (opt.nofargs() > 2)
+			{
+				std::cerr << _TXT( "too many arguments") << std::endl;
+				printUsageAndExit = true;
+				rt = 1;
+			}
+		}
 		if (printUsageAndExit)
 		{
 			std::cout << _TXT("usage:") << " strusHelp [options] <what> <name>" << std::endl;
@@ -252,6 +289,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "--license" << std::endl;
+			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -262,6 +301,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
