@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">strusUtilities
-   &#160;<span id="projectnumber">0.10</span>
+   &#160;<span id="projectnumber">0.13</span>
    </div>
   </td>
  </tr>
@@ -58,13 +58,21 @@
 
 <p>Various functions to instantiate strus components from configuration programs loaded from source.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;string&gt;</code><br/>
+<div class="textblock"><code>#include &quot;strus/analyzer/documentClass.hpp&quot;</code><br/>
+<code>#include &quot;strus/index.hpp&quot;</code><br/>
+<code>#include &quot;strus/base/stdint.h&quot;</code><br/>
+<code>#include &lt;string&gt;</code><br/>
 <code>#include &lt;vector&gt;</code><br/>
+<code>#include &lt;set&gt;</code><br/>
+<code>#include &lt;map&gt;</code><br/>
 </div>
 <p><a href="programLoader_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstrus_1_1QueryDescriptors.html">strus::QueryDescriptors</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Some default settings for parsing and building the query.  <a href="structstrus_1_1QueryDescriptors.html#details">More...</a><br/></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structstrus_1_1AnalyzerMapElement.html">strus::AnalyzerMapElement</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Description of one element of an analyzer map.  <a href="structstrus_1_1AnalyzerMapElement.html#details">More...</a><br/></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -77,42 +85,51 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ad91bcc52f1fd526b856ef54e31f8a105"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#ad91bcc52f1fd526b856ef54e31f8a105">strus::loadDocumentAnalyzerProgram</a> (DocumentAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:ad91bcc52f1fd526b856ef54e31f8a105"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a document analyzer program from source.  <a href="#ad91bcc52f1fd526b856ef54e31f8a105">More...</a><br/></td></tr>
-<tr class="separator:ad91bcc52f1fd526b856ef54e31f8a105"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a257998f8c792b16e3ba7747fe11c5aa0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a257998f8c792b16e3ba7747fe11c5aa0">strus::loadQueryAnalyzerProgram</a> (QueryAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a257998f8c792b16e3ba7747fe11c5aa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a query analyzer program from source.  <a href="#a257998f8c792b16e3ba7747fe11c5aa0">More...</a><br/></td></tr>
-<tr class="separator:a257998f8c792b16e3ba7747fe11c5aa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b3cdb850c577e94e935c468d38afc01"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a2b3cdb850c577e94e935c468d38afc01">strus::loadQueryAnalyzerPhraseType</a> (QueryAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;phrasetype, const std::string &amp;featuretype, const std::string &amp;normalizersrc, const std::string &amp;tokenizersrc, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a2b3cdb850c577e94e935c468d38afc01"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a phrase type definition from its source components.  <a href="#a2b3cdb850c577e94e935c468d38afc01">More...</a><br/></td></tr>
-<tr class="separator:a2b3cdb850c577e94e935c468d38afc01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab17736a5d8508d0003040da5f6cb6512"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#ab17736a5d8508d0003040da5f6cb6512">strus::loadDocumentAnalyzerProgram</a> (DocumentAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;source, bool allowIncludes, std::ostream &amp;warnings, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:ab17736a5d8508d0003040da5f6cb6512"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a document analyzer program from source.  <a href="#ab17736a5d8508d0003040da5f6cb6512">More...</a><br/></td></tr>
+<tr class="separator:ab17736a5d8508d0003040da5f6cb6512"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8792ff139b68a606cf703dc3121ee5b8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a8792ff139b68a606cf703dc3121ee5b8">strus::loadQueryAnalyzerProgram</a> (QueryAnalyzerInterface &amp;analyzer, QueryDescriptors &amp;qdescr, const TextProcessorInterface *textproc, const std::string &amp;source, bool allowIncludes, std::ostream &amp;warnings, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a8792ff139b68a606cf703dc3121ee5b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a query analyzer program from source.  <a href="#a8792ff139b68a606cf703dc3121ee5b8">More...</a><br/></td></tr>
+<tr class="separator:a8792ff139b68a606cf703dc3121ee5b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae55f0e2ac388f36cd6c8619fcb781d24"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#ae55f0e2ac388f36cd6c8619fcb781d24">strus::isAnalyzerMapSource</a> (const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
 <tr class="memdesc:ae55f0e2ac388f36cd6c8619fcb781d24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if 'source' is most likely a source describing an analyzer map.  <a href="#ae55f0e2ac388f36cd6c8619fcb781d24">More...</a><br/></td></tr>
 <tr class="separator:ae55f0e2ac388f36cd6c8619fcb781d24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a8daefcff986cdaf50262c9b0e354fb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a0a8daefcff986cdaf50262c9b0e354fb">strus::loadAnalyzerMap</a> (std::vector&lt; AnalyzerMapElement &gt; &amp;mapdef, const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
 <tr class="memdesc:a0a8daefcff986cdaf50262c9b0e354fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a map of definitions describing how different document types are mapped to an analyzer program.  <a href="#a0a8daefcff986cdaf50262c9b0e354fb">More...</a><br/></td></tr>
 <tr class="separator:a0a8daefcff986cdaf50262c9b0e354fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a94c408e2a3a2997f1557a19489368050"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a94c408e2a3a2997f1557a19489368050">strus::loadQueryEvalProgram</a> (QueryEvalInterface &amp;qeval, const QueryProcessorInterface *qproc, const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a94c408e2a3a2997f1557a19489368050"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a query evaluation program from source.  <a href="#a94c408e2a3a2997f1557a19489368050">More...</a><br/></td></tr>
-<tr class="separator:a94c408e2a3a2997f1557a19489368050"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ea5e58cd742d444c7d56a06642908c7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a8ea5e58cd742d444c7d56a06642908c7">strus::loadQuery</a> (QueryInterface &amp;query, const QueryAnalyzerInterface *analyzer, const QueryProcessorInterface *qproc, const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a8ea5e58cd742d444c7d56a06642908c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a query from source (query language)  <a href="#a8ea5e58cd742d444c7d56a06642908c7">More...</a><br/></td></tr>
-<tr class="separator:a8ea5e58cd742d444c7d56a06642908c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bcc86bc935dfede4346a5811764f88a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a3bcc86bc935dfede4346a5811764f88a">strus::loadQueryEvalProgram</a> (QueryEvalInterface &amp;qeval, QueryDescriptors &amp;qdescr, const QueryProcessorInterface *qproc, const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a3bcc86bc935dfede4346a5811764f88a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a query evaluation program from source.  <a href="#a3bcc86bc935dfede4346a5811764f88a">More...</a><br/></td></tr>
+<tr class="separator:a3bcc86bc935dfede4346a5811764f88a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3ae7a430f337b1d2ac6a2aa098fb71f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#ab3ae7a430f337b1d2ac6a2aa098fb71f">strus::loadQuery</a> (QueryInterface &amp;query, const QueryAnalyzerInterface *analyzer, const QueryProcessorInterface *qproc, const std::string &amp;source, const QueryDescriptors &amp;qdescr, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:ab3ae7a430f337b1d2ac6a2aa098fb71f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a query from source (query language)  <a href="#ab3ae7a430f337b1d2ac6a2aa098fb71f">More...</a><br/></td></tr>
+<tr class="separator:ab3ae7a430f337b1d2ac6a2aa098fb71f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcf0bda4743606823af4d67dff0a4f6f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#adcf0bda4743606823af4d67dff0a4f6f">strus::loadPhraseAnalyzer</a> (QueryAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;normalizersrc, const std::string &amp;tokenizersrc, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:adcf0bda4743606823af4d67dff0a4f6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load a simple query analyzer config for one field (name "") producing one feature type ("")  <a href="#adcf0bda4743606823af4d67dff0a4f6f">More...</a><br/></td></tr>
+<tr class="separator:adcf0bda4743606823af4d67dff0a4f6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4176074a811b447a92cf49bcb9e71e4b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a4176074a811b447a92cf49bcb9e71e4b">strus::scanNextProgram</a> (std::string &amp;segment, std::string::const_iterator &amp;itr, const std::string::const_iterator &amp;end, ErrorBufferInterface *errorhnd)</td></tr>
 <tr class="memdesc:a4176074a811b447a92cf49bcb9e71e4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scan a source for the next program segment in a source that contains multiple programs. The programs are separated by "\r\n.\r\n" or "\n.\n". No escaping of this sequence possible.  <a href="#a4176074a811b447a92cf49bcb9e71e4b">More...</a><br/></td></tr>
 <tr class="separator:a4176074a811b447a92cf49bcb9e71e4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba06c4f42496f638a2013a15f9c2de63"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#aba06c4f42496f638a2013a15f9c2de63">strus::loadDocumentMetaDataAssignments</a> (StorageClientInterface &amp;storage, const std::string &amp;metadataName, const std::string &amp;file, unsigned int commitsize, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:aba06c4f42496f638a2013a15f9c2de63"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load some meta data assignments for a storage from a stream.  <a href="#aba06c4f42496f638a2013a15f9c2de63">More...</a><br/></td></tr>
-<tr class="separator:aba06c4f42496f638a2013a15f9c2de63"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24d0d09698889f14a1cde6ce29423dab"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a24d0d09698889f14a1cde6ce29423dab">strus::loadDocumentAttributeAssignments</a> (StorageClientInterface &amp;storage, const std::string &amp;attributeName, const std::string &amp;file, unsigned int commitsize, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a24d0d09698889f14a1cde6ce29423dab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load some attribute assignments for a storage from a stream.  <a href="#a24d0d09698889f14a1cde6ce29423dab">More...</a><br/></td></tr>
-<tr class="separator:a24d0d09698889f14a1cde6ce29423dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d641ac16251625126db01c15368556b"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a5d641ac16251625126db01c15368556b">strus::loadDocumentUserRightsAssignments</a> (StorageClientInterface &amp;storage, const std::string &amp;file, unsigned int commitsize, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a5d641ac16251625126db01c15368556b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load some user rights assignments for a storage from a stream.  <a href="#a5d641ac16251625126db01c15368556b">More...</a><br/></td></tr>
-<tr class="separator:a5d641ac16251625126db01c15368556b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8713be5d9c9f03b539ee4055573a0270"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a8713be5d9c9f03b539ee4055573a0270">strus::parseDocumentClass</a> (DocumentClass &amp;result, const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
-<tr class="memdesc:a8713be5d9c9f03b539ee4055573a0270"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses a document class from a declaration like 'content="application/xml"; charset=UTF-8"'.  <a href="#a8713be5d9c9f03b539ee4055573a0270">More...</a><br/></td></tr>
-<tr class="separator:a8713be5d9c9f03b539ee4055573a0270"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26b52d5233d28065fa06fa337f466e0e"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a26b52d5233d28065fa06fa337f466e0e">strus::loadDocumentMetaDataAssignments</a> (StorageClientInterface &amp;storage, const std::string &amp;metadataName, const std::multimap&lt; std::string, strus::Index &gt; *attributemapref, const std::string &amp;file, unsigned int commitsize, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a26b52d5233d28065fa06fa337f466e0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load some meta data assignments for a storage from a stream.  <a href="#a26b52d5233d28065fa06fa337f466e0e">More...</a><br/></td></tr>
+<tr class="separator:a26b52d5233d28065fa06fa337f466e0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:accebc70cecdda8195ce2630aeb9adddf"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#accebc70cecdda8195ce2630aeb9adddf">strus::loadDocumentAttributeAssignments</a> (StorageClientInterface &amp;storage, const std::string &amp;attributeName, const std::multimap&lt; std::string, strus::Index &gt; *attributemapref, const std::string &amp;file, unsigned int commitsize, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:accebc70cecdda8195ce2630aeb9adddf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load some attribute assignments for a storage from a stream.  <a href="#accebc70cecdda8195ce2630aeb9adddf">More...</a><br/></td></tr>
+<tr class="separator:accebc70cecdda8195ce2630aeb9adddf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e4cb223c5e326d78ef241799196a80c"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a2e4cb223c5e326d78ef241799196a80c">strus::loadDocumentUserRightsAssignments</a> (StorageClientInterface &amp;storage, const std::multimap&lt; std::string, strus::Index &gt; *attributemapref, const std::string &amp;file, unsigned int commitsize, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a2e4cb223c5e326d78ef241799196a80c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load some user rights assignments for a storage from a stream.  <a href="#a2e4cb223c5e326d78ef241799196a80c">More...</a><br/></td></tr>
+<tr class="separator:a2e4cb223c5e326d78ef241799196a80c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab396cf48e1a280e8fe00cd20a2500a70"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#ab396cf48e1a280e8fe00cd20a2500a70">strus::parseDocumentClass</a> (analyzer::DocumentClass &amp;result, const std::string &amp;source, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:ab396cf48e1a280e8fe00cd20a2500a70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses a document class from a declaration like 'content="application/xml"; charset=UTF-8"'.  <a href="#ab396cf48e1a280e8fe00cd20a2500a70">More...</a><br/></td></tr>
+<tr class="separator:ab396cf48e1a280e8fe00cd20a2500a70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f9de377a99129c479c1c3e9eb0a88d9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a8f9de377a99129c479c1c3e9eb0a88d9">strus::loadVectorStorageVectors</a> (VectorStorageClientInterface *vstorage, const std::string &amp;vectorfile, ErrorBufferInterface *errorhnd)</td></tr>
+<tr class="memdesc:a8f9de377a99129c479c1c3e9eb0a88d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds the feature definitions in the file with path vectorfile to a vector storage.  <a href="#a8f9de377a99129c479c1c3e9eb0a88d9">More...</a><br/></td></tr>
+<tr class="separator:a8f9de377a99129c479c1c3e9eb0a88d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bba25a8e57d7d066c08f69d325ffbf3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a6bba25a8e57d7d066c08f69d325ffbf3">strus::loadPatternMatcherProgramWithLexer</a> (PatternLexerInstanceInterface *lexer, PatternMatcherInstanceInterface *matcher, const std::string &amp;source, ErrorBufferInterface *errorhnd, std::vector&lt; std::string &gt; &amp;warnings)</td></tr>
+<tr class="memdesc:a6bba25a8e57d7d066c08f69d325ffbf3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads and compiles a list of pattern matcher programs from source and instruments a lexer and a matcher instance with it.  <a href="#a6bba25a8e57d7d066c08f69d325ffbf3">More...</a><br/></td></tr>
+<tr class="separator:a6bba25a8e57d7d066c08f69d325ffbf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a78978ceade749384e816394471d23c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestrus.html#a6a78978ceade749384e816394471d23c">strus::loadPatternMatcherProgramWithFeeder</a> (PatternTermFeederInstanceInterface *feeder, PatternMatcherInstanceInterface *matcher, const std::string &amp;source, ErrorBufferInterface *errorhnd, std::vector&lt; std::string &gt; &amp;warnings)</td></tr>
+<tr class="memdesc:a6a78978ceade749384e816394471d23c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads and compiles a list of pattern matcher programs from source and instruments a term feeder for pattern matching as analyzer post processing and a matcher instance.  <a href="#a6a78978ceade749384e816394471d23c">More...</a><br/></td></tr>
+<tr class="separator:a6a78978ceade749384e816394471d23c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Various functions to instantiate strus components from configuration programs loaded from source. </p>
@@ -120,7 +137,7 @@ Functions</h2></td></tr>
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Jul 6 2016 10:44:21 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Feb 6 2017 18:11:44 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
