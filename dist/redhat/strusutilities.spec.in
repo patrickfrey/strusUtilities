@@ -279,6 +279,15 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Mon Feb 6 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.13.0-0.1
+- adapt interface changes in strus analyzer and strus core
+- new program strusPatternSerialize to serialize patterns in a pattern match program
+- new program strusInspectVectorStorage for inspecting a vector storage
+- new program strusBuildVectorStorage for building a vector storage from file
+- new program strusCreateVectorStorage for create a vector storage
+- strusUpdateStorage allows addressing documents to update by attribute name
+- many build fixes
+
 * Sat Oct 1 2016 Patrick Frey <patrickpfrey@yahoo.com> 0.12.0-0.1
 - adapt interface changes in strus analyzer
 
