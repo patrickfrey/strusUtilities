@@ -2343,6 +2343,7 @@ static void print_value_seq( const void* sq, unsigned int sqlen)
 static void loadVectorStorageVectors_word2vecBin( 
 		VectorStorageClientInterface* client,
 		const std::string& vectorfile,
+		bool networkOrder,
 		ErrorBufferInterface* errorhnd)
 {
 	unsigned int linecnt = 0;
@@ -2412,15 +2413,31 @@ static void loadVectorStorageVectors_word2vecBin(
 			std::vector<double> vec;
 			vec.reserve( vecsize);
 			unsigned int ii = 0;
-			for (; ii < vecsize; ii++)
+			if (networkOrder)
 			{
-				float_net_t val;
+				for (; ii < vecsize; ii++)
+				{
+					float_net_t val;
 #ifdef STRUS_LOWLEVEL_DEBUG
-				print_value_seq( si, sizeof( float));
+					print_value_seq( si, sizeof( float));
 #endif
-				std::memcpy( (void*)&val, si, sizeof( val));
-				si += sizeof( float);
-				vec.push_back( ByteOrder<float>::ntoh( val));
+					std::memcpy( (void*)&val, si, sizeof( val));
+					si += sizeof( float);
+					vec.push_back( ByteOrder<float>::ntoh( val));
+				}
+			}
+			else
+			{
+				for (; ii < vecsize; ii++)
+				{
+					float val;
+#ifdef STRUS_LOWLEVEL_DEBUG
+					print_value_seq( si, sizeof( float));
+#endif
+					std::memcpy( (void*)&val, si, sizeof( val));
+					si += sizeof( float);
+					vec.push_back( val);
+				}
 			}
 #ifdef STRUS_LOWLEVEL_DEBUG
 			printf("\n");
@@ -2579,6 +2596,7 @@ static void loadVectorStorageVectors_word2vecText(
 DLL_PUBLIC bool strus::loadVectorStorageVectors( 
 		VectorStorageClientInterface* client,
 		const std::string& vectorfile,
+		bool networkOrder,
 		ErrorBufferInterface* errorhnd)
 {
 	char const* filetype = 0;
@@ -2592,7 +2610,7 @@ DLL_PUBLIC bool strus::loadVectorStorageVectors(
 		else
 		{
 			filetype = "word2vec binary file";
-			loadVectorStorageVectors_word2vecBin( client, vectorfile, errorhnd);
+			loadVectorStorageVectors_word2vecBin( client, vectorfile, networkOrder, errorhnd);
 		}
 		return true;
 	}
