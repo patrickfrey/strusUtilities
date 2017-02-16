@@ -56,10 +56,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 10,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "f,file:" );
+				"s,config:", "S,configfile:", "P,portable",
+				"f,file:" );
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -131,6 +132,7 @@ int main( int argc, const char* argv[])
 		}
 		std::string config;
 		int nof_config = 0;
+		bool portable = opt("portable");
 		if (opt("configfile"))
 		{
 			nof_config += 1;
@@ -178,6 +180,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
+			std::cout << "-P|--portable" << std::endl;
+			std::cout << "    " << _TXT("Tell the loader that the vector values are stored in a portable way (hton)") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -242,7 +246,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::loadVectorStorageVectors( storage.get(), *fi, g_errorBuffer))
+			if (!strus::loadVectorStorageVectors( storage.get(), *fi, portable, g_errorBuffer))
 			{
 				throw strus::runtime_error(_TXT("failed to load input"));
 			}

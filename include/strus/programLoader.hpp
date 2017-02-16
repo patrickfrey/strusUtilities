@@ -257,11 +257,13 @@ bool parseDocumentClass(
 /// \brief Adds the feature definitions in the file with path vectorfile to a vector storage
 /// \param[in] vstorage vector storage object where to add the loaded vectors to
 /// \param[in] vectorfile Path of the file to parse, either a google binary vector file format or text
+/// \param[in] networkOrder true, if the vector elements are stored in platform independent network order (hton).
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success
 bool loadVectorStorageVectors( 
 		VectorStorageClientInterface* vstorage,
 		const std::string& vectorfile,
+		bool networkOrder,
 		ErrorBufferInterface* errorhnd);
 
 /// \brief Loads and compiles a list of pattern matcher programs from source and instruments a lexer and a matcher instance with it

@@ -14,7 +14,6 @@ Programs for analyzer configuration:
 ------------------------------------
 * [Load document analyzer program](@ref strus::loadDocumentAnalyzerProgram)
 * [Load query analyzer program](@ref strus::loadQueryAnalyzerProgram)
-* [Define a phrase type for the query analyzer by its subparts](@ref strus::loadQueryAnalyzerPhraseType)
 
 Programs for query evaluation configuration:
 --------------------------------------------
@@ -33,5 +32,15 @@ Loading storage contents from file:
 * [Load meta data assignments from file](@ref strus::loadDocumentMetaDataAssignments)
 * [Load document attribute assignments from file](@ref strus::loadDocumentAttributeAssignments)
 * [Load user right assignments from file](@ref strus::loadDocumentUserRightsAssignments)
+
+Loading vectors:
+----------------
+* [Load word2vec vectors from file](@ref strus::loadVectorStorageVectors)
+
+Loading pattern matcher programs from file:
+-------------------------------------------
+* [Load patterns with lexer (pre processing) from file](@ref strus::loadPatternMatcherProgramWithLexer)
+* [Load patterns with feeder (post processing) from file](@ref strus::loadPatternMatcherProgramWithFeeder)
+
 
 
