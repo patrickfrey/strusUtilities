@@ -611,7 +611,7 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusAnalyze [options] <program> <queryfile>" << std::endl;
+			std::cout << _TXT("usage:") << " strusAnalyzeQuery [options] <program> <queryfile>" << std::endl;
 			std::cout << "<program>   = " << _TXT("path of analyzer program") << std::endl;
 			std::cout << "<queryfile> = " << _TXT("path of query content to analyze ('-' for stdin)") << std::endl;
 			std::cout << _TXT("description: Analyzes a query and dumps the result to stdout.") << std::endl;
