@@ -19,7 +19,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">strusUtilities
-   &#160;<span id="projectnumber">0.13</span>
+   &#160;<span id="projectnumber">0.14</span>
    </div>
   </td>
  </tr>
@@ -201,32 +201,32 @@
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                <span class="keyword">const</span> std::string&amp; source,</div>
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;                ErrorBufferInterface* errorhnd);</div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a8f9de377a99129c479c1c3e9eb0a88d9">loadVectorStorageVectors</a>( </div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                VectorStorageClientInterface* vstorage,</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;                <span class="keyword">const</span> std::string&amp; vectorfile,</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;                ErrorBufferInterface* errorhnd);</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a6bba25a8e57d7d066c08f69d325ffbf3">loadPatternMatcherProgramWithLexer</a>(</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;                PatternLexerInstanceInterface* lexer,</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;                PatternMatcherInstanceInterface* matcher,</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;                <span class="keyword">const</span> std::string&amp; source,</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                ErrorBufferInterface* errorhnd,</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;                std::vector&lt;std::string&gt;&amp; warnings);</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a6a78978ceade749384e816394471d23c">loadPatternMatcherProgramWithFeeder</a>(</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;                PatternTermFeederInstanceInterface* feeder,</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;                PatternMatcherInstanceInterface* matcher,</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;                <span class="keyword">const</span> std::string&amp; source,</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;                ErrorBufferInterface* errorhnd,</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;                std::vector&lt;std::string&gt;&amp; warnings);</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;}<span class="comment">//namespace</span></div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a0ecea8c05967b7837f4115388f715631">loadVectorStorageVectors</a>( </div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;                VectorStorageClientInterface* vstorage,</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;                <span class="keyword">const</span> std::string&amp; vectorfile,</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;                <span class="keywordtype">bool</span> networkOrder,</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                ErrorBufferInterface* errorhnd);</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a6bba25a8e57d7d066c08f69d325ffbf3">loadPatternMatcherProgramWithLexer</a>(</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;                PatternLexerInstanceInterface* lexer,</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                PatternMatcherInstanceInterface* matcher,</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;                <span class="keyword">const</span> std::string&amp; source,</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;                ErrorBufferInterface* errorhnd,</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;                std::vector&lt;std::string&gt;&amp; warnings);</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;<span class="keywordtype">bool</span> <a class="code" href="namespacestrus.html#a6a78978ceade749384e816394471d23c">loadPatternMatcherProgramWithFeeder</a>(</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;                PatternTermFeederInstanceInterface* feeder,</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;                PatternMatcherInstanceInterface* matcher,</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;                <span class="keyword">const</span> std::string&amp; source,</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;                ErrorBufferInterface* errorhnd,</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;                std::vector&lt;std::string&gt;&amp; warnings);</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;}<span class="comment">//namespace</span></div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;<span class="preprocessor"></span></div>
 <div class="ttc" id="namespacestrus_html_a0a8daefcff986cdaf50262c9b0e354fb"><div class="ttname"><a href="namespacestrus.html#a0a8daefcff986cdaf50262c9b0e354fb">strus::loadAnalyzerMap</a></div><div class="ttdeci">bool loadAnalyzerMap(std::vector&lt; AnalyzerMapElement &gt; &amp;mapdef, const std::string &amp;source, ErrorBufferInterface *errorhnd)</div><div class="ttdoc">Load a map of definitions describing how different document types are mapped to an analyzer program...</div></div>
 <div class="ttc" id="namespacestrus_html_adcf0bda4743606823af4d67dff0a4f6f"><div class="ttname"><a href="namespacestrus.html#adcf0bda4743606823af4d67dff0a4f6f">strus::loadPhraseAnalyzer</a></div><div class="ttdeci">bool loadPhraseAnalyzer(QueryAnalyzerInterface &amp;analyzer, const TextProcessorInterface *textproc, const std::string &amp;normalizersrc, const std::string &amp;tokenizersrc, ErrorBufferInterface *errorhnd)</div><div class="ttdoc">Load a simple query analyzer config for one field (name &quot;&quot;) producing one feature type (&quot;&quot;) ...</div></div>
 <div class="ttc" id="namespacestrus_html_a4176074a811b447a92cf49bcb9e71e4b"><div class="ttname"><a href="namespacestrus.html#a4176074a811b447a92cf49bcb9e71e4b">strus::scanNextProgram</a></div><div class="ttdeci">bool scanNextProgram(std::string &amp;segment, std::string::const_iterator &amp;itr, const std::string::const_iterator &amp;end, ErrorBufferInterface *errorhnd)</div><div class="ttdoc">Scan a source for the next program segment in a source that contains multiple programs. The programs are separated by &quot;\r\n.\r\n&quot; or &quot;\n.\n&quot;. No escaping of this sequence possible. </div></div>
-<div class="ttc" id="namespacestrus_html_a8f9de377a99129c479c1c3e9eb0a88d9"><div class="ttname"><a href="namespacestrus.html#a8f9de377a99129c479c1c3e9eb0a88d9">strus::loadVectorStorageVectors</a></div><div class="ttdeci">bool loadVectorStorageVectors(VectorStorageClientInterface *vstorage, const std::string &amp;vectorfile, ErrorBufferInterface *errorhnd)</div><div class="ttdoc">Adds the feature definitions in the file with path vectorfile to a vector storage. </div></div>
 <div class="ttc" id="namespacestrus_html_a3bcc86bc935dfede4346a5811764f88a"><div class="ttname"><a href="namespacestrus.html#a3bcc86bc935dfede4346a5811764f88a">strus::loadQueryEvalProgram</a></div><div class="ttdeci">bool loadQueryEvalProgram(QueryEvalInterface &amp;qeval, QueryDescriptors &amp;qdescr, const QueryProcessorInterface *qproc, const std::string &amp;source, ErrorBufferInterface *errorhnd)</div><div class="ttdoc">Load a query evaluation program from source. </div></div>
 <div class="ttc" id="structstrus_1_1AnalyzerMapElement_html"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html">strus::AnalyzerMapElement</a></div><div class="ttdoc">Description of one element of an analyzer map. </div><div class="ttdef"><b>Definition:</b> programLoader.hpp:109</div></div>
 <div class="ttc" id="structstrus_1_1QueryDescriptors_html_af11e15cd157ecbe30223747800955116"><div class="ttname"><a href="structstrus_1_1QueryDescriptors.html#af11e15cd157ecbe30223747800955116">strus::QueryDescriptors::QueryDescriptors</a></div><div class="ttdeci">QueryDescriptors()</div><div class="ttdef"><b>Definition:</b> programLoader.hpp:63</div></div>
@@ -241,6 +241,7 @@
 <div class="ttc" id="namespacestrus_html_a2e4cb223c5e326d78ef241799196a80c"><div class="ttname"><a href="namespacestrus.html#a2e4cb223c5e326d78ef241799196a80c">strus::loadDocumentUserRightsAssignments</a></div><div class="ttdeci">unsigned int loadDocumentUserRightsAssignments(StorageClientInterface &amp;storage, const std::multimap&lt; std::string, strus::Index &gt; *attributemapref, const std::string &amp;file, unsigned int commitsize, ErrorBufferInterface *errorhnd)</div><div class="ttdoc">Load some user rights assignments for a storage from a stream. </div></div>
 <div class="ttc" id="structstrus_1_1QueryDescriptors_html_a1dad45136bc009d88ae4dd1aec9aae47"><div class="ttname"><a href="structstrus_1_1QueryDescriptors.html#a1dad45136bc009d88ae4dd1aec9aae47">strus::QueryDescriptors::defaultFieldType</a></div><div class="ttdeci">std::string defaultFieldType</div><div class="ttdoc">default field type name if not explicitely specified </div><div class="ttdef"><b>Definition:</b> programLoader.hpp:57</div></div>
 <div class="ttc" id="structstrus_1_1AnalyzerMapElement_html_aa30302aa77f75d72081424cb2fac80f6"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6">strus::AnalyzerMapElement::segmenter</a></div><div class="ttdeci">std::string segmenter</div><div class="ttdoc">segmenter to use </div><div class="ttdef"><b>Definition:</b> programLoader.hpp:118</div></div>
+<div class="ttc" id="namespacestrus_html_a0ecea8c05967b7837f4115388f715631"><div class="ttname"><a href="namespacestrus.html#a0ecea8c05967b7837f4115388f715631">strus::loadVectorStorageVectors</a></div><div class="ttdeci">bool loadVectorStorageVectors(VectorStorageClientInterface *vstorage, const std::string &amp;vectorfile, bool networkOrder, ErrorBufferInterface *errorhnd)</div><div class="ttdoc">Adds the feature definitions in the file with path vectorfile to a vector storage. </div></div>
 <div class="ttc" id="structstrus_1_1QueryDescriptors_html_a0c97ce668d0169aea15f49d2f7145e38"><div class="ttname"><a href="structstrus_1_1QueryDescriptors.html#a0c97ce668d0169aea15f49d2f7145e38">strus::QueryDescriptors::defaultSelectionJoin</a></div><div class="ttdeci">std::string defaultSelectionJoin</div><div class="ttdoc">default operator used to join terms for selection </div><div class="ttdef"><b>Definition:</b> programLoader.hpp:61</div></div>
 <div class="ttc" id="structstrus_1_1AnalyzerMapElement_html_a37361cdd3b4beb857dd59095449d2f64"><div class="ttname"><a href="structstrus_1_1AnalyzerMapElement.html#a37361cdd3b4beb857dd59095449d2f64">strus::AnalyzerMapElement::AnalyzerMapElement</a></div><div class="ttdeci">AnalyzerMapElement()</div><div class="ttdef"><b>Definition:</b> programLoader.hpp:111</div></div>
 <div class="ttc" id="namespacestrus_html_ab396cf48e1a280e8fe00cd20a2500a70"><div class="ttname"><a href="namespacestrus.html#ab396cf48e1a280e8fe00cd20a2500a70">strus::parseDocumentClass</a></div><div class="ttdeci">bool parseDocumentClass(analyzer::DocumentClass &amp;result, const std::string &amp;source, ErrorBufferInterface *errorhnd)</div><div class="ttdoc">Parses a document class from a declaration like &#39;content=&quot;application/xml&quot;; charset=UTF-8"&#39;. </div></div>
@@ -257,7 +258,7 @@
 <!-- HTML footer for doxygen 1.8.6-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Feb 6 2017 18:11:44 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 16 2017 12:30:10 for strusUtilities by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
