@@ -34,7 +34,7 @@ link_directories(
 # PROGRAMS
 # ------------------------------
 add_executable( strusQuery ${source_files} )
-target_link_libraries( strusQuery strus_storage_objbuild strus_private_utils strus_program strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
+target_link_libraries( strusQuery strus_storage_objbuild strusutilities_private_utils strus_program strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )

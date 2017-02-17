@@ -28,7 +28,7 @@ link_directories(
 # PROGRAMS
 # -------------------------------------------
 add_executable( strusPatternSerialize  strusPatternSerialize.cpp )
-target_link_libraries( strusPatternSerialize  strus_private_utils strus_private_utils  ${strusanalyzer_LIBRARIES}  ${strusmodule_LIBRARIES} strus_program strus_base strus_error  strus_pattern_serialize strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusPatternSerialize  strusutilities_private_utils strusutilities_private_utils  ${strusanalyzer_LIBRARIES}  ${strusmodule_LIBRARIES} strus_program strus_base strus_error  strus_pattern_serialize strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )
