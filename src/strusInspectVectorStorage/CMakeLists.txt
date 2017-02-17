@@ -14,6 +14,7 @@ include_directories(
 	    "${strusbase_INCLUDE_DIRS}"
 	    "${strustrace_INCLUDE_DIRS}"
 	    "${strus_INCLUDE_DIRS}"
+	    "${strusanalyzer_INCLUDE_DIRS}"
 	    "${strusmodule_INCLUDE_DIRS}"
 	    "${strusrpc_INCLUDE_DIRS}"	    
 )

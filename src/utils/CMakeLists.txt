@@ -9,6 +9,8 @@ include_directories(
 	"${strusbase_INCLUDE_DIRS}"
 	"${strus_INCLUDE_DIRS}"
 	"${strusanalyzer_INCLUDE_DIRS}"
+	"${strustrace_INCLUDE_DIRS}"
+	"${strusmodule_INCLUDE_DIRS}"
 )
 link_directories(
 	"${PROJECT_SOURCE_DIR}/utils" 
