@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR )
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 
 # --------------------------------------
 # SOURCES AND INCLUDES
@@ -35,7 +35,7 @@ link_directories(
 # LIBRARIES
 # -------------------------------------------
 add_library( strus_program SHARED ${source_files} )
-target_link_libraries( strus_program strus_private_utils "${Boost_LIBRARIES}"  strus_base strus_error strus_module strus_pattern_serialize strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES} )
+target_link_libraries( strus_program strusutilities_private_utils "${Boost_LIBRARIES}"  strus_base strus_error strus_module strus_pattern_serialize strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES} )
 
 set_target_properties(
     strus_program

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 # --------------------------------------
 # SOURCES AND INCLUDES
@@ -8,6 +8,7 @@ include_directories(
 	"${Intl_INCLUDE_DIRS}"
 	"${PROJECT_SOURCE_DIR}/include"
 	"${strusbase_INCLUDE_DIRS}"
+	"${strus_INCLUDE_DIRS}"
 	"${strusanalyzer_INCLUDE_DIRS}"
 	"${strustrace_INCLUDE_DIRS}"
 	"${strusmodule_INCLUDE_DIRS}"
@@ -28,7 +29,7 @@ link_directories(
 # PROGRAMS
 # -------------------------------------------
 add_executable( strusPatternMatcher  strusPatternMatcher.cpp )
-target_link_libraries( strusPatternMatcher  strus_private_utils strus_private_utils  ${strusmodule_LIBRARIES} strus_program strus_base strus_error strus_markup_std strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusPatternMatcher  strusutilities_private_utils strusutilities_private_utils  ${strusmodule_LIBRARIES} strus_program strus_base strus_error strus_markup_std strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )
