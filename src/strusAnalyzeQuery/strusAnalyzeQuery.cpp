@@ -256,6 +256,13 @@ public:
 #endif
 	}
 
+	virtual void setDebugMode( bool debug)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::string_format( _TXT( "called setDebugMode %u"), debug) << std::endl;
+#endif
+	}
+
 	virtual strus::QueryResult evaluate()
 	{
 		return strus::QueryResult();
