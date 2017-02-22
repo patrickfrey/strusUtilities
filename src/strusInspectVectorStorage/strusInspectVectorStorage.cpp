@@ -287,7 +287,7 @@ public:
 			double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
 			insertResultSet( reslist, maxNofResults, sim, fidx);
 		}
-		return std::vector<Result>( reslist.begin(), reslist.end());
+		return std::vector<Result>( reslist.rbegin(), reslist.rend());
 	}
 
 	virtual std::vector<Result> findSimilarFromSelection( const std::vector<strus::Index>& candidates, const std::vector<double>& vec, unsigned int maxNofResults) const
@@ -303,7 +303,7 @@ public:
 				insertResultSet( reslist, maxNofResults, sim, *ci);
 			}
 		}
-		return std::vector<Result>( reslist.begin(), reslist.end());
+		return std::vector<Result>( reslist.rbegin(), reslist.rend());
 	}
 
 	virtual void close(){}
