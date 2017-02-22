@@ -285,7 +285,10 @@ public:
 		{
 			std::vector<double> candidate_vec = vsmodel->featureVector( fidx);
 			double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
-			insertResultSet( reslist, maxNofResults, sim, fidx);
+			if (sim > 0.7)
+			{
+				insertResultSet( reslist, maxNofResults, sim, fidx);
+			}
 		}
 		return std::vector<Result>( reslist.rbegin(), reslist.rend());
 	}
