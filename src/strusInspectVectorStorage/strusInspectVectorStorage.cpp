@@ -254,11 +254,72 @@ static std::vector<double> subVector( const std::vector<double>& arg1, const std
 	return rt;
 }
 
+class VectorStorageSearchCosimReal
+	:public strus::VectorStorageSearchInterface
+{
+public:
+	VectorStorageSearchCosimReal( const strus::VectorStorageClientInterface* vsmodel_, const strus::Index& range_from_, const strus::Index& range_to_)
+		:vsmodel(vsmodel_),range_from(range_from_),range_to(range_to_){}
+	virtual ~VectorStorageSearchCosimReal(){}
+
+	static void insertResultSet( std::set<Result>& reslist, unsigned int maxNofResults, double sim, const strus::Index& fidx)
+	{
+		if (reslist.size() >= maxNofResults)
+		{
+			if (reslist.rbegin()->weight() < sim)
+			{
+				reslist.insert( Result( fidx, sim));
+				reslist.erase( reslist.begin());
+			}
+		}
+		else
+		{
+			reslist.insert( Result( fidx, sim));
+		}
+	}
+
+	virtual std::vector<Result> findSimilar( const std::vector<double>& vec, unsigned int maxNofResults) const
+	{
+		std::set<Result> reslist;
+		for (strus::Index fidx=range_from; fidx<range_to; ++fidx)
+		{
+			std::vector<double> candidate_vec = vsmodel->featureVector( fidx);
+			double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
+			insertResultSet( reslist, maxNofResults, sim, fidx);
+		}
+		return std::vector<Result>( reslist.begin(), reslist.end());
+	}
+
+	virtual std::vector<Result> findSimilarFromSelection( const std::vector<strus::Index>& candidates, const std::vector<double>& vec, unsigned int maxNofResults) const
+	{
+		std::set<Result> reslist;
+		std::vector<strus::Index>::const_iterator ci = candidates.begin(), ce = candidates.end();
+		for (; ci != ce; ++ci)
+		{
+			if (*ci >= range_from && *ci < range_to)
+			{
+				std::vector<double> candidate_vec = vsmodel->featureVector( *ci);
+				double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
+				insertResultSet( reslist, maxNofResults, sim, *ci);
+			}
+		}
+		return std::vector<Result>( reslist.begin(), reslist.end());
+	}
+
+	virtual void close(){}
+
+private:
+	const strus::VectorStorageClientInterface* vsmodel;
+	strus::Index range_from;
+	strus::Index range_to;
+};
+
+
 class FindSimProcess
 {
 public:
-	FindSimProcess( const strus::VectorStorageClientInterface* vsmodel, const strus::Index& range_from, const strus::Index& range_to)
-		:m_searcher( vsmodel->createSearcher( range_from, range_to)){}
+	explicit FindSimProcess( strus::VectorStorageSearchInterface* searcher_)
+		:m_searcher( searcher_){}
 	FindSimProcess( const FindSimProcess& o)
 		:m_searcher(o.m_searcher),m_feats(o.m_feats){}
 
@@ -277,7 +338,7 @@ private:
 	std::vector<strus::VectorStorageSearchInterface::Result> m_feats;
 };
 
-static void inspectVectorOperations( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration, bool withWeights)
+static void inspectVectorOperations( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration, bool withWeights, bool withRealSimilarityMeasure)
 {
 	if (inspectargsize == 0) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
 	std::size_t argidx=0;
@@ -302,7 +363,15 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 	if (nofThreads == 0)
 	{
 		double startTime = 0.0;
-		strus::Reference<strus::VectorStorageSearchInterface> searcher( vsmodel->createSearcher( 0, std::numeric_limits<strus::Index>::max()));
+		strus::Reference<strus::VectorStorageSearchInterface> searcher;
+		if (withRealSimilarityMeasure)
+		{
+			searcher.reset( new VectorStorageSearchCosimReal( vsmodel, 0, vsmodel->nofFeatures()));
+		}
+		else
+		{
+			searcher.reset( vsmodel->createSearcher( 0, vsmodel->nofFeatures()));
+		}
 		if (doMeasureDuration)
 		{
 			startTime = getTimeStamp();
@@ -323,9 +392,15 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 		unsigned int ti = 0, te = nofThreads;
 		for (unsigned int range_from=0; ti != te; ++ti,range_from+=chunksize)
 		{
-			procar.push_back( FindSimProcess( vsmodel, range_from, range_from + chunksize));
+			if (withRealSimilarityMeasure)
+			{
+				procar.push_back( FindSimProcess( new VectorStorageSearchCosimReal( vsmodel, range_from, range_from + chunksize)));
+			}
+			else
+			{
+				procar.push_back( FindSimProcess( vsmodel->createSearcher( range_from, range_from + chunksize)));
+			}
 		}
-
 		if (doMeasureDuration)
 		{
 			startTime = getTimeStamp();
@@ -581,34 +656,6 @@ static void inspectNofFeatures( const strus::VectorStorageClientInterface* vsmod
 	std::cout << vsmodel->nofFeatures() << std::endl;
 }
 
-static double vector_norm( std::vector<double> vec)
-{
-	double normA = 0.0;
-	std::vector<double>::const_iterator vi = vec.begin(), ve = vec.end();
-	for (; vi != ve; ++vi)
-	{
-		normA += *vi * *vi;
-	}
-	return std::sqrt( normA);
-}
-
-static double vector_prod( const std::vector<double>& v1, const std::vector<double>& v2)
-{
-	double prod = 0.0;
-	std::vector<double>::const_iterator ai = v1.begin(), ae = v1.end();
-	std::vector<double>::const_iterator bi = v2.begin(), be = v2.end();
-	for (; ai != ae && bi != be; ++ai,++bi)
-	{
-		prod += *ai * *bi;
-	}
-	return prod;
-}
-
-static double vector_cosinesim( const std::vector<double>& v1, const std::vector<double>& v2)
-{
-	return vector_prod( v1, v2) / (vector_norm( v1) * vector_norm( v2));
-}
-
 static void inspectFeatureSimilarity( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize < 2) throw strus::runtime_error(_TXT("too few arguments (%u arguments expected)"), 2U);
@@ -618,7 +665,7 @@ static void inspectFeatureSimilarity( const strus::VectorStorageClientInterface*
 	std::vector<double> v1 = vsmodel->featureVector( f1);
 	std::vector<double> v2 = vsmodel->featureVector( f2);
 	std::ostringstream res;
-	res << std::setprecision(6) << std::fixed << vector_cosinesim( v1, v2) << std::endl;
+	res << std::setprecision(6) << std::fixed << vsmodel->vectorSimilarity( v1, v2) << std::endl;
 	std::cout << res.str();
 }
 
@@ -659,11 +706,12 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 12,
+				argc, argv, 13,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "C,class:",
-				"t,threads:", "D,time", "N,nofranks:");
+				"t,threads:", "D,time", "N,nofranks:",
+				"x,realmeasure");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -778,7 +826,7 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Take a single or list of feature names as input.") << std::endl;
 			std::cout << "                 " << _TXT("Return the list of indices assigned to it.") << std::endl;
 			std::cout << "            \"featsim\" <feat1> <feat2>" << std::endl;
-			std::cout << "               = " << _TXT("Take two feature numbers (with '%c' prefix) or names as input.") << std::endl;
+			std::cout << "               = " << strus::string_format( _TXT("Take two feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "                 " << _TXT("Return the cosine similarity, a value between 0.0 and 1.0.") << std::endl;
 			std::cout << "            \"confeat\" or \"confeatidx\" \"confeatname\" { <conceptno> }" << std::endl;
 			std::cout << "               = " << _TXT("Take a single or list of concept numbers as input.") << std::endl;
@@ -837,6 +885,9 @@ int main( int argc, const char* argv[])
 			std::cout << "-t|--threads <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as number of threads to use (only for search)") << std::endl;
 			std::cout << "    " << _TXT("Default is no multithreading (N=0)") << std::endl;
+			std::cout << "-x|--realmeasure" << std::endl;
+			std::cout << "    " << _TXT("Calculate real values of similarities for search and compare") << std::endl;
+			std::cout << "    " << _TXT("of methods 'opfeat','opfeatname','opfeatw' and 'opfeatwname'.") << std::endl;
 			std::cout << "-N|--nofranks <N>" << std::endl;
 			std::cout << "    " << _TXT("Limit the number of results to for searches to <N> (default 20)") << std::endl;
 			return rt;
@@ -858,6 +909,8 @@ int main( int argc, const char* argv[])
 		{
 			clname = opt["class"];
 		}
+		bool realmeasure( opt("realmeasure"));
+
 		// Create root object:
 		std::auto_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
@@ -948,19 +1001,19 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeat"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/, realmeasure);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeatw"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/, realmeasure);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeatname"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/, realmeasure);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeatwname"))
 		{
-			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/);
+			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/, realmeasure);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
 		{
