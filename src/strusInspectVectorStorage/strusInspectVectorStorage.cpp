@@ -284,6 +284,10 @@ public:
 		for (strus::Index fidx=range_from; fidx<range_to; ++fidx)
 		{
 			std::vector<double> candidate_vec = vsmodel->featureVector( fidx);
+			if (candidate_vec.empty())
+			{
+				throw strus::runtime_error(_TXT("vector for feature %u not found"), (unsigned int)fidx);
+			}
 			double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
 			if (sim > 0.7)
 			{
