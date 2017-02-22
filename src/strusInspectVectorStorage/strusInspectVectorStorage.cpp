@@ -280,37 +280,45 @@ public:
 
 	virtual std::vector<Result> findSimilar( const std::vector<double>& vec, unsigned int maxNofResults) const
 	{
-		std::set<Result> reslist;
-		for (strus::Index fidx=range_from; fidx<range_to; ++fidx)
+		try
 		{
-			std::vector<double> candidate_vec = vsmodel->featureVector( fidx);
-			if (candidate_vec.empty())
+			std::set<Result> reslist;
+			for (strus::Index fidx=range_from; fidx<range_to; ++fidx)
 			{
-				throw strus::runtime_error(_TXT("vector for feature %u not found"), (unsigned int)fidx);
+				std::vector<double> candidate_vec = vsmodel->featureVector( fidx);
+				if (candidate_vec.empty())
+				{
+					throw strus::runtime_error(_TXT("vector for feature %u not found"), (unsigned int)fidx);
+				}
+				double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
+				if (sim > 0.7)
+				{
+					insertResultSet( reslist, maxNofResults, sim, fidx);
+				}
 			}
-			double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
-			if (sim > 0.7)
-			{
-				insertResultSet( reslist, maxNofResults, sim, fidx);
-			}
+			return std::vector<Result>( reslist.rbegin(), reslist.rend());
 		}
-		return std::vector<Result>( reslist.rbegin(), reslist.rend());
+		CATCH_ERROR_MAP_RETURN( _TXT("error in find similar: %s"), *g_errorBuffer, std::vector<Result>());
 	}
 
 	virtual std::vector<Result> findSimilarFromSelection( const std::vector<strus::Index>& candidates, const std::vector<double>& vec, unsigned int maxNofResults) const
 	{
-		std::set<Result> reslist;
-		std::vector<strus::Index>::const_iterator ci = candidates.begin(), ce = candidates.end();
-		for (; ci != ce; ++ci)
+		try
 		{
-			if (*ci >= range_from && *ci < range_to)
+			std::set<Result> reslist;
+			std::vector<strus::Index>::const_iterator ci = candidates.begin(), ce = candidates.end();
+			for (; ci != ce; ++ci)
 			{
-				std::vector<double> candidate_vec = vsmodel->featureVector( *ci);
-				double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
-				insertResultSet( reslist, maxNofResults, sim, *ci);
+				if (*ci >= range_from && *ci < range_to)
+				{
+					std::vector<double> candidate_vec = vsmodel->featureVector( *ci);
+					double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
+					insertResultSet( reslist, maxNofResults, sim, *ci);
+				}
 			}
+			return std::vector<Result>( reslist.rbegin(), reslist.rend());
 		}
-		return std::vector<Result>( reslist.rbegin(), reslist.rend());
+		CATCH_ERROR_MAP_RETURN( _TXT("error in find similar: %s"), *g_errorBuffer, std::vector<Result>());
 	}
 
 	virtual void close(){}
