@@ -154,10 +154,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 10,
+				argc, argv, 11,
 				"h,help", "v,version", "license", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
-				"g,segmenter:", "D,dump:");
+				"g,segmenter:", "C,contenttype:", "D,dump:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
@@ -257,6 +257,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
+			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of all documents inserted.") << std::endl;
 			std::cout << "-D|--dump <DUMPCFG>" << std::endl;
 			std::cout << "    " << _TXT("Dump ouput according <DUMPCFG>.") << std::endl;
 			std::cout << "    " << _TXT("<DUMPCFG> is a comma separated list of types or type value assignments.") << std::endl;
@@ -268,9 +270,14 @@ int main( int argc, const char* argv[])
 		// Parse arguments:
 		std::string analyzerprg = opt[0];
 		std::string docpath = opt[1];
+		std::string contenttype;
 		std::string segmentername;
 		DumpConfig dumpConfig;
 		bool doDump = false;
+		if (opt( "contenttype"))
+		{
+			contenttype = opt[ "contenttype"];
+		}
 		if (opt( "segmenter"))
 		{
 			segmentername = opt[ "segmenter"];
@@ -391,9 +398,19 @@ int main( int argc, const char* argv[])
 			throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
 		}
 		strus::analyzer::DocumentClass dclass;
-		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+		if (!contenttype.empty() )
 		{
-			throw strus::runtime_error( _TXT("failed to detect document class")); 
+			if (!strus::parseDocumentClass( dclass, contenttype, errorBuffer.get()))
+			{
+				throw strus::runtime_error(_TXT("failed to parse document class"));
+			}
+		}
+		else
+		{
+			if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+			{
+				throw strus::runtime_error( _TXT("failed to detect document class")); 
+			}
 		}
 		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 			analyzerContext( analyzer->createContext( dclass));
