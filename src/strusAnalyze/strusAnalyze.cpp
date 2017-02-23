@@ -157,7 +157,7 @@ int main( int argc, const char* argv[])
 				argc, argv, 11,
 				"h,help", "v,version", "license", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
-				"g,segmenter:", "C,contenttype:", "D,dump:");
+				"g,segmenter:", "D,contenttype:", "d,dump:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
@@ -257,9 +257,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
-			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "-D|--contenttype <CT>" << std::endl;
 			std::cout << "    " << _TXT("forced definition of the document class of all documents inserted.") << std::endl;
-			std::cout << "-D|--dump <DUMPCFG>" << std::endl;
+			std::cout << "-d|--dump <DUMPCFG>" << std::endl;
 			std::cout << "    " << _TXT("Dump ouput according <DUMPCFG>.") << std::endl;
 			std::cout << "    " << _TXT("<DUMPCFG> is a comma separated list of types or type value assignments.") << std::endl;
 			std::cout << "    " << _TXT("A type in <DUMPCFG> specifies the type to dump.") << std::endl;

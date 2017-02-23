@@ -97,7 +97,7 @@ int main( int argc_, const char* argv_[])
 				argc_, argv_, 18,
 				"h,help", "v,version", "license",
 				"t,threads:", "c,commit:", "f,fetch:",
-				"g,segmenter:", "C,contenttype:", "m,module:",
+				"g,segmenter:", "D,contenttype:", "m,module:",
 				"L,logerror:", "M,moduledir:", "R,resourcedir:",
 				"r,rpc:", "x,extension:", "s,storage:",
 				"S,configfile:", "V,verbose", "T,trace:");
@@ -236,7 +236,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf)") << std::endl;
-			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "-D|--contenttype <CT>" << std::endl;
 			std::cout << "    " << _TXT("forced definition of the document class of all documents inserted.") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
 			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
