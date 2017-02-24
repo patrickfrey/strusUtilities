@@ -231,18 +231,18 @@ void KeyMapGenProcessor::run()
 		}
 		catch (const std::bad_alloc&)
 		{
-			std::cerr << string_format(_TXT("out of memory when processing chunk of %u"), files.size()) << std::endl;
+			std::cerr << string_format(_TXT("out of memory when processing chunk of %u"), (unsigned int)files.size()) << std::endl;
 		}
 		catch (const std::runtime_error& err)
 		{
 			const char* errmsg = m_errorhnd->fetchError();
 			if (errmsg)
 			{
-				std::cerr << string_format(_TXT("failed to process chunk of %u: %s; %s"), files.size(), err.what(), errmsg) << std::endl;
+				std::cerr << string_format(_TXT("failed to process chunk of %u: %s; %s"), (unsigned int)files.size(), err.what(), errmsg) << std::endl;
 			}
 			else
 			{
-				std::cerr << string_format(_TXT("failed to process chunk of %u: %s"), files.size(), err.what()) << std::endl;
+				std::cerr << string_format(_TXT("failed to process chunk of %u: %s"), (unsigned int)files.size(), err.what()) << std::endl;
 			}
 		}
 	}
