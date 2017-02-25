@@ -88,9 +88,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 13,
+				argc, argv, 14,
 				"h,help", "v,version", "license",
-				"s,segmenter:", "e,expression:",
+				"g,segmenter:", "C,contenttype:", "e,expression:",
 				"m,module:", "M,moduledir:", "P,prefix:", "i,index",
 				"p,position", "q,quot:", "E,esceol", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
@@ -179,8 +179,10 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
-			std::cout << "-s|--segmenter <NAME>" << std::endl;
+			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
+			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of the document processed.") << std::endl;
 			std::cout << "-e|--expression <EXPR>" << std::endl;
 			std::cout << "    " << _TXT("Use the expression <EXPR> to select documents (default '//()')") << std::endl;
 			std::cout << "-i|--index" << std::endl;
@@ -201,6 +203,7 @@ int main( int argc, const char* argv[])
 		// Parse arguments:
 		std::string docpath = opt[0];
 		std::string segmenterName;
+		std::string contenttype;
 		std::string resultPrefix;
 		std::string resultQuot;
 		bool printIndices = opt( "index");
@@ -217,6 +220,10 @@ int main( int argc, const char* argv[])
 		if (opt( "segmenter"))
 		{
 			segmenterName = opt[ "segmenter"];
+		}
+		if (opt( "contenttype"))
+		{
+			contenttype = opt[ "contenttype"];
 		}
 
 		// Declare trace proxy objects:
@@ -272,19 +279,26 @@ int main( int argc, const char* argv[])
 
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
-		char hdrbuf[ 1024];
-		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
-		if (input.error())
+		strus::analyzer::DocumentClass documentClass;
+		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
-			throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
-		strus::analyzer::DocumentClass dclass;
-		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+		else
 		{
-			throw strus::runtime_error(_TXT("failed to detect document class")); 
+			char hdrbuf[ 1024];
+			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+			if (input.error())
+			{
+				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+			}
+			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize))
+			{
+				throw strus::runtime_error(_TXT("failed to detect document class")); 
+			}
 		}
 		std::auto_ptr<strus::SegmenterContextInterface>
-			segmenterContext( segmenter->createContext( dclass));
+			segmenterContext( segmenter->createContext( documentClass));
 		if (!segmenterContext.get()) throw strus::runtime_error(_TXT("failed to segmenter context"));
 
 		// Process the document:

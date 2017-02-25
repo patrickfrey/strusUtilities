@@ -469,10 +469,12 @@ static void inspectConceptClassNames( const strus::VectorStorageClientInterface*
 }
 
 // Inspect strus::VectorStorageClientInterface::featureConcepts()
-static void inspectFeatureConcepts( const strus::VectorStorageClientInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize)
+static void inspectFeatureConcepts( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<strus::Index> far;
-	std::size_t ai = 0, ae = inspectargsize;
+	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (class name as first argument expected)"));
+	std::string clname = inspectarg[0];
+	std::size_t ai = 1, ae = inspectargsize;
 	for (; ai != ae; ++ai)
 	{
 		far.push_back( getFeatureIndex( vsmodel, inspectarg[ai]));
@@ -583,12 +585,15 @@ static void inspectFeatureIndex( const strus::VectorStorageClientInterface* vsmo
 }
 
 // Inspect strus::VectorStorageClientInterface::conceptFeatures()
-static void inspectConceptFeatures( const strus::VectorStorageClientInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+static void inspectConceptFeatures( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
 {
-	if (inspectargsize > 0)
+	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (class name as first argument expected)"));
+	std::string clname = inspectarg[0];
+
+	if (inspectargsize > 1)
 	{
 		std::vector<strus::Index> car;
-		std::size_t ai = 0, ae = inspectargsize;
+		std::size_t ai = 1, ae = inspectargsize;
 		for (; ai != ae; ++ai)
 		{
 			car.push_back( strus::utils::toint( inspectarg[ai]));
@@ -620,10 +625,13 @@ static void inspectConceptFeatures( const strus::VectorStorageClientInterface* v
 }
 
 // Inspect strus::VectorStorageClientInterface::featureConcepts() & conceptFeatures()
-static void inspectNeighbourFeatures( const strus::VectorStorageClientInterface* vsmodel, const std::string& clname, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
+static void inspectNeighbourFeatures( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
 {
+	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (class name as first argument expected)"));
+	std::string clname = inspectarg[0];
+
 	std::vector<strus::Index> far;
-	std::size_t ai = 0, ae = inspectargsize;
+	std::size_t ai = 1, ae = inspectargsize;
 	for (; ai != ae; ++ai)
 	{
 		far.push_back( getFeatureIndex( vsmodel, inspectarg[ai]));
@@ -658,9 +666,12 @@ static void inspectNeighbourFeatures( const strus::VectorStorageClientInterface*
 }
 
 // Inspect strus::VectorStorageClientInterface::nofConcepts()
-static void inspectNofConcepts( const strus::VectorStorageClientInterface* vsmodel, const std::string& clname, const char**, std::size_t inspectargsize)
+static void inspectNofConcepts( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
-	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
+	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (class name as first argument expected)"));
+	if (inspectargsize > 1) throw strus::runtime_error(_TXT("too many arguments (only class name as argument expected)"));
+	std::string clname = inspectarg[0];
+
 	std::cout << vsmodel->nofConcepts( clname) << std::endl;
 }
 
@@ -721,10 +732,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 13,
+				argc, argv, 12,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "C,class:",
+				"s,config:", "S,configfile:",
 				"t,threads:", "D,time", "N,nofranks:",
 				"x,realmeasure");
 		if (opt( "help")) printUsageAndExit = true;
@@ -828,9 +839,9 @@ int main( int argc, const char* argv[])
 			std::cout << "<what>    : " << _TXT("what to inspect:") << std::endl;
 			std::cout << "            \"classnames\"" << std::endl;
 			std::cout << "               = " << _TXT("Return all names of concept classes of the model.") << std::endl;
-			std::cout << "            \"featcon\" { <feat> }" << std::endl;
+			std::cout << "            \"featcon\" <classname> { <feat> }" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take a single or list of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
-			std::cout << "                 " << _TXT("Return a sorted list of indices of concepts assigned to it.") << std::endl;
+			std::cout << "                 " << _TXT("Return a sorted list of indices of concepts of the class <classname> assigned to it.") << std::endl;
 			std::cout << "            \"featvec\" <feat>" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take a single feature number (with '%c' prefix) or name as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "                 " << _TXT("Return the vector assigned to it.") << std::endl;
@@ -843,15 +854,15 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"featsim\" <feat1> <feat2>" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take two feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
 			std::cout << "                 " << _TXT("Return the cosine similarity, a value between 0.0 and 1.0.") << std::endl;
-			std::cout << "            \"confeat\" or \"confeatidx\" \"confeatname\" { <conceptno> }" << std::endl;
-			std::cout << "               = " << _TXT("Take a single or list of concept numbers as input.") << std::endl;
+			std::cout << "            \"confeat\" or \"confeatidx\" \"confeatname\" <classname> { <conceptno> }" << std::endl;
+			std::cout << "               = " << _TXT("Take a single or list of concept numbers of the class <classname> as input.") << std::endl;
 			std::cout << "                 " << _TXT("Return a sorted list of features assigned to it.") << std::endl;
 			std::cout << "                 " << _TXT("\"confeatidx\" prints only the result feature indices.") << std::endl;
 			std::cout << "                 " << _TXT("\"confeatname\" prints only the result feature names.") << std::endl;
 			std::cout << "                 " << _TXT("\"confeat\" prints both indices and names.") << std::endl;
-			std::cout << "            \"nbfeat\" or \"nbfeatidx\" \"nbfeatname\"  { <feat> }" << std::endl;
+			std::cout << "            \"nbfeat\" or \"nbfeatidx\" \"nbfeatname\" <classname> { <feat> }" << std::endl;
 			std::cout << "               = " << strus::string_format( _TXT("Take a single or list of feature numbers (with '%c' prefix) or names as input."), FEATNUM_PREFIX_CHAR) << std::endl;
-			std::cout << "                 " << _TXT("Return a list of features reachable over any shared concept.") << std::endl;
+			std::cout << "                 " << _TXT("Return a list of features reachable over any shared concept of the class <classname>.") << std::endl;
 			std::cout << "                 " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
 			std::cout << "                 " << _TXT("\"nbfeatname\" prints only the result feature names.") << std::endl;
 			std::cout << "                 " << _TXT("\"nbfeat\" prints both indices and names.") << std::endl;
@@ -861,7 +872,7 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"opfeatw\"  or \"opfeatwname\" { <expr> }" << std::endl;
 			std::cout << "               = " << _TXT("same as \"opfeat\", resp. \"opfeatname\" but print also the result weights.") << std::endl;
 			std::cout << "            \"nofcon\"" << std::endl;
-			std::cout << "               = " << _TXT("Get the number of concepts defined.") << std::endl;
+			std::cout << "               = " << _TXT("Get the number of concepts of the class <classname> defined.") << std::endl;
 			std::cout << "            \"noffeat\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of features defined.") << std::endl;
 			std::cout << "            \"config\"" << std::endl;
@@ -889,9 +900,6 @@ int main( int argc, const char* argv[])
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector space model configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
-			std::cout << "-C|--class <CLASSNAME>" << std::endl;
-			std::cout << "    " << _TXT("Select <CLASSNAME> as concept class name (default '')") << std::endl;
-			std::cout << "    " << _TXT("Used in the context of inspecting data related to a concept.") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -918,11 +926,6 @@ int main( int argc, const char* argv[])
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
-		}
-		std::string clname;
-		if (opt("class"))
-		{
-			clname = opt["class"];
 		}
 		bool realmeasure( opt("realmeasure"));
 
@@ -976,7 +979,6 @@ int main( int argc, const char* argv[])
 		// Do inspect what is requested:
 		if (strus::utils::caseInsensitiveEquals( what, "classnames"))
 		{
-			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectConceptClassNames( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featsim"))
@@ -985,34 +987,31 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featcon"))
 		{
-			inspectFeatureConcepts( vsmodel.get(), clname, inspectarg, inspectargsize);
+			inspectFeatureConcepts( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featvec"))
 		{
-			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectFeatureVector( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featname"))
 		{
-			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectFeatureName( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "featidx"))
 		{
-			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectFeatureIndex( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "confeatidx"))
 		{
-			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndex);
+			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndex);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "confeatname"))
 		{
-			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintName);
+			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "confeat"))
 		{
-			inspectConceptFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndexName);
+			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "opfeat"))
 		{
@@ -1032,33 +1031,30 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
 		{
-			inspectNeighbourFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndex);
+			inspectNeighbourFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndex);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatname"))
 		{
-			inspectNeighbourFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintName);
+			inspectNeighbourFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nbfeat"))
 		{
-			inspectNeighbourFeatures( vsmodel.get(), clname, inspectarg, inspectargsize, PrintIndexName);
+			inspectNeighbourFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nofcon"))
 		{
-			inspectNofConcepts( vsmodel.get(), clname, inspectarg, inspectargsize);
+			inspectNofConcepts( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "noffeat"))
 		{
-			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectNofFeatures( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "config"))
 		{
-			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectConfig( vsmodel.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "dump"))
 		{
-			if (!clname.empty()) std::cerr << strus::string_format(_TXT("option --class does not make sense for command '%s'"), what.c_str()) << std::endl;
 			inspectDump( vsi, dbi, config, inspectarg, inspectargsize);
 		}
 		else

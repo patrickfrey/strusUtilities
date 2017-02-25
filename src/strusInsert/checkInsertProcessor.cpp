@@ -122,7 +122,7 @@ void CheckInsertProcessor::run()
 				{
 					strus::InputStream input( *fitr);
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
-					if (m_analyzerMap->documentClass().mimeType().empty())
+					if (!m_analyzerMap->documentClass().defined())
 					{
 						// Read the input file to analyze and detect its document type:
 						char hdrbuf[ 1024];
