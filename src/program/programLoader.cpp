@@ -731,10 +731,18 @@ static std::string parseSelectorExpression( char const*& src)
 		char const* start = src;
 		while (*src && *src != ',' && *src != ';' && *src != '{')
 		{
-			if (*src == '\'' || *src == '\"')
+			if (*src == '\n' || *src == '\r')
+			{
+				throw strus::runtime_error(_TXT("unexpected end of line in selector expression (missing semicolon ';' at end of expression?)"));
+			}
+			else if (*src == '\'' || *src == '\"')
 			{
 				char eb = *src;
-				for (++src; *src && *src != eb; ++src){}
+				for (++src; *src && *src != eb && *src != '\n' && *src != '\r'; ++src){}
+				if (*src == '\n' || *src == '\r')
+				{
+					throw strus::runtime_error(_TXT("unexpected end of line in selector expression (missing end quote of string?)"));
+				}
 				if (*src) ++src;
 			}
 			else
