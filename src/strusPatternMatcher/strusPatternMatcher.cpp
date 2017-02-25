@@ -104,8 +104,7 @@ public:
 			const std::vector<std::string>& selectexpr_,
 			const std::string& path,
 			const std::string& fileext,
-			const std::string& mimetype_,
-			const std::string& encoding_,
+			const strus::analyzer::DocumentClass documentClass_,
 			const std::map<std::string,int>& markups_,
 			const std::string& resultMarker_,
 			bool printTokens_)
@@ -114,8 +113,7 @@ public:
 		,m_textproc(textproc_)
 		,m_segmenterName(segmenterName_)
 		,m_selectexpr(selectexpr_)
-		,m_mimetype(mimetype_)
-		,m_encoding(encoding_)
+		,m_documentClass(documentClass_)
 		,m_markups(markups_)
 		,m_resultMarker(resultMarker_)
 		,m_printTokens(printTokens_)
@@ -135,14 +133,9 @@ public:
 		return m_segmenterName;
 	}
 
-	const std::string& encoding() const
+	const strus::analyzer::DocumentClass& documentClass() const
 	{
-		return m_encoding;
-	}
-
-	const std::string& mimetype() const
-	{
-		return m_encoding;
+		return m_documentClass;
 	}
 
 	const std::vector<std::string>& selectexpr() const
@@ -209,8 +202,7 @@ private:
 	const strus::TextProcessorInterface* m_textproc;
 	std::string m_segmenterName;
 	std::vector<std::string> m_selectexpr;
-	std::string m_mimetype;
-	std::string m_encoding;
+	strus::analyzer::DocumentClass m_documentClass;
 	std::auto_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
 	std::map<std::string,int> m_markups;
 	std::string m_resultMarker;
@@ -230,7 +222,6 @@ public:
 		,m_objbuilder(o.m_objbuilder)
 		,m_defaultSegmenter(o.m_defaultSegmenter)
 		,m_defaultSegmenterInstance(o.m_defaultSegmenterInstance)
-		,m_defaultMimeType(o.m_defaultMimeType)
 		,m_segmentermap(o.m_segmentermap)
 		,m_threadid(o.m_threadid)
 		,m_outputfile(o.m_outputfile)
@@ -243,7 +234,6 @@ public:
 		,m_objbuilder(objbuilder_)
 		,m_defaultSegmenter(0)
 		,m_defaultSegmenterInstance()
-		,m_defaultMimeType(globalContext_->mimetype())
 		,m_segmentermap()
 		,m_threadid(threadid_)
 		,m_outputfile()
@@ -254,11 +244,11 @@ public:
 		{
 			m_defaultSegmenter = m_objbuilder->getSegmenter( m_globalContext->segmenterName());
 			m_defaultSegmenterInstance.reset( m_defaultSegmenter->createInstance());
-			initSegmenterInstance( m_defaultSegmenterInstance.get());
-			if (m_defaultMimeType.empty())
+			if (!m_defaultSegmenterInstance.get())
 			{
-				m_defaultMimeType = m_defaultSegmenter->mimeType();
+				throw strus::runtime_error(_TXT("failed to create default segmenter instace: %s"), g_errorBuffer->fetchError());
 			}
+			initSegmenterInstance( m_defaultSegmenterInstance.get());
 		}
 		if (outputfile_.empty())
 		{
@@ -308,10 +298,9 @@ public:
 
 	strus::SegmenterContextInterface* createSegmenterContext( const std::string& content, strus::analyzer::DocumentClass& documentClass, strus::SegmenterInstanceInterface const*& segmenterinst)
 	{
-		if (m_defaultSegmenter)
+		if (m_globalContext->documentClass().defined())
 		{
-			documentClass = strus::analyzer::DocumentClass( m_defaultMimeType, m_globalContext->encoding());
-			return m_defaultSegmenterInstance->createContext( documentClass);
+			documentClass = m_globalContext->documentClass();
 		}
 		else
 		{
@@ -319,6 +308,13 @@ public:
 			{
 				throw strus::runtime_error(_TXT("failed to detect document class"));
 			}
+		}
+		if (m_defaultSegmenter)
+		{
+			return m_defaultSegmenterInstance->createContext( documentClass);
+		}
+		else
+		{
 			SegmenterMap::const_iterator si = m_segmentermap.find( documentClass.mimeType());
 			if (si == m_segmentermap.end())
 			{
@@ -539,7 +535,6 @@ private:
 	const strus::AnalyzerObjectBuilderInterface* m_objbuilder;
 	const strus::SegmenterInterface* m_defaultSegmenter;
 	strus::Reference<strus::SegmenterInstanceInterface> m_defaultSegmenterInstance;
-	std::string m_defaultMimeType;
 	typedef std::map<std::string,strus::Reference<strus::SegmenterInstanceInterface> > SegmenterMap;
 	SegmenterMap m_segmentermap;
 	unsigned int m_threadid;
@@ -565,11 +560,13 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 21,
+				argc, argv, 20,
 				"h,help", "v,version", "license",
-				"g,segmenter:", "x,extension:", "y,mimetype:", "C,encoding:",
-				"e,expression:", "K,tokens", "p,program:", "Z,marker:", "H,markup:",
-				"t,threads:", "o,output:", "X,lexer:", "Y,matcher:",
+				"g,segmenter:", "x,extension:", "C,contenttype:",
+				"e,expression:", "K,tokens", "p,program:",
+				"Z,marker:", "H,markup:",
+				"X,lexer:", "Y,matcher:",
+				"t,threads:", "o,output:",
 				"M,moduledir:", "m,module:", "r,rpc:", "R,resourcedir:", "T,trace:");
 
 		if (opt( "help")) printUsageAndExit = true;
@@ -676,10 +673,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Set <N> as number of inserter threads to use") << std::endl;
 			std::cout << "-x|--ext <FILEEXT>" << std::endl;
 			std::cout << "    " << _TXT("Do only process files with extension <FILEEXT>") << std::endl;
-			std::cout << "-y|--mimetype <TYPE>" << std::endl;
-			std::cout << "    " << _TXT("Specify the MIME type of all files to process as <TYPE>") << std::endl;
-			std::cout << "-C|--encoding <ENC>" << std::endl;
-			std::cout << "    " << _TXT("Specify the character set encoding of all files to process as <ENC>") << std::endl;
+			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of all documents processed.") << std::endl;
 			std::cout << "-e|--expression <EXP>" << std::endl;
 			std::cout << "    " << _TXT("Define a selection expression <EXP> for the content to process") << std::endl;
 			std::cout << "    " << _TXT("  (default if nothing specified is \"//()\"") << std::endl;
@@ -698,7 +693,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-o|--output <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Write output to file <FILE> (thread id is inserted before '.' with threads)") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
@@ -710,8 +705,7 @@ int main( int argc, const char* argv[])
 		std::string inputpath = opt[ 0];
 		std::string segmentername;
 		std::string fileext;
-		std::string mimetype;
-		std::string encoding;
+		std::string contenttype;
 		std::vector<std::string> expressions;
 		std::string matcher( strus::Constants::standard_pattern_matcher());
 		std::string lexer( strus::Constants::standard_pattern_matcher());
@@ -730,13 +724,9 @@ int main( int argc, const char* argv[])
 		{
 			fileext = opt[ "ext"];
 		}
-		if (opt( "mimetype"))
+		if (opt( "contenttype"))
 		{
-			mimetype = opt[ "mimetype"];
-		}
-		if (opt( "encoding"))
-		{
-			encoding = opt[ "encoding"];
+			contenttype = opt[ "contenttype"];
 		}
 		if (opt( "expression"))
 		{
@@ -779,7 +769,6 @@ int main( int argc, const char* argv[])
 		{
 			outputfile = opt[ "output"];
 		}
-
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -848,6 +837,11 @@ int main( int argc, const char* argv[])
 		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pti->createInstance());
 		std::auto_ptr<strus::PatternLexerInstanceInterface> lxinst( lxi->createInstance());
 
+		strus::analyzer::DocumentClass documentClass;
+		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+		{
+			throw strus::runtime_error(_TXT("failed to parse document class"));
+		}
 		std::cerr << "load program ..." << std::endl;
 		std::string programsrc;
 		unsigned int ec = strus::readFile( programfile, programsrc);
@@ -868,7 +862,7 @@ int main( int argc, const char* argv[])
 		}
 		GlobalContext globalContext(
 				ptinst.get(), lxinst.get(), textproc, segmentername,
-				expressions, inputpath, fileext, mimetype, encoding,
+				expressions, inputpath, fileext, documentClass,
 				markups, resultmarker, printTokens);
 
 		std::cerr << "start matching ..." << std::endl;

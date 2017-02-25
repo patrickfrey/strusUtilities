@@ -95,7 +95,7 @@ int main( int argc_, const char* argv_[])
 				"h,help", "v,version", "license",
 				"t,threads:", "l,logfile:", "n,notify:",
 				"R,resourcedir:", "M,moduledir:", "m,module:", 
-				"D,contenttype:", "x,extension:", "r,rpc:",
+				"C,contenttype:", "x,extension:", "r,rpc:",
 				"g,segmenter:", "s,storage:", "S,configfile:",
 				"T,trace:");
 
@@ -227,9 +227,9 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
-			std::cout << "-D|--contenttype <CT>" << std::endl;
-			std::cout << "    " << _TXT("forced definition of the document class of all documents inserted.") << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME>") << std::endl;
+			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of all documents checked.") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
 			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;

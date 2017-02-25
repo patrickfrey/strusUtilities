@@ -418,7 +418,7 @@ int main( int argc_, const char* argv_[])
 			if (!quiet)
 			{
 				std::cout << strus::string_format( _TXT("evaluated till pass %u, got %u ranks (%u without restrictions applied):"), result.evaluationPass(), result.nofDocumentsRanked(), result.nofDocumentsVisited()) << std::endl;
-				std::cout << strus::string_format( _TXT("ranked list (starting with rank %u, maximum %u results):"), firstRank, nofRanks) << std::endl;
+				std::cout << strus::string_format( _TXT("ranked list (starting with rank %u, maximum %u results):"), (unsigned int)firstRank, (unsigned int)nofRanks) << std::endl;
 			}
 			std::vector<strus::ResultDocument>::const_iterator wi = result.ranks().begin(), we = result.ranks().end();
 			if (!quiet)

@@ -58,7 +58,7 @@ int main( int argc_, const char* argv_[])
 				"h,help",  "v,version", "license",
 				"t,threads:", "u,unit:",
 				"n,results:","m,module:", "x,extension:",
-				"s,segmenter:", "D,contenttype:", "M,moduledir:", "R,resourcedir:",
+				"s,segmenter:", "C,contenttype:", "M,moduledir:", "R,resourcedir:",
 				"T,trace:");
 
 		unsigned int nofThreads = 0;
@@ -157,9 +157,9 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-s|--segmenter <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
-			std::cout << "-D|--contenttype <CT>" << std::endl;
-			std::cout << "    " << _TXT("forced definition of the document class of all documents inserted.") << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME>") << std::endl;
+			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of all documents processed.") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
 			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
