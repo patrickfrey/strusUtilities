@@ -242,7 +242,11 @@ public:
 	{
 		if (!m_globalContext->segmenterName().empty())
 		{
-			m_defaultSegmenter = m_objbuilder->getSegmenter( m_globalContext->segmenterName());
+			m_defaultSegmenter = m_globalContext->textproc()->getSegmenterByName( m_globalContext->segmenterName());
+			if (!m_defaultSegmenter)
+			{
+				throw strus::runtime_error(_TXT("failed to get default segmenter by name: %s"), g_errorBuffer->fetchError());
+			}
 			m_defaultSegmenterInstance.reset( m_defaultSegmenter->createInstance());
 			if (!m_defaultSegmenterInstance.get())
 			{
@@ -318,7 +322,7 @@ public:
 			SegmenterMap::const_iterator si = m_segmentermap.find( documentClass.mimeType());
 			if (si == m_segmentermap.end())
 			{
-				const strus::SegmenterInterface* segmenter = m_objbuilder->findMimeTypeSegmenter( documentClass.mimeType());
+				const strus::SegmenterInterface* segmenter = m_globalContext->textproc()->getSegmenterByMimeType( documentClass.mimeType());
 				if (!segmenter)
 				{
 					throw strus::runtime_error(_TXT("no segmenter defined for mime type '%s'"), documentClass.mimeType().c_str());

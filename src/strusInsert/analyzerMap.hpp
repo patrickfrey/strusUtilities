@@ -17,6 +17,8 @@ namespace strus {
 /// \brief Forward declaration
 class AnalyzerObjectBuilderInterface;
 /// \brief Forward declaration
+class TextProcessorInterface;
+/// \brief Forward declaration
 class SegmenterInterface;
 /// \brief Forward declaration
 class ErrorBufferInterface;
@@ -59,6 +61,7 @@ private:
 	std::string m_defaultSegmenterName;
 	const strus::SegmenterInterface* m_defaultSegmenter;
 	const strus::AnalyzerObjectBuilderInterface* m_builder;
+	const strus::TextProcessorInterface* m_textproc;
 	std::ostringstream m_warnings;
 	ErrorBufferInterface* m_errorhnd;
 };

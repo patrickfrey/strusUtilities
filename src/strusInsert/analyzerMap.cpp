@@ -20,13 +20,12 @@ using namespace strus;
 
 AnalyzerMap::AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, const std::string& prgfile_, const analyzer::DocumentClass& documentClass_, const std::string& defaultSegmenterName_, ErrorBufferInterface* errorhnd_)
 	:m_map(),m_documentClass(documentClass_),m_defaultSegmenterName(defaultSegmenterName_)
-	,m_defaultSegmenter(builder_->getSegmenter( defaultSegmenterName_))
-	,m_builder(builder_),m_errorhnd(errorhnd_)
+	,m_defaultSegmenter(0)
+	,m_builder(builder_),m_textproc(builder_->getTextProcessor()),m_errorhnd(errorhnd_)
 {
-	if (!m_defaultSegmenter)
-	{
-		throw strus::runtime_error(_TXT("failed to create default segmenter"));
-	}
+	if (!m_textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+	m_defaultSegmenter = m_textproc->getSegmenterByName( defaultSegmenterName_);
+	if (!m_defaultSegmenter) throw strus::runtime_error(_TXT("failed to create default segmenter"));
 	defineDefaultProgram( prgfile_);
 }
 
@@ -107,8 +106,7 @@ void AnalyzerMap::defineAnalyzerProgramSource(
 	if (!analyzer.get()) throw strus::runtime_error(_TXT("error creating analyzer"));
 
 	std::string mimeType = segmenter->mimeType();
-	const strus::TextProcessorInterface* textproc = m_builder->getTextProcessor();
-	if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, m_warnings, m_errorhnd))
+	if (!strus::loadDocumentAnalyzerProgram( *analyzer, m_textproc, analyzerProgramSource, true/*allow includes*/, m_warnings, m_errorhnd))
 	{
 		throw strus::runtime_error( _TXT("failed to load analyzer configuration program"));
 	}
@@ -124,7 +122,7 @@ void AnalyzerMap::defineAnalyzerProgramSource(
 		const std::string& segmentername,
 		const std::string& analyzerProgramSource)
 {
-	const strus::SegmenterInterface* segmenter = m_builder->getSegmenter( segmentername);
+	const strus::SegmenterInterface* segmenter = m_textproc->getSegmenterByName( segmentername);
 	if (!segmenter) throw strus::runtime_error(_TXT("error getting segmenter by name"));
 	defineAnalyzerProgramSource( scheme, segmenter, analyzerProgramSource);
 }
@@ -150,7 +148,7 @@ const DocumentAnalyzerInterface* AnalyzerMap::get( const analyzer::DocumentClass
 	if (!rt)
 	{
 		std::string key( dclass.mimeType() + ":" + dclass.scheme());
-		throw strus::runtime_error(_TXT("could not find analyzer for this type of document: %s"), key.c_str());
+		throw strus::runtime_error(_TXT("could not find analyzer for this type of document: '%s'"), key.c_str());
 	}
 	return rt;
 }

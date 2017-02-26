@@ -369,26 +369,9 @@ int main( int argc, const char* argv[])
 			analyzerBuilder.reset( proxy);
 		}
 
-		const strus::SegmenterInterface* segmenter = analyzerBuilder->getSegmenter( segmentername);
-		if (!segmenter) throw strus::runtime_error(_TXT("failed to find specified document segmenter"));
-		std::auto_ptr<strus::DocumentAnalyzerInterface>
-			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
-
-		// Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			throw strus::runtime_error( _TXT("failed to load analyzer program %s (file system error %u)"), analyzerprg.c_str(), ec);
-		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
-		if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
-		{
-			throw strus::runtime_error( _TXT("failed to load analyzer program %s"), analyzerprg.c_str());
-		}
+
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
 		strus::analyzer::DocumentClass documentClass;
@@ -412,6 +395,36 @@ int main( int argc, const char* argv[])
 				throw strus::runtime_error( _TXT("failed to detect document class")); 
 			}
 		}
+
+		// Get the document segmenter type either defined by the document class or by content or by the name specified:
+		const strus::SegmenterInterface* segmenter;
+		if (segmentername.empty())
+		{
+			segmenter = textproc->getSegmenterByMimeType( documentClass.mimeType());
+			if (!segmenter) throw strus::runtime_error(_TXT("failed to find document segmenter specified by MIME type '%s'"), documentClass.mimeType().c_str());
+		}
+		else
+		{
+			segmenter = textproc->getSegmenterByName( segmentername);
+			if (!segmenter) throw strus::runtime_error(_TXT("failed to find document segmenter specified by name '%s'"), segmentername.c_str());
+		}
+
+		// Create the document analyzer:
+		std::auto_ptr<strus::DocumentAnalyzerInterface> analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
+
+		// Load analyzer program:
+		unsigned int ec;
+		std::string analyzerProgramSource;
+		ec = strus::readFile( analyzerprg, analyzerProgramSource);
+		if (ec)
+		{
+			throw strus::runtime_error( _TXT("failed to load analyzer program %s (file system error %u)"), analyzerprg.c_str(), ec);
+		}
+		if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
+		{
+			throw strus::runtime_error( _TXT("failed to load analyzer program %s"), analyzerprg.c_str());
+		}
 		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 			analyzerContext( analyzer->createContext( documentClass));
 		if (!analyzerContext.get()) throw strus::runtime_error(_TXT("failed to create document analyzer context"));
@@ -420,7 +433,6 @@ int main( int argc, const char* argv[])
 		enum {AnalyzerBufSize=8192};
 		char buf[ AnalyzerBufSize];
 		bool eof = false;
-
 		while (!eof)
 		{
 			std::size_t readsize = input.read( buf, sizeof(buf));

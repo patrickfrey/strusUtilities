@@ -253,29 +253,8 @@ int main( int argc, const char* argv[])
 			analyzerBuilder.reset( aproxy);
 		}
 
-		const strus::SegmenterInterface*
-			segmentertype = analyzerBuilder->getSegmenter( segmenterName);
-		if (!segmentertype) throw strus::runtime_error(_TXT("failed to get segmenter interface by name"));
-		std::auto_ptr<strus::SegmenterInstanceInterface>
-			segmenter( segmentertype->createInstance());
-		if (!segmenter.get()) throw strus::runtime_error(_TXT("failed to segmenter instance"));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
-
-		// Load expressions:
-		if (opt("expression"))
-		{
-			std::vector<std::string> exprlist( opt.list("expression"));
-			std::vector<std::string>::const_iterator ei = exprlist.begin(), ee = exprlist.end();
-			for (int eidx=1; ei != ee; ++ei,++eidx)
-			{
-				segmenter->defineSelectorExpression( eidx, *ei);
-			}
-		}
-		else
-		{
-			segmenter->defineSelectorExpression( 0, "//()");
-		}
 
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
@@ -297,8 +276,38 @@ int main( int argc, const char* argv[])
 				throw strus::runtime_error(_TXT("failed to detect document class")); 
 			}
 		}
-		std::auto_ptr<strus::SegmenterContextInterface>
-			segmenterContext( segmenter->createContext( documentClass));
+		// Create the document segmenter either defined by the document class or by content or by the name specified:
+		const strus::SegmenterInterface* segmenterType;
+		if (segmenterName.empty())
+		{
+			segmenterType = textproc->getSegmenterByMimeType( documentClass.mimeType());
+			if (!segmenterType) throw strus::runtime_error(_TXT("failed to find document segmenter specified by MIME type '%s'"), documentClass.mimeType().c_str());
+		}
+		else
+		{
+			segmenterType = textproc->getSegmenterByName( segmenterName);
+			if (!segmenterType) throw strus::runtime_error(_TXT("failed to find document segmenter specified by name '%s'"), segmenterName.c_str());
+		}
+		std::auto_ptr<strus::SegmenterInstanceInterface> segmenter( segmenterType->createInstance());
+		if (!segmenter.get()) throw strus::runtime_error(_TXT("failed to segmenter instance"));
+
+		// Load expressions:
+		if (opt("expression"))
+		{
+			std::vector<std::string> exprlist( opt.list("expression"));
+			std::vector<std::string>::const_iterator ei = exprlist.begin(), ee = exprlist.end();
+			for (int eidx=1; ei != ee; ++ei,++eidx)
+			{
+				segmenter->defineSelectorExpression( eidx, *ei);
+			}
+		}
+		else
+		{
+			segmenter->defineSelectorExpression( 0, "//()");
+		}
+
+		// Create the segmenter
+		std::auto_ptr<strus::SegmenterContextInterface> segmenterContext( segmenter->createContext( documentClass));
 		if (!segmenterContext.get()) throw strus::runtime_error(_TXT("failed to segmenter context"));
 
 		// Process the document:
