@@ -6,7 +6,7 @@
 {"employees":[
     { "firstName":"John", "lastName":"Doe" },
     { "firstName":"Anna", "lastName":"Smith" },
-    { "firstName":"Peter", "lastName":"Jones" }
+    { "firstName":"Peter", "lastName":"Jones", "attachment": "&lt;doc&gt;&lt;note&gt;Note about Peter&lt;/note&gt;&lt;/doc&gt;" }
 ]}
 </embedded>
 <text>Here we have normal text. This text is taken from XML.
