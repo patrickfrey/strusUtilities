@@ -25,6 +25,7 @@
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/term.hpp"
+#include "strus/analyzer/segmenterOptions.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
@@ -278,17 +279,22 @@ int main( int argc, const char* argv[])
 		}
 		// Create the document segmenter either defined by the document class or by content or by the name specified:
 		const strus::SegmenterInterface* segmenterType;
+		strus::analyzer::SegmenterOptions segmenteropts;
 		if (segmenterName.empty())
 		{
 			segmenterType = textproc->getSegmenterByMimeType( documentClass.mimeType());
 			if (!segmenterType) throw strus::runtime_error(_TXT("failed to find document segmenter specified by MIME type '%s'"), documentClass.mimeType().c_str());
+			if (!documentClass.scheme().empty())
+			{
+				segmenteropts = textproc->getSegmenterOptions( documentClass.scheme());
+			}
 		}
 		else
 		{
 			segmenterType = textproc->getSegmenterByName( segmenterName);
 			if (!segmenterType) throw strus::runtime_error(_TXT("failed to find document segmenter specified by name '%s'"), segmenterName.c_str());
 		}
-		std::auto_ptr<strus::SegmenterInstanceInterface> segmenter( segmenterType->createInstance());
+		std::auto_ptr<strus::SegmenterInstanceInterface> segmenter( segmenterType->createInstance( segmenteropts));
 		if (!segmenter.get()) throw strus::runtime_error(_TXT("failed to segmenter instance"));
 
 		// Load expressions:

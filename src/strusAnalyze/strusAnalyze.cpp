@@ -26,6 +26,7 @@
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/documentClass.hpp"
+#include "strus/analyzer/segmenterOptions.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
@@ -398,10 +399,15 @@ int main( int argc, const char* argv[])
 
 		// Get the document segmenter type either defined by the document class or by content or by the name specified:
 		const strus::SegmenterInterface* segmenter;
+		strus::analyzer::SegmenterOptions segmenteropts;
 		if (segmentername.empty())
 		{
 			segmenter = textproc->getSegmenterByMimeType( documentClass.mimeType());
 			if (!segmenter) throw strus::runtime_error(_TXT("failed to find document segmenter specified by MIME type '%s'"), documentClass.mimeType().c_str());
+			if (!documentClass.scheme().empty())
+			{
+				segmenteropts = textproc->getSegmenterOptions( documentClass.scheme());
+			}
 		}
 		else
 		{
@@ -410,7 +416,7 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create the document analyzer:
-		std::auto_ptr<strus::DocumentAnalyzerInterface> analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
+		std::auto_ptr<strus::DocumentAnalyzerInterface> analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter, segmenteropts));
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
 
 		// Load analyzer program:

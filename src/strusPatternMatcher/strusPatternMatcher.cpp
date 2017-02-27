@@ -327,7 +327,12 @@ public:
 				{
 					throw strus::runtime_error(_TXT("no segmenter defined for mime type '%s'"), documentClass.mimeType().c_str());
 				}
-				strus::Reference<strus::SegmenterInstanceInterface> segmenterinstref( segmenter->createInstance());
+				strus::analyzer::SegmenterOptions segmenteropts;
+				if (!documentClass.scheme().empty())
+				{
+					segmenteropts = m_globalContext->textproc()->getSegmenterOptions( documentClass.scheme());
+				}
+				strus::Reference<strus::SegmenterInstanceInterface> segmenterinstref( segmenter->createInstance( segmenteropts));
 				if (!segmenterinstref.get())
 				{
 					throw strus::runtime_error(_TXT("failed to create segmenter instance for mime type '%s'"), documentClass.mimeType().c_str());
