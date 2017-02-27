@@ -467,6 +467,7 @@ enum FeatureClass
 	FeatPatternLexem,
 	FeatPatternMatch,
 	FeatSubDocument,
+	FeatSubContent,
 	FeatAggregator
 };
 
@@ -499,6 +500,10 @@ static FeatureClass featureClassFromName( const std::string& name)
 	if (isEqual( name, "Document"))
 	{
 		return FeatSubDocument;
+	}
+	if (isEqual( name, "Content"))
+	{
+		return FeatSubContent;
 	}
 	if (isEqual( name, "Aggregator"))
 	{
@@ -863,6 +868,9 @@ static void parseDocumentPatternFeatureDef(
 		case FeatSubDocument:
 			throw std::logic_error("illegal call of parse feature definition for sub document");
 
+		case FeatSubContent:
+			throw std::logic_error("illegal call of parse feature definition for sub content");
+
 		case FeatAggregator:
 			throw std::logic_error("illegal call of parse feature definition for aggregator");
 	}
@@ -909,6 +917,8 @@ static void parseQueryPatternFeatureDef(
 			throw std::logic_error("illegal call of parse feature definition for attribute in query");
 		case FeatSubDocument:
 			throw std::logic_error("illegal call of parse feature definition for sub document in query");
+		case FeatSubContent:
+			throw std::logic_error("illegal call of parse feature definition for sub content in query");
 		case FeatAggregator:
 			throw std::logic_error("illegal call of parse feature definition for aggregator in query");
 	}
@@ -982,10 +992,10 @@ static void parseDocumentFeatureDef(
 
 		case FeatPatternMatch:
 			throw std::logic_error("illegal call of parse feature definition for pattern match program definition");
-
 		case FeatSubDocument:
 			throw std::logic_error("illegal call of parse feature definition for sub document");
-
+		case FeatSubContent:
+			throw std::logic_error("illegal call of parse feature definition for sub content");
 		case FeatAggregator:
 			throw std::logic_error("illegal call of parse feature definition for aggregator");
 	}
@@ -1049,6 +1059,8 @@ static void parseQueryFeatureDef(
 			throw std::logic_error("illegal call of parse feature definition for attribute in query");
 		case FeatSubDocument:
 			throw std::logic_error("illegal call of parse feature definition for sub document in query");
+		case FeatSubContent:
+			throw std::logic_error("illegal call of parse feature definition for sub content in query");
 		case FeatAggregator:
 			throw std::logic_error("illegal call of parse feature definition for aggregator in query");
 	}
@@ -1264,6 +1276,28 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			if (isOpenSquareBracket( *src))
 			{
 				featclass = parseFeatureClassDef( src, featclassid);
+			}
+			if (featclass == FeatSubContent)
+			{
+				// Define document content with different content-type:
+				if (!isStringQuote(*src))
+				{
+					throw strus::runtime_error( _TXT("expected document class as string at start of sub content definition"));
+				}
+				analyzer::DocumentClass documentClass;
+				if (!parseDocumentClass( documentClass, parse_STRING( src), errorhnd))
+				{
+					throw strus::runtime_error( _TXT("failed to parse document class: %s"), errorhnd->fetchError());
+				}
+
+				std::string xpathexpr( parseSelectorExpression( src));
+				analyzer.defineSubContent( xpathexpr, documentClass);
+				if (!isSemiColon(*src))
+				{
+					throw strus::runtime_error( _TXT("semicolon ';' expected at end of feature declaration"));
+				}
+				(void)parse_OPERATOR(src);
+				continue;
 			}
 			if (!isAlnum(*src))
 			{
@@ -2267,8 +2301,7 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 				si = start;
 			}
 		}
-		if (!mimeType.empty())
-		while (isAlpha(*si))
+		if (mimeType.empty()) while (isAlpha(*si))
 		{
 			std::string id( parse_IDENTIFIER( si));
 			std::string value;
