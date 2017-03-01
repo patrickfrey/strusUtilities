@@ -11,7 +11,7 @@
     sent = empty content /doc/text/h1~;
     sent = empty content /doc/text//li~;
     sent = empty content /doc/title~;
-    punct = empty punctuation("en") /doc/text//();
+    punct = empty punctuation("en",",") /doc/text//();
     sent = empty punctuation("en","") /doc/text//();
     stem = lc:convdia(en):stem(en) word /doc/title();
     stem = lc:convdia(en):stem(en) word /doc/text//();

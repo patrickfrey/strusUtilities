@@ -29,15 +29,15 @@ void CommitQueue::handleWaitingTransactions()
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
 			if (m_verbose)
 			{
-				::printf( _TXT("inserted %u documents (total %u)\n"),
+				::fprintf( stderr, _TXT("inserted %u documents (total %u)\n"),
 						nofDocsInserted, totalNofDocuments);
-				::fflush(stdout);
+				::fflush( stderr);
 			}
 			else
 			{
-				::printf( _TXT("\rinserted %u documents (total %u)          "),
+				::fprintf( stderr, _TXT("\rinserted %u documents (total %u)          "),
 						nofDocsInserted, totalNofDocuments);
-				::fflush( stdout);
+				::fflush( stderr);
 			}
 		}
 		catch (const std::bad_alloc&)

@@ -2,3 +2,4 @@ StrusCreate -S storage.conf
 StrusInsert -S storage.conf doc.ana data/
 StrusDumpStorage -s "path=storage"
 StrusDestroy -s "path=storage"
+
