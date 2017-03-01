@@ -1,0 +1,27 @@
+[Attribute]
+    title = text content /doc/title();
+    docid = text content /doc/docid();
+
+[Content]
+    "encoding=UTF-8; content=JSON;" /doc/embedded();
+
+[SearchIndex]
+    start = empty content /doc/text;
+    para = empty content /doc/text/h1;
+    sent = empty content /doc/text/h1~;
+    sent = empty content /doc/text//li~;
+    sent = empty content /doc/title~;
+    sent = empty punctuation("en",".") /doc/text//();
+    stem = lc:convdia(en):stem(en) word /doc/title();
+    stem = lc:convdia(en):stem(en) word /doc/text//();
+    tist = lc:convdia(en):stem(en) word /doc/title();
+
+[ForwardIndex]
+    orig = orig word /doc/text//();
+    orig = orig word /doc/title();
+
+[Aggregator]
+    title_start = minpos( tist);
+    title_end = nextpos( tist);
+    doclen = count( stem);
+

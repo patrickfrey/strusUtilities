@@ -1,0 +1,2 @@
+StrusCreate -S storage.conf
+StrusAnalyze  doc.ana input.xml 
