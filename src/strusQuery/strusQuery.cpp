@@ -100,11 +100,11 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 15,
+				argc_, argv_, 17,
 				"h,help", "v,version", "license",
-				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:",
+				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:", "P,plain",
 				"D,time", "m,module:", "M,moduledir:", "R,resourcedir:",
-				"s,storage:", "r,rpc:", "T,trace:", "V,verbose");
+				"s,storage:", "S,configfile:", "r,rpc:", "T,trace:", "V,verbose");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -198,6 +198,9 @@ int main( int argc_, const char* argv_[])
 				std::cout << _TXT("    <CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
+			std::cout << "-S|--configfile <FILENAME>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
+			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-u|--user <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use user name <NAME> for the query") << std::endl;
 			std::cout << "-N|--nofranks <N>" << std::endl;
@@ -208,6 +211,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("No output of results") << std::endl;
 			std::cout << "-D|--time" << std::endl;
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
+			std::cout << "-P|--plain" << std::endl;
+			std::cout << "    " << _TXT("Argument <query> is the query and not a reference to a file") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -231,6 +236,7 @@ int main( int argc_, const char* argv_[])
 		std::size_t nofRanks = 20;
 		std::size_t firstRank = 0;
 		std::string storagecfg;
+		bool queryArgIsPlain = opt("plain");
 		if (opt("user"))
 		{
 			username = opt[ "user"];
@@ -243,9 +249,22 @@ int main( int argc_, const char* argv_[])
 		{
 			firstRank = opt.asUint( "firstrank");
 		}
+		if (opt("configfile"))
+		{
+			if (opt("storage")) throw strus::runtime_error(_TXT("conflicting configuration options specified: '%s' and '%s'"), "--storage", "--configfile");
+			std::string configfile = opt[ "configfile"];
+			int ec = strus::readFile( configfile, storagecfg);
+			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u)"), configfile.c_str(), ec);
+
+			std::string::iterator di = storagecfg.begin(), de = storagecfg.end();
+			for (; di != de; ++di)
+			{
+				if ((unsigned char)*di < 32) *di = ' ';
+			}
+		}
 		if (opt("storage"))
 		{
-			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
+			if (opt("configfile")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--configfile");
 			storagecfg = opt["storage"];
 		}
 		std::string analyzerprg = opt[0];
@@ -364,7 +383,11 @@ int main( int argc_, const char* argv_[])
 
 		// Load query:
 		std::string querystring;
-		if (querypath == "-")
+		if (queryArgIsPlain)
+		{
+			querystring = querypath;
+		}
+		else if (querypath == "-")
 		{
 			ec = strus::readStdin( querystring);
 			if (ec) throw strus::runtime_error( _TXT("failed to read query string from stdin (errno %u)"), ec);
@@ -377,7 +400,16 @@ int main( int argc_, const char* argv_[])
 		if (verbose)
 		{
 			std::cerr << "Query context:" << std::endl;
-			std::cerr << "Default field type: " << querydescr.defaultFieldType << std::endl;
+			std::cerr << "Default field types: ";
+			std::vector<std::string>::const_iterator
+				di = querydescr.defaultFieldTypes.begin(),
+				de = querydescr.defaultFieldTypes.end();
+			for (int didx=0; di != de; ++di,++didx)
+			{
+				if (didx) std::cerr << ", ";
+				std::cerr << *di;
+			}
+			std::cerr << std::endl;
 			std::cerr << "Selection feature set: " << querydescr.selectionFeatureSet << std::endl;
 			std::cerr << "Weighting feature set: " << querydescr.weightingFeatureSet << std::endl;
 			std::cerr << "Part of features weighted in selection: " << querydescr.defaultSelectionTermPart << std::endl;

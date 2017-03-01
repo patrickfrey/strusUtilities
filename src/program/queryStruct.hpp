@@ -45,7 +45,10 @@ public:
 	void defineFeature( const std::string& featureSet, float weight);
 
 	/// \brief Define a query field
-	void defineField( const std::string& fieldType, const std::string& fieldContent, bool isSelection);
+	void defineField( const std::string& fieldType, const std::string& fieldContent);
+
+	/// \brief Define an implicitely defined selection feature with a structure
+	void defineImplicitSelection( const std::string& fieldType, const std::string& fieldContent);
 
 	/// \brief Define a meta data restriction field
 	void defineMetaDataRestriction( const std::string& metaDataName, const MetaDataRestrictionInterface::CompareOperator& cmp, const std::string& fieldType, const std::string& fieldContent);

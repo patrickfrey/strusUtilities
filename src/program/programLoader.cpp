@@ -1030,6 +1030,7 @@ static void parseQueryFeatureDef(
 		}
 	}
 	fieldType = parse_IDENTIFIER( src);
+	qdescr.defaultFieldTypes.push_back( fieldType);
 
 	switch (featureClass)
 	{
@@ -1459,10 +1460,6 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 					parseQueryPatternFeatureDef( analyzer, textproc, identifier, src, featclass);
 					break;
 				case AssignNormalizedTerm:
-					if (qdescr.defaultFieldType.empty())
-					{
-						qdescr.defaultFieldType = identifier;
-					}
 					parseQueryFeatureDef( analyzer, qdescr, textproc, identifier, src, featclass);
 					break;
 			}
@@ -1646,92 +1643,73 @@ static std::string parseVariableRef( char const*& src)
 	return rt;
 }
 
-static void parseQueryExpression(
+static bool isQueryStructureExpression( char const* src)
+{
+	if (isAlpha(*src))
+	{
+		++src;
+		while (isAlnum(*src)) ++src;
+		skipSpaces(src);
+		return (isOpenOvalBracket(*src));
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static bool isQueryMetaDataExpression( char const* src)
+{
+	if (isAlpha(*src))
+	{
+		++src;
+		while (isAlnum(*src)) ++src;
+		skipSpaces(src);
+		return (isCompareOperator(src));
+	}
+	else
+	{
+		return false;
+	}
+}
+
+static void parseMetaDataExpression( 
 		QueryStruct& queryStruct,
-		const QueryProcessorInterface* queryproc,
+		char const*& src)
+{
+	std::string functionName = parse_IDENTIFIER(src);
+	MetaDataRestrictionInterface::CompareOperator opr = parse_CompareOperator( src);
+	std::string value = parseQueryTerm( src);
+	queryStruct.defineMetaDataRestriction( functionName, opr, functionName/*field type == metadata name in condition*/, value);
+}
+
+static void closeFeatureParse(
+		QueryStruct& queryStruct,
 		const QueryDescriptors& qdescr,
 		char const*& src)
 {
-	if (isAlpha( *src))
+	float featureWeight = 1.0;
+	if (isAsterisk(*src))
 	{
-		char const* src_bk = src;
-		std::string functionName = parse_IDENTIFIER(src);
-		if (isOpenOvalBracket(*src))
+		(void)parse_OPERATOR(src);
+		if (isDigit(*src))
 		{
-			(void)parse_OPERATOR( src);
-			std::size_t argc = 0;
-
-			if (!isCloseOvalBracket( *src)) while (*src)
-			{
-				argc++;
-				parseQueryExpression( queryStruct, queryproc, qdescr, src);
-				if (isComma( *src))
-				{
-					(void)parse_OPERATOR( src);
-					continue;
-				}
-				break;
-			}
-			int range = 0;
-			unsigned int cardinality = 0;
-			while (isOr( *src) || isExp( *src))
-			{
-				if (isOr( *src))
-				{
-					if (range != 0) throw strus::runtime_error( _TXT("range specified twice"));
-					(void)parse_OPERATOR( src);
-					if (isPlus(*src))
-					{
-						parse_OPERATOR(src);
-						range = parse_UNSIGNED( src);
-					}
-					else
-					{
-						range = parse_INTEGER( src);
-					}
-					if (range == 0) throw strus::runtime_error( _TXT("range should be a non null number"));
-				}
-				else
-				{
-					if (cardinality != 0) throw strus::runtime_error( _TXT("cardinality specified twice"));
-					(void)parse_OPERATOR( src);
-					cardinality = parse_UNSIGNED1( src);
-				}
-			}
-			if (!isCloseOvalBracket( *src))
-			{
-				throw strus::runtime_error( _TXT("comma ',' as query argument separator or colon ':' as range specifier or close oval bracket ')' as end of a query expression expected"));
-			}
-			(void)parse_OPERATOR( src);
-			const PostingJoinOperatorInterface*
-				function = queryproc->getPostingJoinOperator( functionName);
-			if (!function)
-			{
-				throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
-								functionName.c_str());
-			}
-			std::string variableName = parseVariableRef( src);
-			queryStruct.defineExpression( function, argc, range, cardinality);
-			if (!variableName.empty())
-			{
-				queryStruct.defineVariable( variableName);
-			}
-			return;
-		}
-		else if (isCompareOperator(src))
-		{
-			MetaDataRestrictionInterface::CompareOperator opr = parse_CompareOperator( src);
-			std::string value = parseQueryTerm( src);
-			queryStruct.defineMetaDataRestriction( functionName, opr, functionName/*field type == metadata name in condition*/, value);
-			return;
-		}
-		else
-		{
-			src = src_bk;
+			featureWeight = parse_FLOAT( src);
 		}
 	}
+	queryStruct.defineFeature( qdescr.weightingFeatureSet, featureWeight);
+	// [PF:NOTE] Currently very limited: only one feature set possible !
+}
+
+static void parseQueryTermExpression(
+		QueryStruct& queryStruct,
+		const QueryProcessorInterface* queryproc,
+		const QueryDescriptors& qdescr,
+		char const*& src,
+		bool subexpression)
+{
 	bool isSelection = true;
-	if (isExclamation( *src))
+	if (isTilde( *src))
 	{
 		(void)parse_OPERATOR( src);
 		isSelection = false;
@@ -1739,27 +1717,68 @@ static void parseQueryExpression(
 	if (isTextChar( *src) || isStringQuote( *src))
 	{
 		std::string queryField = parseQueryTerm( src);
-		std::string fieldType = parseQueryFieldType( src);
-		if (fieldType.empty())
+		if (isColon( *src))
 		{
-			fieldType = qdescr.weightingFeatureSet;
+			if (isSelection) throw strus::runtime_error(_TXT("operator '~' for optional feature, not allowed together with explicit specification of feature type for field (':' followed by type name)"));
+			std::string fieldType = parseQueryFieldType( src);
+			if (isSelection)
+			{
+				queryStruct.defineImplicitSelection( fieldType, queryField);
+			}
+			queryStruct.defineField( fieldType, queryField);
+			std::string variableName = parseVariableRef( src);
+			if (!variableName.empty())
+			{
+				queryStruct.defineVariable( variableName);
+			}
+			if (!subexpression)
+			{
+				closeFeatureParse( queryStruct, qdescr, src);
+			}
 		}
-		queryStruct.defineField( fieldType, queryField, isSelection);
-
-		std::string variableName = parseVariableRef( src);
-		if (!variableName.empty())
+		else
 		{
-			queryStruct.defineVariable( variableName);
+			if (subexpression && qdescr.defaultFieldTypes.size() > 1)
+			{
+				throw strus::runtime_error("more than one query field defined in configuration, cannot use terms without explicit field declaration in subexpressions");
+			}
+			if (qdescr.defaultFieldTypes.size() == 0)
+			{
+				throw strus::runtime_error("no query field defined in query analyzer configuration");
+			}
+			std::vector<std::string>::const_iterator
+				di = qdescr.defaultFieldTypes.begin(), de = qdescr.defaultFieldTypes.end();
+			for (; di != de; ++di)
+			{
+				if (isSelection)
+				{
+					queryStruct.defineImplicitSelection( *di, queryField);
+				}
+				queryStruct.defineField( *di, queryField);
+				std::string variableName = parseVariableRef( src);
+				if (!variableName.empty())
+				{
+					queryStruct.defineVariable( variableName);
+				}
+				if (!subexpression)
+				{
+					closeFeatureParse( queryStruct, qdescr, src);
+				}
+			}
 		}
 	}
 	else if (isColon( *src))
 	{
 		std::string fieldType = parseQueryFieldType( src);
 		std::string variableName = parseVariableRef( src);
-		queryStruct.defineField( fieldType, std::string(), false/*isSelection*/);
+		queryStruct.defineField( fieldType, std::string());
 		if (!variableName.empty())
 		{
 			queryStruct.defineVariable( variableName);
+		}
+		if (!subexpression)
+		{
+			closeFeatureParse( queryStruct, qdescr, src);
 		}
 	}
 	else
@@ -1768,6 +1787,81 @@ static void parseQueryExpression(
 	}
 }
 
+static void parseQueryStructureExpression(
+		QueryStruct& queryStruct,
+		const QueryProcessorInterface* queryproc,
+		const QueryDescriptors& qdescr,
+		char const*& src)
+{
+	std::string functionName = parse_IDENTIFIER(src);
+	if (!isOpenOvalBracket(*src)) throw strus::runtime_error("internal: bad lookahead in query parser");
+
+	(void)parse_OPERATOR( src);
+	std::size_t argc = 0;
+
+	if (!isCloseOvalBracket( *src) && !isOr( *src) && !isExp( *src)) while (*src)
+	{
+		argc++;
+		if (isQueryStructureExpression( src))
+		{
+			parseQueryStructureExpression( queryStruct, queryproc, qdescr, src);
+		}
+		else
+		{
+			parseQueryTermExpression( queryStruct, queryproc, qdescr, src, true);
+		}
+		if (isComma( *src))
+		{
+			(void)parse_OPERATOR( src);
+			continue;
+		}
+		break;
+	}
+	int range = 0;
+	unsigned int cardinality = 0;
+	while (isOr( *src) || isExp( *src))
+	{
+		if (isOr( *src))
+		{
+			if (range != 0) throw strus::runtime_error( _TXT("range specified twice"));
+			(void)parse_OPERATOR( src);
+			if (isPlus(*src))
+			{
+				parse_OPERATOR(src);
+				range = parse_UNSIGNED( src);
+			}
+			else
+			{
+				range = parse_INTEGER( src);
+			}
+			if (range == 0) throw strus::runtime_error( _TXT("range should be a non null number"));
+		}
+		else
+		{
+			if (cardinality != 0) throw strus::runtime_error( _TXT("cardinality specified twice"));
+			(void)parse_OPERATOR( src);
+			cardinality = parse_UNSIGNED1( src);
+		}
+	}
+	if (!isCloseOvalBracket( *src))
+	{
+		throw strus::runtime_error( _TXT("close oval bracket ')' expected as end of a query structure expression expected"));
+	}
+	(void)parse_OPERATOR( src);
+	const PostingJoinOperatorInterface*
+		function = queryproc->getPostingJoinOperator( functionName);
+	if (!function)
+	{
+		throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
+						functionName.c_str());
+	}
+	std::string variableName = parseVariableRef( src);
+	queryStruct.defineExpression( function, argc, range, cardinality);
+	if (!variableName.empty())
+	{
+		queryStruct.defineVariable( variableName);
+	}
+}
 
 DLL_PUBLIC bool strus::loadQuery(
 		QueryInterface& query,
@@ -1786,37 +1880,19 @@ DLL_PUBLIC bool strus::loadQuery(
 		while (*src)
 		{
 			// Parse query section:
-			float featureWeight = 1.0;
-			std::string featureSet;
-			const char* src_bk = src;
-
-			if (isAlnum( *src))
+			if (isQueryMetaDataExpression( src))
 			{
-				featureSet = parse_IDENTIFIER( src);
-				if (!isColon(*src))
-				{
-					src = src_bk;	//... step back
-					featureSet = qdescr.weightingFeatureSet;
-				}
-				if (utils::caseInsensitiveEquals( featureSet, qdescr.selectionFeatureSet))
-				{
-					haveSelectionFeatureDefined = true;
-				}
+				parseMetaDataExpression( queryStruct, src);
 			}
-			parseQueryExpression( queryStruct, queryproc, qdescr, src);
-			if (isAsterisk(*src))
+			else if (isQueryStructureExpression( src))
 			{
-				(void)parse_OPERATOR(src);
-				if (isDigit(*src))
-				{
-					featureWeight = parse_FLOAT( src);
-				}
-				else
-				{
-					featureWeight = 1.0;
-				}
+				parseQueryStructureExpression( queryStruct, queryproc, qdescr, src);
+				closeFeatureParse( queryStruct, qdescr, src);
 			}
-			queryStruct.defineFeature( featureSet, featureWeight);
+			else
+			{
+				parseQueryTermExpression( queryStruct, queryproc, qdescr, src, false);
+			}
 		}
 		if (!haveSelectionFeatureDefined)
 		{

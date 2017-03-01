@@ -33,6 +33,10 @@ static inline bool isExp( char ch)
 {
 	return (ch == '^');
 }
+static inline bool isTilde( char ch)
+{
+	return (ch == '~');
+}
 static inline bool isMinus( char ch)
 {
 	return (ch == '-');

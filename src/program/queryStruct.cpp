@@ -47,12 +47,13 @@ void QueryStruct::defineFeature( const std::string& featureSet, float weight)
 	m_features.push_back( QueryFeatureStruct( featureSet, weight));
 }
 
-void QueryStruct::defineField( const std::string& fieldType, const std::string& fieldContent, bool isSelection)
+void QueryStruct::defineImplicitSelection( const std::string& fieldType, const std::string& fieldContent)
 {
-	if (isSelection)
-	{
-		m_selectionFeatures.push_back( std::pair<std::string,std::string>( fieldType, fieldContent));
-	}
+	m_selectionFeatures.push_back( std::pair<std::string,std::string>( fieldType, fieldContent));
+}
+
+void QueryStruct::defineField( const std::string& fieldType, const std::string& fieldContent)
+{
 	m_fieldNoStack.push_back( m_fieldNo);
 	m_analyzer->putField( m_fieldNo++, fieldType, fieldContent);
 }
