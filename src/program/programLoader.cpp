@@ -1331,6 +1331,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			if (isOpenSquareBracket( *src))
 			{
 				featclass = parseFeatureClassDef( src, featclassid);
+				if (isOpenSquareBracket( *src)) continue;
 			}
 			if (featclass == FeatSubContent)
 			{
