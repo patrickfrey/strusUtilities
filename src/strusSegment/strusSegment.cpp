@@ -264,7 +264,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
-		else
+		if (!documentClass.defined())
 		{
 			char hdrbuf[ 1024];
 			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));

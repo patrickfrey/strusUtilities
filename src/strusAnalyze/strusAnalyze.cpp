@@ -376,14 +376,11 @@ int main( int argc, const char* argv[])
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
 		strus::analyzer::DocumentClass documentClass;
-		if (!contenttype.empty())
+		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
-			if (!strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
-			{
-				throw strus::runtime_error(_TXT("failed to parse document class"));
-			}
+			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
-		else
+		if (!documentClass.defined())
 		{
 			char hdrbuf[ 1024];
 			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
