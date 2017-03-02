@@ -5,9 +5,9 @@ set -e
 
 # Prepare test output:
 ARG=$1
-TESTROT=$PROJECT/tests/scripts
+TESTROT=$PROJECT_SRC/tests/scripts
 TESTDIR=$TESTROT/$ARG
-EXECROT="$PROJECT/tests/scripts/exec"
+EXECROT="$PROJECT_BIN/tests/scripts/exec"
 EXECDIR="$EXECROT/$ARG"
 rm -Rf $EXECDIR
 mkdir -p $EXECDIR
@@ -20,11 +20,11 @@ for ff in $FILES; do cp -Rf $TESTDIR/$ff $EXECDIR/; done;
 cd $EXECDIR
 echo "#!/bin/bash" > RUN
 echo "" >> RUN
-echo ". $PROJECT/tests/scripts/ENV" >> RUN
+echo ". $TESTROT/ENV" >> RUN
 echo "" >> RUN
 cat $TESTDIR/RUN >> RUN
 chmod +x RUN
-./RUN | perl -pe "s@$PROJECT@/home/strus/@g" > OUT
+./RUN | perl -pe "s@$PROJECT_SRC@/home/strus/@g" > OUT
 ERRNO=$?
 if test "$ERRNO" -gt 0; then
 	echo "ERROR (ERRNO $ERRNO)"

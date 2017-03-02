@@ -10,30 +10,30 @@ ranked list (starting with rank 0, maximum 20 results):
 	phrase = 'In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.' 1
 	debugsummary = 'summarize matchphrase
 find best match with all features:
-candidate pos=1, best=1, span=1, weight=0.000028, string= |  Software |  Introduction
-candidate pos=29, best=0, span=1, weight=0.000022, string=For other uses, see |  Software |  (disambiguation). A
-candidate pos=43, best=0, span=1, weight=0.000022, string=the user interacts with application |  software |  on a typical desktop computer.The
-candidate pos=52, best=0, span=1, weight=0.000022, string=desktop computer.The application |  software |  layer interfaces with the operating
+candidate pos=1, best=1, span=1, weight=0.000033, string= |  Software |  Introduction
+candidate pos=29, best=0, span=1, weight=0.000023, string=For other uses, see |  Software |  (disambiguation). A
+candidate pos=43, best=0, span=1, weight=0.000023, string=the user interacts with application |  software |  on a typical desktop computer.The
+candidate pos=52, best=0, span=1, weight=0.000023, string=desktop computer.The application |  software |  layer interfaces with the operating
 candidate pos=73, best=0, span=1, weight=0.000022, string=The arrows indicate information Computer |  software, |  or simply software,
 candidate pos=77, best=0, span=1, weight=0.000022, string=Computer software, or simply |  software, |  is that part of
 candidate pos=117, best=0, span=1, weight=0.000022, string=History Types of |  software |  Purpose, or domain of
-candidate pos=136, best=0, span=1, weight=0.000022, string=Programming tools |  Software |  topics Architecture Execution
-candidate pos=174, best=0, span=23, weight=0.000026, string=Overview The term "software" |  was first proposed by Alan Turing and used in this sense by John W. Tukey. In computer science and software engineering, |  computer software is all
+candidate pos=136, best=0, span=1, weight=0.000023, string=Programming tools |  Software |  topics Architecture Execution
+candidate pos=174, best=0, span=23, weight=0.000027, string=Overview The term "software" |  was first proposed by Alan Turing and used in this sense by John W. Tukey. In computer science and software engineering, |  computer software is all
 candidate pos=195, best=1, span=2, weight=0.000039, string=In computer science and |  software engineering, |  computer software is all
-candidate pos=196, best=0, span=4, weight=0.000032, string=In computer science and software |  engineering, computer software |  is all information processed by
+candidate pos=196, best=0, span=4, weight=0.000033, string=In computer science and software |  engineering, computer software |  is all information processed by
 candidate pos=213, best=0, span=1, weight=0.000022, string=programs and data. Computer |  software |  includes computer programs, libraries
 candidate pos=236, best=0, span=1, weight=0.000022, string=media. Computer hardware and |  software |  require each other and neither
-candidate pos=390, best=0, span=1, weight=0.000021, string=interrupted. The majority of |  software |  is written in high-level
+candidate pos=390, best=0, span=1, weight=0.000022, string=interrupted. The majority of |  software |  is written in high-level
 candidate pos=435, best=0, span=1, weight=0.000022, string=combination of the two. |  Software |  may also be written in
 candidate pos=490, best=0, span=1, weight=0.000021, string=been the first piece of |  software |  was written by Ada Lovelace
 candidate pos=515, best=0, span=1, weight=0.000021, string=the Analytical Engine nor any |  software |  for it were ever created.
-candidate pos=526, best=0, span=1, weight=0.000021, string=The first theory about |  software—prior |  to creation of computers
+candidate pos=526, best=0, span=1, weight=0.000022, string=The first theory about |  software—prior |  to creation of computers
 candidate pos=573, best=0, span=2, weight=0.000038, string=fields of computer science and |  software engineering, |  which both study software
 candidate pos=574, best=0, span=6, weight=0.000030, string=of computer science and software |  engineering, which both study software |  and its creation. Computer
-candidate pos=579, best=0, span=25, weight=0.000025, string=engineering, which both study |  software and its creation. Computer science is more theoretical (Turing's essay is an example of computer science), whereas software engineering |  focuses on more practical concerns.
-candidate pos=602, best=0, span=2, weight=0.000037, string=computer science), whereas |  software engineering |  focuses on more practical concerns.
+candidate pos=579, best=0, span=25, weight=0.000026, string=engineering, which both study |  software and its creation. Computer science is more theoretical (Turing's essay is an example of computer science), whereas software engineering |  focuses on more practical concerns.
+candidate pos=602, best=0, span=2, weight=0.000038, string=computer science), whereas |  software engineering |  focuses on more practical concerns.
 candidate pos=603, best=0, span=14, weight=0.000025, string=science), whereas software |  engineering focuses on more practical concerns. However, prior to this, software |  as we now understand it—programs
-candidate pos=655, best=0, span=1, weight=0.000021, string=them. Types of |  software |  On virtually all computer
+candidate pos=655, best=0, span=1, weight=0.000022, string=them. Types of |  software |  On virtually all computer
 candidate pos=663, best=0, span=1, weight=0.000021, string=virtually all computer platforms, |  software |  can be grouped into a
 candidate pos=674, best=0, span=1, weight=0.000022, string=few broad categories. Application |  software, |  which is software that
 candidate pos=678, best=0, span=1, weight=0.000021, string=Application software, which is |  software |  that uses the computer system
