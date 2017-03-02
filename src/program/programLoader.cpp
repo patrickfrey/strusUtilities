@@ -1334,6 +1334,8 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			}
 			if (featclass == FeatSubContent)
 			{
+				if (!*src) break;
+
 				// Define document content with different content-type:
 				if (!isStringQuote(*src))
 				{
@@ -1354,6 +1356,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 				(void)parse_OPERATOR(src);
 				continue;
 			}
+			if (!*src) break;
 			if (!isAlnum(*src))
 			{
 				throw strus::runtime_error( _TXT("feature type name (identifier) expected at start of a feature declaration"));
@@ -1474,6 +1477,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			{
 				featclass = parseFeatureClassDef( src, featclassid);
 			}
+			if (!*src) break;
 			if (!isAlnum(*src))
 			{
 				throw strus::runtime_error( _TXT("feature type name (identifier) expected at start of a feature declaration"));
