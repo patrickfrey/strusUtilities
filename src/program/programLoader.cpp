@@ -184,6 +184,7 @@ static void parseWeightingConfig(
 		throw strus::runtime_error(_TXT( "weighting function identifier expected"));
 	}
 	std::string functionName = parse_IDENTIFIER( src);
+	std::string debuginfoName;
 
 	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
 	if (!wf) throw strus::runtime_error(_TXT( "weighting function '%s' not defined"), functionName.c_str());
@@ -218,7 +219,26 @@ static void parseWeightingConfig(
 			throw strus::runtime_error(_TXT( "assingment operator '=' expected after weighting function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
-		if (isDigit(*src) || isMinus(*src) || isPlus(*src))
+		if (!isFeatureParam && utils::caseInsensitiveEquals( parameterName, "debug"))
+		{
+			if (!debuginfoName.empty())
+			{
+				throw strus::runtime_error(_TXT("duplicate definition of 'debug' parameter"));
+			}
+			if (isStringQuote(*src))
+			{
+				debuginfoName = parse_STRING( src);
+			}
+			else if (isStringQuote( *src))
+			{
+				debuginfoName = parse_STRING( src);
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("identifier or string expected as argument of 'debug' parameter"));
+			}
+		}
+		else if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			if (isFeatureParam)
 			{
@@ -232,10 +252,18 @@ static void parseWeightingConfig(
 			std::string parameterValue = parse_STRING( src);
 			if (isFeatureParam)
 			{
-				if (qdescr.weightingFeatureSet.empty())
-				{
-					qdescr.weightingFeatureSet = parameterValue;
-				}
+				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
+			}
+			else
+			{
+				function->addStringParameter( parameterName, parameterValue);
+			}
+		}
+		else if (isAlpha(*src))
+		{
+			std::string parameterValue = parse_IDENTIFIER( src);
+			if (isFeatureParam)
+			{
 				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
 			}
 			else
@@ -245,19 +273,7 @@ static void parseWeightingConfig(
 		}
 		else
 		{
-			std::string parameterValue = parse_IDENTIFIER( src);
-			if (isFeatureParam)
-			{
-				if (qdescr.weightingFeatureSet.empty())
-				{
-					qdescr.weightingFeatureSet = parameterValue;
-				}
-				featureParameters.push_back( FeatureParameter( parameterName, parameterValue));
-			}
-			else
-			{
-				function->addStringParameter( parameterName, parameterValue);
-			}
+			throw strus::runtime_error(_TXT("parameter value (identifier,string,number) expected"));
 		}
 		if (!isComma( *src))
 		{
@@ -270,7 +286,7 @@ static void parseWeightingConfig(
 		throw strus::runtime_error(_TXT( "close oval bracket ')' expected at end of weighting function parameter list"));
 	}
 	(void)parse_OPERATOR(src);
-	qeval.addWeightingFunction( functionName, function.get(), featureParameters); 
+	qeval.addWeightingFunction( functionName, function.get(), featureParameters, debuginfoName); 
 	(void)function.release();
 }
 
@@ -289,6 +305,7 @@ static void parseSummarizerConfig(
 		throw strus::runtime_error(_TXT( "name of summarizer function expected at start of summarizer definition"));
 	}
 	functionName = utils::tolower( parse_IDENTIFIER( src));
+	std::string debuginfoName;
 
 	const SummarizerFunctionInterface* sf = queryproc->getSummarizerFunction( functionName);
 	if (!sf) throw strus::runtime_error(_TXT( "summarizer function not defined: '%s'"), functionName.c_str());
@@ -320,7 +337,26 @@ static void parseSummarizerConfig(
 			throw strus::runtime_error(_TXT( "assignment operator '=' expected after summarizer function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
-		if (isDigit(*src) || isMinus(*src) || isPlus(*src))
+		if (!isFeatureParam && utils::caseInsensitiveEquals( parameterName, "debug"))
+		{
+			if (!debuginfoName.empty())
+			{
+				throw strus::runtime_error(_TXT("duplicate definition of 'debug' parameter"));
+			}
+			if (isStringQuote(*src))
+			{
+				debuginfoName = parse_STRING( src);
+			}
+			else if (isStringQuote( *src))
+			{
+				debuginfoName = parse_STRING( src);
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("identifier or string expected as argument of 'debug' parameter"));
+			}
+		}
+		else if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			if (isFeatureParam)
 			{
@@ -364,7 +400,7 @@ static void parseSummarizerConfig(
 		throw strus::runtime_error(_TXT( "close oval bracket ')' expected at end of summarizer function parameter list"));
 	}
 	(void)parse_OPERATOR(src);
-	qeval.addSummarizerFunction( functionName, function.get(), featureParameters);
+	qeval.addSummarizerFunction( functionName, function.get(), featureParameters, debuginfoName);
 	(void)function.release();
 }
 
@@ -377,7 +413,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 		ErrorBufferInterface* errorhnd)
 {
 	char const* src = source.c_str();
-	enum StatementKeyword {e_FORMULA, e_EVAL, e_SELECTION, e_RESTRICTION, e_TERM, e_SUMMARIZE};
+	enum StatementKeyword {e_FORMULA, e_EVAL, e_SELECT, e_WEIGHT, e_RESTRICTION, e_TERM, e_SUMMARIZE};
 	std::string id;
 
 	skipSpaces( src);
@@ -385,12 +421,12 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 	{
 		while (*src)
 		{
-			switch ((StatementKeyword)parse_KEYWORD( src, 6, "FORMULA", "EVAL", "SELECT", "RESTRICT", "TERM", "SUMMARIZE"))
+			switch ((StatementKeyword)parse_KEYWORD( src, 7, "FORMULA", "EVAL", "SELECT", "WEIGHT", "RESTRICT", "TERM", "SUMMARIZE"))
 			{
 				case e_TERM:
 					parseTermConfig( qeval, qdescr, src);
 					break;
-				case e_SELECTION:
+				case e_SELECT:
 					while (*src && isAlnum( *src))
 					{
 						qdescr.selectionFeatureSet = parse_IDENTIFIER(src);
@@ -403,6 +439,20 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 						{
 							break;
 						}
+					}
+					break;
+				case e_WEIGHT:
+					if (!qdescr.weightingFeatureSet.empty())
+					{
+						throw strus::runtime_error(_TXT("duplicate definition of WEIGHT"));
+					}
+					if (*src && isAlnum( *src))
+					{
+						qdescr.weightingFeatureSet = parse_IDENTIFIER(src);
+					}
+					else
+					{
+						throw strus::runtime_error(_TXT("identifier (feature set) expected as parameter of WEIGHT"));
 					}
 					break;
 				case e_RESTRICTION:
@@ -440,7 +490,11 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 		}
 		if (qdescr.selectionFeatureSet.empty())
 		{
-			throw strus::runtime_error(_TXT("no selection defined in query evaluation configuration"));
+			throw strus::runtime_error(_TXT("no selection feature set (SELECT) defined in query evaluation configuration"));
+		}
+		if (qdescr.weightingFeatureSet.empty())
+		{
+			throw strus::runtime_error(_TXT("no weighting feature set (WEIGHT) defined in query evaluation configuration"));
 		}
 		return true;
 	}
@@ -1719,7 +1773,6 @@ static void parseQueryTermExpression(
 		std::string queryField = parseQueryTerm( src);
 		if (isColon( *src))
 		{
-			if (isSelection) throw strus::runtime_error(_TXT("operator '~' for optional feature, not allowed together with explicit specification of feature type for field (':' followed by type name)"));
 			std::string fieldType = parseQueryFieldType( src);
 			if (isSelection)
 			{

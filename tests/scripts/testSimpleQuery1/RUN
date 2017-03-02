@@ -1,0 +1,10 @@
+StrusCreate -S storage.conf
+StrusInsert -S storage.conf doc.ana data/
+StrusQuery -P -S storage.conf query.ana query.prg "hardware:word"
+StrusQuery -P -S storage.conf query.ana query.prg "software engineer:word"
+StrusQuery -P -S storage.conf query.ana query.prg "software engineer"
+StrusQuery -P -S storage.conf query.ana query.prg "software:title 'machine language instructions':word"
+StrusQuery -P -S storage.conf query.ana query.prg "~hugaga:word software:word"
+StrusQuery -P -S storage.conf query.ana query.prg "hugaga:word software:word"
+StrusDestroy -s "path=storage"
+

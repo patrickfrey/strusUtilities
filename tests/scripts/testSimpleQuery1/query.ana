@@ -1,0 +1,4 @@
+[SearchIndex]
+	tist = lc:convdia(en):stem(en) word title;
+	stem = lc:convdia(en):stem(en) word word;
+

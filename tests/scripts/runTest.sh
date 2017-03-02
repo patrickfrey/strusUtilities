@@ -33,7 +33,6 @@ fi
 cd -
 diff $TESTDIR/EXP $EXECDIR/OUT > $EXECDIR/DIFF || true
 ERR=$(wc -l <"$EXECDIR/DIFF")
-echo "$ERR" > $EXECDIR/ERR
 if test "$ERR" -gt 0; then
 	echo "DIFF AT $ERR"
 	exit 2

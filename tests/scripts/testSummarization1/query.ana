@@ -1,0 +1,3 @@
+[SearchIndex]
+	stem = lc:convdia(en):stem(en) word word;
+

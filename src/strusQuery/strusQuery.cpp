@@ -100,10 +100,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 17,
+				argc_, argv_, 18,
 				"h,help", "v,version", "license",
 				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:", "P,plain",
-				"D,time", "m,module:", "M,moduledir:", "R,resourcedir:",
+				"D,time", "G,debug", "m,module:", "M,moduledir:", "R,resourcedir:",
 				"s,storage:", "S,configfile:", "r,rpc:", "T,trace:", "V,verbose");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
@@ -211,6 +211,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("No output of results") << std::endl;
 			std::cout << "-D|--time" << std::endl;
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
+			std::cout << "-G|--debug" << std::endl;
+			std::cout << "    " << _TXT("Switch debug info of weighting and summarization on") << std::endl;
 			std::cout << "-P|--plain" << std::endl;
 			std::cout << "    " << _TXT("Argument <query> is the query and not a reference to a file") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
@@ -237,6 +239,7 @@ int main( int argc_, const char* argv_[])
 		std::size_t firstRank = 0;
 		std::string storagecfg;
 		bool queryArgIsPlain = opt("plain");
+		bool withDebugInfo = opt("debug");
 		if (opt("user"))
 		{
 			username = opt[ "user"];
@@ -433,6 +436,10 @@ int main( int argc_, const char* argv_[])
 			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, querydescr, errorBuffer.get()))
 			{
 				throw strus::runtime_error(_TXT("failed to load query from source"));
+			}
+			if (withDebugInfo)
+			{
+				query->setDebugMode( true);
 			}
 			query->setMaxNofRanks( nofRanks);
 			query->setMinRank( firstRank);

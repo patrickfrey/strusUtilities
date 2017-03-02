@@ -62,7 +62,7 @@ struct QueryDescriptors
 
 	QueryDescriptors()
 		:defaultFieldTypes(),selectionFeatureSet(),weightingFeatureSet()
-		,defaultSelectionTermPart(0.6),defaultSelectionJoin("contains"){}
+		,defaultSelectionTermPart(1.0),defaultSelectionJoin("contains"){}
 	QueryDescriptors( const QueryDescriptors& o)
 		:defaultFieldTypes(o.defaultFieldTypes)
 		,selectionFeatureSet(o.selectionFeatureSet)
