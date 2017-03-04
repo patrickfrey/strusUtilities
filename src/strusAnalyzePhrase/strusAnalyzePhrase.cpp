@@ -51,9 +51,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 11,
+				argc, argv, 12,
 				"h,help", "v,version", "license", "t,tokenizer:", "n,normalizer:",
-				"m,module:", "M,moduledir:", "q,quot:", "p,plain",
+				"m,module:", "M,moduledir:", "q,quot:", "P,plain", "F,fileinput",
 				"R,resourcedir:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
@@ -127,8 +127,9 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusAnalyze [options] <phrasepath>" << std::endl;
-			std::cout << "<phrasepath> = " << _TXT("path to phrase to analyze ('-' for stdin)") << std::endl;
+			std::cout << _TXT("usage:") << " strusAnalyze [options] <phrase>" << std::endl;
+			std::cout << "<phrase> =   " << _TXT("path to phrase to analyze") << std::endl;
+			std::cout << "             " << _TXT("file or '-' for stdin if option -F is specified)") << std::endl;
 			std::cout << "description: " << _TXT("tokenizes and normalizes a text segment") << std::endl;
 			std::cout << "             " << _TXT("and prints the result to stdout.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
@@ -150,8 +151,10 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Use the normalizer <CALL> (default 'orig')") << std::endl;
 			std::cout << "-q|--quot <STR>" << std::endl;
 			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default \"\'\")") << std::endl;
-			std::cout << "-p|--plain" << std::endl;
+			std::cout << "-P|--plain" << std::endl;
 			std::cout << "    " << _TXT("Do not print position and define default quotes as empty") << std::endl;
+			std::cout << "-F|--fileinput" << std::endl;
+			std::cout << "    " << _TXT("Interpret phrase argument as a file name containing the input") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -181,7 +184,7 @@ int main( int argc, const char* argv[])
 		{
 			resultQuot = opt[ "quot"];
 		}
-		std::string docpath = opt[0];
+		std::string phrasestring = opt[0];
 		std::string tokenizer( "content");
 		if (opt( "tokenizer"))
 		{
@@ -229,27 +232,32 @@ int main( int argc, const char* argv[])
 		// Create phrase type (tokenizer and normalizer):
 		if (!loadPhraseAnalyzer( *analyzer, textproc, normalizer, tokenizer, errorBuffer.get()))
 		{
-			throw strus::runtime_error(_TXT("failed to load analyze phrase type"));
+			throw strus::runtime_error(_TXT("failed to load analyze phrase analyzer"));
 		}
 
 		// Load the phrase:
-		std::string phrase;
-		if (docpath == "-")
+		bool queryIsFile = opt("fileinput");
+		if (queryIsFile)
 		{
-			unsigned int ec = strus::readStdin( phrase);
-			if (ec) throw strus::runtime_error( _TXT( "error reading input from stdin (errno %u)"), ec);
-		}
-		else
-		{
-			unsigned int ec = strus::readFile( docpath, phrase);
-			if (ec) throw strus::runtime_error( _TXT( "error reading input file '%s' (errno %u)"), docpath.c_str(), ec);
+			std::string ps;
+			if (phrasestring == "-")
+			{
+				unsigned int ec = strus::readStdin( ps);
+				if (ec) throw strus::runtime_error( _TXT("failed to read query from stdin (errno %u)"), ec);
+			}
+			else
+			{
+				unsigned int ec = strus::readFile( phrasestring, ps);
+				if (ec) throw strus::runtime_error(_TXT("failed to read query from file %s (errno %u)"), phrasestring.c_str(), ec);
+			}
+			phrasestring = ps;
 		}
 
 		// Analyze the phrase and print the result:
 		std::auto_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
 		if (!qryanactx.get()) throw strus::runtime_error(_TXT("failed to create query analyzer context"));
 	
-		qryanactx->putField( 1, "", phrase);
+		qryanactx->putField( 1, "", phrasestring);
 		strus::analyzer::Query qry = qryanactx->analyze();
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("query analysis failed"));
 		std::vector<strus::analyzer::Term> terms;

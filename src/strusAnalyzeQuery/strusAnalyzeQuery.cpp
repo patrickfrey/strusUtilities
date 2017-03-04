@@ -542,9 +542,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 8,
+				argc, argv, 9,
 				"h,help", "v,version", "license", "m,module:", "r,rpc:",
-				"M,moduledir:", "R,resourcedir:", "T,trace:");
+				"M,moduledir:", "R,resourcedir:", "T,trace:", "F,fileinput");
 		if (opt( "help")) printUsageAndExit = true;
 		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
@@ -618,9 +618,10 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusAnalyzeQuery [options] <program> <queryfile>" << std::endl;
-			std::cout << "<program>   = " << _TXT("path of analyzer program") << std::endl;
-			std::cout << "<queryfile> = " << _TXT("path of query content to analyze ('-' for stdin)") << std::endl;
+			std::cout << _TXT("usage:") << " strusAnalyzeQuery [options] <program> <query>" << std::endl;
+			std::cout << "<program>  = " << _TXT("path of analyzer program") << std::endl;
+			std::cout << "<query>    = " << _TXT("query content to analyze") << std::endl;
+			std::cout << "             " << _TXT("file or '-' for stdin if option -F is specified)") << std::endl;
 			std::cout << _TXT("description: Analyzes a query and dumps the result to stdout.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
@@ -637,6 +638,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
+			std::cout << "-F|--fileinput" << std::endl;
+			std::cout << "    " << _TXT("Interpret query argument as a file name containing the input") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -644,7 +647,7 @@ int main( int argc, const char* argv[])
 		}
 		// Parse arguments:
 		std::string analyzerprg = opt[0];
-		std::string querypath = opt[1];
+		std::string querystring = opt[1];
 
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -718,6 +721,23 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( sproxy);
 		}
 
+		bool queryIsFile = opt("fileinput");
+		if (queryIsFile)
+		{
+			std::string qs;
+			if (querystring == "-")
+			{
+				unsigned int ec = strus::readStdin( qs);
+				if (ec) throw strus::runtime_error( _TXT("failed to read query from stdin (errno %u)"), ec);
+			}
+			else
+			{
+				unsigned int ec = strus::readFile( querystring, qs);
+				if (ec) throw strus::runtime_error(_TXT("failed to read query from file %s (errno %u)"), querystring.c_str(), ec);
+			}
+			querystring = qs;
+		}
+
 		std::auto_ptr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer"));
@@ -737,34 +757,14 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error( _TXT("failed to load query analyze program %s"), analyzerprg.c_str());
 		}
-		// Load the query source:
-		strus::InputStream input( querypath);
-		enum {AnalyzerBufSize=8192};
-		char buf[ AnalyzerBufSize];
-		bool eof = false;
-		std::string querysource;
-
-		while (!eof)
-		{
-			std::size_t readsize = input.read( buf, sizeof(buf));
-			if (readsize < sizeof(buf))
-			{
-				if (input.error())
-				{
-					throw strus::runtime_error( _TXT("failed to read query source file '%s': %s"), querypath.c_str(), ::strerror(input.error())); 
-				}
-				eof = true;
-			}
-			querysource.append( buf, readsize);
-		}
 
 		// Load and print the query:
 		Query query;
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
 		if (!queryproc) throw strus::runtime_error(_TXT("failed to get query processor"));
-		if (!strus::loadQuery( query, analyzer.get(), queryproc, querysource, querydescr, errorBuffer.get()))
+		if (!strus::loadQuery( query, analyzer.get(), queryproc, querystring, querydescr, errorBuffer.get()))
 		{
-			throw strus::runtime_error( _TXT("failed to load query %s"), querypath.c_str());
+			throw strus::runtime_error( _TXT("failed to load query '%s'"), querystring.c_str());
 		}
 
 		query.check();

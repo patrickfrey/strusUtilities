@@ -102,7 +102,7 @@ int main( int argc_, const char* argv_[])
 		opt = strus::ProgramOptions(
 				argc_, argv_, 18,
 				"h,help", "v,version", "license",
-				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:", "P,plain",
+				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:", "F,fileinput",
 				"D,time", "G,debug", "m,module:", "M,moduledir:", "R,resourcedir:",
 				"s,storage:", "S,configfile:", "r,rpc:", "T,trace:", "V,verbose");
 		if (opt( "help")) printUsageAndExit = true;
@@ -182,7 +182,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << _TXT("usage:") << " strusQuery [options] <anprg> <qeprg> <query>" << std::endl;
 			std::cout << "<anprg>   = " << _TXT("path of query analyzer program") << std::endl;
 			std::cout << "<qeprg>   = " << _TXT("path of query eval program") << std::endl;
-			std::cout << "<query>   = " << _TXT("path of query or '-' for stdin") << std::endl;
+			std::cout << "<query>    = " << _TXT("query string") << std::endl;
+			std::cout << "             " << _TXT("file or '-' for stdin if option -F is specified)") << std::endl;
 			std::cout << _TXT("description: Executes a query or a list of queries from a file.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
@@ -213,8 +214,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
 			std::cout << "-G|--debug" << std::endl;
 			std::cout << "    " << _TXT("Switch debug info of weighting and summarization on") << std::endl;
-			std::cout << "-P|--plain" << std::endl;
-			std::cout << "    " << _TXT("Argument <query> is the query and not a reference to a file") << std::endl;
+			std::cout << "-F|--fileinput" << std::endl;
+			std::cout << "    " << _TXT("Interpret query argument as a file name containing the input") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -238,7 +239,7 @@ int main( int argc_, const char* argv_[])
 		std::size_t nofRanks = 20;
 		std::size_t firstRank = 0;
 		std::string storagecfg;
-		bool queryArgIsPlain = opt("plain");
+		bool queryIsFile = opt("fileinput");
 		bool withDebugInfo = opt("debug");
 		if (opt("user"))
 		{
@@ -272,7 +273,7 @@ int main( int argc_, const char* argv_[])
 		}
 		std::string analyzerprg = opt[0];
 		std::string queryprg = opt[1];
-		std::string querypath = opt[2];
+		std::string querystring = opt[2];
 
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -385,20 +386,20 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// Load query:
-		std::string querystring;
-		if (queryArgIsPlain)
+		if (queryIsFile)
 		{
-			querystring = querypath;
-		}
-		else if (querypath == "-")
-		{
-			ec = strus::readStdin( querystring);
-			if (ec) throw strus::runtime_error( _TXT("failed to read query string from stdin (errno %u)"), ec);
-		}
-		else
-		{
-			ec = strus::readFile( querypath, querystring);
-			if (ec) throw strus::runtime_error(_TXT("failed to read query string from file %s (errno %u)"), querypath.c_str(), ec);
+			std::string qs;
+			if (querystring == "-")
+			{
+				ec = strus::readStdin( qs);
+				if (ec) throw strus::runtime_error( _TXT("failed to read query from stdin (errno %u)"), ec);
+			}
+			else
+			{
+				ec = strus::readFile( querystring, qs);
+				if (ec) throw strus::runtime_error(_TXT("failed to read query from file %s (errno %u)"), querystring.c_str(), ec);
+			}
+			querystring = qs;
 		}
 		if (verbose)
 		{
