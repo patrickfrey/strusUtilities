@@ -11,6 +11,7 @@ add_test( TestAnalyzeSubSegmenter1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.s
 add_test( TestAnalyzeSubSegmenter2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeSubSegmenter2 )
 add_test( TestAnalyzeSubSegmenter3 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeSubSegmenter3 )
 add_test( TestAnalyzeBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeBase1 )
+add_test( TestAnalyzeJson1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeJson1 )
 add_test( TestAnalyzeConfig1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig1 )
 add_test( TestAnalyzeConfig2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig2 )
 add_test( TestAnalyzeWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeWithDocType1 )
