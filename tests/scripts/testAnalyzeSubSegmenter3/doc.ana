@@ -1,0 +1,6 @@
+[Content]
+    "encoding=UTF-8; content=JSON;" /posts/post/meta();
+
+[Attribute]
+    title = orig content /posts/post/meta()/title();
+
