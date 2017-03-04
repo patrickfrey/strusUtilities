@@ -1,0 +1,3 @@
+StrusAnalyze doc.map input.json
+StrusAnalyze doc.map input.xml
+

@@ -87,12 +87,14 @@ void KeyMapGenResultList::printKeyOccurrenceList( std::ostream& out, std::size_t
 KeyMapGenProcessor::KeyMapGenProcessor(
 		const TextProcessorInterface* textproc_,
 		const AnalyzerMap* analyzerMap_,
+		const analyzer::DocumentClass& defaultDocumentClass_,
 		KeyMapGenResultList* que_,
 		FileCrawlerInterface* crawler_,
 		ErrorBufferInterface* errorhnd_)
 
 	:m_textproc(textproc_)
 	,m_analyzerMap(analyzerMap_)
+	,m_defaultDocumentClass(defaultDocumentClass_)
 	,m_que(que_)
 	,m_crawler(crawler_)
 	,m_terminated(false)
@@ -128,7 +130,8 @@ void KeyMapGenProcessor::run()
 				{
 					strus::InputStream input( *fitr);
 					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
-					if (!m_analyzerMap->documentClass().defined())
+					strus::analyzer::DocumentClass dclass;
+					if (!m_defaultDocumentClass.defined())
 					{
 						// Read the input file to analyze and detect its document type:
 						char hdrbuf[ 1024];
@@ -138,30 +141,23 @@ void KeyMapGenProcessor::run()
 							std::cerr << string_format( _TXT( "failed to read document file '%s': %s"), fitr->c_str(), ::strerror( input.error())) << std::endl; 
 							break;
 						}
-						strus::analyzer::DocumentClass dclass;
 						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
 						{
 							std::cerr << string_format( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 							continue;
 						}
-						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( dclass);
-						if (!analyzer)
-						{
-							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
-							continue;
-						}
-						analyzerContext.reset( analyzer->createContext( dclass));
 					}
 					else
 					{
-						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( m_analyzerMap->documentClass());
-						if (!analyzer)
-						{
-							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), m_analyzerMap->documentClass().mimeType().c_str(), m_analyzerMap->documentClass().scheme().c_str()) << std::endl; 
-							continue;
-						}
-						analyzerContext.reset( analyzer->createContext( m_analyzerMap->documentClass()));
+						dclass = m_defaultDocumentClass;
 					}
+					const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( dclass);
+					if (!analyzer)
+					{
+						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
+						continue;
+					}
+					analyzerContext.reset( analyzer->createContext( dclass));
 					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
 
 					// Analyze the document (with subdocuments) and update the key map:

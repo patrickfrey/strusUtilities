@@ -12,6 +12,8 @@ add_test( TestAnalyzeSubSegmenter2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.s
 add_test( TestAnalyzeBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeBase1 )
 add_test( TestAnalyzeConfig1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig1 )
 add_test( TestAnalyzeConfig2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig2 )
+add_test( TestAnalyzeWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeWithDocType1 )
+add_test( TestInsertWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertWithDocType1 )
 add_test( TestInsertBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertBase1 )
 add_test( TestSimpleQuery1  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSimpleQuery1 )
 add_test( TestSummarization1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSummarization1 )

@@ -37,6 +37,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/analyzerMap.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -339,6 +340,10 @@ int main( int argc, const char* argv[])
 		{
 			moduleLoader->addResourcePath( resourcepath);
 		}
+		else
+		{
+			moduleLoader->addResourcePath( "./");
+		}
 
 		// Create objects for analyzer:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -380,6 +385,21 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
+		// Load analyzer program(s):
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
+		if (analyzerMap.isAnalyzerConfigSource( analyzerprg))
+		{
+			analyzerMap.loadDefaultAnalyzerProgram( segmentername, analyzerprg);
+		}
+		else
+		{
+			if (!segmentername.empty())
+			{
+				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"));
+			}
+			analyzerMap.loadAnalyzerMap( analyzerprg);
+		}
+		// Detect document content type if not explicitely defined:
 		if (!documentClass.defined())
 		{
 			char hdrbuf[ 1024];
@@ -393,40 +413,11 @@ int main( int argc, const char* argv[])
 				throw strus::runtime_error( _TXT("failed to detect document class")); 
 			}
 		}
-
-		// Get the document segmenter type either defined by the document class or by content or by the name specified:
-		const strus::SegmenterInterface* segmenter;
-		strus::analyzer::SegmenterOptions segmenteropts;
-		if (segmentername.empty())
+		// Create the document analyzer context:
+		const strus::DocumentAnalyzerInterface* analyzer = analyzerMap.get( documentClass);
+		if (!analyzer)
 		{
-			segmenter = textproc->getSegmenterByMimeType( documentClass.mimeType());
-			if (!segmenter) throw strus::runtime_error(_TXT("failed to find document segmenter specified by MIME type '%s'"), documentClass.mimeType().c_str());
-			if (!documentClass.scheme().empty())
-			{
-				segmenteropts = textproc->getSegmenterOptions( documentClass.scheme());
-			}
-		}
-		else
-		{
-			segmenter = textproc->getSegmenterByName( segmentername);
-			if (!segmenter) throw strus::runtime_error(_TXT("failed to find document segmenter specified by name '%s'"), segmentername.c_str());
-		}
-
-		// Create the document analyzer:
-		std::auto_ptr<strus::DocumentAnalyzerInterface> analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter, segmenteropts));
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
-
-		// Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			throw strus::runtime_error( _TXT("failed to load analyzer program %s (file system error %u)"), analyzerprg.c_str(), ec);
-		}
-		if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
-		{
-			throw strus::runtime_error( _TXT("failed to load analyzer program %s"), analyzerprg.c_str());
+			throw strus::runtime_error( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), documentClass.mimeType().c_str(), documentClass.scheme().c_str()); 
 		}
 		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
 			analyzerContext( analyzer->createContext( documentClass));

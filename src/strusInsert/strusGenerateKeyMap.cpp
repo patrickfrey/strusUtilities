@@ -237,6 +237,10 @@ int main( int argc_, const char* argv_[])
 		{
 			moduleLoader->addResourcePath( resourcepath);
 		}
+		else
+		{
+			moduleLoader->addResourcePath( "./");
+		}
 
 		// Create root objects:
 		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
@@ -256,14 +260,27 @@ int main( int argc_, const char* argv_[])
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
-		// [2] Load analyzer program(s):
+		// Parse default document class if specified as option:
 		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
-		std::cerr << analyzerMap.warnings();
+
+		// [2] Load analyzer program(s):
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
+		if (analyzerMap.isAnalyzerConfigSource( analyzerprg))
+		{
+			analyzerMap.loadDefaultAnalyzerProgram( segmentername, analyzerprg);
+		}
+		else
+		{
+			if (!segmentername.empty())
+			{
+				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"));
+			}
+			analyzerMap.loadAnalyzerMap( analyzerprg);
+		}
 
 		strus::KeyMapGenResultList resultList;
 		strus::FileCrawler fileCrawler( datapath, unitSize, nofThreads*5+5, fileext);
@@ -275,7 +292,8 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
-				textproc, &analyzerMap, &resultList, &fileCrawler, errorBuffer.get());
+				textproc, &analyzerMap, documentClass,
+				&resultList, &fileCrawler, errorBuffer.get());
 			processor.run();
 		}
 		else
@@ -285,7 +303,8 @@ int main( int argc_, const char* argv_[])
 			{
 				processorList.push_back(
 					new strus::KeyMapGenProcessor(
-						textproc, &analyzerMap, &resultList, &fileCrawler, errorBuffer.get()));
+						textproc, &analyzerMap, documentClass, 
+						&resultList, &fileCrawler, errorBuffer.get()));
 			}
 			{
 				boost::thread_group tgroup;

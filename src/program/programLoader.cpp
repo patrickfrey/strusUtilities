@@ -1347,7 +1347,6 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 				{
 					throw strus::runtime_error( _TXT("failed to parse document class: %s"), errorhnd->fetchError());
 				}
-
 				std::string xpathexpr( parseSelectorExpression( src));
 				analyzer.defineSubContent( xpathexpr, documentClass);
 				if (!isSemiColon(*src))
@@ -1545,7 +1544,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 }
 
 
-DLL_PUBLIC bool strus::isAnalyzerMapSource(
+DLL_PUBLIC bool strus::isAnalyzerConfigSource(
 		const std::string& source,
 		ErrorBufferInterface* errorhnd)
 {
@@ -1553,11 +1552,13 @@ DLL_PUBLIC bool strus::isAnalyzerMapSource(
 	{
 		char const* src = source.c_str();
 		skipSpaces(src);
+		if (isOpenSquareBracket(*src)) return true;
 		if (isAlpha(*src))
 		{
 			std::string id = parse_IDENTIFIER( src);
-			if (isEqual( id, "SCHEME") || isEqual( id, "SEGMENTER") || isEqual( id, "PROGRAM")) return true;
+			if (isAssign(*src) || isLeftArrow(src)) return true;
 		}
+		if (!*src) return true;
 		return false;
 	}
 	catch (const std::bad_alloc&)
@@ -1567,90 +1568,86 @@ DLL_PUBLIC bool strus::isAnalyzerMapSource(
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report(_TXT("error in check for analyzer map source: %s"), e.what());
 		return false;
 	}
 }
 
-static std::string parseAnalyzerMapValue( char const*& itr)
-{
-	std::string val;
-	if (isStringQuote( *itr))
-	{
-		val = parse_STRING( itr);
-	}
-	else
-	{
-		for (;*itr && !isSpace(*itr) && !isColon(*itr); ++itr)
-		{
-			val.push_back( *itr);
-		}
-	}
-	return val;
-}
+static analyzer::DocumentClass parseDocumentClass_( char const*& si);
 
 DLL_PUBLIC bool strus::loadAnalyzerMap(
 		std::vector<AnalyzerMapElement>& mapdef,
 		const std::string& source,
 		ErrorBufferInterface* errorhnd)
 {
-	enum Mask {MSK_SCHEME=0x01, MSK_PROGRAM=0x02, MSK_SEGMENTER=0x04};
-	AnalyzerMapElement elem;
-	int mask = 0;
 	char const* src = source.c_str();
 	skipSpaces(src);
 	try
 	{
 		while (*src)
 		{
-			if (isSemiColon(*src))
+			char const* si = src;
+			skipToEoln( src);
+			std::string line( si, src-si);
+			si = line.c_str();
+			skipSpaces(src);
+
+			// Parse program filename:
+			std::string program;
+			if (isStringQuote(*si))
 			{
-				(void)parse_OPERATOR( src);
-				if ((mask & MSK_PROGRAM) == 0)
+				program = parse_STRING( si);
+			}
+			else
+			{
+				program = parse_PATH( si);
+			}
+			// Determine segmenter if explicitely defined (optional):
+			std::string segmenter;
+			const char* start = si;
+			if (isAlpha(*si))
+			{
+				// Lookahead for segmenter id:
+				while (isAlnum(*si)) ++si;
+				if (!isSpace(*si))
 				{
-					mapdef.push_back( elem);
-					elem.clear();
-					mask = 0;
-				}
-				else if (!mask)
-				{
-					throw strus::runtime_error( _TXT("empty declaration"));
+					si = start;
 				}
 				else
 				{
-					throw strus::runtime_error( _TXT("PROGRAM missing in declaration"));
+					skipSpaces( si);
+					if (isAssign( *si) || !*si)
+					{
+						si = start;
+					}
+					else
+					{
+						segmenter = std::string( start, si-start);
+					}
 				}
 			}
-			if (isAlpha(*src))
+			// Parse document class:
+			analyzer::DocumentClass doctype;
+			const char* doctypestart = si;
+			if (isStringQuote( *si))
 			{
-				std::string id = parse_IDENTIFIER( src);
-				if (isEqual( id, "SCHEME"))
+				if (!strus::parseDocumentClass( doctype, parse_STRING( si), errorhnd))
 				{
-					if (mask & MSK_SCHEME) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
-					mask |= MSK_SCHEME;
-					elem.scheme = parseAnalyzerMapValue( src);
-				}
-				else if (isEqual( id, "PROGRAM"))
-				{
-					if (mask & MSK_PROGRAM) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
-					mask |= MSK_PROGRAM;
-					elem.prgFilename = parseAnalyzerMapValue( src);
-				}
-				else if (isEqual( id, "SEGMENTER"))
-				{
-					if (mask & MSK_SEGMENTER) throw strus::runtime_error( _TXT("duplicate definition of %s"), id.c_str());
-					mask |= MSK_SEGMENTER;
-					elem.segmenter = parseAnalyzerMapValue( src);
-				}
-				else
-				{
-					throw strus::runtime_error( _TXT( "unknown identifier '%s'"), id.c_str());
+					throw std::runtime_error( errorhnd->fetchError());
 				}
 			}
-		}
-		if (mask)
-		{
-			throw strus::runtime_error( _TXT("unterminated definition, missing semicolon at end of source"));
+			else if (*si)
+			{
+				doctype = parseDocumentClass_( si);
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("document type not defined for program '%s'"), program.c_str());
+			}
+			if (!doctype.defined())
+			{
+				throw strus::runtime_error(_TXT("unknown document type configured for program '%s' at '%s'"), program.c_str(), doctypestart);
+			}
+			mapdef.push_back( AnalyzerMapElement( doctype, segmenter, program));
 		}
 		return true;
 	}
@@ -1667,8 +1664,6 @@ DLL_PUBLIC bool strus::loadAnalyzerMap(
 		return false;
 	}
 }
-
-
 
 
 static std::string parseQueryFieldType( char const*& src)
@@ -2408,6 +2403,78 @@ DLL_PUBLIC unsigned int strus::loadDocumentUserRightsAssignments(
 	}
 }
 
+static analyzer::DocumentClass parseDocumentClass_( char const*& si)
+{
+	std::string mimeType;
+	std::string encoding;
+
+	char const* start = si;
+	skipSpaces( si);
+	if (isAlpha(*si))
+	{
+		std::string value = parse_PATH( si);
+		if (isAssign(*si))
+		{
+			si = start;
+		}
+		else
+		{
+			mimeType = value;
+			encoding = "UTF-8";
+		}
+	}
+	if (mimeType.empty()) while (isAlpha(*si))
+	{
+		std::string id( parse_IDENTIFIER( si));
+		std::string value;
+		if (!isAssign(*si))
+		{
+			throw strus::runtime_error( _TXT("expected assignment operator '=' after identifier"));
+		}
+		(void)parse_OPERATOR( si);
+		if (isStringQuote(*si))
+		{
+			value = parse_STRING( si);
+		}
+		else if (isAlpha(*si))
+		{
+			value = parse_PATH( si);
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT("expected string or content type or encoding as value"));
+		}
+		if (isEqual( id, "content"))
+		{
+			mimeType = value;
+		}
+		else if (isEqual( id, "charset") || isEqual( id, "encoding"))
+		{
+			encoding = value;
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT("unknown identifier in document class declaration: %s"), id.c_str());
+		}
+		if (isSemiColon(*si))
+		{
+			parse_OPERATOR(si);
+		}
+	}
+	if (isEqual( mimeType,"xml") || isEqual( mimeType,"text/xml"))
+	{
+		mimeType = "application/xml";
+	}
+	else if (isEqual( mimeType,"json"))
+	{
+		mimeType = "application/json";
+	}
+	else if (isEqual( mimeType,"tsv"))
+	{
+		mimeType = "text/tab-separated-values";
+	}
+	return analyzer::DocumentClass( mimeType, encoding);
+}
 
 DLL_PUBLIC bool strus::parseDocumentClass(
 		analyzer::DocumentClass& result,
@@ -2416,76 +2483,9 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 {
 	try
 	{
-		std::string mimeType;
-		std::string encoding;
-
 		char const* si = source.c_str();
-		char const* start = si;
-		skipSpaces( si);
-		if (isAlpha(*si))
-		{
-			std::string value = parse_PATH( si);
-			if (!*si)
-			{
-				mimeType = value;
-				encoding = "UTF-8";
-			}
-			else
-			{
-				si = start;
-			}
-		}
-		if (mimeType.empty()) while (isAlpha(*si))
-		{
-			std::string id( parse_IDENTIFIER( si));
-			std::string value;
-			if (!isAssign(*si))
-			{
-				throw strus::runtime_error( _TXT("expected assignment operator '=' after identifier"));
-			}
-			(void)parse_OPERATOR( si);
-			if (isStringQuote(*si))
-			{
-				value = parse_STRING( si);
-			}
-			else if (isAlpha(*si))
-			{
-				value = parse_PATH( si);
-			}
-			else
-			{
-				throw strus::runtime_error( _TXT("expected string or content type or encoding as value"));
-			}
-			if (isEqual( id, "content"))
-			{
-				mimeType = value;
-			}
-			else if (isEqual( id, "charset") || isEqual( id, "encoding"))
-			{
-				encoding = value;
-			}
-			else
-			{
-				throw strus::runtime_error( _TXT("unknown identifier in document class declaration: %s"), id.c_str());
-			}
-			if (isSemiColon(*si))
-			{
-				parse_OPERATOR(si);
-			}
-		}
-		if (isEqual( mimeType,"xml") || isEqual( mimeType,"text/xml"))
-		{
-			mimeType = "application/xml";
-		}
-		else if (isEqual( mimeType,"json"))
-		{
-			mimeType = "application/json";
-		}
-		else if (isEqual( mimeType,"tsv"))
-		{
-			mimeType = "text/tab-separated-values";
-		}
-		result = analyzer::DocumentClass( mimeType, encoding);
+		result = parseDocumentClass_( si);
+		if (*si) throw strus::runtime_error(_TXT("extra tokens at end of document class definition"));
 		return true;
 	}
 	catch (const std::bad_alloc&)

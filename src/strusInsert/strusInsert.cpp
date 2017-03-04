@@ -330,6 +330,10 @@ int main( int argc_, const char* argv_[])
 		{
 			moduleLoader->addResourcePath( resourcepath);
 		}
+		else
+		{
+			moduleLoader->addResourcePath( "./");
+		}
 
 		// Create objects for inserter:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -380,9 +384,21 @@ int main( int argc_, const char* argv_[])
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
+
 		// Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
-		std::cerr << analyzerMap.warnings();
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
+		if (analyzerMap.isAnalyzerConfigSource( analyzerprg))
+		{
+			analyzerMap.loadDefaultAnalyzerProgram( segmentername, analyzerprg);
+		}
+		else
+		{
+			if (!segmentername.empty())
+			{
+				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"));
+			}
+			analyzerMap.loadAnalyzerMap( analyzerprg);
+		}
 
 		// Start inserter process:
 		strus::utils::ScopedPtr<strus::CommitQueue>
@@ -395,7 +411,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
-				storage.get(), textproc, &analyzerMap, commitQue.get(),
+				storage.get(), textproc, &analyzerMap, documentClass, commitQue.get(),
 				&fileCrawler, transactionSize, verbose, errorBuffer.get());
 			inserter.run();
 		}
@@ -407,7 +423,7 @@ int main( int argc_, const char* argv_[])
 			{
 				processorList.push_back(
 					new strus::InsertProcessor(
-						storage.get(), textproc, &analyzerMap, commitQue.get(),
+						storage.get(), textproc, &analyzerMap, documentClass, commitQue.get(),
 						&fileCrawler, transactionSize, verbose, errorBuffer.get()));
 			}
 			{

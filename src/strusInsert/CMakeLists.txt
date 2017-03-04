@@ -8,7 +8,6 @@ set(source_files
 	commitQueue.cpp
 	fileCrawler.cpp
 	insertProcessor.cpp
-	analyzerMap.cpp
 	keyMapGenProcessor.cpp
 )
 

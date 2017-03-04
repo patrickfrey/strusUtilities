@@ -1,0 +1,5 @@
+StrusCreate -S storage.conf
+StrusInsert -S storage.conf doc.map data/
+StrusDumpStorage -s "path=storage"
+StrusDestroy -s "path=storage"
+

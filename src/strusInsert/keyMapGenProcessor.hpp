@@ -11,7 +11,7 @@
 #include <vector>
 #include <string>
 #include "private/utils.hpp"
-#include "analyzerMap.hpp"
+#include "private/analyzerMap.hpp"
 
 namespace strus {
 
@@ -64,6 +64,7 @@ public:
 	KeyMapGenProcessor(
 			const TextProcessorInterface* textproc_,
 			const AnalyzerMap* analyzerMap_,
+			const analyzer::DocumentClass& defaultDocumentClass_,
 			KeyMapGenResultList* que_,
 			FileCrawlerInterface* crawler_,
 			ErrorBufferInterface* errorhnd_);
@@ -76,6 +77,7 @@ public:
 private:
 	const TextProcessorInterface* m_textproc;
 	const AnalyzerMap* m_analyzerMap;
+	analyzer::DocumentClass m_defaultDocumentClass;
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
 	utils::AtomicBool m_terminated;

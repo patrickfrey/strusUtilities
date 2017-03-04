@@ -109,21 +109,21 @@ bool loadQueryAnalyzerProgram(
 struct AnalyzerMapElement
 {
 	AnalyzerMapElement(){}
+	AnalyzerMapElement( const strus::analyzer::DocumentClass& doctype_, const std::string& segmenter_, const std::string& program_)
+		:doctype(doctype_),segmenter(segmenter_),program(program_){}
 	AnalyzerMapElement( const AnalyzerMapElement& o)
-		:scheme(o.scheme),segmenter(o.segmenter),prgFilename(o.prgFilename){}
-	void clear()
-		{scheme.clear(); segmenter.clear(); prgFilename.clear();}
+		:doctype(o.doctype),segmenter(o.segmenter),program(o.program){}
 
-	std::string scheme;		///< document class id type or list of element descriptions
-	std::string segmenter;		///< segmenter to use
-	std::string prgFilename;	///< analyzer program to use
+	strus::analyzer::DocumentClass doctype;		///< document class that identifies the segmenter
+	std::string segmenter;				///< segmenter explicitely defined
+	std::string program;				///< analyzer program file
 };
 
-/// \brief Determine if 'source' is most likely a source describing an analyzer map
+/// \brief Determine if 'source' is more likely a source describing an analyzer configuration than an analyzer map
 /// \param[in] source source candidate
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true, if yes, false, else
-bool isAnalyzerMapSource(
+bool isAnalyzerConfigSource(
 		const std::string& source,
 		ErrorBufferInterface* errorhnd);
 

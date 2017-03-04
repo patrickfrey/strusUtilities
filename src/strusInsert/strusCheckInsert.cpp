@@ -309,6 +309,10 @@ int main( int argc_, const char* argv_[])
 		{
 			moduleLoader->addResourcePath( resourcepath);
 		}
+		else
+		{
+			moduleLoader->addResourcePath( "./");
+		}
 
 		// Create root objects:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -362,7 +366,19 @@ int main( int argc_, const char* argv_[])
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
+		if (analyzerMap.isAnalyzerConfigSource( analyzerprg))
+		{
+			analyzerMap.loadDefaultAnalyzerProgram( segmentername, analyzerprg);
+		}
+		else
+		{
+			if (!segmentername.empty())
+			{
+				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"));
+			}
+			analyzerMap.loadAnalyzerMap( analyzerprg);
+		}
 		std::cerr << analyzerMap.warnings();
 
 		strus::FileCrawler fileCrawler( datapath, notificationInterval, nofThreads*5+5, fileext);
@@ -372,7 +388,7 @@ int main( int argc_, const char* argv_[])
 		if (nofThreads == 0)
 		{
 			strus::CheckInsertProcessor checker(
-				storage.get(), textproc, &analyzerMap, &fileCrawler, logfile, errorBuffer.get());
+				storage.get(), textproc, &analyzerMap, documentClass, &fileCrawler, logfile, errorBuffer.get());
 			checker.run();
 		}
 		else
@@ -383,7 +399,7 @@ int main( int argc_, const char* argv_[])
 			{
 				processorList.push_back(
 					new strus::CheckInsertProcessor(
-						storage.get(), textproc, &analyzerMap,
+						storage.get(), textproc, &analyzerMap, documentClass,
 						&fileCrawler, logfile, errorBuffer.get()));
 			}
 			{
