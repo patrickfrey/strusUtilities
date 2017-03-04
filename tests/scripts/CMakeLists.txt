@@ -9,6 +9,7 @@ ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 
 add_test( TestAnalyzeSubSegmenter1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeSubSegmenter1 )
 add_test( TestAnalyzeSubSegmenter2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeSubSegmenter2 )
+add_test( TestAnalyzeSubSegmenter3 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeSubSegmenter3 )
 add_test( TestAnalyzeBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeBase1 )
 add_test( TestAnalyzeConfig1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig1 )
 add_test( TestAnalyzeConfig2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig2 )
