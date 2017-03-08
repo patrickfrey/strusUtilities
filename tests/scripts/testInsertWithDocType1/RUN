@@ -1,5 +1,18 @@
 StrusCreate -S storage.conf
 StrusInsert -S storage.conf doc.map data/
-StrusDumpStorage -s "path=storage"
+StrusInspect -s "path=storage" nofdocs
+StrusInspect -s "path=storage" attribute title
+StrusInspect -s "path=storage" attribute docid
+StrusInspect -s "path=storage" metadata title_start
+StrusInspect -s "path=storage" metadata title_end
+StrusInspect -s "path=storage" metadata doclen
+StrusInspect -s "path=storage" indexterms start
+StrusInspect -s "path=storage" indexterms para
+StrusInspect -s "path=storage" indexterms sent
+StrusInspect -s "path=storage" indexterms punct
+StrusInspect -s "path=storage" indexterms stem
+StrusInspect -s "path=storage" indexterms tist
+StrusInspect -s "path=storage" content orig
 StrusDestroy -s "path=storage"
+
 
