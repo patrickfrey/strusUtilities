@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
+IF( UNIX AND NOT APPLE )
 IF (WITH_STRUS_PATTERN STREQUAL "YES")
 add_test( TestPatternMatch1  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch1 )
 add_test( TestPatternMatch2  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch2 )
@@ -20,4 +21,5 @@ add_test( TestInsertWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh 
 add_test( TestInsertBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertBase1 )
 add_test( TestSimpleQuery1  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSimpleQuery1 )
 add_test( TestSummarization1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSummarization1 )
+ENDIF( UNIX AND NOT APPLE )
 
