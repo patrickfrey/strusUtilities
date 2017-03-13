@@ -65,6 +65,7 @@ src/strusCheckStorage/strusCheckStorage
 src/strusDumpStorage/strusDumpStorage
 src/strusInspect/strusInspect
 src/strusUpdateStorage/strusUpdateStorage
+src/strusUpdateStorageCalcStatistics/strusUpdateStorageCalcStatistics
 src/strusSegment/strusSegment
 src/strusHelp/strusHelp
 src/strusDeleteDocument/strusDeleteDocument

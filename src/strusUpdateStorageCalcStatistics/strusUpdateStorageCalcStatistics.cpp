@@ -1,32 +1,42 @@
 /*
- * Copyright (c) 2014 Patrick P. Frey
+ * Copyright (c) 2016 Patrick P. Frey
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+/// \brief Program pre-calculating and storing statistics for documents in meta data
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/scalarfunc.hpp"
 #include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/attributeReaderInterface.hpp"
+#include "strus/storageTransactionInterface.hpp"
+#include "strus/documentTermIteratorInterface.hpp"
+#include "strus/statisticsProcessorInterface.hpp"
+#include "strus/statisticsIteratorInterface.hpp"
+#include "strus/statisticsViewerInterface.hpp"
+#include "strus/scalarFunctionParserInterface.hpp"
+#include "strus/scalarFunctionInterface.hpp"
+#include "strus/scalarFunctionInstanceInterface.hpp"
+#include "strus/metaDataReaderInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
+#include "strus/numericVariant.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "strus/base/cmdLineOpt.hpp"
@@ -38,8 +48,11 @@
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
+#include <cstdio>
 #include <stdexcept>
 #include <map>
+
+#undef STRUS_LOWLEVEL_DEBUG
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
@@ -65,31 +78,87 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
-static std::multimap<std::string,strus::Index> loadAttributeDocnoMap(
-		strus::StorageClientInterface* storage, const std::string& attributeName)
+typedef std::map<std::string,strus::GlobalCounter> DfMap;
+
+static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const std::string& feattype, strus::StorageClientInterface* storage)
 {
-	std::multimap<std::string,strus::Index> rt;
-	std::auto_ptr<strus::AttributeReaderInterface> attributeReader( storage->createAttributeReader());
-	if (!attributeReader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
-	strus::Index ehnd = attributeReader->elementHandle( attributeName.c_str());
-	if (ehnd == 0) throw strus::runtime_error(_TXT("unknown attribute name '%s'"), attributeName.c_str());
-	strus::Index di = 1, de = storage->maxDocumentNumber()+1;
-	for (; di != de; ++di)
+	const strus::StatisticsProcessorInterface* statproc = storage->getStatisticsProcessor();
+	if (!statproc) throw strus::runtime_error(_TXT("failed to get statistics processor"));
+	strus::Reference<strus::StatisticsIteratorInterface> statitr( storage->createInitStatisticsIterator());
+	if (!statitr.get()) throw strus::runtime_error(_TXT("failed to initialize statistics iterator"));
+	collectionSize += storage->nofDocumentsInserted();
+	const char* statmsg;
+	std::size_t statmsgsize;
+	while (statitr->getNext( statmsg, statmsgsize))
 	{
-		attributeReader->skipDoc( di);
-		std::string name = attributeReader->getValue( ehnd);
-		if (!name.empty())
+		strus::Reference<strus::StatisticsViewerInterface>
+			viewer( statproc->createViewer( statmsg, statmsgsize));
+		if (!viewer.get()) throw strus::runtime_error(_TXT("failed to statistics viewer"));
+
+		strus::StatisticsViewerInterface::DocumentFrequencyChange dfchg;
+		while (viewer->nextDfChange( dfchg))
 		{
-			rt.insert( std::pair<std::string,strus::Index>( name, di));
+			if (feattype == dfchg.type)
+			{
+				dfmap[ dfchg.value] += dfchg.increment;
+			}
 		}
 	}
-	return rt;
+}
+
+static void updateStorageWithFormula( const DfMap& dfmap, const std::string& feattype, const std::string& fieldname, strus::StorageClientInterface* storage, unsigned int transactionSize, const strus::ScalarFunctionInstanceInterface* func, const strus::ScalarFunctionInstanceInterface* normfunc)
+{
+	strus::Reference<strus::StorageTransactionInterface>
+		transaction( storage->createTransaction());
+	if (!transaction.get()) throw strus::runtime_error(_TXT("failed to create storage transaction"));
+	unsigned int transactionCount = 0;
+	unsigned int transactionTotalCount = 0;
+	strus::Reference<strus::DocumentTermIteratorInterface>
+		termitr( storage->createDocumentTermIterator( feattype));
+	if (!termitr.get()) throw strus::runtime_error(_TXT("failed to create document term iterator"));
+	strus::Index di = 1, de = storage->maxDocumentNumber();
+	for (; di <= de; ++di)
+	{
+		strus::Index docno = termitr->skipDoc( di);
+		if (!docno) return;
+		double weight;
+		strus::DocumentTermIteratorInterface::Term term;
+		while (termitr->nextTerm( term))
+		{
+			std::string termval( termitr->termValue( term.termno));
+			double args[2];
+			DfMap::const_iterator dfi = dfmap.find( termval);
+			if (dfi == dfmap.end()) throw strus::runtime_error(_TXT("df for '%s' not found in map"), termval.c_str());
+			args[0] = dfi->second;
+			args[1] = term.tf;
+			weight += func->call( args, 2);
+		}
+		weight = normfunc->call( &weight, 1);
+		transaction->updateMetaData( docno, fieldname, strus::NumericVariant( weight));
+		if (transactionCount++ >= transactionSize)
+		{
+			if (!transaction->commit()) throw strus::runtime_error(_TXT("transaction commit failed"));
+			transaction.reset( storage->createTransaction());
+			if (!transaction.get()) throw strus::runtime_error(_TXT("failed to create storage transaction"));
+
+			transactionTotalCount += transactionCount;
+			fprintf( stderr, "\rupdated %u documents           ", transactionTotalCount);
+			transactionCount = 0;
+		}
+		
+	}
+	if (transactionCount)
+	{
+		transactionTotalCount += transactionCount;
+		transactionCount = 0;
+		if (!transaction->commit()) throw strus::runtime_error(_TXT("transaction commit failed"));
+		fprintf( stderr, "updated %u documents\n", transactionTotalCount);
+	}
 }
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	FILE* logfile = 0;
 	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
@@ -101,12 +170,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 14,
+				argc, argv, 9,
 				"h,help", "v,version", "license",
-				"m,module:", "M,moduledir:", "L,logerror:",
+				"m,module:", "M,moduledir:",
 				"r,rpc:", "s,storage:", "c,commit:",
-				"a,attribute:", "x,mapattribute:",
-				"m,metadata:","u,useraccess", "T,trace:");
+				"T,trace:");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
@@ -166,13 +234,13 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() < 1)
+			if (opt.nofargs() < 3)
 			{
 				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			if (opt.nofargs() > 1)
+			if (opt.nofargs() > 4)
 			{
 				std::cerr << _TXT("too many arguments") << std::endl;
 				printUsageAndExit = true;
@@ -181,10 +249,13 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusUpdateStorage [options] <updatefile>" << std::endl;
-			std::cout << "<updatefile>  = " << _TXT("file with the batch of updates ('-' for stdin)") << std::endl;
-			std::cout << _TXT("description: Executes a batch of updates of attributes, meta data") << std::endl;
-			std::cout << "             " << _TXT("or user rights in a storage.") << std::endl;
+			std::cout << _TXT("usage:") << " strusUpdateStorageCalcStatistics [options] <metadata> <feattype> <formula> <sumnorm>" << std::endl;
+			std::cout << "<metadata>  = " << _TXT("meta data element to store the result") << std::endl;
+			std::cout << "<feattype>  = " << _TXT("search index feature type to calculate the result with") << std::endl;
+			std::cout << "<formula>   = " << _TXT("meta formula to calculate the result with") << std::endl;
+			std::cout << "<sumnorm>   = " << _TXT("formula to normalize the sum of results (identity function is default)") << std::endl;
+			std::cout << _TXT("description: Calculate a formula for each document in the storages") << std::endl;
+			std::cout << "              " << _TXT("and update a metadata field with the result.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
@@ -199,28 +270,15 @@ int main( int argc, const char* argv[])
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
 			std::cout << "-s|--storage <CONFIG>" << std::endl;
-			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
+			std::cout << "    " << _TXT("Define a storage configuration string as <CONFIG>") << std::endl;
 			if (!opt("rpc"))
 			{
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
-			std::cout << "-a|--attribute <NAME>" << std::endl;
-			std::cout << "    " << _TXT("The update batch is a list of attributes assignments") << std::endl;
-			std::cout << "    " << _TXT("The name of the updated attribute is <NAME>.") << std::endl;
-			std::cout << "-m|--metadata <NAME>" << std::endl;
-			std::cout << "    " << _TXT("The update batch is a list of meta data assignments.") << std::endl;
-			std::cout << "    " << _TXT("The name of the updated meta data element is <NAME>.") << std::endl;
-			std::cout << "-u|--useraccess" << std::endl;
-			std::cout << "    " << _TXT("The update batch is a list of user right assignments.") << std::endl;
-			std::cout << "-x|--mapattribute <ATTR>" << std::endl;
-			std::cout << "    " << _TXT("The update document is selected by the attribute <ATTR> as key,") << std::endl;
-			std::cout << "    " << _TXT("instead of the document id or document number.") << std::endl;
 			std::cout << "-c|--commit <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as number of updates per transaction (default 10000)") << std::endl;
 			std::cout << "    " << _TXT("If <N> is set to 0 then only one commit is done at the end") << std::endl;
-			std::cout << "-L|--logerror <FILE>" << std::endl;
-			std::cout << "    " << _TXT("Write the last error occurred to <FILE> in case of an exception")  << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -238,29 +296,19 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
-		// Set logger:
-		if (opt("logerror"))
-		{
-			std::string filename( opt["logerror"]);
-			logfile = fopen( filename.c_str(), "a+");
-			if (!logfile) throw strus::runtime_error(_TXT("error loading log file '%s' for appending (errno %u)"), filename.c_str(), errno);
-			errorBuffer->setLogFile( logfile);
-		}
 		// Parse arguments:
-		std::string storagecfg;
-		std::multimap<std::string,strus::Index> attributemap;
-		std::multimap<std::string,strus::Index>* attributemapref = 0;
-		std::string mapattribute;
+		std::vector<std::string> storagecfgs;
+		std::string fieldname( opt[0]);
+		std::string feattype( opt[1]);
+		std::string formula( opt[2]);
+		std::string sumnorm( opt.nofargs() > 3 ? opt[3]:"_0");
+
 		if (opt("storage"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
-			storagecfg = opt["storage"];
+			storagecfgs = opt.list( "storage");
 		}
-		if (opt("mapattribute"))
-		{
-			mapattribute = opt["mapattribute"];
-		}
+
 		// Create objects for storage document update:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;
@@ -280,72 +328,73 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
-		std::auto_ptr<strus::StorageClientInterface>
-			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
-		if (!mapattribute.empty())
+		// Calculate the df map:
+		DfMap dfmap;
+		strus::GlobalCounter collectionSize = 0;
+		strus::GlobalCounter collectionNofTerms = 0;
+		std::vector<std::string>::const_iterator
+			ci = storagecfgs.begin(), ce = storagecfgs.end();
+		for (; ci != ce; ++ci)
 		{
-			attributemap = loadAttributeDocnoMap( storage.get(), mapattribute);
-			attributemapref = &attributemap;
+			std::auto_ptr<strus::StorageClientInterface>
+				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), *ci));
+			if (!storage.get())
+			{
+				throw strus::runtime_error(_TXT("failed to open storage '%s'"), ci->c_str());
+			}
+			fillDfMap( dfmap, collectionSize, feattype, storage.get());
 		}
-		enum UpdateOperation
-		{
-			UpdateOpAttribute,
-			UpdateOpMetadata,
-			UpdateOpUserAccess
-		};
-		UpdateOperation updateOperation;
-		std::string elemname;
-		std::string updateBatchPath( opt[0]);
+		collectionNofTerms = dfmap.size();
 
-		if (opt("metadata"))
-		{
-			if (opt("attribute")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s") ,"--attribute", "--metadata");
-			if (opt("useraccess")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--useraccess", "--metadata");
-			elemname = opt["metadata"];
-			updateOperation = UpdateOpMetadata;
-		}
-		else if (opt("attribute"))
-		{
-			if (opt("useraccess")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--useraccess", "--attribute");
-			elemname = opt["attribute"];
-			updateOperation = UpdateOpAttribute;
-		}
-		else if (opt("useraccess"))
-		{
-			updateOperation = UpdateOpUserAccess;
-		}
-		else
-		{
-			throw strus::runtime_error(_TXT("no update operation type specified as option (one of %s is mandatory)"), "--attribute,--metadata,--useraccess");
-		}
-		unsigned int nofUpdates = 0;
+		// Build the Function for calculating the statistics:
+		strus::Reference<strus::ScalarFunctionParserInterface> funcparser( strus::createScalarFunctionParser_default( errorBuffer.get()));
+		if (!funcparser.get()) throw strus::runtime_error(_TXT("failed to load scalar function parser"));
+
+		std::vector<std::string> args;
+		args.push_back("df");
+		args.push_back("tf");
+		strus::Reference<strus::ScalarFunctionInterface>
+			func( funcparser->createFunction( formula, args));
+		if (!func.get()) throw strus::runtime_error(_TXT("failed to parse scalar function '%s'"), formula.c_str());
+		strus::Reference<strus::ScalarFunctionInterface>
+			normfunc( funcparser->createFunction( sumnorm, args));
+		if (!normfunc.get()) throw strus::runtime_error(_TXT("failed to parse scalar function '%s'"), sumnorm.c_str());
+
+		// Do the updates:
 		unsigned int transactionSize = 10000;
 		if (opt("commit"))
 		{
 			transactionSize = opt.asUint( "commit");
 		}
-		switch (updateOperation)
+		ci = storagecfgs.begin(), ce = storagecfgs.end();
+		for (; ci != ce; ++ci)
 		{
-			case UpdateOpMetadata:
-				nofUpdates = strus::loadDocumentMetaDataAssignments(
-						*storage, elemname, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
-				break;
-			case UpdateOpAttribute:
-				nofUpdates = strus::loadDocumentAttributeAssignments(
-						*storage, elemname, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
-				break;
-			case UpdateOpUserAccess:
-				nofUpdates = strus::loadDocumentUserRightsAssignments(
-						*storage, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
-				break;
+			strus::Reference<strus::ScalarFunctionInstanceInterface>
+				funcinst( func->createInstance());
+			if (!funcinst.get()) throw strus::runtime_error(_TXT("failed to create scalar function instance of '%s'"), formula.c_str());
+			strus::Reference<strus::ScalarFunctionInstanceInterface>
+				normfuncinst( func->createInstance());
+			if (!normfuncinst.get()) throw strus::runtime_error(_TXT("failed to create scalar function instance of '%s'"), sumnorm.c_str());
+
+			std::auto_ptr<strus::StorageClientInterface>
+				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), *ci));
+			if (!storage.get())
+			{
+				throw strus::runtime_error(_TXT("failed to open storage '%s'"), ci->c_str());
+			}
+			funcinst->setVariableValue( "N", collectionSize);
+			normfuncinst->setVariableValue( "N", collectionSize);
+			funcinst->setVariableValue( "T", collectionNofTerms);
+			normfuncinst->setVariableValue( "T", collectionNofTerms);
+
+			fprintf( stderr, "update storage '%s':\n", ci->c_str());
+			updateStorageWithFormula( dfmap, feattype, fieldname, storage.get(), transactionSize, funcinst.get(), normfuncinst.get());
 		}
-		if (!nofUpdates && errorBuffer->hasError())
+		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("error in update storage"));
 		}
-		std::cerr << strus::string_format( _TXT("done %u update operations"), nofUpdates) << std::endl;
-		if (logfile) fclose( logfile);
+		fprintf( stderr, "done\n");
 		return 0;
 	}
 	catch (const std::bad_alloc&)
@@ -368,7 +417,6 @@ int main( int argc, const char* argv[])
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
 	}
-	if (logfile) fclose( logfile);
 	return -1;
 }
 
