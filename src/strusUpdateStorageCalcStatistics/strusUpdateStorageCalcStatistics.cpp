@@ -121,7 +121,7 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 	{
 		strus::Index docno = termitr->skipDoc( di);
 		if (!docno) return;
-		double weight;
+		double weight = 0;
 		strus::DocumentTermIteratorInterface::Term term;
 		while (termitr->nextTerm( term))
 		{
@@ -301,8 +301,19 @@ int main( int argc, const char* argv[])
 		std::string fieldname( opt[0]);
 		std::string feattype( opt[1]);
 		std::string formula( opt[2]);
-		std::string sumnorm( opt.nofargs() > 3 ? opt[3]:"_0");
-
+		std::string sumnorm;
+		if (opt.nofargs() > 3)
+		{
+			sumnorm = opt[3];
+			if (0==std::strchr( sumnorm.c_str(), '(') && 0==std::strchr( sumnorm.c_str(), '_'))
+			{
+				sumnorm = sumnorm + "(_0)";
+			}
+		}
+		else
+		{
+			sumnorm = "_0";
+		}
 		if (opt("storage"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
@@ -332,10 +343,16 @@ int main( int argc, const char* argv[])
 		DfMap dfmap;
 		strus::GlobalCounter collectionSize = 0;
 		strus::GlobalCounter collectionNofTerms = 0;
-		std::vector<std::string>::const_iterator
+		std::vector<std::string>::iterator
 			ci = storagecfgs.begin(), ce = storagecfgs.end();
 		for (; ci != ce; ++ci)
 		{
+			std::string configstr = *ci;
+			std::string cfgvalue;
+			if (!strus::extractStringFromConfigString( cfgvalue, configstr, "statsproc", errorBuffer.get()))
+			{
+				*ci = "statsproc=default;" + *ci;
+			}
 			std::auto_ptr<strus::StorageClientInterface>
 				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), *ci));
 			if (!storage.get())
@@ -346,7 +363,7 @@ int main( int argc, const char* argv[])
 		}
 		collectionNofTerms = dfmap.size();
 
-		// Build the Function for calculating the statistics:
+		// Build the functions for calculating the statistics:
 		strus::Reference<strus::ScalarFunctionParserInterface> funcparser( strus::createScalarFunctionParser_default( errorBuffer.get()));
 		if (!funcparser.get()) throw strus::runtime_error(_TXT("failed to load scalar function parser"));
 
@@ -357,8 +374,31 @@ int main( int argc, const char* argv[])
 			func( funcparser->createFunction( formula, args));
 		if (!func.get()) throw strus::runtime_error(_TXT("failed to parse scalar function '%s'"), formula.c_str());
 		strus::Reference<strus::ScalarFunctionInterface>
-			normfunc( funcparser->createFunction( sumnorm, args));
+			normfunc( funcparser->createFunction( sumnorm, std::vector<std::string>()));
 		if (!normfunc.get()) throw strus::runtime_error(_TXT("failed to parse scalar function '%s'"), sumnorm.c_str());
+
+		strus::Reference<strus::ScalarFunctionInstanceInterface>
+			funcinst( func->createInstance());
+		if (!funcinst.get()) throw strus::runtime_error(_TXT("failed to create scalar function instance of '%s'"), formula.c_str());
+		strus::Reference<strus::ScalarFunctionInstanceInterface>
+			normfuncinst( normfunc->createInstance());
+		if (!normfuncinst.get()) throw strus::runtime_error(_TXT("failed to create scalar function instance of '%s'"), sumnorm.c_str());
+
+		// Initialize some variables, if referenced
+		std::vector<std::string> variables = func->getVariables();
+		std::vector<std::string>::const_iterator vi = variables.begin(), ve = variables.end();
+		for (; vi != ve; ++vi)
+		{
+			if (strus::utils::caseInsensitiveEquals( *vi, "N")) funcinst->setVariableValue( "N", collectionSize);
+			if (strus::utils::caseInsensitiveEquals( *vi, "T")) funcinst->setVariableValue( "T", collectionNofTerms);
+		}
+		variables = normfunc->getVariables();
+		vi = variables.begin(), ve = variables.end();
+		for (; vi != ve; ++vi)
+		{
+			if (strus::utils::caseInsensitiveEquals( *vi, "N")) normfuncinst->setVariableValue( "N", collectionSize);
+			if (strus::utils::caseInsensitiveEquals( *vi, "T")) normfuncinst->setVariableValue( "T", collectionNofTerms);
+		}
 
 		// Do the updates:
 		unsigned int transactionSize = 10000;
@@ -369,24 +409,12 @@ int main( int argc, const char* argv[])
 		ci = storagecfgs.begin(), ce = storagecfgs.end();
 		for (; ci != ce; ++ci)
 		{
-			strus::Reference<strus::ScalarFunctionInstanceInterface>
-				funcinst( func->createInstance());
-			if (!funcinst.get()) throw strus::runtime_error(_TXT("failed to create scalar function instance of '%s'"), formula.c_str());
-			strus::Reference<strus::ScalarFunctionInstanceInterface>
-				normfuncinst( func->createInstance());
-			if (!normfuncinst.get()) throw strus::runtime_error(_TXT("failed to create scalar function instance of '%s'"), sumnorm.c_str());
-
 			std::auto_ptr<strus::StorageClientInterface>
 				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), *ci));
 			if (!storage.get())
 			{
 				throw strus::runtime_error(_TXT("failed to open storage '%s'"), ci->c_str());
 			}
-			funcinst->setVariableValue( "N", collectionSize);
-			normfuncinst->setVariableValue( "N", collectionSize);
-			funcinst->setVariableValue( "T", collectionNofTerms);
-			normfuncinst->setVariableValue( "T", collectionNofTerms);
-
 			fprintf( stderr, "update storage '%s':\n", ci->c_str());
 			updateStorageWithFormula( dfmap, feattype, fieldname, storage.get(), transactionSize, funcinst.get(), normfuncinst.get());
 		}

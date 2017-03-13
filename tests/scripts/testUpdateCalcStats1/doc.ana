@@ -1,0 +1,14 @@
+[Attribute]
+    title = text content /doc/title();
+    docid = text content /doc/docid();
+
+[SearchIndex]
+    word = text word /doc/text();
+
+[ForwardIndex]
+    orig = orig split /doc/text();
+
+[Aggregator]
+    doclen = count( word);
+
+
