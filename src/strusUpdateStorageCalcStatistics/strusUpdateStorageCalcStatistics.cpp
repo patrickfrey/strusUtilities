@@ -135,7 +135,7 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 		}
 		weight = normfunc->call( &weight, 1);
 		transaction->updateMetaData( docno, fieldname, strus::NumericVariant( weight));
-		if (transactionCount++ >= transactionSize)
+		if (++transactionCount >= transactionSize)
 		{
 			if (!transaction->commit()) throw strus::runtime_error(_TXT("transaction commit failed"));
 			transaction.reset( storage->createTransaction());
