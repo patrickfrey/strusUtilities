@@ -494,7 +494,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 		}
 		if (qdescr.weightingFeatureSet.empty())
 		{
-			throw strus::runtime_error(_TXT("no weighting feature set (WEIGHT) defined in query evaluation configuration"));
+			qdescr.weightingFeatureSet = qdescr.selectionFeatureSet;
 		}
 		return true;
 	}
