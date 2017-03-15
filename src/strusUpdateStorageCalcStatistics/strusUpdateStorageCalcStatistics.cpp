@@ -98,9 +98,9 @@ static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const
 		strus::StatisticsViewerInterface::DocumentFrequencyChange dfchg;
 		while (viewer->nextDfChange( dfchg))
 		{
-			if (feattype == dfchg.type)
+			if (feattype == dfchg.type())
 			{
-				dfmap[ dfchg.value] += dfchg.increment;
+				dfmap[ dfchg.value()] += dfchg.increment();
 			}
 		}
 	}
