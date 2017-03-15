@@ -1836,11 +1836,11 @@ static void parseQueryTermExpression(
 		{
 			if (subexpression && qdescr.defaultFieldTypes.size() > 1)
 			{
-				throw strus::runtime_error("more than one query field defined in configuration, cannot use terms without explicit field declaration in subexpressions");
+				throw strus::runtime_error(_TXT("more than one query field defined in configuration, cannot use terms without explicit field declaration in subexpressions"));
 			}
 			if (qdescr.defaultFieldTypes.size() == 0)
 			{
-				throw strus::runtime_error("no query field defined in query analyzer configuration");
+				throw strus::runtime_error(_TXT("no query field defined in query analyzer configuration"));
 			}
 			std::vector<std::string>::const_iterator
 				di = qdescr.defaultFieldTypes.begin(), de = qdescr.defaultFieldTypes.end();
@@ -1890,7 +1890,7 @@ static void parseQueryStructureExpression(
 		char const*& src)
 {
 	std::string functionName = parse_IDENTIFIER(src);
-	if (!isOpenOvalBracket(*src)) throw strus::runtime_error("internal: bad lookahead in query parser");
+	if (!isOpenOvalBracket(*src)) throw strus::runtime_error(_TXT("internal: bad lookahead in query parser"));
 
 	(void)parse_OPERATOR( src);
 	std::size_t argc = 0;
@@ -1910,6 +1910,10 @@ static void parseQueryStructureExpression(
 		{
 			(void)parse_OPERATOR( src);
 			continue;
+		}
+		else if (!isCloseOvalBracket( *src) && !isExp( *src) && !isOr(*src))
+		{
+			throw strus::runtime_error(_TXT("expected a comma ',' (argument separator) or a close bracket ')' (end of argument list) or a '|' (range specififier), or a '^' (cardinality specifier)"));
 		}
 		break;
 	}
@@ -2586,10 +2590,10 @@ static void loadVectorStorageVectors_word2vecBin(
 		const char* se = std::strchr( si, '\n');
 		if (!se) throw strus::runtime_error(_TXT("failed to parse header line"));
 		skipSpaces( si);
-		if (!is_UNSIGNED(si)) throw strus::runtime_error("expected collection size as first element of the header line");
+		if (!is_UNSIGNED(si)) throw strus::runtime_error(_TXT("expected collection size as first element of the header line"));
 		collsize = parse_UNSIGNED1( si);
 		skipSpaces( si);
-		if (!is_UNSIGNED(si)) throw strus::runtime_error("expected vector size as second element of the header line");
+		if (!is_UNSIGNED(si)) throw strus::runtime_error(_TXT("expected vector size as second element of the header line"));
 		vecsize = parse_UNSIGNED1( si);
 		if (*(si-1) != '\n')
 		{

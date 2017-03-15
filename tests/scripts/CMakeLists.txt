@@ -20,6 +20,7 @@ add_test( TestAnalyzeWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh
 add_test( TestInsertWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertWithDocType1 )
 add_test( TestInsertBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertBase1 )
 add_test( TestSimpleQuery1  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSimpleQuery1 )
+add_test( TestQueryWithRestriction1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testQueryWithRestriction1 )
 add_test( TestSummarization1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSummarization1 )
 add_test( TestUpdateCalcStats ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testUpdateCalcStats1 )
 ENDIF( UNIX AND NOT APPLE )
