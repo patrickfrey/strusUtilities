@@ -1,0 +1,6 @@
+[SearchIndex]
+	word = lc:convdia(en):stem(en) word word;
+[MetaData]
+	continent = dictmap("continents.txt"):lc content;
+
+

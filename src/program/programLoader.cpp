@@ -1072,20 +1072,23 @@ static void parseQueryFeatureDef(
 
 	// [3] Parse field type (corresponds to xpath selection in document):
 	std::string fieldType;
-	if (!isAlpha(*src))
+	if (featureClass == FeatMetaData)
 	{
-		if (featureClass == FeatMetaData)
+		fieldType = featureName;
+		if (isAlpha(*src))
 		{
-			fieldType = featureName;
+			throw strus::runtime_error(_TXT("unexpected identifier at end of query analyzer metadata definition after the tokenizer definition (the field type must not be specified here, the name of the query field is the same as the feature name)"));
 		}
-		else
+	}
+	else
+	{
+		if (!isAlpha(*src))
 		{
 			throw strus::runtime_error(_TXT("expected field type name"));
 		}
+		fieldType = parse_IDENTIFIER( src);
+		qdescr.defaultFieldTypes.push_back( fieldType);
 	}
-	fieldType = parse_IDENTIFIER( src);
-	qdescr.defaultFieldTypes.push_back( fieldType);
-
 	switch (featureClass)
 	{
 		case FeatSearchIndexTerm:
@@ -1727,14 +1730,54 @@ static bool isQueryMetaDataExpression( char const* src)
 	}
 }
 
+static MetaDataRestrictionInterface::CompareOperator invertCompareOperator( const MetaDataRestrictionInterface::CompareOperator& opr)
+{
+	switch (opr)
+	{
+		case MetaDataRestrictionInterface::CompareLess: return MetaDataRestrictionInterface::CompareGreaterEqual;
+		case MetaDataRestrictionInterface::CompareLessEqual: return MetaDataRestrictionInterface::CompareGreater;
+		case MetaDataRestrictionInterface::CompareEqual: return MetaDataRestrictionInterface::CompareNotEqual;
+		case MetaDataRestrictionInterface::CompareNotEqual: return MetaDataRestrictionInterface::CompareEqual;
+		case MetaDataRestrictionInterface::CompareGreater: return MetaDataRestrictionInterface::CompareLessEqual;
+		case MetaDataRestrictionInterface::CompareGreaterEqual: return MetaDataRestrictionInterface::CompareLess;
+	}
+	throw strus::runtime_error(_TXT("unknown metadata compare operator"));
+}
+
 static void parseMetaDataExpression( 
 		QueryStruct& queryStruct,
 		char const*& src)
 {
-	std::string functionName = parse_IDENTIFIER(src);
-	MetaDataRestrictionInterface::CompareOperator opr = parse_CompareOperator( src);
-	std::string value = parseQueryTerm( src);
-	queryStruct.defineMetaDataRestriction( functionName, opr, functionName/*field type == metadata name in condition*/, value);
+	std::string fieldName;
+	std::vector<std::string> values;
+	MetaDataRestrictionInterface::CompareOperator opr;
+	if (isAlpha(*src))
+	{
+		fieldName = parse_IDENTIFIER(src);
+		opr = parse_CompareOperator( src);
+		values.push_back( parseQueryTerm( src));
+		while (isComma(*src))
+		{
+			parse_OPERATOR(src);
+			values.push_back( parseQueryTerm( src));
+		}
+	}
+	else
+	{
+		values.push_back( parseQueryTerm( src));
+		while (isComma(*src))
+		{
+			parse_OPERATOR(src);
+			values.push_back( parseQueryTerm( src));
+		}
+		opr = invertCompareOperator( parse_CompareOperator( src));
+		fieldName = parse_IDENTIFIER(src);
+	}
+	std::vector<std::string>::const_iterator vi = values.begin(), ve = values.end();
+	for (int vidx=0; vi != ve; ++vi,++vidx)
+	{
+		queryStruct.defineMetaDataRestriction( fieldName, opr, fieldName/*field type == metadata name in condition*/, *vi, (vidx==0)/*new group*/);
+	}
 }
 
 static void closeFeatureParse(

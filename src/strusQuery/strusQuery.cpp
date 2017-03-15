@@ -308,7 +308,10 @@ int main( int argc_, const char* argv_[])
 		{
 			moduleLoader->addResourcePath( resourcepath);
 		}
-
+		else
+		{
+			moduleLoader->addResourcePath( "./");
+		}
 		// Create objects for query evaluation:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;

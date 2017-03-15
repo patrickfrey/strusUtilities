@@ -143,7 +143,7 @@ static inline bool isSpace( char ch)
 }
 static inline bool isCompareOperator( const char* si)
 {
-	return si[0] == '<' || si[0] == '>' || (si[0] == '!' && si[1] == '=') || (si[0] == '=' && si[1] == '=');
+	return si[0] == '<' || si[0] == '>' || si[0] == '!' || si[0] == '=';
 }
 static inline void skipToEoln( char const*& src)
 {

@@ -311,17 +311,18 @@ int parser::parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsig
 
 MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( const char*& si)
 {
+	MetaDataRestrictionInterface::CompareOperator rt;
 	if (si[0] == '<')
 	{
 		if (si[1] == '=')
 		{
 			si += 2;
-			return MetaDataRestrictionInterface::CompareLessEqual;
+			rt = MetaDataRestrictionInterface::CompareLessEqual;
 		}
 		else
 		{
 			si += 1;
-			return MetaDataRestrictionInterface::CompareLess;
+			rt = MetaDataRestrictionInterface::CompareLess;
 		}
 	}
 	else if (si[0] == '>')
@@ -329,12 +330,12 @@ MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( con
 		if (si[1] == '=')
 		{
 			si += 2;
-			return MetaDataRestrictionInterface::CompareGreaterEqual;
+			rt = MetaDataRestrictionInterface::CompareGreaterEqual;
 		}
 		else
 		{
 			si += 1;
-			return MetaDataRestrictionInterface::CompareGreater;
+			rt = MetaDataRestrictionInterface::CompareGreater;
 		}
 	}
 	else if (si[0] == '!')
@@ -342,7 +343,11 @@ MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( con
 		if (si[1] == '=')
 		{
 			si += 2;
-			return MetaDataRestrictionInterface::CompareNotEqual;
+			rt = MetaDataRestrictionInterface::CompareNotEqual;
+		}
+		else
+		{
+			throw strus::runtime_error( _TXT( "unknown compare operator"));
 		}
 	}
 	else if (si[0] == '=')
@@ -350,9 +355,19 @@ MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( con
 		if (si[1] == '=')
 		{
 			si += 2;
-			return MetaDataRestrictionInterface::CompareEqual;
+			rt = MetaDataRestrictionInterface::CompareEqual;
+		}
+		else
+		{
+			si += 1;
+			rt = MetaDataRestrictionInterface::CompareEqual;
 		}
 	}
-	throw strus::runtime_error( _TXT( "unknown compare operator"));
+	else
+	{
+		throw strus::runtime_error( _TXT( "unknown compare operator"));
+	}
+	skipSpaces( si);
+	return rt;
 }
 
