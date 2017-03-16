@@ -385,20 +385,6 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("failed to parse document class"));
 		}
-		// Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
-		if (analyzerMap.isAnalyzerConfigSource( analyzerprg))
-		{
-			analyzerMap.loadDefaultAnalyzerProgram( segmentername, analyzerprg);
-		}
-		else
-		{
-			if (!segmentername.empty())
-			{
-				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"));
-			}
-			analyzerMap.loadAnalyzerMap( analyzerprg);
-		}
 		// Detect document content type if not explicitely defined:
 		if (!documentClass.defined())
 		{
@@ -412,6 +398,20 @@ int main( int argc, const char* argv[])
 			{
 				throw strus::runtime_error( _TXT("failed to detect document class")); 
 			}
+		}
+		// Load analyzer program(s):
+		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
+		if (analyzerMap.isAnalyzerConfigSource( analyzerprg))
+		{
+			analyzerMap.loadDefaultAnalyzerProgram( documentClass, segmentername, analyzerprg);
+		}
+		else
+		{
+			if (!segmentername.empty())
+			{
+				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"));
+			}
+			analyzerMap.loadAnalyzerMap( analyzerprg);
 		}
 		// Create the document analyzer context:
 		const strus::DocumentAnalyzerInterface* analyzer = analyzerMap.get( documentClass);

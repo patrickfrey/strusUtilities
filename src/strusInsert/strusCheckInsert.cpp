@@ -30,6 +30,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/inputStream.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
@@ -360,16 +361,35 @@ int main( int argc_, const char* argv_[])
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
 
-		// Load analyzer program(s):
+		// Try to determine document class:
 		strus::analyzer::DocumentClass documentClass;
-		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+		if (!contenttype.empty())
 		{
-			throw strus::runtime_error(_TXT("failed to parse document class"));
+			if (!strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+			{
+				throw strus::runtime_error(_TXT("failed to parse document class"));
+			}
 		}
+		else if (strus::isFile( datapath))
+		{
+			strus::InputStream input( datapath);
+			char hdrbuf[ 1024];
+			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+			if (input.error())
+			{
+				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), datapath.c_str(), ::strerror(input.error())); 
+			}
+			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize))
+			{
+				throw strus::runtime_error( _TXT("failed to detect document class")); 
+			}
+		}
+
+		// Load analyzer program(s):
 		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
 		if (analyzerMap.isAnalyzerConfigSource( analyzerprg))
 		{
-			analyzerMap.loadDefaultAnalyzerProgram( segmentername, analyzerprg);
+			analyzerMap.loadDefaultAnalyzerProgram( documentClass, segmentername, analyzerprg);
 		}
 		else
 		{

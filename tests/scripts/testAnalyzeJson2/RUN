@@ -1,1 +1,1 @@
-StrusAnalyze -g cjson doc.ana input.json
+StrusAnalyze doc.ana input.json
