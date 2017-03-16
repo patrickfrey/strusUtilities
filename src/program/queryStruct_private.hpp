@@ -51,11 +51,12 @@ struct QueryMetaDataStruct
 {
 	std::string name;
 	MetaDataRestrictionInterface::CompareOperator cmp;
+	bool newGroup;
 
-	QueryMetaDataStruct( const std::string& name_, const MetaDataRestrictionInterface::CompareOperator& cmp_)
-		:name(name_),cmp(cmp_){}
+	QueryMetaDataStruct( const std::string& name_, const MetaDataRestrictionInterface::CompareOperator& cmp_, bool newGroup_)
+		:name(name_),cmp(cmp_),newGroup(newGroup_){}
 	QueryMetaDataStruct( const QueryMetaDataStruct& o)
-		:name(o.name),cmp(o.cmp){}
+		:name(o.name),cmp(o.cmp),newGroup(o.newGroup){}
 };
 
 struct QueryGroupStruct

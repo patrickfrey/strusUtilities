@@ -31,10 +31,6 @@ public:
 		ErrorBufferInterface* errorhnd_);
 
 	void loadDefaultAnalyzerProgram(
-		const std::string& segmenter,
-		const std::string& prgfile);
-
-	void loadAnalyzerProgram(
 		const analyzer::DocumentClass& documentClass,
 		const std::string& segmenter,
 		const std::string& prgfile);
@@ -47,6 +43,12 @@ public:
 
 	const DocumentAnalyzerInterface* get(
 		const analyzer::DocumentClass& dclass) const;
+
+private:
+	void loadAnalyzerProgram(
+		const analyzer::DocumentClass& documentClass,
+		const std::string& segmenter,
+		const std::string& prgfile);
 
 private:
 	typedef std::map<std::string,utils::SharedPtr<DocumentAnalyzerInterface> > Map;

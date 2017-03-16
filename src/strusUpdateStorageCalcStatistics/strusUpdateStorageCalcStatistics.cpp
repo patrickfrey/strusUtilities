@@ -252,8 +252,8 @@ int main( int argc, const char* argv[])
 			std::cout << _TXT("usage:") << " strusUpdateStorageCalcStatistics [options] <metadata> <feattype> <formula> <sumnorm>" << std::endl;
 			std::cout << "<metadata>  = " << _TXT("meta data element to store the result") << std::endl;
 			std::cout << "<feattype>  = " << _TXT("search index feature type to calculate the result with") << std::endl;
-			std::cout << "<formula>   = " << _TXT("meta formula to calculate the result with") << std::endl;
-			std::cout << "<sumnorm>   = " << _TXT("formula to normalize the sum of results (identity function is default)") << std::endl;
+			std::cout << "<formula>   = " << _TXT("meta formula to calculate one summand of the result for one document with") << std::endl;
+			std::cout << "<sumnorm>   = " << _TXT("formula to normalize the sum of summands for each document (identity is default)") << std::endl;
 			std::cout << _TXT("description: Calculate a formula for each document in the storages") << std::endl;
 			std::cout << "              " << _TXT("and update a metadata field with the result.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;

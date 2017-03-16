@@ -308,7 +308,10 @@ int main( int argc_, const char* argv_[])
 		{
 			moduleLoader->addResourcePath( resourcepath);
 		}
-
+		else
+		{
+			moduleLoader->addResourcePath( "./");
+		}
 		// Create objects for query evaluation:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
 		std::auto_ptr<strus::RpcClientInterface> rpcClient;
@@ -349,20 +352,20 @@ int main( int argc_, const char* argv_[])
 		// Create objects:
 		std::auto_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
+		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client: %s"), errorBuffer->fetchError());
 
 		strus::utils::ScopedPtr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer"));
+		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer: %s"), errorBuffer->fetchError());
 
 		strus::utils::ScopedPtr<strus::QueryEvalInterface>
 			qeval( storageBuilder->createQueryEval());
-		if (!qeval.get()) throw strus::runtime_error(_TXT("failed to create query evaluation interface"));
+		if (!qeval.get()) throw strus::runtime_error(_TXT("failed to create query evaluation interface: %s"), errorBuffer->fetchError());
 
 		const strus::QueryProcessorInterface* qproc = storageBuilder->getQueryProcessor();
-		if (!qproc) throw strus::runtime_error(_TXT("failed to get query processor"));
+		if (!qproc) throw strus::runtime_error(_TXT("failed to get query processor: %s"), errorBuffer->fetchError());
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor: %s"), errorBuffer->fetchError());
 
 		// Load query analyzer program:
 		unsigned int ec;
@@ -373,7 +376,7 @@ int main( int argc_, const char* argv_[])
 		strus::QueryDescriptors querydescr;
 		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
 		{
-			throw strus::runtime_error(_TXT("failed to load query analyzer program"));
+			throw strus::runtime_error(_TXT("failed to load query analyzer program: %s"), errorBuffer->fetchError());
 		}
 		// Load query evaluation program:
 		std::string qevalProgramSource;
@@ -382,7 +385,7 @@ int main( int argc_, const char* argv_[])
 
 		if (!strus::loadQueryEvalProgram( *qeval, querydescr, qproc, qevalProgramSource, errorBuffer.get()))
 		{
-			throw strus::runtime_error(_TXT("failed to load query evaluation program"));
+			throw strus::runtime_error(_TXT("failed to load query evaluation program: %s"), errorBuffer->fetchError());
 		}
 
 		// Load query:
@@ -432,11 +435,11 @@ int main( int argc_, const char* argv_[])
 			++nofQueries;
 			std::auto_ptr<strus::QueryInterface> query(
 				qeval->createQuery( storage.get()));
-			if (!query.get()) throw strus::runtime_error(_TXT("failed to create query object"));
+			if (!query.get()) throw strus::runtime_error(_TXT("failed to create query object: %s"), errorBuffer->fetchError());
 
 			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, querydescr, errorBuffer.get()))
 			{
-				throw strus::runtime_error(_TXT("failed to load query from source"));
+				throw strus::runtime_error(_TXT("failed to load query from source: %s"), errorBuffer->fetchError());
 			}
 			if (withDebugInfo)
 			{
@@ -490,7 +493,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in command line query"));
+			throw strus::runtime_error(_TXT("unhandled error in command line query: %s"), errorBuffer->fetchError());
 		}
 		return 0;
 	}

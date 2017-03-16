@@ -58,14 +58,14 @@ void QueryStruct::defineField( const std::string& fieldType, const std::string& 
 	m_analyzer->putField( m_fieldNo++, fieldType, fieldContent);
 }
 
-void QueryStruct::defineMetaDataRestriction( const std::string& metaDataName, const MetaDataRestrictionInterface::CompareOperator& cmp, const std::string& fieldType, const std::string& fieldContent)
+void QueryStruct::defineMetaDataRestriction( const std::string& metaDataName, const MetaDataRestrictionInterface::CompareOperator& cmp, const std::string& fieldType, const std::string& fieldContent, bool newGroup)
 {
 	m_analyzer->putField( m_fieldNo, fieldType, fieldContent);
 	std::vector<unsigned int> fieldNoList;
 	fieldNoList.push_back( m_fieldNo++);
 	m_analyzer->groupElements( m_groups.size(), fieldNoList, QueryAnalyzerContextInterface::GroupEvery, true/*groupSingle*/);
 	m_groups.push_back( QueryGroupStruct( QueryGroupStruct::QueryMetaDataStructType, m_metadata.size()));
-	m_metadata.push_back( QueryMetaDataStruct( metaDataName, cmp));
+	m_metadata.push_back( QueryMetaDataStruct( metaDataName, cmp, newGroup));
 }
 
 void QueryStruct::defineExpression( const PostingJoinOperatorInterface* function, unsigned int arg, int range, unsigned int cardinality)
@@ -127,7 +127,7 @@ void QueryStruct::translate( QueryInterface& query, const QueryProcessorInterfac
 				{
 					throw strus::runtime_error(_TXT("internal: meta data element name does not match"));
 				}
-				query.addMetaDataRestrictionCondition( mt.cmp, mt.name, elem.value(), true);
+				query.addMetaDataRestrictionCondition( mt.cmp, mt.name, elem.value(), mt.newGroup);
 				break;
 			}
 			case analyzer::Query::Instruction::PushSearchIndexTerm:

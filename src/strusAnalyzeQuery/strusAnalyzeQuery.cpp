@@ -683,6 +683,10 @@ int main( int argc, const char* argv[])
 		{
 			moduleLoader->addResourcePath( resourcepath);
 		}
+		else
+		{
+			moduleLoader->addResourcePath( "./");
+		}
 
 		// Create objects for analyzer:
 		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;

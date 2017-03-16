@@ -51,7 +51,7 @@ public:
 	void defineImplicitSelection( const std::string& fieldType, const std::string& fieldContent);
 
 	/// \brief Define a meta data restriction field
-	void defineMetaDataRestriction( const std::string& metaDataName, const MetaDataRestrictionInterface::CompareOperator& cmp, const std::string& fieldType, const std::string& fieldContent);
+	void defineMetaDataRestriction( const std::string& metaDataName, const MetaDataRestrictionInterface::CompareOperator& cmp, const std::string& fieldType, const std::string& fieldContent, bool newGroup);
 
 	/// \brief Define a query expression node on the top elements of the current stack
 	void defineExpression( const PostingJoinOperatorInterface* function, unsigned int arg, int range, unsigned int cardinality);

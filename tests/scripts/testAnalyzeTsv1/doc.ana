@@ -1,0 +1,9 @@
+[SearchIndex]
+    stem = orig word lastname;
+    stem = orig word firstname;
+    stem = orig word street;
+    stem = orig word zip;
+    stem = orig word city;
+    stem = orig word country;
+
+

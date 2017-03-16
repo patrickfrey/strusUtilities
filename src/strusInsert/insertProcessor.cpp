@@ -239,6 +239,11 @@ void InsertProcessor::run()
 								docCount = 0;
 							}
 						}
+						if (m_errorhnd->hasError())
+						{
+							const char* errmsg = m_errorhnd->fetchError();
+							throw strus::runtime_error( _TXT( "failed to process document '%s': %s"), fitr->c_str(), errmsg);
+						}
 					}
 					if (m_verbose)
 					{
