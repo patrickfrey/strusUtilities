@@ -404,7 +404,6 @@ static void parseSummarizerConfig(
 	(void)function.release();
 }
 
-
 DLL_PUBLIC bool strus::loadQueryEvalProgram(
 		QueryEvalInterface& qeval,
 		QueryDescriptors& qdescr,
@@ -427,34 +426,24 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 					parseTermConfig( qeval, qdescr, src);
 					break;
 				case e_SELECT:
-					while (*src && isAlnum( *src))
+				{
+					if (!qdescr.selectionFeatureSet.empty())
 					{
-						qdescr.selectionFeatureSet = parse_IDENTIFIER(src);
-						qeval.addSelectionFeature( qdescr.selectionFeatureSet);
-						if (isComma( *src))
-						{
-							(void)parse_OPERATOR( src);
-						}
-						else
-						{
-							break;
-						}
+						throw strus::runtime_error(_TXT("cannot handle more than one SELECT feature definition yet"));
 					}
+					qdescr.selectionFeatureSet = parse_IDENTIFIER(src);
+					qeval.addSelectionFeature( qdescr.selectionFeatureSet);
 					break;
+				}
 				case e_WEIGHT:
+				{
 					if (!qdescr.weightingFeatureSet.empty())
 					{
-						throw strus::runtime_error(_TXT("duplicate definition of WEIGHT"));
+						throw strus::runtime_error(_TXT("cannot handle more than one WEIGHT feature definition yet"));
 					}
-					if (*src && isAlnum( *src))
-					{
-						qdescr.weightingFeatureSet = parse_IDENTIFIER(src);
-					}
-					else
-					{
-						throw strus::runtime_error(_TXT("identifier (feature set) expected as parameter of WEIGHT"));
-					}
+					qdescr.weightingFeatureSet = parse_IDENTIFIER(src);
 					break;
+				}
 				case e_RESTRICTION:
 					while (*src && isAlnum( *src))
 					{
@@ -1087,7 +1076,7 @@ static void parseQueryFeatureDef(
 			throw strus::runtime_error(_TXT("expected field type name"));
 		}
 		fieldType = parse_IDENTIFIER( src);
-		qdescr.defaultFieldTypes.push_back( fieldType);
+		qdescr.defaultFieldTypeDefined |= utils::caseInsensitiveEquals( fieldType, "default");
 	}
 	switch (featureClass)
 	{
@@ -1811,75 +1800,45 @@ static void parseQueryTermExpression(
 		(void)parse_OPERATOR( src);
 		isSelection = false;
 	}
+	std::string field;
+	std::string fieldType;
 	if (isTextChar( *src) || isStringQuote( *src))
 	{
-		std::string queryField = parseQueryTerm( src);
+		field = parseQueryTerm( src);
 		if (isColon( *src))
 		{
-			std::string fieldType = parseQueryFieldType( src);
-			if (isSelection)
-			{
-				queryStruct.defineImplicitSelection( fieldType, queryField);
-			}
-			queryStruct.defineField( fieldType, queryField);
-			std::string variableName = parseVariableRef( src);
-			if (!variableName.empty())
-			{
-				queryStruct.defineVariable( variableName);
-			}
-			if (!subexpression)
-			{
-				closeFeatureParse( queryStruct, qdescr, src);
-			}
+			fieldType = parseQueryFieldType( src);
 		}
 		else
 		{
-			if (subexpression && qdescr.defaultFieldTypes.size() > 1)
+			if (!qdescr.defaultFieldTypeDefined)
 			{
-				throw strus::runtime_error(_TXT("more than one query field defined in configuration, cannot use terms without explicit field declaration in subexpressions"));
+				throw strus::runtime_error(_TXT("no query field with name 'default' defined in query analyzer configuration, cannot handle query fields without explicit naming"));
 			}
-			if (qdescr.defaultFieldTypes.size() == 0)
-			{
-				throw strus::runtime_error(_TXT("no query field defined in query analyzer configuration"));
-			}
-			std::vector<std::string>::const_iterator
-				di = qdescr.defaultFieldTypes.begin(), de = qdescr.defaultFieldTypes.end();
-			for (; di != de; ++di)
-			{
-				if (isSelection)
-				{
-					queryStruct.defineImplicitSelection( *di, queryField);
-				}
-				queryStruct.defineField( *di, queryField);
-				std::string variableName = parseVariableRef( src);
-				if (!variableName.empty())
-				{
-					queryStruct.defineVariable( variableName);
-				}
-				if (!subexpression)
-				{
-					closeFeatureParse( queryStruct, qdescr, src);
-				}
-			}
+			fieldType = "default";
 		}
 	}
 	else if (isColon( *src))
 	{
-		std::string fieldType = parseQueryFieldType( src);
-		std::string variableName = parseVariableRef( src);
-		queryStruct.defineField( fieldType, std::string());
-		if (!variableName.empty())
-		{
-			queryStruct.defineVariable( variableName);
-		}
-		if (!subexpression)
-		{
-			closeFeatureParse( queryStruct, qdescr, src);
-		}
+		fieldType = parseQueryFieldType( src);
 	}
 	else
 	{
 		throw strus::runtime_error( _TXT("syntax error in query, query expression or term expected"));
+	}
+	if (isSelection)
+	{
+		queryStruct.defineImplicitSelection( fieldType, field);
+	}
+	queryStruct.defineField( fieldType, field);
+	std::string variableName = parseVariableRef( src);
+	if (!variableName.empty())
+	{
+		queryStruct.defineVariable( variableName);
+	}
+	if (!subexpression)
+	{
+		closeFeatureParse( queryStruct, qdescr, src);
 	}
 }
 
@@ -1975,7 +1934,6 @@ DLL_PUBLIC bool strus::loadQuery(
 	try
 	{
 		QueryStruct queryStruct( analyzer);
-		bool haveSelectionFeatureDefined = false;
 		skipSpaces(src);
 		while (*src)
 		{
@@ -1994,10 +1952,7 @@ DLL_PUBLIC bool strus::loadQuery(
 				parseQueryTermExpression( queryStruct, queryproc, qdescr, src, false);
 			}
 		}
-		if (!haveSelectionFeatureDefined)
-		{
-			queryStruct.defineSelectionFeatures( queryproc, qdescr);
-		}
+		queryStruct.defineSelectionFeatures( queryproc, qdescr);
 		queryStruct.translate( query, queryproc, errorhnd);
 		return true;
 	}

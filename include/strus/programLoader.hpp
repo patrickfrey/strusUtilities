@@ -54,17 +54,17 @@ class ErrorBufferInterface;
 /// \brief Some default settings for parsing and building the query
 struct QueryDescriptors
 {
-	std::vector<std::string> defaultFieldTypes;	///< default field type names for search if not explicitely specified
-	std::string selectionFeatureSet;		///< default feature set used for document selection
-	std::string weightingFeatureSet;		///< default feature set used for document weighting
+	bool defaultFieldTypeDefined;			///< true if a field type name with name default has been specified
+	std::string selectionFeatureSet;		///< feature sets used for document selection
+	std::string weightingFeatureSet;		///< feature sets used for document weighting
 	float defaultSelectionTermPart;			///< default percentage of weighting terms required in selection
 	std::string defaultSelectionJoin;		///< default operator used to join terms for selection
 
 	QueryDescriptors()
-		:defaultFieldTypes(),selectionFeatureSet(),weightingFeatureSet()
+		:defaultFieldTypeDefined(false),selectionFeatureSet(),weightingFeatureSet()
 		,defaultSelectionTermPart(1.0),defaultSelectionJoin("contains"){}
 	QueryDescriptors( const QueryDescriptors& o)
-		:defaultFieldTypes(o.defaultFieldTypes)
+		:defaultFieldTypeDefined(o.defaultFieldTypeDefined)
 		,selectionFeatureSet(o.selectionFeatureSet)
 		,weightingFeatureSet(o.weightingFeatureSet)
 		,defaultSelectionTermPart(o.defaultSelectionTermPart)

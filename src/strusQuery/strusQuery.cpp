@@ -407,16 +407,6 @@ int main( int argc_, const char* argv_[])
 		if (verbose)
 		{
 			std::cerr << "Query context:" << std::endl;
-			std::cerr << "Default field types: ";
-			std::vector<std::string>::const_iterator
-				di = querydescr.defaultFieldTypes.begin(),
-				de = querydescr.defaultFieldTypes.end();
-			for (int didx=0; di != de; ++di,++didx)
-			{
-				if (didx) std::cerr << ", ";
-				std::cerr << *di;
-			}
-			std::cerr << std::endl;
 			std::cerr << "Selection feature set: " << querydescr.selectionFeatureSet << std::endl;
 			std::cerr << "Weighting feature set: " << querydescr.weightingFeatureSet << std::endl;
 			std::cerr << "Part of features weighted in selection: " << querydescr.defaultSelectionTermPart << std::endl;
