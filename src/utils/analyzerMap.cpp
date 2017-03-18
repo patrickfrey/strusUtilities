@@ -32,22 +32,22 @@ static const std::string getAnalyzerMapKey( const std::string& mimeType, const s
 	{
 		if (!encoding.empty())
 		{
-			return mimeType + "[" + encoding + "]" + ":" + scheme;
+			return utils::tolower( mimeType + "[" + encoding + "]" + ":" + scheme);
 		}
 		else
 		{
-			return mimeType + ":" + scheme;
+			return utils::tolower( mimeType + ":" + scheme);
 		}
 	}
 	else
 	{
 		if (!encoding.empty())
 		{
-			return mimeType + "[" + encoding + "]";
+			return utils::tolower( mimeType + "[" + encoding + "]");
 		}
 		else
 		{
-			return mimeType;
+			return utils::tolower( mimeType);
 		}
 	}
 }

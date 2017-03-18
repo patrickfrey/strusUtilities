@@ -17,6 +17,7 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/textProcessorInterface.hpp"
+#include "strus/segmenterInterface.hpp"
 #include "strus/tokenizerFunctionInterface.hpp"
 #include "strus/normalizerFunctionInterface.hpp"
 #include "strus/aggregatorFunctionInterface.hpp"
@@ -51,6 +52,7 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 	const char* label = "";
 	switch (type)
 	{
+		case strus::TextProcessorInterface::Segmenter: label = _TXT("Segmenter "); break;
 		case strus::TextProcessorInterface::TokenizerFunction: label = _TXT("Tokenizer "); break;
 		case strus::TextProcessorInterface::NormalizerFunction: label = _TXT("Normalizer "); break;
 		case strus::TextProcessorInterface::AggregatorFunction: label = _TXT("Aggregator "); break;
@@ -74,6 +76,13 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 		const char* descr = 0;
 		switch (type)
 		{
+			case strus::TextProcessorInterface::Segmenter:
+			{
+				const strus::SegmenterInterface* func = textproc->getSegmenterByName( *fi);
+				if (!func) break;
+				descr = func->getDescription();
+				break;
+			}
 			case strus::TextProcessorInterface::TokenizerFunction:
 			{
 				const strus::TokenizerFunctionInterface* func = textproc->getTokenizer( *fi);
@@ -389,12 +398,17 @@ int main( int argc_, const char* argv_[])
 
 		if (what.empty())
 		{
+			printTextProcessorDescription( textproc, strus::TextProcessorInterface::Segmenter, 0);
 			printTextProcessorDescription( textproc, strus::TextProcessorInterface::TokenizerFunction, 0);
 			printTextProcessorDescription( textproc, strus::TextProcessorInterface::NormalizerFunction, 0);
 			printTextProcessorDescription( textproc, strus::TextProcessorInterface::AggregatorFunction, 0);
 			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::PostingJoinOperator, 0);
 			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::WeightingFunction, 0);
 			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::SummarizerFunction, 0);
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "segmenter"))
+		{
+			printTextProcessorDescription( textproc, strus::TextProcessorInterface::Segmenter, item.empty()?0:item.c_str());
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "tokenizer"))
 		{
