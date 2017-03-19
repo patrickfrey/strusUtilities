@@ -417,6 +417,7 @@ int main( int argc, const char* argv[])
 			}
 			fprintf( stderr, "update storage '%s':\n", ci->c_str());
 			updateStorageWithFormula( dfmap, feattype, fieldname, storage.get(), transactionSize, funcinst.get(), normfuncinst.get());
+			storage->close();
 		}
 		if (errorBuffer->hasError())
 		{

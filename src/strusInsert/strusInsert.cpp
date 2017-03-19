@@ -455,6 +455,7 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		fileCrawlerThread->join();
+		storage->close();
 
 		if (errorBuffer->hasError())
 		{
