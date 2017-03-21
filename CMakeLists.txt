@@ -47,6 +47,12 @@ ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
 configure_file( "${PROJECT_SOURCE_DIR}/include/private/version.hpp.in"  "${PROJECT_SOURCE_DIR}/include/private/version.hpp"  @ONLY )
 
+if( APPLE OR WIN32 )
+	set( PROJECT_BIN_AFFIX "${CMAKE_BUILD_TYPE}/" )
+else( APPLE OR WIN32 )
+	set( PROJECT_BIN_AFFIX "" )
+endif( APPLE OR WIN32 )
+
 set( STRUS_GETTEXT_PACKAGE "strus-dom" )	#... 1st parameter of bindtextdomain(...)
 set( STRUS_GETTEXT_LOCALEDIR "" )			#... 2nd parameter of bindtextdomain(...)
 configure_file( "${PROJECT_SOURCE_DIR}/src/utils/internationalization.cpp.in"  "${PROJECT_SOURCE_DIR}/src/utils/internationalization.cpp"  @ONLY )
