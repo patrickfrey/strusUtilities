@@ -240,6 +240,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("failed to delete documents"));
 		}
+		storage->close();
 		std::cerr << strus::string_format( _TXT("done %u documents deleted"), (unsigned int)opt.nofargs()) << std::endl;
 		return 0;
 	}

@@ -344,6 +344,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error(_TXT("error in update storage"));
 		}
+		storage->close();
 		std::cerr << strus::string_format( _TXT("done %u update operations"), nofUpdates) << std::endl;
 		if (logfile) fclose( logfile);
 		return 0;
