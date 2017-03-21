@@ -13,5 +13,4 @@ StrusInspect -s "path=storage" indexterms punct
 StrusInspect -s "path=storage" indexterms stem
 StrusInspect -s "path=storage" indexterms tist
 StrusInspect -s "path=storage" content orig
-StrusDestroy -s "path=storage"
 

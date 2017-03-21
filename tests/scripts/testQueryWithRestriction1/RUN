@@ -4,5 +4,4 @@ StrusQuery -S storage.conf query.ana query.prg "going"
 StrusQuery -S storage.conf query.ana query.prg "sequence( on, holidays | 2) continent = 'Europe'"
 StrusQuery -S storage.conf query.ana query.prg "continent = 'Europe' going"
 StrusQuery -S storage.conf query.ana query.prg "continent = 'Europe','Africa' going"
-StrusDestroy -s "path=storage"
 

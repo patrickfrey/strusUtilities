@@ -2,4 +2,3 @@ StrusCreate -S storage.conf
 StrusInsert -S storage.conf doc.ana data/
 StrusQuery -S storage.conf query.ana query.prg "software engineer"
 StrusQuery -G -S storage.conf query.ana query.prg "software engineer"
-StrusDestroy -s "path=storage"

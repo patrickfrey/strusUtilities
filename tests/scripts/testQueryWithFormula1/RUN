@@ -2,5 +2,4 @@ StrusCreate -S storage.conf
 StrusInsert -S storage.conf doc.ana data/
 StrusQuery -S storage.conf query.ana query.prg "going"
 StrusQuery -S storage.conf query.ana query.prg "sequence( on, holidays | 2)"
-StrusDestroy -s "path=storage"
 

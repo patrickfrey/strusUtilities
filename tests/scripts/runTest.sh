@@ -41,10 +41,7 @@ fi
 for ff in $FILES; do
 	rm -Rf $EXECDIR/$ff || true;
 done;
-rm -f $EXECDIR/OUT
-rm -f $EXECDIR/DIFF
-rm -f $EXECDIR/ERR
-rmdir $EXECDIR
+rm -Rf $EXECDIR
 (rmdir $EXECROT || true) 2>/dev/null
 echo "OK $1 [ $FILES]"
 

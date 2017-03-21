@@ -6,5 +6,4 @@ StrusQuery -S storage.conf query.ana query.prg "software engineer"
 StrusQuery -S storage.conf query.ana query.prg "software:title 'machine language instructions':word"
 StrusQuery -S storage.conf query.ana query.prg "~hugaga:word software:word"
 StrusQuery -S storage.conf query.ana query.prg "hugaga:word software:word"
-StrusDestroy -s "path=storage"
 

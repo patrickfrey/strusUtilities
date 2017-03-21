@@ -11,5 +11,4 @@ StrusInsert -S storage.conf doc.ana data/doc9.xml
 StrusInsert -S storage.conf doc.ana data/doc10.xml
 StrusUpdateStorageCalcStatistics -s "path=storage" docnorm word "sqr( tf * log((N+1)/(df+1)))" "sqrt(_0)" 
 StrusInspect -s path=storage metadata docnorm
-StrusDestroy -s "path=storage"
 
