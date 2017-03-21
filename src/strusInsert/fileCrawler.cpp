@@ -15,141 +15,80 @@ using namespace strus;
 
 FileCrawler::FileCrawler(
 		const std::string& path_,
-		std::size_t transactionSize_,
-		std::size_t nofChunksReadAhead_,
+		std::size_t chunkSize_,
 		const std::string& extension_)
 
-	:m_transactionSize(transactionSize_)
-	,m_nofChunksReadAhead(nofChunksReadAhead_)
+	:m_chunkSize(chunkSize_)
 	,m_extension(extension_)
-	,m_chunkquesize(0)
-	,m_terminated(false)
+	,m_chunkque()
 {
 	if (strus::isDir( path_))
 	{
-		std::size_t psize = path_.size();
-		while (psize && path_[ psize-1] == strus::dirSeparator()) --psize;
-		m_directories.push_back( std::string( path_.c_str(), psize));
+		m_chunkque.push_back( Chunk());
+		collectFilesToProcess( path_);
 	}
 	else
 	{
-		m_openchunk.push_back( path_);
+		m_chunkque.push_back( Chunk::singleFile( path_));
 	}
-	m_diritr = m_directories.begin();
 }
 
 FileCrawler::~FileCrawler()
 {
 }
 
-void FileCrawler::run()
+void FileCrawler::collectFilesToProcess( const std::string& dir)
 {
-	findFilesToProcess();
-
-	while (!m_terminated)
+	std::vector<std::string> files;
+	unsigned int ec = strus::readDirFiles( dir, m_extension, files);
+	if (ec)
 	{
-		utils::UniqueLock lock( m_worker_mutex);
-		m_worker_cond.wait( lock);
-		if (m_terminated) break;
-
-		findFilesToProcess();
+		std::cerr << string_format( _TXT( "could not read directory to process '%s' (errno %u)"), dir.c_str(), ec) << std::endl;
+		std::cerr.flush();
 	}
-	m_chunkque_cond.notify_all();
-}
-
-void FileCrawler::findFilesToProcess()
-{
-	while (m_diritr != m_directories.end())
+	else
 	{
-		std::vector<std::string> files;
-		std::string path = *m_diritr;
-		unsigned int ec = strus::readDirFiles( path, m_extension, files);
+		std::vector<std::string>::const_iterator fi = files.begin(), fe = files.end();
+		for (; fi != fe; ++fi)
+		{
+			if (m_chunkque.back().files.size() >= m_chunkSize)
+			{
+				m_chunkque.push_back( Chunk());
+			}
+			m_chunkque.back().files.push_back( dir + strus::dirSeparator() + *fi);
+		}
+		std::vector<std::string> subdirs;
+		ec = strus::readDirSubDirs( dir, subdirs);
 		if (ec)
 		{
-			std::cerr << string_format( _TXT( "could not read directory to process '%s' (errno %u)"), path.c_str(), ec) << std::endl;
+			std::cerr << string_format( _TXT( "could not read subdirectories to process '%s' (errno %u)"), dir.c_str(), ec) << std::endl;
 			std::cerr.flush();
 		}
 		else
 		{
-			std::vector<std::string>::const_iterator
-				fi = files.begin(), fe = files.end();
-			for (; fi != fe; ++fi)
+			std::vector<std::string>::const_iterator di = subdirs.begin(), de = subdirs.end();
+			for (; di != de; ++di)
 			{
-				m_openchunk.push_back(
-					path + strus::dirSeparator() + *fi);
-				if (m_openchunk.size() == m_transactionSize)
+				std::string subdir( dir + strus::dirSeparator() + *di);
+				if (strus::isDir( subdir))
 				{
-					pushChunk( m_openchunk);
-					m_openchunk.clear();
+					collectFilesToProcess( subdir);
 				}
 			}
 		}
-		std::vector<std::string> subdirs;
-		ec = strus::readDirSubDirs( path, subdirs);
-		m_diritr = m_directories.erase( m_diritr);
-		if (ec)
-		{
-			std::cerr << string_format( _TXT( "could not read subdirectories to process '%s' (errno %u)"), path.c_str(), ec) << std::endl;
-			std::cerr.flush();
-			continue;
-		}
-		std::vector<std::string>::const_iterator
-			di = subdirs.begin(), de = subdirs.end();
-		for (; di != de; ++di)
-		{
-			std::string subdir( path + strus::dirSeparator() + *di);
-			if (strus::isDir( subdir))
-			{
-				m_diritr = m_directories.insert( m_diritr, subdir);
-			}
-		}
-
-		if (haveEnough()) return;
 	}
-	m_terminated = true;
-	if (m_openchunk.empty())
-	{
-		return;
-	}
-	pushChunk( m_openchunk);
-	m_openchunk.clear();
 }
 
-
-bool FileCrawler::fetch( std::vector<std::string>& files)
+std::vector<std::string> FileCrawler::fetch()
 {
 	utils::UniqueLock lock(m_chunkque_mutex);
-	if (!needMore())
-	{
-		m_worker_cond.notify_one();
-	}
-
-	while (m_chunkque.empty() && !m_terminated)
-	{
-		m_worker_cond.notify_one();
-		m_chunkque_cond.wait(lock);
-	}
 	if (m_chunkque.empty())
 	{
-		return false;
+		return std::vector<std::string>();
 	}
-	m_chunkquesize -= 1;
-	files = m_chunkque.front();
+	std::vector<std::string> rt = m_chunkque.front().files;
 	m_chunkque.pop_front();
-	return true;
+	return rt;
 }
 
-void FileCrawler::sigStop()
-{
-	m_terminated = true;
-	m_worker_cond.notify_one();
-}
-
-void FileCrawler::pushChunk( const std::vector<std::string>& chunk)
-{
-	utils::UniqueLock lock( m_chunkque_mutex);
-	m_chunkquesize += 1;
-	m_chunkque.push_back( chunk);
-	m_chunkque_cond.notify_one();
-}
 

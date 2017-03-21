@@ -423,10 +423,7 @@ int main( int argc_, const char* argv_[])
 		strus::utils::ScopedPtr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get(), verbose, errorBuffer.get()));
 
-		strus::FileCrawler fileCrawler( datapath, fetchSize, nofThreads*5+5, fileext);
-		std::auto_ptr<boost::thread> fileCrawlerThread(
-			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));
-
+		strus::FileCrawler fileCrawler( datapath, fetchSize, fileext);
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
@@ -454,7 +451,6 @@ int main( int argc_, const char* argv_[])
 				tgroup.join_all();
 			}
 		}
-		fileCrawlerThread->join();
 		storage->close();
 
 		if (errorBuffer->hasError())

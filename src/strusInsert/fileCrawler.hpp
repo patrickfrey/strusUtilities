@@ -24,48 +24,46 @@ class FileCrawler
 public:
 	FileCrawler(
 			const std::string& path_,
-			std::size_t transactionSize_,
-			std::size_t nofChunksReadAhead_,
+			std::size_t chunkSize_,
 			const std::string& extension_);
 
 	virtual ~FileCrawler();
 
-	virtual bool fetch( std::vector<std::string>& files);
-
-	void sigStop();
-	void run();
+	virtual std::vector<std::string> fetch();
 
 private:
-	void findFilesToProcess();
-
-	void pushChunk( const std::vector<std::string>& chunk);
-
-	bool haveEnough()
+	struct Chunk
 	{
-		return (m_chunkquesize > (m_nofChunksReadAhead*2));
-	}
-	bool needMore()
-	{
-		return (m_chunkquesize < m_nofChunksReadAhead);
-	}
+		Chunk( const Chunk& o)
+			:files(o.files){}
+		Chunk()
+			:files(){}
+
+		void clear()
+		{
+			files.clear();
+		}
+
+		static Chunk singleFile( const std::string& filename)
+		{
+			Chunk rt;
+			rt.files.push_back( filename);
+			return rt;
+		}
+
+		std::vector<std::string> files;
+	};
+
+	void collectFilesToProcess( const std::string& dir);
 
 private:
-	std::size_t m_transactionSize;
-	std::size_t m_nofChunksReadAhead;
+	std::size_t m_chunkSize;
 	std::string m_extension;
-	std::list<std::string> m_directories;
-	std::list<std::string>::iterator m_diritr;
 
-	std::vector<std::string> m_openchunk;
-	std::deque<std::vector<std::string> > m_chunkque;
-	std::size_t m_chunkquesize;
+	std::list<Chunk> m_chunkque;
 	utils::Mutex m_chunkque_mutex;
-	utils::ConditionVariable m_chunkque_cond;
-
-	utils::ConditionVariable m_worker_cond;
-	utils::Mutex m_worker_mutex;
-	utils::AtomicBool m_terminated;
 };
 
 }//namespace
 #endif
+

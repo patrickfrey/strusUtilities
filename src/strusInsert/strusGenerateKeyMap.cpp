@@ -301,12 +301,9 @@ int main( int argc_, const char* argv_[])
 		}
 
 		strus::KeyMapGenResultList resultList;
-		strus::FileCrawler fileCrawler( datapath, unitSize, nofThreads*5+5, fileext);
+		strus::FileCrawler fileCrawler( datapath, unitSize, fileext);
 
 		// [3] Start threads:
-		std::auto_ptr<boost::thread> fileCrawlerThread(
-			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));
-
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
@@ -333,8 +330,6 @@ int main( int argc_, const char* argv_[])
 				tgroup.join_all();
 			}
 		}
-		fileCrawlerThread->join();
-
 		// [3] Final merge:
 		std::cerr << std::endl << _TXT("merging results:") << std::endl;
 		resultList.printKeyOccurrenceList( std::cout, nofResults);

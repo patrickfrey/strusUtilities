@@ -116,7 +116,7 @@ void KeyMapGenProcessor::run()
 	std::vector<std::string> files;
 	std::vector<std::string>::const_iterator fitr;
 
-	while (m_crawler->fetch( files))
+	while (!(files=m_crawler->fetch()).empty())
 	{
 		try
 		{

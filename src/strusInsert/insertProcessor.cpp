@@ -74,7 +74,7 @@ void InsertProcessor::run()
 			transaction( m_storage->createTransaction());
 		if (!transaction.get()) throw strus::runtime_error(_TXT("error creating storage transaction"));
 
-		while (m_crawler->fetch( files))
+		while (!(files=m_crawler->fetch()).empty())
 		{
 			fitr = files.begin();
 			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
