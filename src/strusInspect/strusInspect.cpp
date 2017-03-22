@@ -379,7 +379,7 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 		attreader( storage.createAttributeReader());
 	if (!attreader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
 
-	strus::Index ehandle = attreader->elementHandle( attribute.c_str());	
+	strus::Index ehandle = attribute.empty()?0:attreader->elementHandle( attribute.c_str());
 	strus::Index hnd = attreader->elementHandle( key[0]);
 	if (hnd == 0)
 	{

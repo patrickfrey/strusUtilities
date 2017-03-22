@@ -5,6 +5,7 @@ set -e
 
 # Prepare test output:
 ARG=$1
+OPT=$2
 TESTROT=$PROJECT_SRC/tests/scripts
 TESTDIR=$TESTROT/$ARG
 EXECROT="$PROJECT_BIN/tests/scripts/exec"
@@ -38,10 +39,11 @@ if test "$ERR" -gt 0; then
 	exit 2
 fi
 # Cleanup:
-for ff in $FILES; do
-	rm -Rf $EXECDIR/$ff || true;
-done;
-rm -Rf $EXECDIR
-(rmdir $EXECROT || true) 2>/dev/null
+if [ "x$OPT" = "xkeep" ]; then
+	true
+else
+	rm -Rf $EXECDIR
+	(rmdir $EXECROT || true) 2>/dev/null
+fi
 echo "OK $1 [ $FILES]"
 
