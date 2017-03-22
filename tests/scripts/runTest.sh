@@ -19,7 +19,7 @@ FILES=`ls | tr '\n' ' ' | tr '\r' ' '`
 cd -
 for ff in $FILES; do cp -Rf $TESTDIR/$ff $EXECDIR/; done;
 cd $EXECDIR
-echo "#!/bin/bash" > RUN
+echo "#!/bin/sh" > RUN
 echo "" >> RUN
 echo ". $TESTROT/ENV" >> RUN
 echo "" >> RUN
