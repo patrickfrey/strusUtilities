@@ -18,6 +18,7 @@ add_test( TestAnalyzeTsv1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAn
 add_test( TestAnalyzeConfig1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig1 )
 add_test( TestAnalyzeConfig2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig2 )
 add_test( TestAnalyzeWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeWithDocType1 )
+add_test( TestAnalyzeBindPos1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeBindPos1 )
 add_test( TestInsertWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertWithDocType1 )
 add_test( TestInsertBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertBase1 )
 add_test( TestSimpleQuery1  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSimpleQuery1 )
