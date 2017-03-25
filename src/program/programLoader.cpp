@@ -745,6 +745,10 @@ static analyzer::FeatureOptions
 					{
 						rt.definePositionBind( analyzer::BindPredecessor);
 					}
+					else if (utils::caseInsensitiveEquals( optval, "unique"))
+					{
+						rt.definePositionBind( analyzer::BindUnique);
+					}
 					else
 					{
 						throw strus::runtime_error( _TXT("'pred' or 'succ' expected as 'position' option value instead of '%s'"), optval.c_str());
