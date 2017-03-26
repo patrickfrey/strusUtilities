@@ -283,8 +283,9 @@ int main( int argc_, const char* argv_[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusHelp [options] <what> <name>" << std::endl;
+			std::cout << _TXT("usage:") << " strusHelp [options] [ <what> <name> ]" << std::endl;
 			std::cout << "<what> = " << _TXT("specifies what type of item to retrieve (default all):") << std::endl;
+			std::cout << "         " << "segmenter     : " << _TXT("Get segmenter function description") << std::endl;
 			std::cout << "         " << "tokenizer     : " << _TXT("Get tokenizer function description") << std::endl;
 			std::cout << "         " << "normalizer    : " << _TXT("Get normalizer function description") << std::endl;
 			std::cout << "         " << "aggregator    : " << _TXT("Get aggregator function description") << std::endl;
