@@ -90,7 +90,7 @@ static bool isIndex( char const* cc)
 	return (*cc == '\0');
 }
 
-static void inspectPositions( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute)
+static void inspectPositions( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
 	if (size > 3) throw strus::runtime_error( _TXT("too many arguments"));
 	if (size < 2) throw strus::runtime_error( _TXT("too few arguments"));
@@ -115,7 +115,11 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		for (; docno <= maxDocno; ++docno)
 		{
 			docno = itr->skipDoc( docno);
-			if (!docno) break;
+			if (!docno)
+			{
+				if (printEmpty && ehandle <= 0) std::cout << docno << ':' << std::endl;
+				break;
+			}
 
 			if (ehandle > 0)
 			{
@@ -174,7 +178,7 @@ static void inspectDocumentIndexFeatureTypes( strus::StorageClientInterface& sto
 	}
 }
 
-static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute)
+static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
 	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
 	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
@@ -197,7 +201,13 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			if (!itr->skipDoc( docno)) continue;
+			if (!itr->skipDoc( docno))
+			{
+				if (printEmpty && ehandle <= 0)
+				{
+					std::cout << docno << ':' << std::endl;
+				}
+			}
 			if (ehandle > 0)
 			{
 				areader->skipDoc(docno);
@@ -298,7 +308,7 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 	}
 }
 
-static void inspectFeatureFrequency( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute)
+static void inspectFeatureFrequency( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
 	if (size > 3) throw strus::runtime_error( _TXT("too many arguments"));
 	if (size < 2) throw strus::runtime_error( _TXT("too few arguments"));
@@ -322,8 +332,32 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			docno = itr->skipDoc( docno);
-			if (!docno) break;
+			strus::Index next_docno = itr->skipDoc( docno);
+			if (docno != next_docno)
+			{
+				if (printEmpty && ehandle <= 0)
+				{
+					if (!next_docno)
+					{
+						for (; docno <= maxDocno; ++docno)
+						{
+							std::cout << docno << " 0" << std::endl;
+						}
+						break;
+					}
+					else
+					{
+						for (; docno < next_docno; ++docno)
+						{
+							std::cout << docno << " 0" << std::endl;
+						}
+					}
+				}
+				else
+				{
+					docno = next_docno;
+				}
+			}
 			if (ehandle > 0)
 			{
 				areader->skipDoc(docno);
@@ -370,7 +404,7 @@ static void inspectMaxDocumentNumber( const strus::StorageClientInterface& stora
 	std::cout << storage.maxDocumentNumber() << std::endl;
 }
 
-static void inspectDocAttribute( const strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute)
+static void inspectDocAttribute( const strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
 	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
 	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
@@ -393,7 +427,7 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 		{
 			attreader->skipDoc( docno);
 			std::string value = attreader->getValue( hnd);
-			if (value.size())
+			if (printEmpty || value.size())
 			{
 				if (ehandle > 0)
 				{
@@ -442,7 +476,7 @@ static void inspectDocAttributeNames( const strus::StorageClientInterface& stora
 	}
 }
 
-static void inspectDocMetaData( const strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute)
+static void inspectDocMetaData( const strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
 	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
 	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
@@ -469,10 +503,9 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 		for (; docno <= maxDocno; ++docno)
 		{
 			metadata->skipDoc( docno);
-			if (!docno) break;
 
 			strus::NumericVariant value = metadata->getValue( hnd);
-			if (value.defined())
+			if (printEmpty || value.defined())
 			{
 				if (ehandle > 0)
 				{
@@ -527,7 +560,7 @@ static void inspectDocMetaTable( const strus::StorageClientInterface& storage, c
 	std::cout << std::endl;
 }
 
-static void inspectContent( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute)
+static void inspectContent( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
 	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
 	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
@@ -549,7 +582,7 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 		for (; docno <= maxDocno; ++docno)
 		{
 			viewer->skipDoc( docno);
-			if (0 != viewer->skipPos(0))
+			if (printEmpty || 0 != viewer->skipPos(0))
 			{
 				if (ehandle > 0)
 				{
@@ -711,7 +744,7 @@ static void inspectForwardIndexMap( strus::StorageClientInterface& storage, cons
 			while (0!=(pos=viewer->skipPos(pos+1)))
 			{
 				std::string value = viewer->fetch();
-				std::cout << docno << " " << mapCntrlToSpace(value) << std::endl;
+				std::cout << docno << ":" << pos << " " << mapCntrlToSpace(value) << std::endl;
 			}
 		}
 	}
@@ -727,7 +760,7 @@ static void inspectForwardIndexMap( strus::StorageClientInterface& storage, cons
 			while (0!=(pos=viewer->skipPos(pos+1)))
 			{
 				std::string value = viewer->fetch();
-				std::cout << mapCntrlToSpace(value) << std::endl;
+				std::cout << pos << " " << mapCntrlToSpace(value) << std::endl;
 			}
 		}
 		else
@@ -793,11 +826,11 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 9,
+				argc, argv, 10,
 				"h,help", "v,version","license",
 				"m,module:", "M,moduledir:",
 				"r,rpc:", "s,storage:", "T,trace:",
-				"A,attribute:");
+				"A,attribute:", "E,empty");
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
@@ -945,6 +978,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			std::cout << "-A|--attribute <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Print attribute with name <NAME> for lists of results instead of docno") << std::endl;
+			std::cout << "-E|--empty" << std::endl;
+			std::cout << "    " << _TXT("Print non existing elements as empty value") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
@@ -959,6 +994,8 @@ int main( int argc, const char* argv[])
 		{
 			attribute = opt["attribute"];
 		}
+		bool printEmpty = opt("empty");
+
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -1011,11 +1048,11 @@ int main( int argc, const char* argv[])
 
 		if (strus::utils::caseInsensitiveEquals( what, "pos"))
 		{
-			inspectPositions( *storage, inpectarg, inpectargsize, attribute);
+			inspectPositions( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "ff"))
 		{
-			inspectFeatureFrequency( *storage, inpectarg, inpectargsize, attribute);
+			inspectFeatureFrequency( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "df"))
 		{
@@ -1035,7 +1072,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "indexterms"))
 		{
-			inspectDocumentIndexTerms( *storage, inpectarg, inpectargsize, attribute);
+			inspectDocumentIndexTerms( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "nofdocs"))
 		{
@@ -1047,7 +1084,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "metadata"))
 		{
-			inspectDocMetaData( *storage, inpectarg, inpectargsize, attribute);
+			inspectDocMetaData( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "metatable"))
 		{
@@ -1055,7 +1092,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "attribute"))
 		{
-			inspectDocAttribute( *storage, inpectarg, inpectargsize, attribute);
+			inspectDocAttribute( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "attrnames"))
 		{
@@ -1063,7 +1100,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "content"))
 		{
-			inspectContent( *storage, inpectarg, inpectargsize, attribute);
+			inspectContent( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "fwstats"))
 		{
