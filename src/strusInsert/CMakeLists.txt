@@ -39,6 +39,7 @@ link_directories(
 # ------------------------------
 add_library( local_objs_static STATIC ${source_files})
 set_property( TARGET local_objs_static PROPERTY POSITION_INDEPENDENT_CODE TRUE )
+set_property( TARGET local_objs_static PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 add_executable( strusInsert  strusInsert.cpp )
 target_link_libraries( strusInsert  strus_storage_objbuild strusutilities_private_utils  local_objs_static strus_program strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
