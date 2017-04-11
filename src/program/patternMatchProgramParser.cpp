@@ -159,7 +159,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 						{
 							throw strus::runtime_error(_TXT("failed to define lexem name symbol"));
 						}
-						if (nameid > MaxPatternTermNameId)
+						if (nameid >= MaxPatternTermNameId)
 						{
 							throw strus::runtime_error(_TXT("too many regular expression tokens defined: %u"), nameid);
 						}
@@ -394,7 +394,7 @@ unsigned int PatternMatcherProgramParser::defineAnalyzerTermType( const std::str
 	{
 		throw strus::runtime_error(_TXT("failed to define term type symbol"));
 	}
-	if (typid > MaxPatternTermNameId)
+	if (typid >= MaxPatternTermNameId)
 	{
 		throw strus::runtime_error(_TXT("too many term types defined: %u"), typid);
 	}
@@ -639,24 +639,13 @@ void PatternMatcherProgramParser::loadExpression( char const*& si, SubExpression
 	if (isAssign(*si))
 	{
 		(void)parse_OPERATOR( si);
-		float weight = 1.0f;
-		if (isOpenSquareBracket(*si))
+		if (!isAlpha(*si))
 		{
-			(void)parse_OPERATOR( si);
-			if (!is_FLOAT(si))
-			{
-				throw strus::runtime_error(_TXT("floating point number expected for variable assignment weight in square brackets '[' ']' after assignment operator"));
-			}
-			weight = parse_FLOAT( si);
-			if (!isCloseSquareBracket(*si))
-			{
-				throw strus::runtime_error(_TXT("close square bracket expected after floating point number in variable assignment weight specification"));
-			}
-			(void)parse_OPERATOR( si);
+			throw strus::runtime_error(_TXT("expected variable after assign '='"));
 		}
 		std::string op = parse_IDENTIFIER( si);
 		loadExpressionNode( op, si, exprinfo);
-		m_patternMatcher->attachVariable( name, weight);
+		m_patternMatcher->attachVariable( name);
 	}
 	else
 	{
