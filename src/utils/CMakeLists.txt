@@ -32,6 +32,7 @@ link_directories(
 # -------------------------------------------
 add_library( strusutilities_private_utils STATIC  ${source_files} )
 target_link_libraries( strusutilities_private_utils  "${Boost_LIBRARIES}" )
+set_property( TARGET strusutilities_private_utils PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 
 
