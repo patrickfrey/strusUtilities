@@ -92,7 +92,7 @@ License: MPLv2
 Group: Development/Libraries/C++
 
 Source: %{name}_%{main_version}.tar.gz
-Patch0: strusutilities-0.12.0-sles11-long-long.patch
+Patch0: strusutilities-0.14.0-sles11-long-long.patch
 
 URL: http://project-strus.net
 
