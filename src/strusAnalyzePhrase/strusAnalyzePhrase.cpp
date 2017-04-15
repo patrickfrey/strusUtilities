@@ -265,9 +265,9 @@ int main( int argc, const char* argv[])
 			ii = qry.instructions().begin(), ie = qry.instructions().end();
 		for (; ii != ie; ++ii)
 		{
-			if (ii->opCode() == strus::analyzer::Query::Instruction::PushSearchIndexTerm)
+			if (ii->opCode() == strus::analyzer::Query::Instruction::Term)
 			{
-				const strus::analyzer::Term& term = qry.searchIndexTerm( ii->idx());
+				const strus::analyzer::Term& term = qry.term( ii->idx());
 				if (!resultPlain)
 				{
 					std::cout << term.pos() << " ";

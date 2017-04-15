@@ -108,21 +108,23 @@ void QueryStruct::translate( QueryInterface& query, const QueryProcessorInterfac
 	{
 		switch (ii->opCode())
 		{
-			case analyzer::Query::Instruction::PushMetaData:
+			case analyzer::Query::Instruction::MetaData:
 			{
-				unsigned int midx = ii->idx();
-				++ii;
+				const analyzer::MetaData& elem = queryana.metadata( ii->idx());
+				if (++ii == ie)
+				{
+					throw strus::runtime_error(_TXT("internal: unexpected end of serialization after MetaData"));;
+				}
 				if (ii->opCode() != analyzer::Query::Instruction::Operator)
 				{
-					throw strus::runtime_error(_TXT("internal: unexpected operation after pushMetaData"));
+					throw strus::runtime_error(_TXT("internal: unexpected operation after MetaData"));
 				}
 				const QueryGroupStruct& group = m_groups[ ii->idx()];
 				if (group.type != QueryGroupStruct::QueryMetaDataStructType)
 				{
-					throw strus::runtime_error(_TXT("internal: group in argument of operation after pushMetaData"));
+					throw strus::runtime_error(_TXT("internal: group in argument of operation after MetaData"));
 				}
 				const QueryMetaDataStruct& mt = m_metadata[ group.idx];
-				const analyzer::MetaData& elem = queryana.metadata( midx);
 				if (mt.name != elem.name()) 
 				{
 					throw strus::runtime_error(_TXT("internal: meta data element name does not match"));
@@ -130,9 +132,9 @@ void QueryStruct::translate( QueryInterface& query, const QueryProcessorInterfac
 				query.addMetaDataRestrictionCondition( mt.cmp, mt.name, elem.value(), mt.newGroup);
 				break;
 			}
-			case analyzer::Query::Instruction::PushSearchIndexTerm:
+			case analyzer::Query::Instruction::Term:
 			{
-				const analyzer::Term& term = queryana.searchIndexTerm( ii->idx());
+				const analyzer::Term& term = queryana.term( ii->idx());
 				query.pushTerm( term.type(), term.value(), term.len());
 				break;
 			}

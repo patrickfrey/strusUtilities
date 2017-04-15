@@ -117,6 +117,7 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 		termitr( storage->createDocumentTermIterator( feattype));
 	if (!termitr.get()) throw strus::runtime_error(_TXT("failed to create document term iterator"));
 	strus::Index di = 1, de = storage->maxDocumentNumber();
+	fprintf( stderr, "\n");
 	for (; di <= de; ++di)
 	{
 		strus::Index docno = termitr->skipDoc( di);
@@ -152,7 +153,7 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 		transactionTotalCount += transactionCount;
 		transactionCount = 0;
 		if (!transaction->commit()) throw strus::runtime_error(_TXT("transaction commit failed"));
-		fprintf( stderr, "updated %u documents\n", transactionTotalCount);
+		fprintf( stderr, "\rupdated %u documents\n", transactionTotalCount);
 	}
 }
 
