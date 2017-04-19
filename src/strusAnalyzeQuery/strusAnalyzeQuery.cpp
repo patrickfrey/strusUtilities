@@ -263,7 +263,7 @@ public:
 #endif
 	}
 
-	virtual strus::QueryResult evaluate()
+	virtual strus::QueryResult evaluate() const
 	{
 		return strus::QueryResult();
 	}
