@@ -22,6 +22,7 @@ add_test( TestAnalyzeBindPos1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  te
 add_test( TestInsertWithDocType1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertWithDocType1 )
 add_test( TestInsertBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testInsertBase1 )
 add_test( TestSimpleQuery1  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSimpleQuery1 )
+add_test( TestSimpleQuery2  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSimpleQuery2 )
 add_test( TestQueryWithRestriction1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testQueryWithRestriction1 )
 add_test( TestQueryWithFormula1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh   testQueryWithFormula1 )
 add_test( TestSummarization1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testSummarization1 )
