@@ -1,2 +1,3 @@
 - program to test vector space models with random samples to calculate a rate of miss and a rate of false positives
+- write test for strusUpdateStorageCalcStatistics. check if 'tf' is really considered in formula ?
 

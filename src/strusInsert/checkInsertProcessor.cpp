@@ -282,8 +282,16 @@ void CheckInsertProcessor::run()
 									case strus::NumericVariant::Int:
 										if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
 										{
-											strus::NumericVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-											storagedoc->setMetaData( mi->name(), av);
+											if (val < 0.0)
+											{
+												strus::NumericVariant av( (int64_t)(std::floor( val - std::numeric_limits<float>::epsilon())));
+												storagedoc->setMetaData( mi->name(), av);
+											}
+											else
+											{
+												strus::NumericVariant av( (int64_t)(std::floor( val + std::numeric_limits<float>::epsilon())));
+												storagedoc->setMetaData( mi->name(), av);
+											}
 										}
 										else
 										{
@@ -292,9 +300,9 @@ void CheckInsertProcessor::run()
 										break;
 									case strus::NumericVariant::UInt:
 										if (val - std::floor( val) < std::numeric_limits<float>::epsilon()
-										|| (val + std::numeric_limits<float>::epsilon()) < 0.0)
+										|| (val + std::numeric_limits<float>::epsilon()) > 0.0)
 										{
-											strus::NumericVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+											strus::NumericVariant av( (uint64_t)(std::floor( val + std::numeric_limits<float>::epsilon())));
 											storagedoc->setMetaData( mi->name(), av);
 										}
 										else

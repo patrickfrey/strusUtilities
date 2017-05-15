@@ -121,7 +121,7 @@ static NumericVariant parseNumericValue( char const*& src)
 	{
 		if (isMinus(*src) || isPlus(*src))
 		{
-			return NumericVariant( parse_INTEGER( src));
+			return NumericVariant( (int64_t)parse_INTEGER( src));
 		}
 		else
 		{
@@ -133,12 +133,12 @@ static NumericVariant parseNumericValue( char const*& src)
 			while (*src == '0') ++src;
 			if (*src >= '1' && *src <= '9')
 			{
-				return NumericVariant( parse_UNSIGNED( src));
+				return NumericVariant( (uint64_t)parse_UNSIGNED( src));
 			}
 			else
 			{
 				skipSpaces(src);
-				return NumericVariant( 0);
+				return NumericVariant( (int64_t)0);
 			}
 		}
 	}
