@@ -174,7 +174,7 @@ public:
 	}
 
 	virtual void addMetaDataRestrictionCondition(
-			strus::MetaDataRestrictionInterface::CompareOperator opr, const std::string& name,
+			const strus::MetaDataRestrictionInterface::CompareOperator& opr, const std::string& name,
 			const strus::NumericVariant& operand, bool newGroup=true)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
