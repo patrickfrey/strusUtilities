@@ -245,7 +245,7 @@ int main( int argc, const char* argv[])
 		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
 
 		std::auto_ptr<strus::StatisticsIteratorInterface>
-			statsqueue( storage->createStatisticsIterator());
+			statsqueue( storage->createAllStatisticsIterator());
 		if (!statsqueue.get())
 		{
 			throw strus::runtime_error( _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
