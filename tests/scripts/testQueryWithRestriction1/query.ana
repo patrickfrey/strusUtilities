@@ -2,6 +2,6 @@
 	word = lc:convdia(en):stem(en) word word;
 	word = lc:convdia(en):stem(en) word default;
 [MetaData]
-	continent = dictmap("continents.txt"):lc content;
+	continent = dictmap("continents.txt"):lc content continent;
 
 

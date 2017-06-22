@@ -9,12 +9,15 @@
 /// \file queryStruct.hpp
 #ifndef _STRUS_UTILITIES_PROGRAM_QUERY_STRUCT_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_QUERY_STRUCT_HPP_INCLUDED
-#include "queryStruct_private.hpp"
+#include "metadataExpression.hpp"
+#include "termExpression.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/programLoader.hpp"
 #include <string>
 #include <vector>
+
+#error DEPRECATED
 
 /// \brief strus toplevel namespace
 namespace strus {
@@ -51,7 +54,7 @@ public:
 	void defineImplicitSelection( const std::string& fieldType, const std::string& fieldContent);
 
 	/// \brief Define a meta data restriction field
-	void defineMetaDataRestriction( const std::string& metaDataName, const MetaDataRestrictionInterface::CompareOperator& cmp, const std::string& fieldType, const std::string& fieldContent, bool newGroup);
+	void defineMetaDataRestriction( const MetaDataRestrictionInterface::CompareOperator& cmp, const std::string& fieldType, const std::string& fieldContent, bool newGroup);
 
 	/// \brief Define a query expression node on the top elements of the current stack
 	void defineExpression( const PostingJoinOperatorInterface* function, unsigned int arg, int range, unsigned int cardinality);
@@ -63,15 +66,9 @@ public:
 	void translate( QueryInterface& query, const QueryProcessorInterface* queryproc, ErrorBufferInterface* errorhnd);
 
 private:
-	std::vector<QueryExpressionStruct> m_expressions;
-	std::vector<QueryFeatureStruct> m_features;
-	std::vector<QueryMetaDataStruct> m_metadata;
-	std::vector<std::string> m_variables;
-	std::vector<QueryGroupStruct> m_groups;
-	std::vector<std::pair<std::string,std::string> > m_selectionFeatures;
-	strus::Reference<QueryAnalyzerContextInterface> m_analyzer;
-	std::vector<unsigned int> m_fieldNoStack;
-	unsigned int m_fieldNo;
+	strus::Reference<QueryAnalyzerStruct> m_analyzerStruct;
+	strus::Reference<TermExpression> m_termExpression;
+	strus::Reference<MetaDataExpression> m_metadataExpression;
 };
 
 } //namespace

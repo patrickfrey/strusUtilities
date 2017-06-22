@@ -52,10 +52,9 @@
 
 struct TermOrder
 {
-	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
+	bool operator()( const strus::analyzer::DocumentTerm& aa, const strus::analyzer::DocumentTerm& bb)
 	{
 		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
-		if (aa.len() != bb.len()) return (aa.len() < bb.len());
 		int cmp;
 		cmp = aa.type().compare( bb.type());
 		if (cmp != 0) return (cmp < 0);
@@ -121,9 +120,9 @@ static DumpConfigElem getNextDumpConfigElem( char const*& di)
 }
 
 
-static void filterTerms( std::vector<strus::analyzer::Term>& termar, const DumpConfig& dumpConfig, const std::vector<strus::analyzer::Term>& inputtermar)
+static void filterTerms( std::vector<strus::analyzer::DocumentTerm>& termar, const DumpConfig& dumpConfig, const std::vector<strus::analyzer::DocumentTerm>& inputtermar)
 {
-	std::vector<strus::analyzer::Term>::const_iterator
+	std::vector<strus::analyzer::DocumentTerm>::const_iterator
 		ti = inputtermar.begin(), te = inputtermar.end();
 	for (; ti != te; ++ti)
 	{
@@ -136,7 +135,7 @@ static void filterTerms( std::vector<strus::analyzer::Term>& termar, const DumpC
 			}
 			else
 			{
-				termar.push_back( strus::analyzer::Term( ti->type(), dci->second, ti->pos(), ti->len()));
+				termar.push_back( strus::analyzer::DocumentTerm( ti->type(), dci->second, ti->pos()));
 			}
 		}
 	}
@@ -446,8 +445,8 @@ int main( int argc, const char* argv[])
 			{
 				if (doDump)
 				{
-					std::vector<strus::analyzer::Term> termar;
-					std::vector<strus::analyzer::MetaData>::const_iterator
+					std::vector<strus::analyzer::DocumentTerm> termar;
+					std::vector<strus::analyzer::DocumentMetaData>::const_iterator
 						mi = doc.metadata().begin(), me = doc.metadata().end();
 					for (; mi != me; ++mi)
 					{
@@ -456,15 +455,15 @@ int main( int argc, const char* argv[])
 						{
 							if (dci->second.empty())
 							{
-								termar.push_back( strus::analyzer::Term( mi->name(), mi->value().tostring().c_str(), 0/*pos*/, 0/*len*/));
+								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), mi->value().tostring().c_str(), 0/*pos*/));
 							}
 							else
 							{
-								termar.push_back( strus::analyzer::Term( mi->name(), dci->second, 0/*pos*/, 0/*len*/));
+								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), dci->second, 0/*pos*/));
 							}
 						}
 					}
-					std::vector<strus::analyzer::Attribute>::const_iterator
+					std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 						ai = doc.attributes().begin(), ae = doc.attributes().end();
 					for (; ai != ae; ++ai)
 					{
@@ -473,11 +472,11 @@ int main( int argc, const char* argv[])
 						{
 							if (dci->second.empty())
 							{
-								termar.push_back( strus::analyzer::Term( ai->name(), ai->value(), 0/*pos*/, 0/*len*/));
+								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), ai->value(), 0/*pos*/));
 							}
 							else
 							{
-								termar.push_back( strus::analyzer::Term( ai->name(), dci->second, 0/*pos*/, 0/*len*/));
+								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), dci->second, 0/*pos*/));
 							}
 						}
 					}
@@ -486,7 +485,7 @@ int main( int argc, const char* argv[])
 
 					std::sort( termar.begin(), termar.end(), TermOrder());
 
-					std::vector<strus::analyzer::Term>::const_iterator
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
 						ti = termar.begin(), te = termar.end();
 					for (unsigned int tidx=0; ti != te; ++ti,++tidx)
 					{
@@ -500,25 +499,25 @@ int main( int argc, const char* argv[])
 					{
 						std::cout << "-- " << strus::string_format( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
 					}
-					std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
+					std::vector<strus::analyzer::DocumentTerm> itermar = doc.searchIndexTerms();
 					std::sort( itermar.begin(), itermar.end(), TermOrder());
 		
-					std::vector<strus::analyzer::Term>::const_iterator
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
 						ti = itermar.begin(), te = itermar.end();
 
 					std::cout << std::endl << _TXT("search index terms:") << std::endl;
 					for (; ti != te; ++ti)
 					{
-						std::cout << ti->pos() << ":" << ti->len()
+						std::cout << ti->pos() << ":"
 							  << " " << ti->type()
 							  << " '" << ti->value() << "'"
 							  << std::endl;
 					}
 
-					std::vector<strus::analyzer::Term> ftermar = doc.forwardIndexTerms();
+					std::vector<strus::analyzer::DocumentTerm> ftermar = doc.forwardIndexTerms();
 					std::sort( ftermar.begin(), ftermar.end(), TermOrder());
-		
-					std::vector<strus::analyzer::Term>::const_iterator
+
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
 						fi = ftermar.begin(), fe = ftermar.end();
 
 					std::cout << std::endl << _TXT("forward index terms:") << std::endl;
@@ -530,7 +529,7 @@ int main( int argc, const char* argv[])
 							  << std::endl;
 					}
 
-					std::vector<strus::analyzer::MetaData>::const_iterator
+					std::vector<strus::analyzer::DocumentMetaData>::const_iterator
 						mi = doc.metadata().begin(), me = doc.metadata().end();
 		
 					std::cout << std::endl << _TXT("metadata:") << std::endl;
@@ -541,7 +540,7 @@ int main( int argc, const char* argv[])
 							  << std::endl;
 					}
 
-					std::vector<strus::analyzer::Attribute>::const_iterator
+					std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 						ai = doc.attributes().begin(), ae = doc.attributes().end();
 
 					std::cout << std::endl << _TXT("attributes:") << std::endl;

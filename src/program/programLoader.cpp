@@ -40,7 +40,8 @@
 #include "strus/vectorStorageClientInterface.hpp"
 #include "strus/vectorStorageTransactionInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/analyzer/term.hpp"
+#include "strus/analyzer/queryTermExpression.hpp"
+#include "strus/analyzer/document.hpp"
 #include "strus/analyzer/documentClass.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/snprintf.h"
@@ -52,7 +53,8 @@
 #include "strus/base/symbolTable.hpp"
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
-#include "queryStruct.hpp"
+#include "metadataExpression.hpp"
+#include "termExpression.hpp"
 #include "errorPosition.hpp"
 #include "patternMatchProgramParser.hpp"
 #include <string>
@@ -928,8 +930,7 @@ static void parseQueryPatternFeatureDef(
 	QueryAnalyzerInterface& analyzer,
 	const TextProcessorInterface* textproc,
 	const std::string& featureName,
-	char const*& src,
-	FeatureClass featureClass)
+	char const*& src)
 {
 	FeatureDef featuredef;
 
@@ -942,33 +943,7 @@ static void parseQueryPatternFeatureDef(
 	{
 		featuredef.parseNormalizer( src, textproc);
 	}
-	switch (featureClass)
-	{
-		case FeatSearchIndexTerm:
-			analyzer.addSearchIndexElementFromPatternMatch( 
-				featureName, patternTypeName, featuredef.normalizer);
-			break;
-
-		case FeatMetaData:
-			analyzer.addMetaDataElementFromPatternMatch( 
-				featureName, patternTypeName, featuredef.normalizer);
-			break;
-
-		case FeatPatternLexem:
-			throw std::logic_error("cannot define pattern match lexem from pattern match result in query");
-		case FeatPatternMatch:
-			throw std::logic_error("illegal call of parse feature definition for pattern match program definition in query");
-		case FeatForwardIndexTerm:
-			throw std::logic_error("illegal call of parse feature definition for forward index feature in query");
-		case FeatAttribute:
-			throw std::logic_error("illegal call of parse feature definition for attribute in query");
-		case FeatSubDocument:
-			throw std::logic_error("illegal call of parse feature definition for sub document in query");
-		case FeatSubContent:
-			throw std::logic_error("illegal call of parse feature definition for sub content in query");
-		case FeatAggregator:
-			throw std::logic_error("illegal call of parse feature definition for aggregator in query");
-	}
+	analyzer.addElementFromPatternMatch( featureName, patternTypeName, featuredef.normalizer);
 	featuredef.release();
 }
 
@@ -1065,33 +1040,19 @@ static void parseQueryFeatureDef(
 
 	// [3] Parse field type (corresponds to xpath selection in document):
 	std::string fieldType;
-	if (featureClass == FeatMetaData)
+	if (!isAlpha(*src))
 	{
-		fieldType = featureName;
-		if (isAlpha(*src))
-		{
-			throw strus::runtime_error(_TXT("unexpected identifier at end of query analyzer metadata definition after the tokenizer definition (the field type must not be specified here, the name of the query field is the same as the feature name)"));
-		}
+		throw strus::runtime_error(_TXT("expected field type name"));
 	}
-	else
-	{
-		if (!isAlpha(*src))
-		{
-			throw strus::runtime_error(_TXT("expected field type name"));
-		}
-		fieldType = parse_IDENTIFIER( src);
-		qdescr.defaultFieldTypeDefined |= utils::caseInsensitiveEquals( fieldType, "default");
-	}
+	fieldType = parse_IDENTIFIER( src);
+	qdescr.defaultFieldTypeDefined |= utils::caseInsensitiveEquals( fieldType, "default");
+
 	switch (featureClass)
 	{
-		case FeatSearchIndexTerm:
-			analyzer.addSearchIndexElement(
-				featureName, fieldType,
-				featuredef.tokenizer.get(), featuredef.normalizer);
-			break;
-
 		case FeatMetaData:
-			analyzer.addMetaDataElement(
+		case FeatSearchIndexTerm:
+			qdescr.fieldset[ fieldType] += 1;
+			analyzer.addElement(
 				featureName, fieldType,
 				featuredef.tokenizer.get(), featuredef.normalizer);
 			break;
@@ -1511,7 +1472,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			else switch (statementType)
 			{
 				case AssignPatternResult:
-					parseQueryPatternFeatureDef( analyzer, textproc, identifier, src, featclass);
+					parseQueryPatternFeatureDef( analyzer, textproc, identifier, src);
 					break;
 				case AssignNormalizedTerm:
 					parseQueryFeatureDef( analyzer, qdescr, textproc, identifier, src, featclass);
@@ -1738,7 +1699,7 @@ static MetaDataRestrictionInterface::CompareOperator invertCompareOperator( cons
 }
 
 static void parseMetaDataExpression( 
-		QueryStruct& queryStruct,
+		MetaDataExpression& metadataExpression,
 		char const*& src)
 {
 	std::string fieldName;
@@ -1767,36 +1728,21 @@ static void parseMetaDataExpression(
 		fieldName = parse_IDENTIFIER(src);
 	}
 	std::vector<std::string>::const_iterator vi = values.begin(), ve = values.end();
-	for (int vidx=0; vi != ve; ++vi,++vidx)
+	for (; vi != ve; ++vi)
 	{
-		queryStruct.defineMetaDataRestriction( fieldName, opr, fieldName/*field type == metadata name in condition*/, *vi, (vidx==0)/*new group*/);
+		metadataExpression.pushCompare( opr, fieldName, *vi);
 	}
-}
-
-static void closeFeatureParse(
-		QueryStruct& queryStruct,
-		const QueryDescriptors& qdescr,
-		char const*& src)
-{
-	float featureWeight = 1.0;
-	if (isAsterisk(*src))
+	if (values.size() > 1)
 	{
-		(void)parse_OPERATOR(src);
-		if (isDigit(*src))
-		{
-			featureWeight = parse_FLOAT( src);
-		}
+		metadataExpression.pushOperator( MetaDataExpression::OperatorOR, values.size());
 	}
-	queryStruct.defineFeature( qdescr.weightingFeatureSet, featureWeight);
-	// [PF:NOTE] Currently very limited: only one feature set possible !
 }
 
 static void parseQueryTermExpression(
-		QueryStruct& queryStruct,
-		const QueryProcessorInterface* queryproc,
+		TermExpression& termExpression,
+		TermExpression& selectedTermExpression,
 		const QueryDescriptors& qdescr,
-		char const*& src,
-		bool subexpression)
+		char const*& src)
 {
 	bool isSelection = true;
 	if (isTilde( *src))
@@ -1830,25 +1776,25 @@ static void parseQueryTermExpression(
 	{
 		throw strus::runtime_error( _TXT("syntax error in query, query expression or term expected"));
 	}
+	if (qdescr.fieldset.find( fieldType) == qdescr.fieldset.end())
+	{
+		throw strus::runtime_error( _TXT("query field type '%s' not defined in analyzer configuration"), fieldType.c_str());
+	}
 	if (isSelection)
 	{
-		queryStruct.defineImplicitSelection( fieldType, field);
+		selectedTermExpression.pushField( fieldType, field);
 	}
-	queryStruct.defineField( fieldType, field);
+	termExpression.pushField( fieldType, field);
 	std::string variableName = parseVariableRef( src);
 	if (!variableName.empty())
 	{
-		queryStruct.defineVariable( variableName);
-	}
-	if (!subexpression)
-	{
-		closeFeatureParse( queryStruct, qdescr, src);
+		termExpression.attachVariable( variableName);
 	}
 }
 
 static void parseQueryStructureExpression(
-		QueryStruct& queryStruct,
-		const QueryProcessorInterface* queryproc,
+		TermExpression& termExpression,
+		TermExpression& selectedTermExpression,
 		const QueryDescriptors& qdescr,
 		char const*& src)
 {
@@ -1863,11 +1809,11 @@ static void parseQueryStructureExpression(
 		argc++;
 		if (isQueryStructureExpression( src))
 		{
-			parseQueryStructureExpression( queryStruct, queryproc, qdescr, src);
+			parseQueryStructureExpression( termExpression, selectedTermExpression, qdescr, src);
 		}
 		else
 		{
-			parseQueryTermExpression( queryStruct, queryproc, qdescr, src, true);
+			parseQueryTermExpression( termExpression, selectedTermExpression, qdescr, src);
 		}
 		if (isComma( *src))
 		{
@@ -1911,18 +1857,11 @@ static void parseQueryStructureExpression(
 		throw strus::runtime_error( _TXT("close oval bracket ')' expected as end of a query structure expression expected"));
 	}
 	(void)parse_OPERATOR( src);
-	const PostingJoinOperatorInterface*
-		function = queryproc->getPostingJoinOperator( functionName);
-	if (!function)
-	{
-		throw strus::runtime_error( _TXT("posting join operator not defined: '%s'"),
-						functionName.c_str());
-	}
 	std::string variableName = parseVariableRef( src);
-	queryStruct.defineExpression( function, argc, range, cardinality);
+	termExpression.pushExpression( functionName, argc, range, cardinality);
 	if (!variableName.empty())
 	{
-		queryStruct.defineVariable( variableName);
+		termExpression.attachVariable( variableName);
 	}
 }
 
@@ -1937,27 +1876,67 @@ DLL_PUBLIC bool strus::loadQuery(
 	char const* src = source.c_str();
 	try
 	{
-		QueryStruct queryStruct( analyzer);
+		QueryAnalyzerStruct queryAnalyzerStruct;
+		std::map<std::string,unsigned int>::const_iterator si = qdescr.fieldset.begin(), se = qdescr.fieldset.end();
+		for (; si != se; ++si)
+		{
+			// Group elements configured only once together as sequences:
+			if (si->second == 1)
+			{
+				queryAnalyzerStruct.autoGroupBy( si->first, "sequence_imm", 0, 0, QueryAnalyzerContextInterface::GroupAll, false/*group single*/);
+			}
+		}
+		MetaDataExpression metaDataExpression( analyzer, errorhnd);
+		TermExpression termExpression( &queryAnalyzerStruct, analyzer, errorhnd);
+		TermExpression selectedTermExpression( &queryAnalyzerStruct, analyzer, errorhnd);
+
 		skipSpaces(src);
 		while (*src)
 		{
 			// Parse query section:
 			if (isQueryMetaDataExpression( src))
 			{
-				parseMetaDataExpression( queryStruct, src);
-			}
-			else if (isQueryStructureExpression( src))
-			{
-				parseQueryStructureExpression( queryStruct, queryproc, qdescr, src);
-				closeFeatureParse( queryStruct, qdescr, src);
+				parseMetaDataExpression( metaDataExpression, src);
 			}
 			else
 			{
-				parseQueryTermExpression( queryStruct, queryproc, qdescr, src, false);
+				if (isQueryStructureExpression( src))
+				{
+					parseQueryStructureExpression( termExpression, selectedTermExpression, qdescr, src);
+				}
+				else
+				{
+					parseQueryTermExpression( termExpression, selectedTermExpression, qdescr, src);
+				}
+				double featureWeight = 1.0;
+				if (isAsterisk(*src))
+				{
+					(void)parse_OPERATOR(src);
+					if (isDigit(*src))
+					{
+						featureWeight = parse_FLOAT( src);
+					}
+					else
+					{
+						throw strus::runtime_error(_TXT("feature weight expected after term expression and following asterisk '*'"));
+					}
+				}
+				termExpression.assignFeature( qdescr.weightingFeatureSet, featureWeight);
 			}
 		}
-		queryStruct.defineSelectionFeatures( queryproc, qdescr);
-		queryStruct.translate( query, queryproc, errorhnd);
+		{
+			// Define selection term expression
+			unsigned int argc = selectedTermExpression.nofExpressionsDefined();
+			unsigned int cardinality = std::min( argc, (unsigned int)(qdescr.defaultSelectionTermPart * argc + 1));
+			selectedTermExpression.pushExpression( qdescr.defaultSelectionJoin, argc, 0/*range*/, cardinality);
+			selectedTermExpression.assignFeature( qdescr.selectionFeatureSet, 1.0);
+		}
+		metaDataExpression.analyze();
+		metaDataExpression.translate( query);
+		termExpression.analyze();
+		termExpression.translate( query, queryproc);
+		selectedTermExpression.analyze();
+		selectedTermExpression.translate( query, queryproc);
 		return true;
 	}
 	catch (const std::bad_alloc&)
@@ -2018,7 +1997,7 @@ DLL_PUBLIC bool strus::loadPhraseAnalyzer(
 		tokenizer.reset( tk->createInstance( tokenizercfg.args(), textproc));
 		if (!tokenizer.get()) throw strus::runtime_error(_TXT( "failed to create instance of tokenizer function '%s'"), tokenizercfg.name().c_str());
 	
-		analyzer.addSearchIndexElement( "", "", tokenizer.get(), normalizer);
+		analyzer.addElement( "", "", tokenizer.get(), normalizer);
 
 		std::vector<Reference<NormalizerFunctionInstanceInterface> >::iterator
 			ri = normalizer_ref.begin(), re = normalizer_ref.end();

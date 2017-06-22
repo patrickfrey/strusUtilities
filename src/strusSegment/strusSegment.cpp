@@ -24,7 +24,6 @@
 #include "strus/versionBase.hpp"
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/analyzer/term.hpp"
 #include "strus/analyzer/segmenterOptions.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
@@ -40,20 +39,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
-
-struct TermOrder
-{
-	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
-	{
-		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
-		int cmp;
-		cmp = aa.type().compare( bb.type());
-		if (cmp != 0) return (cmp < 0);
-		cmp = aa.value().compare( bb.value());
-		if (cmp != 0) return (cmp < 0);
-		return false;
-	}
-};
 
 std::string escapeEndOfLine( const std::string& str)
 {

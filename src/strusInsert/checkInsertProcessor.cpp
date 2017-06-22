@@ -180,7 +180,7 @@ void CheckInsertProcessor::run()
 						strus::analyzer::Document doc;
 						while (analyzerContext->analyzeNext( doc))
 						{
-							std::vector<strus::analyzer::Attribute>::const_iterator
+							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								oi = doc.attributes().begin(),
 								oe = doc.attributes().end();
 							for (;oi != oe
@@ -216,7 +216,7 @@ void CheckInsertProcessor::run()
 							unsigned int maxpos = 0;
 		
 							// Define all search index term occurrencies:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								ti = doc.searchIndexTerms().begin(),
 								te = doc.searchIndexTerms().end();
 							for (; ti != te; ++ti)
@@ -238,7 +238,7 @@ void CheckInsertProcessor::run()
 							}
 			
 							// Define all forward index term occurrencies:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								fi = doc.forwardIndexTerms().begin(),
 								fe = doc.forwardIndexTerms().end();
 							for (; fi != fe; ++fi)
@@ -259,7 +259,7 @@ void CheckInsertProcessor::run()
 							}
 		
 							// Define all attributes extracted from the document analysis:
-							std::vector<strus::analyzer::Attribute>::const_iterator
+							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								ai = doc.attributes().begin(), ae = doc.attributes().end();
 							for (; ai != ae; ++ai)
 							{
@@ -267,7 +267,7 @@ void CheckInsertProcessor::run()
 							}
 	
 							// Define all metadata elements extracted from the document analysis:
-							std::vector<strus::analyzer::MetaData>::const_iterator
+							std::vector<strus::analyzer::DocumentMetaData>::const_iterator
 								mi = doc.metadata().begin(), me = doc.metadata().end();
 							for (; mi != me; ++mi)
 							{

@@ -136,7 +136,7 @@ void InsertProcessor::run()
 						while (!m_terminated && analyzerContext->analyzeNext( doc))
 						{
 							// Create the storage transaction document with the correct docid:
-							std::vector<strus::analyzer::Attribute>::const_iterator
+							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								oi = doc.attributes().begin(),
 								oe = doc.attributes().end();
 							for (;oi != oe
@@ -162,7 +162,7 @@ void InsertProcessor::run()
 							}
 							unsigned int maxpos = 0;
 							// Define all search index term occurrencies:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								ti = doc.searchIndexTerms().begin(),
 								te = doc.searchIndexTerms().end();
 							for (; ti != te; ++ti)
@@ -184,7 +184,7 @@ void InsertProcessor::run()
 							}
 		
 							// Define all forward index terms:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								fi = doc.forwardIndexTerms().begin(),
 								fe = doc.forwardIndexTerms().end();
 							for (; fi != fe; ++fi)
@@ -205,7 +205,7 @@ void InsertProcessor::run()
 							}
 		
 							// Define all attributes extracted from the document analysis:
-							std::vector<strus::analyzer::Attribute>::const_iterator
+							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								ai = doc.attributes().begin(), ae = doc.attributes().end();
 							for (; ai != ae; ++ai)
 							{
@@ -213,7 +213,7 @@ void InsertProcessor::run()
 							}
 	
 							// Define all metadata elements extracted from the document analysis:
-							std::vector<strus::analyzer::MetaData>::const_iterator
+							std::vector<strus::analyzer::DocumentMetaData>::const_iterator
 								mi = doc.metadata().begin(), me = doc.metadata().end();
 							for (; mi != me; ++mi)
 							{

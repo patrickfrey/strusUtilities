@@ -184,7 +184,7 @@ void KeyMapGenProcessor::run()
 						while (analyzerContext->analyzeNext( doc))
 						{
 							// Define all search index term occurrencies:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								ti = doc.searchIndexTerms().begin(),
 								te = doc.searchIndexTerms().end();
 							for (; ti != te; ++ti)

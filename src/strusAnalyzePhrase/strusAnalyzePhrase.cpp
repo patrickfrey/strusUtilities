@@ -258,19 +258,19 @@ int main( int argc, const char* argv[])
 		if (!qryanactx.get()) throw strus::runtime_error(_TXT("failed to create query analyzer context"));
 	
 		qryanactx->putField( 1, "", phrasestring);
-		strus::analyzer::Query qry = qryanactx->analyze();
+		strus::analyzer::QueryTermExpression qry = qryanactx->analyze();
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("query analysis failed"));
-		std::vector<strus::analyzer::Term> terms;
-		std::vector<strus::analyzer::Query::Instruction>::const_iterator
+		std::vector<strus::analyzer::QueryTerm> terms;
+		std::vector<strus::analyzer::QueryTermExpression::Instruction>::const_iterator
 			ii = qry.instructions().begin(), ie = qry.instructions().end();
 		for (; ii != ie; ++ii)
 		{
-			if (ii->opCode() == strus::analyzer::Query::Instruction::Term)
+			if (ii->opCode() == strus::analyzer::QueryTermExpression::Instruction::Term)
 			{
-				const strus::analyzer::Term& term = qry.term( ii->idx());
+				const strus::analyzer::QueryTerm& term = qry.term( ii->idx());
 				if (!resultPlain)
 				{
-					std::cout << term.pos() << " ";
+					std::cout << " ";
 				}
 				std::cout << resultQuot << term.value() << resultQuot << std::endl;
 			}

@@ -6,7 +6,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 set(source_files
 	lexems.cpp
 	errorPosition.cpp
-	queryStruct.cpp
+	termExpression.cpp
+	metadataExpression.cpp
 	patternMatchProgramParser.cpp
 	programLoader.cpp
 )

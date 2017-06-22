@@ -8,11 +8,14 @@ ranked list (starting with rank 0, maximum 20 results):
 [1] 1 score 0.000038
 	title = 'Software' 1
 	docid = '123' 1
-evaluated till pass 0, got 0 ranks (0 without restrictions applied):
-ranked list (starting with rank 0, maximum 20 results):
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
-[1] 1 score 0.000052
+[1] 1 score 0.000038
+	title = 'Software' 1
+	docid = '123' 1
+evaluated till pass 0, got 1 ranks (1 without restrictions applied):
+ranked list (starting with rank 0, maximum 20 results):
+[1] 1 score 0.000008
 	title = 'Software' 1
 	docid = '123' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
