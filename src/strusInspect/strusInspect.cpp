@@ -467,7 +467,7 @@ static void inspectDocAttributeNames( const strus::StorageClientInterface& stora
 		attreader( storage.createAttributeReader());
 	if (!attreader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
 
-	std::vector<std::string> alist = attreader->getAttributeNames();
+	std::vector<std::string> alist = attreader->getNames();
 	std::vector<std::string>::const_iterator ai = alist.begin(), ae = alist.end();
 
 	for (; ai != ae; ++ai)
