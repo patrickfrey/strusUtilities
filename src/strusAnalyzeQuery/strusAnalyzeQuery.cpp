@@ -241,7 +241,7 @@ public:
 		m_minRank = minRank_;
 	}
 
-	virtual void addUserName( const std::string& username_)
+	virtual void addAccessRestriction( const std::string& username_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cerr << strus::string_format( _TXT( "called addUserName %s"), username_.c_str()) << std::endl;
