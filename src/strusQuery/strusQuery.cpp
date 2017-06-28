@@ -439,7 +439,7 @@ int main( int argc_, const char* argv_[])
 			query->setMinRank( firstRank);
 			if (!username.empty())
 			{
-				query->addAccessRestriction( username);
+				query->addAccess( username);
 			}
 			if (verbose)
 			{
