@@ -383,6 +383,8 @@ public:
 		const strus::SegmenterInstanceInterface* segmenterInstance;
 		std::auto_ptr<strus::SegmenterContextInterface> segmenter( createSegmenterContext( content, documentClass, segmenterInstance));
 
+		*m_output << m_globalContext->resultMarker() << filename << ":" << std::endl;
+
 		segmenter->putInput( content.c_str(), content.size(), true);
 		int id;
 		strus::SegmenterPosition segmentpos;
@@ -415,7 +417,15 @@ public:
 					ti->setOrdpos( ti->ordpos() + ordposOffset);
 					if (m_globalContext->printTokens())
 					{
-						std::cout << ti->ordpos() << ": " << ti->id() << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+						const char* lexemname = m_globalContext->PatternLexerInstance()->getLexemName( ti->id());
+						if (lexemname)
+						{
+							*m_output << ti->ordpos() << ": " << ti->id() << " " << lexemname << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+						}
+						else
+						{
+							*m_output << ti->ordpos() << ": " << ti->id() << " ? " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+						}
 					}
 					mt->putInput( *ti);
 				}
@@ -429,7 +439,6 @@ public:
 		{
 			throw std::runtime_error("error matching rules");
 		}
-		std::cout << m_globalContext->resultMarker() << filename << ":" << std::endl;
 		std::vector<strus::analyzer::PatternMatcherResult> results = mt->fetchResults();
 		if (m_globalContext->markups().empty())
 		{

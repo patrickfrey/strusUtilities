@@ -55,6 +55,11 @@ public:
 	bool compile();
 	const std::vector<std::string>& warnings() const	{return m_warnings;}
 
+	bool hasMatcherRules() const
+	{
+		return m_patternNameSymbolTab.size() > 0;
+	}
+
 private:
 	struct SubExpressionInfo
 	{

@@ -85,7 +85,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				{
 					if (!m_patternLexer)
 					{
-						throw strus::runtime_error(_TXT("defined 'LEXER' option without feeder defined"));
+						throw strus::runtime_error(_TXT("defined 'LEXER' option without lexer defined"));
 					}
 					for (;;)
 					{
@@ -163,6 +163,10 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 						{
 							throw strus::runtime_error(_TXT("too many regular expression tokens defined: %u"), nameid);
 						}
+						if (m_regexNameSymbolTab.isNew())
+						{
+							m_patternLexer->defineLexemName( nameid, name);
+						}
 						std::string regex;
 						do
 						{
@@ -176,6 +180,15 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 							else
 							{
 								throw strus::runtime_error(_TXT("regular expression definition (inside chosen characters) expected after colon ':'"));
+							}
+							if (isTilde(*si) && isDigit(*(si+1)))
+							{
+								//... edit distance operator "~1","~2",....
+								regex.push_back(*si);
+								for (++si; isDigit( *si); ++si)
+								{
+									regex.push_back(*si);
+								}
 							}
 							unsigned int resultIndex = 0;
 							if (isOpenSquareBracket(*si))
@@ -365,6 +378,7 @@ uint32_t PatternMatcherProgramParser::getOrCreateSymbol( unsigned int regexid, c
 		if (m_patternLexer)
 		{
 			m_patternLexer->defineSymbol( symid, regexid, name);
+			m_patternLexer->defineLexemName( symid, name);
 		}
 		else if (m_patternTermFeeder)
 		{
