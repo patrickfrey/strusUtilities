@@ -104,6 +104,7 @@ public:
 			const std::vector<std::string>& selectexpr_,
 			const std::string& path,
 			const std::string& fileext,
+			unsigned int nofFilesPerFetch_,
 			const strus::analyzer::DocumentClass documentClass_,
 			const std::map<std::string,int>& markups_,
 			const std::string& resultMarker_,
@@ -113,6 +114,7 @@ public:
 		,m_textproc(textproc_)
 		,m_segmenterName(segmenterName_)
 		,m_selectexpr(selectexpr_)
+		,m_nofFilesPerFetch(nofFilesPerFetch_)
 		,m_documentClass(documentClass_)
 		,m_markups(markups_)
 		,m_resultMarker(resultMarker_)
@@ -158,28 +160,16 @@ public:
 
 	bool printTokens() const							{return m_printTokens;}
 
-	void fetchError()
+	std::vector<std::string> fetchFiles()
 	{
-		if (g_errorBuffer->hasError())
-		{
-			boost::mutex::scoped_lock lock( m_mutex);
-			m_errors.push_back( g_errorBuffer->fetchError());
-		}
-	}
-
-	std::string fetchFile()
-	{
+		unsigned int filecnt = m_nofFilesPerFetch;
 		boost::mutex::scoped_lock lock( m_mutex);
-		if (m_fileitr != m_files.end())
+		std::vector<std::string> rt;
+		for (; m_fileitr != m_files.end() && filecnt; ++m_fileitr,--filecnt)
 		{
-			return *m_fileitr++;
+			rt.push_back( *m_fileitr);
 		}
-		return std::string();
-	}
-
-	const std::vector<std::string>& errors() const
-	{
-		return m_errors;
+		return rt;
 	}
 
 	const std::map<std::string,int>& markups() const
@@ -202,11 +192,11 @@ private:
 	const strus::TextProcessorInterface* m_textproc;
 	std::string m_segmenterName;
 	std::vector<std::string> m_selectexpr;
+	unsigned int m_nofFilesPerFetch;
 	strus::analyzer::DocumentClass m_documentClass;
 	std::auto_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
 	std::map<std::string,int> m_markups;
 	std::string m_resultMarker;
-	std::vector<std::string> m_errors;
 	std::vector<std::string> m_files;
 	std::vector<std::string>::const_iterator m_fileitr;
 	bool m_printTokens;
@@ -227,9 +217,37 @@ public:
 		,m_outputfile(o.m_outputfile)
 		,m_outputfilestream(o.m_outputfilestream)
 		,m_output(o.m_output)
+		,m_outerrfile(o.m_outerrfile)
+		,m_outerrfilestream(o.m_outerrfilestream)
+		,m_outerr(o.m_outerr)
 	{}
 
-	ThreadContext( GlobalContext* globalContext_, const strus::AnalyzerObjectBuilderInterface* objbuilder_, unsigned int threadid_, const std::string& outputfile_="")
+private:
+	std::string getOutputFileName( const std::string& outputfile_) const
+	{
+		if (m_threadid > 0)
+		{
+			std::ostringstream namebuf;
+			char const* substpos = std::strchr( outputfile_.c_str(), '.');
+			if (substpos)
+			{
+				namebuf << std::string( outputfile_.c_str(), substpos-outputfile_.c_str())
+					<< m_threadid << substpos;
+			}
+			else
+			{
+				namebuf << outputfile_ << m_threadid;
+			}
+			return namebuf.str();
+		}
+		else
+		{
+			return outputfile_;
+		}
+	}
+
+public:
+	ThreadContext( GlobalContext* globalContext_, const strus::AnalyzerObjectBuilderInterface* objbuilder_, unsigned int threadid_, const std::string& outputfile_="", const std::string& outerrfile_="")
 		:m_globalContext(globalContext_)
 		,m_objbuilder(objbuilder_)
 		,m_defaultSegmenter(0)
@@ -239,6 +257,9 @@ public:
 		,m_outputfile()
 		,m_outputfilestream()
 		,m_output(0)
+		,m_outerrfile()
+		,m_outerrfilestream()
+		,m_outerr(0)
 	{
 		if (!m_globalContext->segmenterName().empty())
 		{
@@ -260,25 +281,7 @@ public:
 		}
 		else
 		{
-			if (m_threadid > 0)
-			{
-				std::ostringstream namebuf;
-				char const* substpos = std::strchr( outputfile_.c_str(), '.');
-				if (substpos)
-				{
-					namebuf << std::string( outputfile_.c_str(), substpos-outputfile_.c_str())
-						<< m_threadid << substpos;
-				}
-				else
-				{
-					namebuf << outputfile_ << m_threadid;
-				}
-				m_outputfile = namebuf.str();
-			}
-			else
-			{
-				m_outputfile = outputfile_;
-			}
+			m_outputfile = getOutputFileName( outputfile_);
 			try
 			{
 				m_outputfilestream.reset( new std::ofstream( m_outputfile.c_str()));
@@ -288,6 +291,23 @@ public:
 				throw strus::runtime_error(_TXT("failed to open file '%s' for output: %s"), m_outputfile.c_str(), err.what());
 			}
 			m_output = m_outputfilestream.get();
+		}
+		if (outerrfile_.empty())
+		{
+			m_outerr = &std::cerr;
+		}
+		else
+		{
+			m_outerrfile = getOutputFileName( outerrfile_);
+			try
+			{
+				m_outerrfilestream.reset( new std::ofstream( m_outerrfile.c_str()));
+			}
+			catch (const std::exception& err)
+			{
+				throw strus::runtime_error(_TXT("failed to open file '%s' for errors: %s"), m_outerrfile.c_str(), err.what());
+			}
+			m_outerr = m_outerrfilestream.get();
 		}
 	}
 
@@ -403,7 +423,7 @@ public:
 				segmentposmap.push_back( PositionInfo( segmentpos, source.size()));
 				source.append( segment, segmentsize);
 #ifdef STRUS_LOWLEVEL_DEBUG
-				std::cerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
+				*m_outerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
 #endif
 				std::vector<strus::analyzer::PatternLexem> crmatches = crctx->match( segment, segmentsize);
 				if (crmatches.size() == 0 && g_errorBuffer->hasError())
@@ -420,7 +440,7 @@ public:
 						const char* lexemname = m_globalContext->PatternLexerInstance()->getLexemName( ti->id());
 						if (lexemname)
 						{
-							*m_output << ti->ordpos() << ": " << ti->id() << " " << lexemname << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+							*m_output << ti->ordpos() << " [" << (segmentpos+ti->origpos()) << "] : " << ti->id() << " " << lexemname << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
 						}
 						else
 						{
@@ -518,33 +538,45 @@ public:
 
 	void run()
 	{
-		try
-		{
 		for (;;)
 		{
-			std::string filename = m_globalContext->fetchFile();
-			if (filename.empty()) break;
-
-#ifdef STRUS_LOWLEVEL_DEBUG
-			std::cerr << _TXT("processing file '") << filename << "'" << std::endl;
-#endif
-			processDocument( filename);
-			if (g_errorBuffer->hasError())
+			std::vector<std::string> filenames = m_globalContext->fetchFiles();
+			if (filenames.empty()) break;
+			std::vector<std::string>::const_iterator fi = filenames.begin(), fe = filenames.end();
+			for (; fi != fe; ++fi)
 			{
-				std::cerr << _TXT( "got error, terminating thread ...");
-				break;
+#ifdef STRUS_LOWLEVEL_DEBUG
+				*m_outerr << strus::string_format( _TXT("thread %u processing file '%s'"), m_threadid, *fi) << std::endl;
+#endif
+				try
+				{
+					processDocument( *fi);
+					if (g_errorBuffer->hasError())
+					{
+						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s"), m_threadid, fi->c_str(), g_errorBuffer->fetchError()) << std::endl;
+					}
+				}
+				catch (const std::runtime_error& err)
+				{
+					if (g_errorBuffer->hasError())
+					{
+						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s, %s"), m_threadid, fi->c_str(), err.what(), g_errorBuffer->fetchError()) << std::endl;
+					}
+					else
+					{
+						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s"), m_threadid, fi->c_str(), err.what()) << std::endl;
+					}
+				}
+				catch (const std::bad_alloc&)
+				{
+					*m_outerr << strus::string_format( _TXT( "out of memory thread %u processing document '%s'"), m_threadid, fi->c_str()) << std::endl;
+				}
 			}
 		}
-		}
-		catch (const std::runtime_error& err)
+		if (g_errorBuffer->hasError())
 		{
-			g_errorBuffer->report( "error processing documents: %s", err.what());
+			*m_outerr << strus::string_format( _TXT("error thread %u: %s"), m_threadid, g_errorBuffer->fetchError()) << std::endl;
 		}
-		catch (const std::bad_alloc&)
-		{
-			g_errorBuffer->report( "out of memory processing documents");
-		}
-		m_globalContext->fetchError();
 		g_errorBuffer->releaseContext();
 	}
 
@@ -559,6 +591,9 @@ private:
 	std::string m_outputfile;
 	strus::utils::SharedPtr<std::ofstream> m_outputfilestream;
 	std::ostream* m_output;
+	std::string m_outerrfile;
+	strus::utils::SharedPtr<std::ofstream> m_outerrfilestream;
+	std::ostream* m_outerr;
 };
 
 
@@ -578,13 +613,13 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 20,
+				argc, argv, 22,
 				"h,help", "v,version", "license",
 				"g,segmenter:", "x,extension:", "C,contenttype:",
 				"e,expression:", "K,tokens", "p,program:",
 				"Z,marker:", "H,markup:",
 				"X,lexer:", "Y,matcher:",
-				"t,threads:", "o,output:",
+				"t,threads:", "f,fetch:", "o,output:", "O,outerr:",
 				"M,moduledir:", "m,module:", "r,rpc:", "R,resourcedir:", "T,trace:");
 
 		if (opt( "help")) printUsageAndExit = true;
@@ -601,6 +636,22 @@ int main( int argc, const char* argv[])
 				std::cerr << _TXT("error too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 2;
+			}
+		}
+		unsigned int nofThreads = 0;
+		if (opt("threads"))
+		{
+			nofThreads = opt.asUint( "threads");
+			if (nofThreads > 1)
+			{
+				strus::ErrorBufferInterface* alterr = strus::createErrorBuffer_standard( 0, nofThreads+1);
+				if (!alterr)
+				{
+					std::cerr << _TXT("failed to recreate error buffer") << std::endl;
+					return -1;
+				}
+				errorBuffer.reset( alterr);
+				g_errorBuffer = alterr;
 			}
 		}
 		std::auto_ptr<strus::ModuleLoaderInterface>
@@ -688,7 +739,9 @@ int main( int argc, const char* argv[])
 			std::cout << "-K|--tokens" << std::endl;
 			std::cout << "    " << _TXT("Print the tokenization used for pattern matching too") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
-			std::cout << "    " << _TXT("Set <N> as number of inserter threads to use") << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of matcher threads to use") << std::endl;
+			std::cout << "-f|--fetch <N>" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of files to fetch per iteration") << std::endl;
 			std::cout << "-x|--ext <FILEEXT>" << std::endl;
 			std::cout << "    " << _TXT("Do only process files with extension <FILEEXT>") << std::endl;
 			std::cout << "-C|--contenttype <CT>" << std::endl;
@@ -710,6 +763,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Load program <PRG> with patterns to process") << std::endl;
 			std::cout << "-o|--output <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Write output to file <FILE> (thread id is inserted before '.' with threads)") << std::endl;
+			std::cout << "-O|--outerr <FILE>" << std::endl;
+			std::cout << "    " << _TXT("Write errors to file <FILE> (thread id is inserted before '.' with threads)") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
@@ -731,8 +786,9 @@ int main( int argc, const char* argv[])
 		bool printTokens = false;
 		std::map<std::string,int> markups;
 		std::string resultmarker;
-		unsigned int nofThreads = 0;
+		unsigned int nofFilesFetch = 1;
 		std::string outputfile;
+		std::string outerrfile;
 
 		if (opt( "segmenter"))
 		{
@@ -783,9 +839,18 @@ int main( int argc, const char* argv[])
 		{
 			nofThreads = opt.asUint( "threads");
 		}
+		if (opt( "fetch"))
+		{
+			nofFilesFetch = opt.asUint( "fetch");
+			if (!nofFilesFetch) nofFilesFetch = 1;
+		}
 		if (opt( "output"))
 		{
 			outputfile = opt[ "output"];
+		}
+		if (opt( "outerr"))
+		{
+			outerrfile = opt[ "outerr"];
 		}
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -880,7 +945,7 @@ int main( int argc, const char* argv[])
 		}
 		GlobalContext globalContext(
 				ptinst.get(), lxinst.get(), textproc, segmentername,
-				expressions, inputpath, fileext, documentClass,
+				expressions, inputpath, fileext, nofFilesFetch, documentClass,
 				markups, resultmarker, printTokens);
 
 		std::cerr << "start matching ..." << std::endl;
@@ -892,7 +957,7 @@ int main( int argc, const char* argv[])
 			processorList.reserve( nofThreads);
 			for (unsigned int ti=0; ti<nofThreads; ++ti)
 			{
-				processorList.push_back( new ThreadContext( &globalContext, analyzerBuilder.get(), ti+1, outputfile));
+				processorList.push_back( new ThreadContext( &globalContext, analyzerBuilder.get(), ti+1, outputfile, outerrfile));
 			}
 			{
 				boost::thread_group tgroup;
@@ -905,20 +970,9 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			ThreadContext ctx( &globalContext, analyzerBuilder.get(), 0, outputfile);
+			ThreadContext ctx( &globalContext, analyzerBuilder.get(), 0, outputfile, outerrfile);
 			ctx.run();
 		}
-		if (!globalContext.errors().empty())
-		{
-			std::vector<std::string>::const_iterator 
-				ei = globalContext.errors().begin(), ee = globalContext.errors().end();
-			for (; ei != ee; ++ei)
-			{
-				std::cerr << _TXT("error in thread: ") << *ei << std::endl;
-			}
-			throw std::runtime_error( "error processing documents");
-		}
-
 		if (g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("uncaught error in pattern matcher"));
