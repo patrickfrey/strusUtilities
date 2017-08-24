@@ -58,6 +58,41 @@
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
+static std::string trimString( const char* li, const char* le)
+{
+	for (; *li && *li <= 32 && li < le; ++li){}
+	for (; le > li && *(le-1) <= 32; --le){}
+	return std::string( li, le - li);
+}
+
+static void loadFileNamesFromFile( std::vector<std::string>& result, const std::string& filename)
+{
+	std::string content;
+	unsigned int ec;
+	if (filename == "-")
+	{
+		ec = strus::readStdin( content);
+	}
+	else
+	{
+		ec = strus::readFile( filename, content);
+	}
+	if (ec)
+	{
+		throw strus::runtime_error(_TXT("error (%u) reading file list %s: %s"), ec, filename.c_str(), ::strerror(ec));
+	}
+	char const* ci = content.c_str();
+	char const* cn = std::strchr( ci, '\n');
+	for (; cn; ci=cn+1,cn = std::strchr( ci, '\n'))
+	{
+		std::string resultname( trimString( ci, cn));
+		if (!resultname.empty()) result.push_back( resultname);
+	}
+	cn = std::strchr( ci, '\0');
+	std::string resultname( trimString( ci, cn));
+	if (!resultname.empty()) result.push_back( resultname);
+}
+
 static void loadFileNames( std::vector<std::string>& result, const std::string& path, const std::string& fileext)
 {
 	if (strus::isDir( path))
@@ -102,8 +137,7 @@ public:
 			const strus::TextProcessorInterface* textproc_,
 			const std::string& segmenterName_,
 			const std::vector<std::string>& selectexpr_,
-			const std::string& path,
-			const std::string& fileext,
+			const std::vector<std::string>& files_,
 			unsigned int nofFilesPerFetch_,
 			const strus::analyzer::DocumentClass documentClass_,
 			const std::map<std::string,int>& markups_,
@@ -118,9 +152,9 @@ public:
 		,m_documentClass(documentClass_)
 		,m_markups(markups_)
 		,m_resultMarker(resultMarker_)
+		,m_files(files_)
 		,m_printTokens(printTokens_)
 	{
-		loadFileNames( m_files, path, fileext);
 		m_fileitr = m_files.begin();
 
 		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorBuffer));
@@ -541,6 +575,7 @@ public:
 		for (;;)
 		{
 			std::vector<std::string> filenames = m_globalContext->fetchFiles();
+			/*[-]*/std::cout << "++++ FETCHED FILES: " << filenames.size() << std::endl;
 			if (filenames.empty()) break;
 			std::vector<std::string>::const_iterator fi = filenames.begin(), fe = filenames.end();
 			for (; fi != fe; ++fi)
@@ -613,9 +648,9 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 22,
+				argc, argv, 23,
 				"h,help", "v,version", "license",
-				"g,segmenter:", "x,extension:", "C,contenttype:",
+				"g,segmenter:", "x,ext:", "C,contenttype:", "F,filelist",
 				"e,expression:", "K,tokens", "p,program:",
 				"Z,marker:", "H,markup:",
 				"X,lexer:", "Y,matcher:",
@@ -746,6 +781,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Do only process files with extension <FILEEXT>") << std::endl;
 			std::cout << "-C|--contenttype <CT>" << std::endl;
 			std::cout << "    " << _TXT("forced definition of the document class of all documents processed.") << std::endl;
+			std::cout << "-F|--filelist" << std::endl;
+			std::cout << "    " << _TXT("inputpath is a file containing the list of files to process.") << std::endl;
 			std::cout << "-e|--expression <EXP>" << std::endl;
 			std::cout << "    " << _TXT("Define a selection expression <EXP> for the content to process") << std::endl;
 			std::cout << "    " << _TXT("  (default if nothing specified is \"//()\"") << std::endl;
@@ -789,6 +826,7 @@ int main( int argc, const char* argv[])
 		unsigned int nofFilesFetch = 1;
 		std::string outputfile;
 		std::string outerrfile;
+		bool inputIsAListOfFiles = false;
 
 		if (opt( "segmenter"))
 		{
@@ -797,10 +835,30 @@ int main( int argc, const char* argv[])
 		if (opt( "ext"))
 		{
 			fileext = opt[ "ext"];
+			if (opt( "filelist"))
+			{
+				throw strus::runtime_error(_TXT("called with contradicting options --%s and --%s"), "ext", "filelist");
+			}
 		}
 		if (opt( "contenttype"))
 		{
 			contenttype = opt[ "contenttype"];
+			if (opt( "filelist"))
+			{
+				throw strus::runtime_error(_TXT("called with contradicting options --%s and --%s"), "contenttype", "filelist");
+			}
+		}
+		if (opt("filelist"))
+		{
+			if (opt( "ext"))
+			{
+				throw strus::runtime_error(_TXT("called with contradicting options --%s and --%s"), "ext", "filelist");
+			}
+			if (opt( "contenttype"))
+			{
+				throw strus::runtime_error(_TXT("called with contradicting options --%s and --%s"), "contenttype", "filelist");
+			}
+			inputIsAListOfFiles = true;
 		}
 		if (opt( "expression"))
 		{
@@ -943,9 +1001,18 @@ int main( int argc, const char* argv[])
 		{
 			expressions.push_back( "//()");
 		}
+		std::vector<std::string> inputfiles;
+		if (inputIsAListOfFiles)
+		{
+			loadFileNamesFromFile( inputfiles, inputpath);
+		}
+		else
+		{
+			loadFileNames( inputfiles, inputpath, fileext);
+		}
 		GlobalContext globalContext(
 				ptinst.get(), lxinst.get(), textproc, segmentername,
-				expressions, inputpath, fileext, nofFilesFetch, documentClass,
+				expressions, inputfiles, nofFilesFetch, documentClass,
 				markups, resultmarker, printTokens);
 
 		std::cerr << "start matching ..." << std::endl;
