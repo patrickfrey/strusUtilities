@@ -575,7 +575,6 @@ public:
 		for (;;)
 		{
 			std::vector<std::string> filenames = m_globalContext->fetchFiles();
-			/*[-]*/std::cout << "++++ FETCHED FILES: " << filenames.size() << std::endl;
 			if (filenames.empty()) break;
 			std::vector<std::string>::const_iterator fi = filenames.begin(), fe = filenames.end();
 			for (; fi != fe; ++fi)
