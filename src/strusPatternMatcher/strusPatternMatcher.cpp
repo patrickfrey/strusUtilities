@@ -842,20 +842,12 @@ int main( int argc, const char* argv[])
 		if (opt( "contenttype"))
 		{
 			contenttype = opt[ "contenttype"];
-			if (opt( "filelist"))
-			{
-				throw strus::runtime_error(_TXT("called with contradicting options --%s and --%s"), "contenttype", "filelist");
-			}
 		}
 		if (opt("filelist"))
 		{
 			if (opt( "ext"))
 			{
 				throw strus::runtime_error(_TXT("called with contradicting options --%s and --%s"), "ext", "filelist");
-			}
-			if (opt( "contenttype"))
-			{
-				throw strus::runtime_error(_TXT("called with contradicting options --%s and --%s"), "contenttype", "filelist");
 			}
 			inputIsAListOfFiles = true;
 		}
@@ -998,7 +990,14 @@ int main( int argc, const char* argv[])
 		}
 		if (expressions.empty())
 		{
-			expressions.push_back( "//()");
+			if (segmentername == "plain")
+			{
+				expressions.push_back( "");
+			}
+			else
+			{
+				expressions.push_back( "//()");
+			}
 		}
 		std::vector<std::string> inputfiles;
 		if (inputIsAListOfFiles)

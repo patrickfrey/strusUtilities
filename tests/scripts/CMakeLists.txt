@@ -8,6 +8,7 @@ add_test( TestPatternMatch3  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh test
 add_test( TestPatternMatch4  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch4 )
 add_test( TestPatternMatchNamesEditDist ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testPatternMatchNamesEditDist )
 add_test( TestPatternMatchNamesInputFromFile ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatchNamesInputFromFile )
+add_test( TestPatternMatchNamesTextInputFromFile  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testPatternMatchNamesTextInputFromFile )
 ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 
 add_test( TestAnalyzeSubSegmenter1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeSubSegmenter1 )
@@ -16,6 +17,7 @@ add_test( TestAnalyzeSubSegmenter3 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.s
 add_test( TestAnalyzeBase1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeBase1 )
 add_test( TestAnalyzeJson1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeJson1 )
 add_test( TestAnalyzeJson2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeJson2 )
+add_test( TestAnalyzePlain1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzePlain1 )
 add_test( TestAnalyzeTsv1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeTsv1 )
 add_test( TestAnalyzeConfig1 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig1 )
 add_test( TestAnalyzeConfig2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testAnalyzeConfig2 )
