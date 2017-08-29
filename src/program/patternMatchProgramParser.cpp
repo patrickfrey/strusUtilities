@@ -195,7 +195,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 							{
 								(void)parse_OPERATOR(si);
 								resultIndex = parse_UNSIGNED( si);
-								if (!isOpenSquareBracket(*si))
+								if (!isCloseSquareBracket(*si))
 								{
 									throw strus::runtime_error(_TXT("close square bracket ']' expected at end of result index definition"));
 								}
