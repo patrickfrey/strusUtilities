@@ -354,22 +354,28 @@ public:
 		}
 	}
 
-	strus::SegmenterContextInterface* createSegmenterContext( const std::string& content, strus::analyzer::DocumentClass& documentClass, strus::SegmenterInstanceInterface const*& segmenterinst)
+	strus::analyzer::DocumentClass getDocumentClass( const std::string& content) const
 	{
 		if (m_globalContext->documentClass().defined())
 		{
-			documentClass = m_globalContext->documentClass();
+			return m_globalContext->documentClass();
 		}
 		else
 		{
-			if (!m_globalContext->textproc()->detectDocumentClass( documentClass, content.c_str(), content.size()))
+			strus::analyzer::DocumentClass rt;
+			if (!m_globalContext->textproc()->detectDocumentClass( rt, content.c_str(), content.size()))
 			{
 				throw strus::runtime_error(_TXT("failed to detect document class"));
 			}
+			return rt;
 		}
+	}
+
+	const strus::SegmenterInstanceInterface* getSegmenterInstance( const std::string& content, const strus::analyzer::DocumentClass& documentClass)
+	{
 		if (m_defaultSegmenter)
 		{
-			return m_defaultSegmenterInstance->createContext( documentClass);
+			return m_defaultSegmenterInstance.get();
 		}
 		else
 		{
@@ -392,14 +398,13 @@ public:
 					throw strus::runtime_error(_TXT("failed to create segmenter instance for mime type '%s'"), documentClass.mimeType().c_str());
 				}
 				m_segmentermap[ documentClass.mimeType()] = segmenterinstref;
-				segmenterinst = segmenterinstref.get();
 				initSegmenterInstance( segmenterinstref.get());
+				return segmenterinstref.get();
 			}
 			else
 			{
-				segmenterinst = si->second.get();
+				return si->second.get();
 			}
-			return segmenterinst->createContext( documentClass);
 		}
 	}
 
@@ -433,9 +438,9 @@ public:
 		}
 		std::auto_ptr<strus::PatternMatcherContextInterface> mt( m_globalContext->PatternMatcherInstance()->createContext());
 		std::auto_ptr<strus::PatternLexerContextInterface> crctx( m_globalContext->PatternLexerInstance()->createContext());
-		strus::analyzer::DocumentClass documentClass;
-		const strus::SegmenterInstanceInterface* segmenterInstance;
-		std::auto_ptr<strus::SegmenterContextInterface> segmenter( createSegmenterContext( content, documentClass, segmenterInstance));
+		strus::analyzer::DocumentClass documentClass = getDocumentClass( content);
+		const strus::SegmenterInstanceInterface* segmenterInstance = getSegmenterInstance( content, documentClass);
+		std::auto_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
 
 		*m_output << m_globalContext->resultMarker() << filename << ":" << std::endl;
 
