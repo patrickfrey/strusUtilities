@@ -441,7 +441,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( errorBuffer->fetchError());
+			throw strus::runtime_error( "%s", errorBuffer->fetchError());
 		}
 		return 0;
 	}

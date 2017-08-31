@@ -73,13 +73,13 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				(void)parse_OPERATOR( si);
 				if (!isAlpha(*si))
 				{
-					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%' (option)"));
+					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%%' (option)"));
 				}
 				unsigned int dupf = 0;
 				int id = parse_KEYWORD( dupf, si, 3, "LEXER", "MATCHER", "FEEDER");
 				if (id < 0)
 				{
-					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%' (option)"));
+					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%%' (option)"));
 				}
 				else if (id == 0)
 				{
@@ -219,7 +219,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					}
 					else if (m_patternTermFeeder)
 					{
-						throw strus::runtime_error(_TXT("pattern analyzer terms are defined by option %lexem type and not with id : regex"));
+						throw strus::runtime_error(_TXT("pattern analyzer terms are defined by option %%lexem type and not with id : regex"));
 					}
 				}
 				else if (isAssign(*si))

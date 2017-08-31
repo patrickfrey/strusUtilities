@@ -190,7 +190,7 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 		else
 		{
 			std::string str( si, si+30);
-			throw strus::runtime_error( _TXT( "semicolon expected as separator of commands at '..."), str.c_str());
+			throw strus::runtime_error( _TXT( "semicolon expected as separator of commands at '%s..."), str.c_str());
 		}
 	}
 	return rt;

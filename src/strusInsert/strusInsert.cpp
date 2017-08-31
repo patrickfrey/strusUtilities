@@ -414,7 +414,7 @@ int main( int argc_, const char* argv_[])
 		{
 			if (!segmentername.empty())
 			{
-				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"));
+				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"), segmentername.c_str());
 			}
 			analyzerMap.loadAnalyzerMap( analyzerprg);
 		}

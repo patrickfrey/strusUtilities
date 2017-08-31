@@ -2310,7 +2310,7 @@ static unsigned int loadStorageValues(
 	}
 	catch (const std::runtime_error& err)
 	{
-		throw strus::runtime_error( _TXT("error on line %u: %s"), linecnt, err.what());
+		throw strus::runtime_error( _TXT("error on line %u: %s"), (unsigned int)linecnt, err.what());
 	}
 }
 
@@ -2776,7 +2776,7 @@ DLL_PUBLIC bool strus::loadVectorStorageVectors(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading feature vectors from file (file format: %s)"), vectorfile.c_str(), filetype);
+		errorhnd->report( _TXT("out of memory loading feature vectors from file %s (file format: %s)"), vectorfile.c_str(), filetype);
 		return false;
 	}
 	catch (const std::runtime_error& e)

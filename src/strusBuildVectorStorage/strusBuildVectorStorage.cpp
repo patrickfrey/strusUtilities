@@ -200,7 +200,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << strus::string_format( _TXT("Specify the maximum number of threads to use as <N> (default %u)"), DEFAULT_MAX_NOF_THREADS) << std::endl;
 			if (g_errorBuffer->hasError())
 			{
-				throw strus::runtime_error( g_errorBuffer->fetchError());
+				throw strus::runtime_error( "%s", g_errorBuffer->fetchError());
 			}
 			return rt;
 		}
@@ -238,7 +238,7 @@ int main( int argc, const char* argv[])
 		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
-		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
+		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database"));
 
 		const strus::VectorStorageInterface* vsi = storageBuilder->getVectorStorage( modelname);
 		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
