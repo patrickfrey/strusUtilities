@@ -419,6 +419,24 @@ public:
 			:segpos(o.segpos),srcpos(o.srcpos){}
 	};
 
+	static std::string encodeOutput( const char* ptr, std::size_t size)
+	{
+		std::string rt;
+		std::size_t si = 0, se = size;
+		for (; si != se; ++si)
+		{
+			if ((unsigned char)ptr[si] <= 32)
+			{
+				rt.push_back( ' ');
+			}
+			else
+			{
+				rt.push_back( ptr[si]);
+			}
+		}
+		return rt;
+	}
+
 	void processDocument( const std::string& filename)
 	{
 		std::string content;
@@ -462,7 +480,7 @@ public:
 				segmentposmap.push_back( PositionInfo( segmentpos, source.size()));
 				source.append( segment, segmentsize);
 #ifdef STRUS_LOWLEVEL_DEBUG
-				*m_outerr << "processing segment " << id << " [" << std::string(segment,segmentsize) << "] at " << segmentpos << std::endl;
+				*m_outerr << "processing segment " << id << " [" << encodeOutput(segment,segmentsize) << "] at " << segmentpos << std::endl;
 #endif
 				std::vector<strus::analyzer::PatternLexem> crmatches = crctx->match( segment, segmentsize);
 				if (crmatches.size() == 0 && g_errorBuffer->hasError())
@@ -479,11 +497,11 @@ public:
 						const char* lexemname = m_globalContext->PatternLexerInstance()->getLexemName( ti->id());
 						if (lexemname)
 						{
-							*m_output << ti->ordpos() << " [" << (segmentpos+ti->origpos()) << "] : " << ti->id() << " " << lexemname << " " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+							*m_output << ti->ordpos() << " [" << (segmentpos+ti->origpos()) << "] : " << ti->id() << " " << lexemname << " " << encodeOutput( segment+ti->origpos(), ti->origsize()) << std::endl;
 						}
 						else
 						{
-							*m_output << ti->ordpos() << ": " << ti->id() << " ? " << std::string( segment+ti->origpos(), ti->origsize()) << std::endl;
+							*m_output << ti->ordpos() << ": " << ti->id() << " ? " << encodeOutput( segment+ti->origpos(), ti->origsize()) << std::endl;
 						}
 					}
 					mt->putInput( *ti);
@@ -531,7 +549,7 @@ public:
 						<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
 				std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
 				std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
-				out << " '" << std::string( src.c_str() + start_srcpos, end_srcpos - start_srcpos) << "'";
+				out << " '" << encodeOutput( src.c_str() + start_srcpos, end_srcpos - start_srcpos) << "'";
 			}
 			out << std::endl;
 		}
