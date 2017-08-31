@@ -7,6 +7,7 @@ add_test( TestPatternMatch2  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh test
 add_test( TestPatternMatch3  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch3 )
 add_test( TestPatternMatch4  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatch4 )
 add_test( TestPatternMatchNamesEditDist ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testPatternMatchNamesEditDist )
+add_test( TestPatternMatchEditDist2 ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testPatternMatchEditDist2 )
 add_test( TestPatternMatchNamesInputFromFile ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh testPatternMatchNamesInputFromFile )
 add_test( TestPatternMatchNamesTextInputFromFile  ${PROJECT_SOURCE_DIR}/tests/scripts/runTest.sh  testPatternMatchNamesTextInputFromFile )
 ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
