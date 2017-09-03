@@ -280,6 +280,11 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Sun Sep 3 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.15.0-0.1
+- remove hardcoded setting of C++98 in CMake files
+- many CMake build fixes
+- adapt interface changes in strus core
+
 * Wed Feb 15 2017 Patrick Frey <patrickpfrey@yahoo.com> 0.14.0-0.1
 - adapt interface changes in strus core
 
