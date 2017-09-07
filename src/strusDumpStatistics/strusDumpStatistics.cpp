@@ -250,7 +250,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error( _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
 		}
-		const char* msg;
+		const void* msg;
 		std::size_t msgsize;
 		std::string output;
 

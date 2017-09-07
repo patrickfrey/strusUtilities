@@ -87,7 +87,7 @@ static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const
 	strus::Reference<strus::StatisticsIteratorInterface> statitr( storage->createAllStatisticsIterator());
 	if (!statitr.get()) throw strus::runtime_error(_TXT("failed to initialize statistics iterator"));
 	collectionSize += storage->nofDocumentsInserted();
-	const char* statmsg;
+	const void* statmsg;
 	std::size_t statmsgsize;
 	while (statitr->getNext( statmsg, statmsgsize))
 	{
