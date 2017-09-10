@@ -31,6 +31,7 @@
 #include "strus/base/configParser.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -43,7 +44,7 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, DEFAULT_MAX_NOF_THREADS));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, DEFAULT_MAX_NOF_THREADS));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -75,7 +76,7 @@ int main( int argc, const char* argv[])
 				g_errorBuffer = errorBuffer.get();
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -217,7 +218,7 @@ int main( int argc, const char* argv[])
 			}
 		}
 		// Create root object:
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
+		strus::local_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
 		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 

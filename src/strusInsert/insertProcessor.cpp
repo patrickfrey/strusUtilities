@@ -20,6 +20,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/utils.hpp"
@@ -70,7 +71,7 @@ void InsertProcessor::run()
 		std::vector<std::string> files;
 		std::vector<std::string>::const_iterator fitr;
 	
-		std::auto_ptr<strus::StorageTransactionInterface>
+		strus::local_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
 		if (!transaction.get()) throw strus::runtime_error(_TXT("error creating storage transaction"));
 
@@ -82,7 +83,7 @@ void InsertProcessor::run()
 				try
 				{
 					strus::InputStream input( *fitr);
-					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
+					strus::local_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
 					strus::analyzer::DocumentClass dclass;
 					if (!m_defaultDocumentClass.defined())
 					{
@@ -143,7 +144,7 @@ void InsertProcessor::run()
 								&& oi->name() != strus::Constants::attribute_docid();
 								++oi){}
 							const char* docid = 0;
-							std::auto_ptr<strus::StorageDocumentInterface> storagedoc;
+							strus::local_ptr<strus::StorageDocumentInterface> storagedoc;
 							if (oi != oe)
 							{
 								storagedoc.reset( transaction->createDocument( oi->value()));

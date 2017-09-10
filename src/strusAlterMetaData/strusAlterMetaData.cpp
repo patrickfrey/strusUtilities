@@ -31,6 +31,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
@@ -42,7 +43,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	std::string dbname;
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
@@ -200,7 +201,7 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -217,7 +218,7 @@ int main( int argc, const char* argv[])
 		{
 			printUsageAndExit = true;
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader(
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader(
 			strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("error creating module loader"));
 
@@ -352,8 +353,8 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create objects for altering the meta data table:
-		std::auto_ptr<strus::StorageObjectBuilderInterface> builder;
-		std::auto_ptr<strus::StorageAlterMetaDataTableInterface> md;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> builder;
+		strus::local_ptr<strus::StorageAlterMetaDataTableInterface> md;
 
 		builder.reset( moduleLoader->createStorageObjectBuilder());
 		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));

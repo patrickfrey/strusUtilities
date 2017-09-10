@@ -40,6 +40,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
@@ -228,7 +229,7 @@ private:
 	std::vector<std::string> m_selectexpr;
 	unsigned int m_nofFilesPerFetch;
 	strus::analyzer::DocumentClass m_documentClass;
-	std::auto_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
+	strus::local_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
 	std::map<std::string,int> m_markups;
 	std::string m_resultMarker;
 	std::vector<std::string> m_files;
@@ -454,11 +455,11 @@ public:
 		{
 			throw strus::runtime_error(_TXT("error (%u) reading document %s: %s"), ec, filename.c_str(), ::strerror(ec));
 		}
-		std::auto_ptr<strus::PatternMatcherContextInterface> mt( m_globalContext->PatternMatcherInstance()->createContext());
-		std::auto_ptr<strus::PatternLexerContextInterface> crctx( m_globalContext->PatternLexerInstance()->createContext());
+		strus::local_ptr<strus::PatternMatcherContextInterface> mt( m_globalContext->PatternMatcherInstance()->createContext());
+		strus::local_ptr<strus::PatternLexerContextInterface> crctx( m_globalContext->PatternLexerInstance()->createContext());
 		strus::analyzer::DocumentClass documentClass = getDocumentClass( content);
 		const strus::SegmenterInstanceInterface* segmenterInstance = getSegmenterInstance( content, documentClass);
-		std::auto_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
+		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
 
 		*m_output << m_globalContext->resultMarker() << filename << ":" << std::endl;
 
@@ -560,7 +561,7 @@ public:
 				const strus::analyzer::DocumentClass& documentClass, const std::string& src,
 				const strus::SegmenterInstanceInterface* segmenterInstance)
 	{
-		std::auto_ptr<strus::TokenMarkupContextInterface> markupContext( m_globalContext->createTokenMarkupContext());
+		strus::local_ptr<strus::TokenMarkupContextInterface> markupContext( m_globalContext->createTokenMarkupContext());
 
 		std::vector<strus::analyzer::PatternMatcherResult>::const_iterator
 			ri = results.begin(), re = results.end();
@@ -657,7 +658,7 @@ private:
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -711,7 +712,7 @@ int main( int argc, const char* argv[])
 				g_errorBuffer = alterr;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface>
+		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 
@@ -950,9 +951,9 @@ int main( int argc, const char* argv[])
 			}
 		}
 		// Create objects for analyzer:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
 
 		if (opt("rpc"))
 		{
@@ -989,8 +990,8 @@ int main( int argc, const char* argv[])
 		if (!pti) throw strus::runtime_error(_TXT("unknown pattern matcher"));
 		const strus::PatternLexerInterface* lxi = textproc->getPatternLexer( lexer);
 		if (!lxi) throw strus::runtime_error(_TXT("unknown pattern lexer"));
-		std::auto_ptr<strus::PatternMatcherInstanceInterface> ptinst( pti->createInstance());
-		std::auto_ptr<strus::PatternLexerInstanceInterface> lxinst( lxi->createInstance());
+		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pti->createInstance());
+		strus::local_ptr<strus::PatternLexerInstanceInterface> lxinst( lxi->createInstance());
 
 		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))

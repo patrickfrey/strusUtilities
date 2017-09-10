@@ -19,6 +19,7 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/inputStream.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -44,7 +45,7 @@
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -68,7 +69,7 @@ int main( int argc_, const char* argv_[])
 			nofThreads = opt.asUint( "threads");
 		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -244,7 +245,7 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// Create root objects:
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
 		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 

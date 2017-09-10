@@ -40,6 +40,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
@@ -62,7 +63,7 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -97,7 +98,7 @@ int main( int argc, const char* argv[])
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface>
+		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 
@@ -226,9 +227,9 @@ int main( int argc, const char* argv[])
 			}
 		}
 		// Create objects for analyzer:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
 
 		if (opt("rpc"))
 		{
@@ -262,7 +263,7 @@ int main( int argc, const char* argv[])
 		strus::PatternSerializerType serializerType = use_feeder
 							? strus::PatternMatcherWithFeeder
 							: strus::PatternMatcherWithLexer;
-		std::auto_ptr<strus::PatternSerializer> serializer;
+		strus::local_ptr<strus::PatternSerializer> serializer;
 		if (outputfile.empty())
 		{
 			serializer.reset( strus::createPatternSerializerText( std::cout, serializerType, g_errorBuffer));

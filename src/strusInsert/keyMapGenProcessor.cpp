@@ -12,6 +12,7 @@
 #include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/base/fileio.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
 #include "fileCrawlerInterface.hpp"
@@ -129,7 +130,7 @@ void KeyMapGenProcessor::run()
 				try
 				{
 					strus::InputStream input( *fitr);
-					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
+					strus::local_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
 					strus::analyzer::DocumentClass dclass;
 					if (!m_defaultDocumentClass.defined())
 					{

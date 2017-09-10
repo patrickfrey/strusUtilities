@@ -36,6 +36,7 @@
 #include "strus/base/string_format.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/base/configParser.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "private/utils.hpp"
@@ -54,7 +55,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
@@ -166,7 +167,7 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 
 static void inspectDocumentIndexFeatureTypes( strus::StorageClientInterface& storage)
 {
-	std::auto_ptr<strus::ValueIteratorInterface> valItr( storage.createTermTypeIterator());
+	strus::local_ptr<strus::ValueIteratorInterface> valItr( storage.createTermTypeIterator());
 
 	// KLUDGE: This is bad, but the storage cannot tell us how far we should
 	// iterate, does it?
@@ -409,7 +410,7 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
 	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
 
-	std::auto_ptr<strus::AttributeReaderInterface>
+	strus::local_ptr<strus::AttributeReaderInterface>
 		attreader( storage.createAttributeReader());
 	if (!attreader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
 
@@ -463,7 +464,7 @@ static void inspectDocAttributeNames( const strus::StorageClientInterface& stora
 {
 	if (size > 0) throw strus::runtime_error( _TXT("too many arguments"));
 
-	std::auto_ptr<strus::AttributeReaderInterface>
+	strus::local_ptr<strus::AttributeReaderInterface>
 		attreader( storage.createAttributeReader());
 	if (!attreader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
 
@@ -815,7 +816,7 @@ static void inspectConfig( strus::StorageClientInterface& storage, const char**,
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -835,7 +836,7 @@ int main( int argc, const char* argv[])
 		{
 			printUsageAndExit = true;
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -1010,9 +1011,9 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create objects for inspecting storage:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
@@ -1042,7 +1043,7 @@ int main( int argc, const char* argv[])
 		std::size_t inpectargsize = opt.nofargs() - 1;
 
 		// Do inspect what is requested:
-		std::auto_ptr<strus::StorageClientInterface>
+		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 

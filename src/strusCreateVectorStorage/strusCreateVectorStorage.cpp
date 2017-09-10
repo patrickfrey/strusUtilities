@@ -32,6 +32,7 @@
 #include "strus/base/configParser.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -43,7 +44,7 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -62,7 +63,7 @@ int main( int argc, const char* argv[])
 				"s,config:", "S,configfile:", "P,portable",
 				"f,file:" );
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -211,7 +212,7 @@ int main( int argc, const char* argv[])
 			inputfiles = opt.list( "file");
 		}
 		// Create root object:
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
+		strus::local_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
 		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
@@ -240,7 +241,7 @@ int main( int argc, const char* argv[])
 		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
 
 		if (!vsi->createStorage( config, dbi)) throw strus::runtime_error(_TXT("failed to create vector storage"));
-		std::auto_ptr<strus::VectorStorageClientInterface> storage( vsi->createClient( config, dbi));
+		strus::local_ptr<strus::VectorStorageClientInterface> storage( vsi->createClient( config, dbi));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create vector storage builder"));
 
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();

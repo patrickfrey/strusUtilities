@@ -24,6 +24,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -40,7 +41,7 @@
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -56,7 +57,7 @@ int main( int argc, const char* argv[])
 				"m,module:", "M,moduledir:", "q,quot:", "P,plain", "F,fileinput",
 				"R,resourcedir:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 
 		if (opt("moduledir"))
@@ -208,7 +209,7 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create root object for analyzer:
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
 		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
 
@@ -223,7 +224,7 @@ int main( int argc, const char* argv[])
 			}
 		}
 		// Create objects for analyzer:
-		std::auto_ptr<strus::QueryAnalyzerInterface>
+		strus::local_ptr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create analyzer"));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
@@ -254,7 +255,7 @@ int main( int argc, const char* argv[])
 		}
 
 		// Analyze the phrase and print the result:
-		std::auto_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
+		strus::local_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
 		if (!qryanactx.get()) throw strus::runtime_error(_TXT("failed to create query analyzer context"));
 	
 		qryanactx->putField( 1, "", phrasestring);

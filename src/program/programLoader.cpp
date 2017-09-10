@@ -10,6 +10,7 @@
 #include "strus/lib/pattern_serialize.hpp"
 #include "strus/constants.hpp"
 #include "strus/numericVariant.hpp"
+#include "strus/errorBufferInterface.hpp"
 #include "strus/weightingFunctionInterface.hpp"
 #include "strus/weightingFunctionInstanceInterface.hpp"
 #include "strus/summarizerFunctionInterface.hpp"
@@ -20,6 +21,7 @@
 #include "strus/tokenizerFunctionInstanceInterface.hpp"
 #include "strus/aggregatorFunctionInterface.hpp"
 #include "strus/aggregatorFunctionInstanceInterface.hpp"
+#include "strus/scalarFunctionInterface.hpp"
 #include "strus/patternLexerInterface.hpp"
 #include "strus/patternLexerInstanceInterface.hpp"
 #include "strus/patternTermFeederInterface.hpp"
@@ -39,7 +41,6 @@
 #include "strus/storageDocumentUpdateInterface.hpp"
 #include "strus/vectorStorageClientInterface.hpp"
 #include "strus/vectorStorageTransactionInterface.hpp"
-#include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/queryTermExpression.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/analyzer/documentClass.hpp"
@@ -51,6 +52,7 @@
 #include "strus/base/hton.hpp"
 #include "strus/base/inputStream.hpp"
 #include "strus/base/symbolTable.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/utils.hpp"
 #include "private/internationalization.hpp"
 #include "metadataExpression.hpp"
@@ -166,7 +168,7 @@ static void parseWeightingFormula(
 	}
 	std::string funcsrc = parse_STRING( src);
 	const ScalarFunctionParserInterface* scalarfuncparser = queryproc->getScalarFunctionParser(langName);
-	std::auto_ptr<ScalarFunctionInterface> scalarfunc( scalarfuncparser->createFunction( funcsrc, std::vector<std::string>()));
+	strus::local_ptr<ScalarFunctionInterface> scalarfunc( scalarfuncparser->createFunction( funcsrc, std::vector<std::string>()));
 	if (!scalarfunc.get())
 	{
 		throw strus::runtime_error(_TXT( "failed to create scalar function (weighting formula) from source"));
@@ -191,7 +193,7 @@ static void parseWeightingConfig(
 	const WeightingFunctionInterface* wf = queryproc->getWeightingFunction( functionName);
 	if (!wf) throw strus::runtime_error(_TXT( "weighting function '%s' not defined"), functionName.c_str());
 
-	std::auto_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance( queryproc));
+	strus::local_ptr<WeightingFunctionInstanceInterface> function( wf->createInstance( queryproc));
 	if (!function.get()) throw strus::runtime_error(_TXT( "failed to create weighting function '%s'"), functionName.c_str());
 
 	typedef QueryEvalInterface::FeatureParameter FeatureParameter;
@@ -312,7 +314,7 @@ static void parseSummarizerConfig(
 	const SummarizerFunctionInterface* sf = queryproc->getSummarizerFunction( functionName);
 	if (!sf) throw strus::runtime_error(_TXT( "summarizer function not defined: '%s'"), functionName.c_str());
 
-	std::auto_ptr<SummarizerFunctionInstanceInterface> function( sf->createInstance( queryproc));
+	strus::local_ptr<SummarizerFunctionInstanceInterface> function( sf->createInstance( queryproc));
 	if (!function.get()) throw strus::runtime_error(_TXT( "failed to create summarizer function instance '%s'"), functionName.c_str());
 
 	if (!isOpenOvalBracket( *src))
@@ -812,7 +814,7 @@ static std::string parseSelectorExpression( char const*& src)
 
 struct FeatureDef
 {
-	std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+	strus::local_ptr<TokenizerFunctionInstanceInterface> tokenizer;
 	std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
 	std::vector<NormalizerFunctionInstanceInterface*> normalizer;
 
@@ -1155,8 +1157,8 @@ static void parseAnalyzerPatternMatchProgramDef(
 		{
 			throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
 		}
-		std::auto_ptr<PatternTermFeederInstanceInterface> feederctx( feeder->createInstance());
-		std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( matcher->createInstance());
+		strus::local_ptr<PatternTermFeederInstanceInterface> feederctx( feeder->createInstance());
+		strus::local_ptr<PatternMatcherInstanceInterface> matcherctx( matcher->createInstance());
 		if (!feederctx.get() || !matcherctx.get())
 		{
 			throw strus::runtime_error( _TXT("failed to create post proc pattern matching: %s"), errorhnd->fetchError());
@@ -1188,8 +1190,8 @@ static void parseAnalyzerPatternMatchProgramDef(
 		{
 			throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
 		}
-		std::auto_ptr<PatternLexerInstanceInterface> lexerctx( lexer->createInstance());
-		std::auto_ptr<PatternMatcherInstanceInterface> matcherctx( matcher->createInstance());
+		strus::local_ptr<PatternLexerInstanceInterface> lexerctx( lexer->createInstance());
+		strus::local_ptr<PatternMatcherInstanceInterface> matcherctx( matcher->createInstance());
 		if (!lexerctx.get() || !matcherctx.get())
 		{
 			throw strus::runtime_error( _TXT("failed to create pre proc pattern matching: %s"), errorhnd->fetchError());
@@ -1346,7 +1348,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			{
 				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in aggregator section"));
 
-				std::auto_ptr<AggregatorFunctionInstanceInterface> statfunc;
+				strus::local_ptr<AggregatorFunctionInstanceInterface> statfunc;
 				FunctionConfig cfg = parseAggregatorFunctionConfig( src);
 
 				const AggregatorFunctionInterface* sf = textproc->getAggregator( cfg.name());
@@ -1963,7 +1965,7 @@ DLL_PUBLIC bool strus::loadPhraseAnalyzer(
 {
 	try
 	{
-		std::auto_ptr<TokenizerFunctionInstanceInterface> tokenizer;
+		strus::local_ptr<TokenizerFunctionInstanceInterface> tokenizer;
 		std::vector<Reference<NormalizerFunctionInstanceInterface> > normalizer_ref;
 		std::vector<NormalizerFunctionInstanceInterface*> normalizer;
 	
@@ -2110,7 +2112,7 @@ static std::string parseDocKey( char const*& itr)
 
 static void storeMetaDataValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const NumericVariant& val)
 {
-	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	strus::local_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
 	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
 
 	update->setMetaData( name, val);
@@ -2119,7 +2121,7 @@ static void storeMetaDataValue( StorageTransactionInterface& transaction, const 
 
 static void storeAttributeValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const std::string& val)
 {
-	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	strus::local_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
 	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
 	if (val.empty())
 	{
@@ -2134,7 +2136,7 @@ static void storeAttributeValue( StorageTransactionInterface& transaction, const
 
 static void storeUserRights( StorageTransactionInterface& transaction, const Index& docno, const std::string& val)
 {
-	std::auto_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
+	strus::local_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
 	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
 	char const* itr = val.c_str();
 	if (itr[0] == '+' && (itr[1] == ',' || !itr[1]))
@@ -2247,7 +2249,7 @@ static unsigned int loadStorageValues(
 	InputStream stream( file);
 	if (stream.error()) throw strus::runtime_error(_TXT("failed to open storage value file '%s': %s"), file.c_str(), ::strerror(stream.error()));
 	unsigned int rt = 0;
-	std::auto_ptr<StorageTransactionInterface>
+	strus::local_ptr<StorageTransactionInterface>
 		transaction( storage.createTransaction());
 	if (!transaction.get()) throw strus::runtime_error( _TXT("failed to create storage transaction"));
 	std::size_t linecnt = 1;

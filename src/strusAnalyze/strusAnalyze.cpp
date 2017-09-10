@@ -32,6 +32,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/programOptions.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
@@ -144,7 +145,7 @@ static void filterTerms( std::vector<strus::analyzer::DocumentTerm>& termar, con
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -160,7 +161,7 @@ int main( int argc, const char* argv[])
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "D,dump:");
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface>
+		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 
@@ -345,9 +346,9 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create objects for analyzer:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
 
 		if (opt("rpc"))
 		{
@@ -418,7 +419,7 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), documentClass.mimeType().c_str(), documentClass.scheme().c_str()); 
 		}
-		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
+		strus::local_ptr<strus::DocumentAnalyzerContextInterface>
 			analyzerContext( analyzer->createContext( documentClass));
 		if (!analyzerContext.get()) throw strus::runtime_error(_TXT("failed to create document analyzer context"));
 

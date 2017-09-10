@@ -21,6 +21,7 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -123,7 +124,7 @@ void CheckInsertProcessor::run()
 				try
 				{
 					strus::InputStream input( *fitr);
-					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
+					strus::local_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
 					strus::analyzer::DocumentClass dclass;
 					if (!m_defaultDocumentClass.defined())
 					{

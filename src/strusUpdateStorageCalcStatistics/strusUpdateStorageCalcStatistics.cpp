@@ -42,6 +42,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/version.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -61,7 +62,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
@@ -160,7 +161,7 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -180,7 +181,7 @@ int main( int argc, const char* argv[])
 		{
 			printUsageAndExit = true;
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -322,9 +323,9 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create objects for storage document update:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
@@ -354,7 +355,7 @@ int main( int argc, const char* argv[])
 			{
 				*ci = "statsproc=default;" + *ci;
 			}
-			std::auto_ptr<strus::StorageClientInterface>
+			strus::local_ptr<strus::StorageClientInterface>
 				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), *ci));
 			if (!storage.get())
 			{
@@ -410,7 +411,7 @@ int main( int argc, const char* argv[])
 		ci = storagecfgs.begin(), ce = storagecfgs.end();
 		for (; ci != ce; ++ci)
 		{
-			std::auto_ptr<strus::StorageClientInterface>
+			strus::local_ptr<strus::StorageClientInterface>
 				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), *ci));
 			if (!storage.get())
 			{

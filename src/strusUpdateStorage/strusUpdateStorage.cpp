@@ -32,6 +32,7 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/version.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -48,7 +49,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
 	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
 
@@ -69,7 +70,7 @@ static std::multimap<std::string,strus::Index> loadAttributeDocnoMap(
 		strus::StorageClientInterface* storage, const std::string& attributeName)
 {
 	std::multimap<std::string,strus::Index> rt;
-	std::auto_ptr<strus::AttributeReaderInterface> attributeReader( storage->createAttributeReader());
+	strus::local_ptr<strus::AttributeReaderInterface> attributeReader( storage->createAttributeReader());
 	if (!attributeReader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
 	strus::Index ehnd = attributeReader->elementHandle( attributeName.c_str());
 	if (ehnd == 0) throw strus::runtime_error(_TXT("unknown attribute name '%s'"), attributeName.c_str());
@@ -90,7 +91,7 @@ int main( int argc, const char* argv[])
 {
 	int rt = 0;
 	FILE* logfile = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -111,7 +112,7 @@ int main( int argc, const char* argv[])
 		{
 			printUsageAndExit = true;
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
@@ -262,9 +263,9 @@ int main( int argc, const char* argv[])
 			mapattribute = opt["mapattribute"];
 		}
 		// Create objects for storage document update:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
@@ -280,7 +281,7 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
 		}
-		std::auto_ptr<strus::StorageClientInterface>
+		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
 		if (!mapattribute.empty())
