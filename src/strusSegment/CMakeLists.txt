@@ -19,8 +19,8 @@ include_directories(
 	    "${strusrpc_INCLUDE_DIRS}"	    
 )
 link_directories( 
-	   "${PROJECT_SOURCE_DIR}/utils" 
-	   "${strusbase_LIBRARY_DIRS}"
+	   "${CMAKE_CURRENT_BINARY_DIR}/../utils" 
+	   "${CMAKE_CURRENT_BINARY_DIR}/../program" 
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"
            "${strustrace_LIBRARY_DIRS}"

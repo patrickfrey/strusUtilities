@@ -20,7 +20,7 @@ include_directories(
 	"${strusmodule_INCLUDE_DIRS}"
 )
 link_directories(
-	"${PROJECT_SOURCE_DIR}/utils" 
+	"${CMAKE_CURRENT_BINARY_DIR}/../utils" 
 	"${strusbase_LIBRARY_DIRS}"
 	"${strus_LIBRARY_DIRS}"
 	"${strusanalyzer_LIBRARY_DIRS}"

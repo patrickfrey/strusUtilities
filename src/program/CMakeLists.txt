@@ -23,8 +23,7 @@ include_directories(
 )
 link_directories( 
            "${Boost_LIBRARY_DIRS}"
-	   "${PROJECT_SOURCE_DIR}/program" 
-	   "${PROJECT_SOURCE_DIR}/utils" 
+	   "${CMAKE_CURRENT_BINARY_DIR}/../utils" 
   	   "${strusbase_LIBRARY_DIRS}"
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"
