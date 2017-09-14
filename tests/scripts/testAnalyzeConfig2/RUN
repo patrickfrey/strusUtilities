@@ -1,1 +1,1 @@
-StrusAnalyze  doc.ana data/input.xml 
+StrusAnalyze  $T/doc.ana $T/data/input.xml 

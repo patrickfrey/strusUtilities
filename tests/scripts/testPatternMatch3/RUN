@@ -1,1 +1,1 @@
-StrusPatternMatcher --tokens -m modstrus_analyzer_pattern -p program.rul input.xml 
+StrusPatternMatcher --tokens -m modstrus_analyzer_pattern -p $T/program.rul $T/input.xml 

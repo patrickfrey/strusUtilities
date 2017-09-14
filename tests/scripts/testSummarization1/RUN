@@ -1,4 +1,4 @@
-StrusCreate -S storage.conf
-StrusInsert -S storage.conf doc.ana data/
-StrusQuery -S storage.conf query.ana query.prg "software engineer"
-StrusQuery -G -S storage.conf query.ana query.prg "software engineer"
+StrusCreate -S $T/storage.conf
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "software engineer"
+StrusQuery -G -S $T/storage.conf $T/query.ana $T/query.prg "software engineer"

@@ -1,5 +1,5 @@
-StrusCreate -S storage.conf
-StrusInsert -S storage.conf doc.map data/
+StrusCreate -S $T/storage.conf
+StrusInsert -S $T/storage.conf $T/doc.map $T/data/
 StrusInspect -s "path=storage" nofdocs
 StrusInspect -s "path=storage" attribute title
 StrusInspect -s "path=storage" attribute docid

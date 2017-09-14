@@ -1,3 +1,3 @@
-StrusAnalyze doc.map input.json
-StrusAnalyze doc.map input.xml
+StrusAnalyze $T/doc.map $T/input.json
+StrusAnalyze $T/doc.map $T/input.xml
 
