@@ -16,6 +16,7 @@
 #include <cerrno>
 #include <string>
 #include <vector>
+#include <map>
 #include <stdexcept>
 #include <unistd.h>
 
@@ -27,6 +28,7 @@ static std::string g_testname;
 static std::string g_maindir;
 static std::string g_bindir;
 static std::string g_testdir;
+static std::map<std::string,std::string> g_env;
 
 struct ProgramPath
 {
@@ -271,7 +273,15 @@ struct TestCommand
 		}
 		argv[ argc] = 0;
 
-		int ec = strus::execv_tostring( prg.c_str(), argv, rt);
+		int ec;
+		if (g_env.empty())
+		{
+			ec = strus::execv_tostring( prg.c_str(), argv, rt);
+		}
+		else
+		{
+			ec = strus::execve_tostring( prg.c_str(), argv, g_env, rt);
+		}
 		if (ec)
 		{
 			char buf[ 2048];
@@ -332,6 +342,16 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("test directory: ") << g_testdir << std::endl;
 		std::cerr << _TXT("binary directory: ") << g_bindir << std::endl;
 		std::cerr << _TXT("project directory: ") << g_maindir << std::endl;
+		int argi=3;
+		for (; argi < argc; ++argi)
+		{
+			const char* sep = std::strchr( argv[argi], '=');
+			if (!sep) throw std::runtime_error( _TXT("expected list of environment variable assignments for the rest of arguments"));
+			std::string envkey( argv[argi], sep - argv[argi]);
+			std::string envval( sep+1);
+			g_env[ envkey] = envval;
+			std::cerr << _TXT("environment variable ") << envkey << "='" << envval << "'" << std::endl;
+		}
 		std::cerr << std::endl;
 
 		std::string prgsrc;
