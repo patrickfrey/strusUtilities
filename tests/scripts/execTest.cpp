@@ -63,11 +63,6 @@ static ProgramPath g_prgpathmap[] =
 	{0,0}
 };
 
-static bool isDirSep( char ch)
-{
-	return ch == '/' || ch == '\\';
-}
-
 static bool isSpace( char ch)
 {
 	return ch && (unsigned char)ch <= 32;
@@ -99,51 +94,6 @@ static std::string parseLine( char const*& si)
 	}
 	if (*si) ++si;
 	return rt;
-}
-
-static std::string getAncestorPath( char const* argv0, int level)
-{
-	std::string path;
-	if (argv0[0] == '.')
-	{
-		char cwd[2048];
-		const char* pwd = ::getcwd(cwd, sizeof(cwd));
-		if (!pwd) throw std::runtime_error( _TXT("path is too long"));
-		path = std::string(pwd) + strus::dirSeparator() + argv0;
-		argv0 = path.c_str();
-	}
-	char const* se = std::strchr( argv0, '\0');
-	char const* si = argv0;
-	while (se > si && isDirSep(*(se-1))) --se;
-	while (se > si && level)
-	{
-		std::cerr << "level " << level << ": " << std::string( si, se-si) << std::endl;
-		char const* pi = se;
-		while (pi > si && !isDirSep( *(pi-1))) --pi;
-		if (pi == si)
-		{
-			break;
-		}
-		if (se-pi == 1 && pi[0] == '.')
-		{
-			se = pi;
-			while (se > si && isDirSep(*(se-1))) --se;
-			std::cerr << "curdir level " << level << ": " << std::string( si, se-si) << std::endl;
-			continue;
-		}
-		if (se-pi == 2 && pi[0] == '.' && pi[1] == '.')
-		{
-			se = pi;
-			while (se > si && isDirSep(*(se-1))) --se;
-			level += 1;
-			continue;
-		}
-		se = pi;
-		while (se > si && isDirSep(*(se-1))) --se;
-		--level;
-	}
-	if (level) throw std::runtime_error( _TXT("Failed to evaluate ancestor path"));
-	return std::string( si, se-si);
 }
 
 static void skipSpacesAndComments( char const*& si)
@@ -375,7 +325,8 @@ int main( int argc, const char* argv[])
 		g_testname = argv[1];
 		g_maindir = argv[2];
 		g_testdir = g_maindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + g_testname;
-		g_bindir = getAncestorPath( argv[0], 3);
+		rt = strus::getAncestorPath( argv[0], 3, g_bindir);
+		if (rt) throw std::runtime_error( _TXT("could not retrieve ancestor path of test program"));
 
 		std::cerr << _TXT("test name: ") << g_testname << std::endl;
 		std::cerr << _TXT("test directory: ") << g_testdir << std::endl;
