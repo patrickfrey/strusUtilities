@@ -420,6 +420,9 @@ int main( int argc, const char* argv[])
 		}
 		else if (!diffTestOutput( output, expected))
 		{
+			strus::writeFile( g_testname + strus::dirSeparator() + "OUT", output);
+			strus::writeFile( g_testname + strus::dirSeparator() + "EXP", expected);
+
 			throw std::runtime_error("output differs from expected");
 		}
 		else
