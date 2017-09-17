@@ -68,8 +68,17 @@ static std::string trimString( const char* li, const char* le)
 
 static void loadFileNamesFromFile( std::vector<std::string>& result, const std::string& filename)
 {
+	std::string path;
+	int ec = strus::getParentPath( filename, path);
+	if (ec)
+	{
+		throw strus::runtime_error(_TXT("error (%u) getting parent path of %s: %s"), ec, filename.c_str(), ::strerror(ec));
+	}
+	if (!path.empty())
+	{
+		path += strus::dirSeparator();
+	}
 	std::string content;
-	unsigned int ec;
 	if (filename == "-")
 	{
 		ec = strus::readStdin( content);
@@ -87,7 +96,17 @@ static void loadFileNamesFromFile( std::vector<std::string>& result, const std::
 	for (; cn; ci=cn+1,cn = std::strchr( ci, '\n'))
 	{
 		std::string resultname( trimString( ci, cn));
-		if (!resultname.empty()) result.push_back( resultname);
+		if (!resultname.empty())
+		{
+			if (strus::isRelativePath( resultname))
+			{
+				result.push_back( path + resultname);
+			}
+			else
+			{
+				result.push_back( resultname);
+			}
+		}
 	}
 	cn = std::strchr( ci, '\0');
 	std::string resultname( trimString( ci, cn));
@@ -99,7 +118,7 @@ static void loadFileNames( std::vector<std::string>& result, const std::string& 
 	if (strus::isDir( path))
 	{
 		std::vector<std::string> filenames;
-		unsigned int ec = strus::readDirFiles( path, fileext, filenames);
+		int ec = strus::readDirFiles( path, fileext, filenames);
 		if (ec)
 		{
 			throw strus::runtime_error( _TXT( "could not read directory to process '%s' (errno %u)"), path.c_str(), ec);
@@ -107,7 +126,14 @@ static void loadFileNames( std::vector<std::string>& result, const std::string& 
 		std::vector<std::string>::const_iterator fi = filenames.begin(), fe = filenames.end();
 		for (; fi != fe; ++fi)
 		{
-			result.push_back( path + strus::dirSeparator() + *fi);
+			if (path.empty())
+			{
+				result.push_back( *fi);
+			}
+			else
+			{
+				result.push_back( path + strus::dirSeparator() + *fi);
+			}
 		}
 		std::vector<std::string> subdirs;
 		ec = strus::readDirSubDirs( path, subdirs);
@@ -442,7 +468,7 @@ public:
 	{
 		std::string content;
 
-		unsigned int ec;
+		int ec;
 		if (filename == "-")
 		{
 			ec = strus::readStdin( content);
@@ -1000,7 +1026,7 @@ int main( int argc, const char* argv[])
 		}
 		std::cerr << "load program ..." << std::endl;
 		std::string programsrc;
-		unsigned int ec = strus::readFile( programfile, programsrc);
+		int ec = strus::readFile( programfile, programsrc);
 		if (ec) throw strus::runtime_error(_TXT("error (%u) reading rule file %s: %s"), ec, programfile.c_str(), ::strerror(ec));
 		std::vector<std::string> warnings;
 		if (!strus::loadPatternMatcherProgramWithLexer( lxinst.get(), ptinst.get(), programsrc, g_errorBuffer, warnings))
