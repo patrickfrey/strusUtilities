@@ -54,6 +54,7 @@
 #include <memory>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/algorithm/string.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -164,6 +165,7 @@ public:
 			const strus::TextProcessorInterface* textproc_,
 			const std::string& segmenterName_,
 			const std::vector<std::string>& selectexpr_,
+			const std::string& fileprefix_,
 			const std::vector<std::string>& files_,
 			unsigned int nofFilesPerFetch_,
 			const strus::analyzer::DocumentClass documentClass_,
@@ -179,6 +181,7 @@ public:
 		,m_documentClass(documentClass_)
 		,m_markups(markups_)
 		,m_resultMarker(resultMarker_)
+		,m_fileprefix(fileprefix_)
 		,m_files(files_)
 		,m_printTokens(printTokens_)
 	{
@@ -233,6 +236,10 @@ public:
 		return rt;
 	}
 
+	const std::string& fileprefix() const
+	{
+		return m_fileprefix;
+	}
 	const std::map<std::string,int>& markups() const
 	{
 		return m_markups;
@@ -258,6 +265,7 @@ private:
 	strus::local_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
 	std::map<std::string,int> m_markups;
 	std::string m_resultMarker;
+	std::string m_fileprefix;
 	std::vector<std::string> m_files;
 	std::vector<std::string>::const_iterator m_fileitr;
 	bool m_printTokens;
@@ -487,8 +495,16 @@ public:
 		const strus::SegmenterInstanceInterface* segmenterInstance = getSegmenterInstance( content, documentClass);
 		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
 
-		*m_output << m_globalContext->resultMarker() << filename << ":" << std::endl;
-
+		if (boost::starts_with( filename, m_globalContext->fileprefix()))
+		{
+			char const* di = filename.c_str() + m_globalContext->fileprefix().size();
+			while (*di == strus::dirSeparator()) ++di;
+			*m_output << m_globalContext->resultMarker() << di << ":" << std::endl;
+		}
+		else
+		{
+			*m_output << m_globalContext->resultMarker() << filename << ":" << std::endl;
+		}
 		segmenter->putInput( content.c_str(), content.size(), true);
 		int id;
 		strus::SegmenterPosition segmentpos;
@@ -1050,17 +1066,41 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::vector<std::string> inputfiles;
+		std::string fileprefix;
 		if (inputIsAListOfFiles)
 		{
+			int ec = strus::getParentPath( inputpath, fileprefix);
+			if (ec)
+			{
+				throw strus::runtime_error(_TXT("error (%u) getting parent path of %s: %s"), ec, inputpath.c_str(), ::strerror(ec));
+			}
+			fileprefix += strus::dirSeparator();
 			loadFileNamesFromFile( inputfiles, inputpath);
 		}
 		else
 		{
+			if (inputpath == "-")
+			{
+				
+			}
+			else if (strus::isDir( inputpath))
+			{
+				fileprefix = inputpath + strus::dirSeparator();
+			}
+			else
+			{
+				int ec = strus::getParentPath( inputpath, fileprefix);
+				if (ec)
+				{
+					throw strus::runtime_error(_TXT("error (%u) getting parent path of %s: %s"), ec, inputpath.c_str(), ::strerror(ec));
+				}
+				fileprefix += strus::dirSeparator();
+			}
 			loadFileNames( inputfiles, inputpath, fileext);
 		}
 		GlobalContext globalContext(
 				ptinst.get(), lxinst.get(), textproc, segmentername,
-				expressions, inputfiles, nofFilesFetch, documentClass,
+				expressions, fileprefix, inputfiles, nofFilesFetch, documentClass,
 				markups, resultmarker, printTokens);
 
 		std::cerr << "start matching ..." << std::endl;
