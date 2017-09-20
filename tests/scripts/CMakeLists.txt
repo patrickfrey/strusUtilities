@@ -4,12 +4,12 @@ include_directories(
 	    "${Intl_INCLUDE_DIRS}"
             "${Boost_INCLUDE_DIRS}"
 	    "${strusbase_INCLUDE_DIRS}"
-	    "${PROJECT_SOURCE_DIR}/include"
+	    "${UTILS_INCLUDE_DIRS}"
 )
 link_directories( 
 	   "${strusbase_LIBRARY_DIRS}"
             "${Boost_LIBRARY_DIRS}"
-	    "${CMAKE_CURRENT_BINARY_DIR}/../../src/utils" 
+	    "${UTILS_INCLUDE_DIRS}" 
 )
 
 add_executable( execTest execTest.cpp )

@@ -13,22 +13,23 @@ set(source_files
 )
 
 include_directories(
-            "${Boost_INCLUDE_DIRS}"
-	    "${PROJECT_SOURCE_DIR}/include"
-	    "${strusbase_INCLUDE_DIRS}"
-	    "${strus_INCLUDE_DIRS}"
-	    "${strusanalyzer_INCLUDE_DIRS}"
-	    "${strusmodule_INCLUDE_DIRS}"
-	    "${strusrpc_INCLUDE_DIRS}"	    
+	"${Intl_INCLUDE_DIRS}"
+	"${Boost_INCLUDE_DIRS}"
+	"${UTILS_INCLUDE_DIRS}"
+	"${strusbase_INCLUDE_DIRS}"
+	"${strus_INCLUDE_DIRS}"
+	"${strusanalyzer_INCLUDE_DIRS}"
+	"${strusmodule_INCLUDE_DIRS}"
+	"${strusrpc_INCLUDE_DIRS}"	    
 )
 link_directories( 
-           "${Boost_LIBRARY_DIRS}"
-	   "${CMAKE_CURRENT_BINARY_DIR}/../utils" 
-  	   "${strusbase_LIBRARY_DIRS}"
-	   "${strus_LIBRARY_DIRS}"
-	   "${strusanalyzer_LIBRARY_DIRS}"
-	   "${strusmodule_LIBRARY_DIRS}"
-	   "${strusrpc_LIBRARY_DIRS}"
+	"${Boost_LIBRARY_DIRS}"
+	"${UTILS_LIBRARY_DIRS}" 
+	"${strusbase_LIBRARY_DIRS}"
+	"${strus_LIBRARY_DIRS}"
+	"${strusanalyzer_LIBRARY_DIRS}"
+	"${strusmodule_LIBRARY_DIRS}"
+	"${strusrpc_LIBRARY_DIRS}"
 )
 
 # -------------------------------------------

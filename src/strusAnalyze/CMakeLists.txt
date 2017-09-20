@@ -10,7 +10,8 @@ set(source_files
 include_directories(
 	    "${Intl_INCLUDE_DIRS}"
             "${Boost_INCLUDE_DIRS}"
-	    "${PROJECT_SOURCE_DIR}/include"
+	    "${UTILS_INCLUDE_DIRS}"
+	    "${PROGRAM_INCLUDE_DIRS}"
 	    "${strusbase_INCLUDE_DIRS}"
 	    "${strus_INCLUDE_DIRS}"
 	    "${strusanalyzer_INCLUDE_DIRS}"
@@ -19,8 +20,8 @@ include_directories(
 	    "${strusrpc_INCLUDE_DIRS}"	    
 )
 link_directories( 
-	   "${CMAKE_CURRENT_BINARY_DIR}/../utils" 
-	   "${CMAKE_CURRENT_BINARY_DIR}/../program" 
+	   "${UTILS_LIBRARY_DIRS}" 
+	   "${PROGRAM_LIBRARY_DIRS}" 
 	   "${strusbase_LIBRARY_DIRS}"
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"

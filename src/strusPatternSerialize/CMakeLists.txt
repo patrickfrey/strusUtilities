@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 include_directories(
 	"${Boost_INCLUDE_DIRS}"
 	"${Intl_INCLUDE_DIRS}"
-	"${PROJECT_SOURCE_DIR}/include"
+	"${UTILS_INCLUDE_DIRS}"
 	"${strusbase_INCLUDE_DIRS}"
 	"${strus_INCLUDE_DIRS}"
 	"${strusanalyzer_INCLUDE_DIRS}"
@@ -16,7 +16,7 @@ include_directories(
 )
 
 link_directories(
-	"${CMAKE_CURRENT_BINARY_DIR}/../utils" 
+	"${UTILS_LIBRARY_DIRS}" 
 	"${Boost_LIBRARY_DIRS}"
    	"${strusbase_LIBRARY_DIRS}"
 	"${strusanalyzer_LIBRARY_DIRS}"
