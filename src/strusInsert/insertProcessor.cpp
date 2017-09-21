@@ -27,6 +27,7 @@
 #include "fileCrawlerInterface.hpp"
 #include "commitQueue.hpp"
 #include <memory>
+#include <iostream>
 #include <fstream>
 #include <boost/thread.hpp>
 

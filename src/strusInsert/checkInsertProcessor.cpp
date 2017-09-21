@@ -28,6 +28,7 @@
 #include "fileCrawlerInterface.hpp"
 #include <cmath>
 #include <limits>
+#include <iostream>
 #include <boost/thread.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/interprocess/smart_ptr/unique_ptr.hpp>

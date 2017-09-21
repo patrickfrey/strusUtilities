@@ -10,6 +10,7 @@
 #include "private/internationalization.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
+#include <iostream>
 
 using namespace strus;
 
