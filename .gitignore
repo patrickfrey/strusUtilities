@@ -49,6 +49,9 @@ dist/obs/strusutilities-Debian_7.0.dsc
 dist/obs/strusutilities-xUbuntu_12.04.dsc
 dist/redhat/strusutilities.spec
 
+# Suggested build directory
+build
+
 # Compiled Programs
 src/strusCreate/strusCreate
 src/strusDestroy/strusDestroy
