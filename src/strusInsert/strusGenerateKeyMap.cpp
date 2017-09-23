@@ -70,7 +70,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -233,7 +233,7 @@ int main( int argc_, const char* argv_[])
 		std::string resourcepath;
 		if (0!=strus::getParentPath( analyzerprg, resourcepath))
 		{
-			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
+			throw strus::runtime_error( "%s",  _TXT("failed to evaluate resource path"));
 		}
 		if (!resourcepath.empty())
 		{
@@ -247,7 +247,7 @@ int main( int argc_, const char* argv_[])
 		// Create root objects:
 		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
-		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+		if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -260,7 +260,7 @@ int main( int argc_, const char* argv_[])
 		
 		// Create objects for keymap generation:
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));
 
 		// Try to determine document class:
 		strus::analyzer::DocumentClass documentClass;
@@ -268,7 +268,7 @@ int main( int argc_, const char* argv_[])
 		{
 			if (!strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 			{
-				throw strus::runtime_error(_TXT("failed to parse document class"));
+				throw strus::runtime_error( "%s", _TXT("failed to parse document class"));
 			}
 		}
 		else if (strus::isFile( datapath))
@@ -282,7 +282,7 @@ int main( int argc_, const char* argv_[])
 			}
 			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize))
 			{
-				throw strus::runtime_error( _TXT("failed to detect document class")); 
+				throw strus::runtime_error( "%s",  _TXT("failed to detect document class")); 
 			}
 		}
 
@@ -337,7 +337,7 @@ int main( int argc_, const char* argv_[])
 		
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in generate key map"));
+			throw strus::runtime_error( "%s", _TXT("unhandled error in generate key map"));
 		}
 		std::cerr << _TXT("done") << std::endl;
 		return 0;

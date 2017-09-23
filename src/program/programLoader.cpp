@@ -84,7 +84,7 @@ static std::string parseQueryTerm( char const*& src)
 	}
 	else
 	{
-		throw strus::runtime_error(_TXT("query term (identifier,word,number or string) expected"));
+		throw strus::runtime_error( "%s", _TXT("query term (identifier,word,number or string) expected"));
 	}
 }
 
@@ -98,24 +98,24 @@ static void parseTermConfig(
 		std::string termset = utils::tolower( parse_IDENTIFIER( src));
 		if (!isStringQuote( *src) && !isTextChar( *src))
 		{
-			throw strus::runtime_error(_TXT( "term value (string,identifier,number) after the feature identifier"));
+			throw strus::runtime_error( "%s", _TXT( "term value (string,identifier,number) after the feature identifier"));
 		}
 		std::string termvalue = parseQueryTerm( src);
 		if (!isColon( *src))
 		{
-			throw strus::runtime_error(_TXT( "colon (':') expected after term value"));
+			throw strus::runtime_error( "%s", _TXT( "colon (':') expected after term value"));
 		}
 		(void)parse_OPERATOR(src);
 		if (!isAlpha( *src))
 		{
-			throw strus::runtime_error(_TXT( "term type identifier expected after colon and term value"));
+			throw strus::runtime_error( "%s", _TXT( "term type identifier expected after colon and term value"));
 		}
 		std::string termtype = utils::tolower( parse_IDENTIFIER( src));
 		qeval.addTerm( termset, termtype, termvalue);
 	}
 	else
 	{
-		throw strus::runtime_error(_TXT( "feature set identifier expected as start of a term declaration in the query"));
+		throw strus::runtime_error( "%s", _TXT( "feature set identifier expected as start of a term declaration in the query"));
 	}
 }
 
@@ -132,7 +132,7 @@ static NumericVariant parseNumericValue( char const*& src)
 			if (isPlus(*src))
 			{
 				parse_OPERATOR( src);
-				if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
+				if (isMinus(*src)) throw strus::runtime_error( "%s",  _TXT( "unexpected minus '-' operator after plus '+'"));
 			}
 			while (*src == '0') ++src;
 			if (*src >= '1' && *src <= '9')
@@ -164,14 +164,14 @@ static void parseWeightingFormula(
 	}
 	if (!isStringQuote( *src))
 	{
-		throw strus::runtime_error(_TXT( "weighting formula string expected"));
+		throw strus::runtime_error( "%s", _TXT( "weighting formula string expected"));
 	}
 	std::string funcsrc = parse_STRING( src);
 	const ScalarFunctionParserInterface* scalarfuncparser = queryproc->getScalarFunctionParser(langName);
 	strus::local_ptr<ScalarFunctionInterface> scalarfunc( scalarfuncparser->createFunction( funcsrc, std::vector<std::string>()));
 	if (!scalarfunc.get())
 	{
-		throw strus::runtime_error(_TXT( "failed to create scalar function (weighting formula) from source"));
+		throw strus::runtime_error( "%s", _TXT( "failed to create scalar function (weighting formula) from source"));
 	}
 	qeval.defineWeightingFormula( scalarfunc.get());
 	scalarfunc.release();
@@ -185,7 +185,7 @@ static void parseWeightingConfig(
 {
 	if (!isAlpha( *src))
 	{
-		throw strus::runtime_error(_TXT( "weighting function identifier expected"));
+		throw strus::runtime_error( "%s", _TXT( "weighting function identifier expected"));
 	}
 	std::string functionName = parse_IDENTIFIER( src);
 	std::string debuginfoName;
@@ -201,7 +201,7 @@ static void parseWeightingConfig(
 
 	if (!isOpenOvalBracket( *src))
 	{
-		throw strus::runtime_error(_TXT( "open oval bracket '(' expected after weighting function identifier"));
+		throw strus::runtime_error( "%s", _TXT( "open oval bracket '(' expected after weighting function identifier"));
 	}
 	(void)parse_OPERATOR(src);
 
@@ -215,19 +215,19 @@ static void parseWeightingConfig(
 		}
 		if (!isAlpha( *src))
 		{
-			throw strus::runtime_error(_TXT( "identifier as start of parameter declaration (assignment parameter name to parameter value) expected"));
+			throw strus::runtime_error( "%s", _TXT( "identifier as start of parameter declaration (assignment parameter name to parameter value) expected"));
 		}
 		std::string parameterName = parse_IDENTIFIER( src);
 		if (!isAssign( *src))
 		{
-			throw strus::runtime_error(_TXT( "assingment operator '=' expected after weighting function parameter name"));
+			throw strus::runtime_error( "%s", _TXT( "assingment operator '=' expected after weighting function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
 		if (!isFeatureParam && utils::caseInsensitiveEquals( parameterName, "debug"))
 		{
 			if (!debuginfoName.empty())
 			{
-				throw strus::runtime_error(_TXT("duplicate definition of 'debug' parameter"));
+				throw strus::runtime_error( "%s", _TXT("duplicate definition of 'debug' parameter"));
 			}
 			if (isStringQuote(*src))
 			{
@@ -239,14 +239,14 @@ static void parseWeightingConfig(
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("identifier or string expected as argument of 'debug' parameter"));
+				throw strus::runtime_error( "%s", _TXT("identifier or string expected as argument of 'debug' parameter"));
 			}
 		}
 		else if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			if (isFeatureParam)
 			{
-				throw strus::runtime_error(_TXT( "feature parameter argument must be an identifier or string and not a number"));
+				throw strus::runtime_error( "%s", _TXT( "feature parameter argument must be an identifier or string and not a number"));
 			}
 			NumericVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
@@ -277,7 +277,7 @@ static void parseWeightingConfig(
 		}
 		else
 		{
-			throw strus::runtime_error(_TXT("parameter value (identifier,string,number) expected"));
+			throw strus::runtime_error( "%s", _TXT("parameter value (identifier,string,number) expected"));
 		}
 		if (!isComma( *src))
 		{
@@ -287,7 +287,7 @@ static void parseWeightingConfig(
 	}
 	if (!isCloseOvalBracket( *src))
 	{
-		throw strus::runtime_error(_TXT( "close oval bracket ')' expected at end of weighting function parameter list"));
+		throw strus::runtime_error( "%s", _TXT( "close oval bracket ')' expected at end of weighting function parameter list"));
 	}
 	(void)parse_OPERATOR(src);
 	qeval.addWeightingFunction( functionName, function.get(), featureParameters, debuginfoName); 
@@ -306,7 +306,7 @@ static void parseSummarizerConfig(
 
 	if (!isAlpha( *src))
 	{
-		throw strus::runtime_error(_TXT( "name of summarizer function expected at start of summarizer definition"));
+		throw strus::runtime_error( "%s", _TXT( "name of summarizer function expected at start of summarizer definition"));
 	}
 	functionName = utils::tolower( parse_IDENTIFIER( src));
 	std::string debuginfoName;
@@ -319,7 +319,7 @@ static void parseSummarizerConfig(
 
 	if (!isOpenOvalBracket( *src))
 	{
-		throw strus::runtime_error(_TXT( "open oval bracket '(' expected after summarizer function identifier"));
+		throw strus::runtime_error( "%s", _TXT( "open oval bracket '(' expected after summarizer function identifier"));
 	}
 	(void)parse_OPERATOR(src);
 
@@ -333,19 +333,19 @@ static void parseSummarizerConfig(
 		}
 		if (!isAlpha( *src))
 		{
-			throw strus::runtime_error(_TXT( "identifier as start of parameter declaration (assignment parameter name to parameter value) expected"));
+			throw strus::runtime_error( "%s", _TXT( "identifier as start of parameter declaration (assignment parameter name to parameter value) expected"));
 		}
 		std::string parameterName = parse_IDENTIFIER( src);
 		if (!isAssign( *src))
 		{
-			throw strus::runtime_error(_TXT( "assignment operator '=' expected after summarizer function parameter name"));
+			throw strus::runtime_error( "%s", _TXT( "assignment operator '=' expected after summarizer function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
 		if (!isFeatureParam && utils::caseInsensitiveEquals( parameterName, "debug"))
 		{
 			if (!debuginfoName.empty())
 			{
-				throw strus::runtime_error(_TXT("duplicate definition of 'debug' parameter"));
+				throw strus::runtime_error( "%s", _TXT("duplicate definition of 'debug' parameter"));
 			}
 			if (isStringQuote(*src))
 			{
@@ -357,14 +357,14 @@ static void parseSummarizerConfig(
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("identifier or string expected as argument of 'debug' parameter"));
+				throw strus::runtime_error( "%s", _TXT("identifier or string expected as argument of 'debug' parameter"));
 			}
 		}
 		else if (isDigit(*src) || isMinus(*src) || isPlus(*src))
 		{
 			if (isFeatureParam)
 			{
-				throw strus::runtime_error(_TXT( "feature parameter argument must be an identifier or string and not a number"));
+				throw strus::runtime_error( "%s", _TXT( "feature parameter argument must be an identifier or string and not a number"));
 			}
 			NumericVariant parameterValue = parseNumericValue( src);
 			function->addNumericParameter( parameterName, parameterValue);
@@ -401,7 +401,7 @@ static void parseSummarizerConfig(
 	}
 	if (!isCloseOvalBracket( *src))
 	{
-		throw strus::runtime_error(_TXT( "close oval bracket ')' expected at end of summarizer function parameter list"));
+		throw strus::runtime_error( "%s", _TXT( "close oval bracket ')' expected at end of summarizer function parameter list"));
 	}
 	(void)parse_OPERATOR(src);
 	qeval.addSummarizerFunction( functionName, function.get(), featureParameters, debuginfoName);
@@ -433,7 +433,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 				{
 					if (!qdescr.selectionFeatureSet.empty())
 					{
-						throw strus::runtime_error(_TXT("cannot handle more than one SELECT feature definition yet"));
+						throw strus::runtime_error( "%s", _TXT("cannot handle more than one SELECT feature definition yet"));
 					}
 					qdescr.selectionFeatureSet = parse_IDENTIFIER(src);
 					qeval.addSelectionFeature( qdescr.selectionFeatureSet);
@@ -443,7 +443,7 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 				{
 					if (!qdescr.weightingFeatureSet.empty())
 					{
-						throw strus::runtime_error(_TXT("cannot handle more than one WEIGHT feature definition yet"));
+						throw strus::runtime_error( "%s", _TXT("cannot handle more than one WEIGHT feature definition yet"));
 					}
 					qdescr.weightingFeatureSet = parse_IDENTIFIER(src);
 					break;
@@ -476,14 +476,14 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 			{
 				if (!isSemiColon(*src))
 				{
-					throw strus::runtime_error(_TXT( "semicolon expected as delimiter of query eval program instructions"));
+					throw strus::runtime_error( "%s", _TXT( "semicolon expected as delimiter of query eval program instructions"));
 				}
 				(void)parse_OPERATOR( src);
 			}
 		}
 		if (qdescr.selectionFeatureSet.empty())
 		{
-			throw strus::runtime_error(_TXT("no selection feature set (SELECT) defined in query evaluation configuration"));
+			throw strus::runtime_error( "%s", _TXT("no selection feature set (SELECT) defined in query evaluation configuration"));
 		}
 		if (qdescr.weightingFeatureSet.empty())
 		{
@@ -588,7 +588,7 @@ static std::vector<std::string> parseArgumentList( char const*& src)
 				if (isPlus(*src))
 				{
 					parse_OPERATOR( src);
-					if (isMinus(*src)) throw strus::runtime_error( _TXT( "unexpected minus '-' operator after plus '+'"));
+					if (isMinus(*src)) throw strus::runtime_error( "%s",  _TXT( "unexpected minus '-' operator after plus '+'"));
 				}
 				if (is_INTEGER( src))
 				{
@@ -607,7 +607,7 @@ static std::vector<std::string> parseArgumentList( char const*& src)
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown type in argument list"));
+			throw strus::runtime_error( "%s",  _TXT("unknown type in argument list"));
 		}
 		rt.push_back( value);
 		if (isComma(*src))
@@ -724,7 +724,7 @@ static analyzer::FeatureOptions
 				std::string optval;
 				if (!isAssign(*src))
 				{
-					throw strus::runtime_error( _TXT("assign '=' expected after open curly brackets '{' and option identifier"));
+					throw strus::runtime_error( "%s",  _TXT("assign '=' expected after open curly brackets '{' and option identifier"));
 				}
 				(void)parse_OPERATOR(src);
 				if (isStringQuote(*src))
@@ -737,7 +737,7 @@ static analyzer::FeatureOptions
 				}
 				else
 				{
-					throw strus::runtime_error( _TXT("identifier or string expected as option value"));
+					throw strus::runtime_error( "%s",  _TXT("identifier or string expected as option value"));
 				}
 				if (utils::caseInsensitiveEquals( optname, "position"))
 				{
@@ -768,7 +768,7 @@ static analyzer::FeatureOptions
 
 		if (!isCloseCurlyBracket( *src))
 		{
-			throw strus::runtime_error( _TXT("close curly bracket '}' expected at end of option list"));
+			throw strus::runtime_error( "%s",  _TXT("close curly bracket '}' expected at end of option list"));
 		}
 		(void)parse_OPERATOR( src);
 	}
@@ -789,7 +789,7 @@ static std::string parseSelectorExpression( char const*& src)
 		{
 			if (*src == '\n' || *src == '\r')
 			{
-				throw strus::runtime_error(_TXT("unexpected end of line in selector expression (missing semicolon ';' at end of expression?)"));
+				throw strus::runtime_error( "%s", _TXT("unexpected end of line in selector expression (missing semicolon ';' at end of expression?)"));
 			}
 			else if (*src == '\'' || *src == '\"')
 			{
@@ -797,7 +797,7 @@ static std::string parseSelectorExpression( char const*& src)
 				for (++src; *src && *src != eb && *src != '\n' && *src != '\r'; ++src){}
 				if (*src == '\n' || *src == '\r')
 				{
-					throw strus::runtime_error(_TXT("unexpected end of line in selector expression (missing end quote of string?)"));
+					throw strus::runtime_error( "%s", _TXT("unexpected end of line in selector expression (missing end quote of string?)"));
 				}
 				if (*src) ++src;
 			}
@@ -869,7 +869,7 @@ static void parseDocumentPatternFeatureDef(
 	FeatureDef featuredef;
 
 	// [1] Parse pattern item name:
-	if (!isAlpha(*src)) throw strus::runtime_error(_TXT("identifier expected in pattern matcher feature definition after left arrow"));
+	if (!isAlpha(*src)) throw strus::runtime_error( "%s", _TXT("identifier expected in pattern matcher feature definition after left arrow"));
 	std::string patternTypeName = parse_IDENTIFIER(src);
 
 	// [2] Parse normalizer, if defined:
@@ -895,7 +895,7 @@ static void parseDocumentPatternFeatureDef(
 		case FeatMetaData:
 			if (featopt.opt())
 			{
-				throw strus::runtime_error( _TXT("no feature options expected for meta data feature"));
+				throw strus::runtime_error( "%s",  _TXT("no feature options expected for meta data feature"));
 			}
 			analyzer.defineMetaDataFromPatternMatch( 
 				featureName, patternTypeName, featuredef.normalizer);
@@ -904,7 +904,7 @@ static void parseDocumentPatternFeatureDef(
 		case FeatAttribute:
 			if (featopt.opt())
 			{
-				throw strus::runtime_error( _TXT("no feature options expected for attribute feature"));
+				throw strus::runtime_error( "%s",  _TXT("no feature options expected for attribute feature"));
 			}
 			analyzer.defineAttributeFromPatternMatch( 
 				featureName, patternTypeName, featuredef.normalizer);
@@ -937,7 +937,7 @@ static void parseQueryPatternFeatureDef(
 	FeatureDef featuredef;
 
 	// [1] Parse pattern item name:
-	if (!isAlpha(*src)) throw strus::runtime_error(_TXT("identifier expected in pattern matcher feature definition after left arrow"));
+	if (!isAlpha(*src)) throw strus::runtime_error( "%s", _TXT("identifier expected in pattern matcher feature definition after left arrow"));
 	std::string patternTypeName = parse_IDENTIFIER(src);
 
 	// [2] Parse normalizer, if defined:
@@ -987,7 +987,7 @@ static void parseDocumentFeatureDef(
 		case FeatMetaData:
 			if (featopt.opt())
 			{
-				throw strus::runtime_error( _TXT("no feature options expected for meta data feature"));
+				throw strus::runtime_error( "%s",  _TXT("no feature options expected for meta data feature"));
 			}
 			analyzer.defineMetaData(
 				featureName, xpathexpr,
@@ -997,7 +997,7 @@ static void parseDocumentFeatureDef(
 		case FeatAttribute:
 			if (featopt.opt())
 			{
-				throw strus::runtime_error( _TXT("no feature options expected for attribute feature"));
+				throw strus::runtime_error( "%s",  _TXT("no feature options expected for attribute feature"));
 			}
 			analyzer.defineAttribute(
 				featureName, xpathexpr,
@@ -1007,7 +1007,7 @@ static void parseDocumentFeatureDef(
 		case FeatPatternLexem:
 			if (featopt.opt())
 			{
-				throw strus::runtime_error( _TXT("no feature options expected for pattern lexem"));
+				throw strus::runtime_error( "%s",  _TXT("no feature options expected for pattern lexem"));
 			}
 			analyzer.addPatternLexem(
 				featureName, xpathexpr,
@@ -1044,7 +1044,7 @@ static void parseQueryFeatureDef(
 	std::string fieldType;
 	if (!isAlpha(*src))
 	{
-		throw strus::runtime_error(_TXT("expected field type name"));
+		throw strus::runtime_error( "%s", _TXT("expected field type name"));
 	}
 	fieldType = parse_IDENTIFIER( src);
 	qdescr.defaultFieldTypeDefined |= utils::caseInsensitiveEquals( fieldType, "default");
@@ -1089,7 +1089,7 @@ static FeatureClass parseFeatureClassDef( char const*& src, std::string& domaini
 		(void)parse_OPERATOR(src);
 		if (!isAlnum(*src))
 		{
-			throw strus::runtime_error( _TXT("feature class identifier expected after open square bracket '['"));
+			throw strus::runtime_error( "%s",  _TXT("feature class identifier expected after open square bracket '['"));
 		}
 		rt = featureClassFromName( parse_IDENTIFIER( src));
 		if (rt == FeatPatternMatch && isAlnum(*src))
@@ -1098,7 +1098,7 @@ static FeatureClass parseFeatureClassDef( char const*& src, std::string& domaini
 		}
 		if (!isCloseSquareBracket( *src))
 		{
-			throw strus::runtime_error( _TXT("close square bracket ']' expected to close feature class section definition"));
+			throw strus::runtime_error( "%s",  _TXT("close square bracket ']' expected to close feature class section definition"));
 		}
 		(void)parse_OPERATOR(src);
 	}
@@ -1132,7 +1132,7 @@ static void parseAnalyzerPatternMatchProgramDef(
 		} while (isComma(*src));
 		if (!isCloseCurlyBracket(*src))
 		{
-			throw strus::runtime_error(_TXT("expected close curly bracket '}' at end of pattern lexer selection expressions"));
+			throw strus::runtime_error( "%s", _TXT("expected close curly bracket '}' at end of pattern lexer selection expressions"));
 		}
 		(void)parse_OPERATOR( src);
 	}
@@ -1230,10 +1230,10 @@ static void expandIncludes(
 		src+= 8;
 		while (isSpace( *src)) ++src;
 
-		if (!isStringQuote(*src)) throw strus::runtime_error(_TXT("string expected as include file path"));
+		if (!isStringQuote(*src)) throw strus::runtime_error( "%s", _TXT("string expected as include file path"));
 		std::string filename = parse_STRING_noskip( src);
 
-		if (filename.empty()) throw strus::runtime_error(_TXT("include file name is empty"));
+		if (filename.empty()) throw strus::runtime_error( "%s", _TXT("include file name is empty"));
 		std::string filepath = textproc->getResourcePath( filename);
 		if (filepath.empty()) throw strus::runtime_error(_TXT("failed to find include file path '%s': %s"), filename.c_str(), errorhnd->fetchError());
 
@@ -1299,7 +1299,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 				// Define document content with different content-type:
 				if (!isStringQuote(*src))
 				{
-					throw strus::runtime_error( _TXT("expected document class as string at start of sub content definition"));
+					throw strus::runtime_error( "%s",  _TXT("expected document class as string at start of sub content definition"));
 				}
 				analyzer::DocumentClass documentClass;
 				if (!parseDocumentClass( documentClass, parse_STRING( src), errorhnd))
@@ -1310,7 +1310,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 				analyzer.defineSubContent( xpathexpr, documentClass);
 				if (!isSemiColon(*src))
 				{
-					throw strus::runtime_error( _TXT("semicolon ';' expected at end of feature declaration"));
+					throw strus::runtime_error( "%s",  _TXT("semicolon ';' expected at end of feature declaration"));
 				}
 				(void)parse_OPERATOR(src);
 				continue;
@@ -1318,7 +1318,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			if (!*src) break;
 			if (!isAlnum(*src))
 			{
-				throw strus::runtime_error( _TXT("feature type name (identifier) expected at start of a feature declaration"));
+				throw strus::runtime_error( "%s",  _TXT("feature type name (identifier) expected at start of a feature declaration"));
 			}
 			std::string identifier = parse_IDENTIFIER( src);
 			StatementType statementType = AssignNormalizedTerm;
@@ -1335,18 +1335,18 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			}
 			else
 			{
-				throw strus::runtime_error( _TXT("assignment operator '=' or '<-' expected after set identifier in a feature declaration"));
+				throw strus::runtime_error( "%s",  _TXT("assignment operator '=' or '<-' expected after set identifier in a feature declaration"));
 			}
 			if (featclass == FeatSubDocument)
 			{
-				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in sub document section"));
+				if (statementType == AssignPatternResult) throw strus::runtime_error( "%s", _TXT("pattern result assignment '<-' not allowed in sub document section"));
 
 				std::string xpathexpr( parseSelectorExpression( src));
 				analyzer.defineSubDocument( identifier, xpathexpr);
 			}
 			else if (featclass == FeatAggregator)
 			{
-				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in aggregator section"));
+				if (statementType == AssignPatternResult) throw strus::runtime_error( "%s", _TXT("pattern result assignment '<-' not allowed in aggregator section"));
 
 				strus::local_ptr<AggregatorFunctionInstanceInterface> statfunc;
 				FunctionConfig cfg = parseAggregatorFunctionConfig( src);
@@ -1362,7 +1362,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			}
 			else if (featclass == FeatPatternMatch)
 			{
-				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in pattern match section"));
+				if (statementType == AssignPatternResult) throw strus::runtime_error( "%s", _TXT("pattern result assignment '<-' not allowed in pattern match section"));
 				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, featclassid, identifier, src, warnings, errorhnd);
 			}
 			else switch (statementType)
@@ -1376,7 +1376,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 			}
 			if (!isSemiColon(*src))
 			{
-				throw strus::runtime_error( _TXT("semicolon ';' expected at end of feature declaration"));
+				throw strus::runtime_error( "%s",  _TXT("semicolon ';' expected at end of feature declaration"));
 			}
 			(void)parse_OPERATOR(src);
 		}
@@ -1439,7 +1439,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			if (!*src) break;
 			if (!isAlnum(*src))
 			{
-				throw strus::runtime_error( _TXT("feature type name (identifier) expected at start of a feature declaration"));
+				throw strus::runtime_error( "%s",  _TXT("feature type name (identifier) expected at start of a feature declaration"));
 			}
 			std::string identifier = parse_IDENTIFIER( src);
 			StatementType statementType = AssignNormalizedTerm;
@@ -1456,19 +1456,19 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			}
 			else
 			{
-				throw strus::runtime_error( _TXT("assignment operator '=' or '<-' expected after set identifier in a feature declaration"));
+				throw strus::runtime_error( "%s",  _TXT("assignment operator '=' or '<-' expected after set identifier in a feature declaration"));
 			}
 			if (featclass == FeatSubDocument)
 			{
-				throw strus::runtime_error(_TXT("sub document sections not implemented in query"));
+				throw strus::runtime_error( "%s", _TXT("sub document sections not implemented in query"));
 			}
 			else if (featclass == FeatAggregator)
 			{
-				throw strus::runtime_error(_TXT("aggregator sections not implemented in query"));
+				throw strus::runtime_error( "%s", _TXT("aggregator sections not implemented in query"));
 			}
 			else if (featclass == FeatPatternMatch)
 			{
-				if (statementType == AssignPatternResult) throw strus::runtime_error(_TXT("pattern result assignment '<-' not allowed in pattern match section"));
+				if (statementType == AssignPatternResult) throw strus::runtime_error( "%s", _TXT("pattern result assignment '<-' not allowed in pattern match section"));
 				parseAnalyzerPatternMatchProgramDef( analyzer, textproc, featclassid, identifier, src, warnings, errorhnd);
 			}
 			else switch (statementType)
@@ -1482,7 +1482,7 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 			}
 			if (!isSemiColon(*src))
 			{
-				throw strus::runtime_error( _TXT("semicolon ';' expected at end of feature declaration"));
+				throw strus::runtime_error( "%s",  _TXT("semicolon ';' expected at end of feature declaration"));
 			}
 			(void)parse_OPERATOR(src);
 		}
@@ -1636,7 +1636,7 @@ static std::string parseQueryFieldType( char const*& src)
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("query analyze phrase type (identifier) expected after colon ':' in query"));
+			throw strus::runtime_error( "%s",  _TXT("query analyze phrase type (identifier) expected after colon ':' in query"));
 		}
 	}
 	else
@@ -1697,7 +1697,7 @@ static MetaDataRestrictionInterface::CompareOperator invertCompareOperator( cons
 		case MetaDataRestrictionInterface::CompareGreater: return MetaDataRestrictionInterface::CompareLessEqual;
 		case MetaDataRestrictionInterface::CompareGreaterEqual: return MetaDataRestrictionInterface::CompareLess;
 	}
-	throw strus::runtime_error(_TXT("unknown metadata compare operator"));
+	throw strus::runtime_error( "%s", _TXT("unknown metadata compare operator"));
 }
 
 static void parseMetaDataExpression( 
@@ -1765,7 +1765,7 @@ static void parseQueryTermExpression(
 		{
 			if (!qdescr.defaultFieldTypeDefined)
 			{
-				throw strus::runtime_error(_TXT("no query field with name 'default' defined in query analyzer configuration, cannot handle query fields without explicit naming"));
+				throw strus::runtime_error( "%s", _TXT("no query field with name 'default' defined in query analyzer configuration, cannot handle query fields without explicit naming"));
 			}
 			fieldType = "default";
 		}
@@ -1776,7 +1776,7 @@ static void parseQueryTermExpression(
 	}
 	else
 	{
-		throw strus::runtime_error( _TXT("syntax error in query, query expression or term expected"));
+		throw strus::runtime_error( "%s",  _TXT("syntax error in query, query expression or term expected"));
 	}
 	if (qdescr.fieldset.find( fieldType) == qdescr.fieldset.end())
 	{
@@ -1801,7 +1801,7 @@ static void parseQueryStructureExpression(
 		char const*& src)
 {
 	std::string functionName = parse_IDENTIFIER(src);
-	if (!isOpenOvalBracket(*src)) throw strus::runtime_error(_TXT("internal: bad lookahead in query parser"));
+	if (!isOpenOvalBracket(*src)) throw strus::runtime_error( "%s", _TXT("internal: bad lookahead in query parser"));
 
 	(void)parse_OPERATOR( src);
 	std::size_t argc = 0;
@@ -1824,7 +1824,7 @@ static void parseQueryStructureExpression(
 		}
 		else if (!isCloseOvalBracket( *src) && !isExp( *src) && !isOr(*src))
 		{
-			throw strus::runtime_error(_TXT("expected a comma ',' (argument separator) or a close bracket ')' (end of argument list) or a '|' (range specififier), or a '^' (cardinality specifier)"));
+			throw strus::runtime_error( "%s", _TXT("expected a comma ',' (argument separator) or a close bracket ')' (end of argument list) or a '|' (range specififier), or a '^' (cardinality specifier)"));
 		}
 		break;
 	}
@@ -1834,7 +1834,7 @@ static void parseQueryStructureExpression(
 	{
 		if (isOr( *src))
 		{
-			if (range != 0) throw strus::runtime_error( _TXT("range specified twice"));
+			if (range != 0) throw strus::runtime_error( "%s",  _TXT("range specified twice"));
 			(void)parse_OPERATOR( src);
 			if (isPlus(*src))
 			{
@@ -1845,18 +1845,18 @@ static void parseQueryStructureExpression(
 			{
 				range = parse_INTEGER( src);
 			}
-			if (range == 0) throw strus::runtime_error( _TXT("range should be a non null number"));
+			if (range == 0) throw strus::runtime_error( "%s",  _TXT("range should be a non null number"));
 		}
 		else
 		{
-			if (cardinality != 0) throw strus::runtime_error( _TXT("cardinality specified twice"));
+			if (cardinality != 0) throw strus::runtime_error( "%s",  _TXT("cardinality specified twice"));
 			(void)parse_OPERATOR( src);
 			cardinality = parse_UNSIGNED1( src);
 		}
 	}
 	if (!isCloseOvalBracket( *src))
 	{
-		throw strus::runtime_error( _TXT("close oval bracket ')' expected as end of a query structure expression expected"));
+		throw strus::runtime_error( "%s",  _TXT("close oval bracket ')' expected as end of a query structure expression expected"));
 	}
 	(void)parse_OPERATOR( src);
 	std::string variableName = parseVariableRef( src);
@@ -1920,7 +1920,7 @@ DLL_PUBLIC bool strus::loadQuery(
 					}
 					else
 					{
-						throw strus::runtime_error(_TXT("feature weight expected after term expression and following asterisk '*'"));
+						throw strus::runtime_error( "%s", _TXT("feature weight expected after term expression and following asterisk '*'"));
 					}
 				}
 				termExpression.assignFeature( qdescr.weightingFeatureSet, featureWeight);
@@ -2113,7 +2113,7 @@ static std::string parseDocKey( char const*& itr)
 static void storeMetaDataValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const NumericVariant& val)
 {
 	strus::local_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
-	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
+	if (!update.get()) throw strus::runtime_error( "%s",  _TXT("failed to create document update structure"));
 
 	update->setMetaData( name, val);
 	update->done();
@@ -2122,7 +2122,7 @@ static void storeMetaDataValue( StorageTransactionInterface& transaction, const 
 static void storeAttributeValue( StorageTransactionInterface& transaction, const Index& docno, const std::string& name, const std::string& val)
 {
 	strus::local_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
-	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
+	if (!update.get()) throw strus::runtime_error( "%s",  _TXT("failed to create document update structure"));
 	if (val.empty())
 	{
 		update->clearAttribute( name);
@@ -2137,7 +2137,7 @@ static void storeAttributeValue( StorageTransactionInterface& transaction, const
 static void storeUserRights( StorageTransactionInterface& transaction, const Index& docno, const std::string& val)
 {
 	strus::local_ptr<StorageDocumentUpdateInterface> update( transaction.createDocumentUpdate( docno));
-	if (!update.get()) throw strus::runtime_error( _TXT("failed to create document update structure"));
+	if (!update.get()) throw strus::runtime_error( "%s",  _TXT("failed to create document update structure"));
 	char const* itr = val.c_str();
 	if (itr[0] == '+' && (itr[1] == ',' || !itr[1]))
 	{
@@ -2174,7 +2174,7 @@ static void storeUserRights( StorageTransactionInterface& transaction, const Ind
 		}
 		else if (*itr)
 		{
-			throw strus::runtime_error( _TXT("unexpected token in user rigths specification"));
+			throw strus::runtime_error( "%s",  _TXT("unexpected token in user rigths specification"));
 		}
 	}
 }
@@ -2232,7 +2232,7 @@ static bool updateStorageValue(
 	}
 	if (*itr)
 	{
-		throw strus::runtime_error( _TXT("extra characters after value assignment"));
+		throw strus::runtime_error( "%s",  _TXT("extra characters after value assignment"));
 	}
 	return false;
 }
@@ -2251,7 +2251,7 @@ static unsigned int loadStorageValues(
 	unsigned int rt = 0;
 	strus::local_ptr<StorageTransactionInterface>
 		transaction( storage.createTransaction());
-	if (!transaction.get()) throw strus::runtime_error( _TXT("failed to create storage transaction"));
+	if (!transaction.get()) throw strus::runtime_error( "%s",  _TXT("failed to create storage transaction"));
 	std::size_t linecnt = 1;
 	unsigned int commitcnt = 0;
 	try
@@ -2287,11 +2287,11 @@ static unsigned int loadStorageValues(
 			{
 				if (!transaction->commit())
 				{
-					throw strus::runtime_error(_TXT("transaction commit failed"));
+					throw strus::runtime_error( "%s", _TXT("transaction commit failed"));
 				}
 				commitcnt = 0;
 				transaction.reset( storage.createTransaction());
-				if (!transaction.get()) throw strus::runtime_error( _TXT("failed to recreate storage transaction after commit"));
+				if (!transaction.get()) throw strus::runtime_error( "%s",  _TXT("failed to recreate storage transaction after commit"));
 			}
 		}
 		if (stream.error())
@@ -2302,11 +2302,11 @@ static unsigned int loadStorageValues(
 		{
 			if (!transaction->commit())
 			{
-				throw strus::runtime_error(_TXT("transaction commit failed"));
+				throw strus::runtime_error( "%s", _TXT("transaction commit failed"));
 			}
 			commitcnt = 0;
 			transaction.reset( storage.createTransaction());
-			if (!transaction.get()) throw strus::runtime_error( _TXT("failed to recreate storage transaction after commit"));
+			if (!transaction.get()) throw strus::runtime_error( "%s",  _TXT("failed to recreate storage transaction after commit"));
 		}
 		return rt;
 	}
@@ -2416,7 +2416,7 @@ static analyzer::DocumentClass parseDocumentClass_( char const*& si)
 		std::string value;
 		if (!isAssign(*si))
 		{
-			throw strus::runtime_error( _TXT("expected assignment operator '=' after identifier"));
+			throw strus::runtime_error( "%s",  _TXT("expected assignment operator '=' after identifier"));
 		}
 		(void)parse_OPERATOR( si);
 		if (isStringQuote(*si))
@@ -2429,7 +2429,7 @@ static analyzer::DocumentClass parseDocumentClass_( char const*& si)
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("expected string or content type or encoding as value"));
+			throw strus::runtime_error( "%s",  _TXT("expected string or content type or encoding as value"));
 		}
 		if (isEqual( id, "content"))
 		{
@@ -2472,7 +2472,7 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 	{
 		char const* si = source.c_str();
 		result = parseDocumentClass_( si);
-		if (*si) throw strus::runtime_error(_TXT("extra tokens at end of document class definition"));
+		if (*si) throw strus::runtime_error( "%s", _TXT("extra tokens at end of document class definition"));
 		return true;
 	}
 	catch (const std::bad_alloc&)
@@ -2512,7 +2512,7 @@ static void loadVectorStorageVectors_word2vecBin(
 	try
 	{
 		Reference<VectorStorageTransactionInterface> transaction( client->createTransaction());
-		if (!transaction.get()) throw strus::runtime_error(_TXT("create transaction failed"));
+		if (!transaction.get()) throw strus::runtime_error( "%s", _TXT("create transaction failed"));
 
 		InputStream infile( vectorfile);
 		if (infile.error())
@@ -2528,12 +2528,12 @@ static void loadVectorStorageVectors_word2vecBin(
 		firstline[ size] = '\0';
 		char const* si = firstline;
 		const char* se = std::strchr( si, '\n');
-		if (!se) throw strus::runtime_error(_TXT("failed to parse header line"));
+		if (!se) throw strus::runtime_error( "%s", _TXT("failed to parse header line"));
 		skipSpaces( si);
-		if (!is_UNSIGNED(si)) throw strus::runtime_error(_TXT("expected collection size as first element of the header line"));
+		if (!is_UNSIGNED(si)) throw strus::runtime_error( "%s", _TXT("expected collection size as first element of the header line"));
 		collsize = parse_UNSIGNED1( si);
 		skipSpaces( si);
-		if (!is_UNSIGNED(si)) throw strus::runtime_error(_TXT("expected vector size as second element of the header line"));
+		if (!is_UNSIGNED(si)) throw strus::runtime_error( "%s", _TXT("expected vector size as second element of the header line"));
 		vecsize = parse_UNSIGNED1( si);
 		if (*(si-1) != '\n')
 		{
@@ -2567,7 +2567,7 @@ static void loadVectorStorageVectors_word2vecBin(
 			++si;
 			if (si+vecsize*sizeof(float) > se)
 			{
-				throw strus::runtime_error( _TXT("wrong file format"));
+				throw strus::runtime_error( "%s",  _TXT("wrong file format"));
 			}
 #ifdef STRUS_LOWLEVEL_DEBUG
 			for (std::size_t ti=0; ti<termsize; ++ti) printf("%c",term[ti]);
@@ -2645,7 +2645,7 @@ static void loadVectorStorageVectors_word2vecBin(
 		}
 		if (collsize != linecnt)
 		{
-			throw strus::runtime_error(_TXT("collection size does not match"));
+			throw strus::runtime_error( "%s", _TXT("collection size does not match"));
 		}
 		if (!transaction->commit())
 		{
@@ -2667,7 +2667,7 @@ static void loadVectorStorageVectors_word2vecText(
 	try
 	{
 		Reference<VectorStorageTransactionInterface> transaction( client->createTransaction());
-		if (!transaction.get()) throw strus::runtime_error(_TXT("create transaction failed"));
+		if (!transaction.get()) throw strus::runtime_error( "%s", _TXT("create transaction failed"));
 		InputStream infile( vectorfile);
 		if (infile.error())
 		{
@@ -2687,7 +2687,7 @@ static void loadVectorStorageVectors_word2vecText(
 		{
 			char const* si = line;
 			const char* se = si + std::strlen(si);
-			if (se - si == LineBufSize-1) throw strus::runtime_error(_TXT("input line too long"));
+			if (se - si == LineBufSize-1) throw strus::runtime_error( "%s", _TXT("input line too long"));
 			++linecnt;
 			const char* term;
 			std::size_t termsize;
@@ -2698,7 +2698,7 @@ static void loadVectorStorageVectors_word2vecText(
 			for (; *si && *si != ' ' && *si != '\t'; ++si){}
 			if (!*si)
 			{
-				throw strus::runtime_error(_TXT("unexpected end of file"));
+				throw strus::runtime_error( "%s", _TXT("unexpected end of file"));
 			}
 			termsize = si - term;
 			++si;
@@ -2714,7 +2714,7 @@ static void loadVectorStorageVectors_word2vecText(
 			}
 			if (si < se)
 			{
-				throw strus::runtime_error(_TXT("expected vector of double precision floating point numbers after term definition"));
+				throw strus::runtime_error( "%s", _TXT("expected vector of double precision floating point numbers after term definition"));
 			}
 			double len = 0;
 			std::vector<double>::iterator vi = vec.begin(), ve = vec.end();

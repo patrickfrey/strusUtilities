@@ -42,10 +42,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -73,7 +73,7 @@ int main( int argc, const char* argv[])
 				"s,storage:", "S,configfile:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -210,7 +210,7 @@ int main( int argc, const char* argv[])
 		// Create root object:
 		strus::local_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
-		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+		if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -227,16 +227,16 @@ int main( int argc, const char* argv[])
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorBuffer->fetchError());
 
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+		if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
 
 		// Do the delete:
 		if (!dbi->destroyDatabase( databasecfg))
 		{
-			throw strus::runtime_error(_TXT("error destroying database"));
+			throw strus::runtime_error( "%s", _TXT("error destroying database"));
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in destroy storage"));
+			throw strus::runtime_error( "%s", _TXT("unhandled error in destroy storage"));
 		}
 		std::cerr << _TXT("database successfully destroyed.") << std::endl;
 		return 0;

@@ -70,8 +70,8 @@ void QueryStruct::defineMetaDataRestriction( const std::string& metaDataName, co
 
 void QueryStruct::defineExpression( const PostingJoinOperatorInterface* function, unsigned int arg, int range, unsigned int cardinality)
 {
-	if (arg > m_fieldNoStack.size()) throw strus::runtime_error(_TXT("too many arguments selected for function"));
-	if (!arg) throw strus::runtime_error(_TXT("no arguments passed to posting join operator"));
+	if (arg > m_fieldNoStack.size()) throw strus::runtime_error( "%s", _TXT("too many arguments selected for function"));
+	if (!arg) throw strus::runtime_error( "%s", _TXT("no arguments passed to posting join operator"));
 	std::vector<unsigned int> fieldNoList( m_fieldNoStack.begin() + m_fieldNoStack.size() - arg, m_fieldNoStack.end());
 	m_analyzer->groupElements( m_groups.size(), fieldNoList, QueryAnalyzerContextInterface::GroupAll, false/*groupSingle*/);
 	m_groups.push_back( QueryGroupStruct( QueryGroupStruct::QueryExpressionStructType, m_expressions.size()));
@@ -113,21 +113,21 @@ void QueryStruct::translate( QueryInterface& query, const QueryProcessorInterfac
 				const analyzer::MetaData& elem = queryana.metadata( ii->idx());
 				if (++ii == ie)
 				{
-					throw strus::runtime_error(_TXT("internal: unexpected end of serialization after MetaData"));;
+					throw strus::runtime_error( "%s", _TXT("internal: unexpected end of serialization after MetaData"));;
 				}
 				if (ii->opCode() != analyzer::Query::Instruction::Operator)
 				{
-					throw strus::runtime_error(_TXT("internal: unexpected operation after MetaData"));
+					throw strus::runtime_error( "%s", _TXT("internal: unexpected operation after MetaData"));
 				}
 				const QueryGroupStruct& group = m_groups[ ii->idx()];
 				if (group.type != QueryGroupStruct::QueryMetaDataStructType)
 				{
-					throw strus::runtime_error(_TXT("internal: group in argument of operation after MetaData"));
+					throw strus::runtime_error( "%s", _TXT("internal: group in argument of operation after MetaData"));
 				}
 				const QueryMetaDataStruct& mt = m_metadata[ group.idx];
 				if (mt.name != elem.name()) 
 				{
-					throw strus::runtime_error(_TXT("internal: meta data element name does not match"));
+					throw strus::runtime_error( "%s", _TXT("internal: meta data element name does not match"));
 				}
 				query.addMetaDataRestrictionCondition( mt.cmp, mt.name, elem.value(), mt.newGroup);
 				break;
@@ -144,7 +144,7 @@ void QueryStruct::translate( QueryInterface& query, const QueryProcessorInterfac
 				switch (group.type)
 				{
 					case QueryGroupStruct::QueryMetaDataStructType:
-						throw strus::runtime_error(_TXT("internal: unexpected grouping operation"));
+						throw strus::runtime_error( "%s", _TXT("internal: unexpected grouping operation"));
 					case QueryGroupStruct::QueryExpressionStructType:
 					{
 						const QueryExpressionStruct& opr = m_expressions[ group.idx];

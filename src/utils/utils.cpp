@@ -94,7 +94,7 @@ std::string utils::tostring( int val)
 	}
 	catch (...)
 	{
-		throw strus::runtime_error( _TXT("failed to convert number to string"));
+		throw strus::runtime_error( "%s",  _TXT("failed to convert number to string"));
 	}
 }
 

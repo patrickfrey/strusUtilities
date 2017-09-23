@@ -64,7 +64,7 @@ int main( int argc, const char* argv[])
 				"f,file:" );
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -214,7 +214,7 @@ int main( int argc, const char* argv[])
 		// Create root object:
 		strus::local_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
-		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+		if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -233,28 +233,28 @@ int main( int argc, const char* argv[])
 		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
-		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database"));
+		if (errorBuffer->hasError()) throw strus::runtime_error( "%s", _TXT("cannot evaluate database"));
 
 		const strus::VectorStorageInterface* vsi = storageBuilder->getVectorStorage( storagename);
-		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector storage interface"));
+		if (!vsi) throw strus::runtime_error( "%s", _TXT("failed to get vector storage interface"));
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+		if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
 
-		if (!vsi->createStorage( config, dbi)) throw strus::runtime_error(_TXT("failed to create vector storage"));
+		if (!vsi->createStorage( config, dbi)) throw strus::runtime_error( "%s", _TXT("failed to create vector storage"));
 		strus::local_ptr<strus::VectorStorageClientInterface> storage( vsi->createClient( config, dbi));
-		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create vector storage builder"));
+		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create vector storage builder"));
 
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
 			if (!strus::loadVectorStorageVectors( storage.get(), *fi, portable, g_errorBuffer))
 			{
-				throw strus::runtime_error(_TXT("failed to load input"));
+				throw strus::runtime_error( "%s", _TXT("failed to load input"));
 			}
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in command"));
+			throw strus::runtime_error( "%s", _TXT("unhandled error in command"));
 		}
 		std::cerr << _TXT("done.") << std::endl;
 		return 0;

@@ -62,7 +62,7 @@ static strus::Index getFeatureIndex( const strus::VectorStorageClientInterface* 
 	if (inspectarg[0] == FEATNUM_PREFIX_CHAR && inspectarg[1] >= '0' && inspectarg[1] <= '9')
 	{
 		idx = strus::utils::toint( inspectarg+1);
-		if (idx < 0) strus::runtime_error(_TXT("feature number must not be negative"));
+		if (idx < 0) strus::runtime_error( "%s", _TXT("feature number must not be negative"));
 	}
 	else
 	{
@@ -165,7 +165,7 @@ static std::vector<double> parseNextVectorOperand( const strus::VectorStorageCli
 	std::vector<double> rt;
 	if (argidx >= inspectargsize)
 	{
-		throw strus::runtime_error(_TXT("unexpected end of arguments"));
+		throw strus::runtime_error( "%s", _TXT("unexpected end of arguments"));
 	}
 	char sign = '+';
 	const char* argptr = 0;
@@ -178,7 +178,7 @@ static std::vector<double> parseNextVectorOperand( const strus::VectorStorageCli
 		}
 		else
 		{
-			if (++argidx == inspectargsize) throw strus::runtime_error(_TXT( "unexpected end of arguments"));
+			if (++argidx == inspectargsize) throw strus::runtime_error( "%s", _TXT( "unexpected end of arguments"));
 			argptr = inspectarg[ argidx];
 		}
 		++argidx;
@@ -356,7 +356,7 @@ private:
 
 static void inspectVectorOperations( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration, bool withWeights, bool withRealSimilarityMeasure)
 {
-	if (inspectargsize == 0) throw strus::runtime_error(_TXT("too few arguments (at least one argument expected)"));
+	if (inspectargsize == 0) throw strus::runtime_error( "%s", _TXT("too few arguments (at least one argument expected)"));
 	std::size_t argidx=0;
 	std::vector<double> res = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
 	while (argidx < inspectargsize)
@@ -459,7 +459,7 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 // Inspect strus::VectorStorageClientInterface::conceptClassNames()
 static void inspectConceptClassNames( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
-	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
+	if (inspectargsize > 0) throw strus::runtime_error( "%s", _TXT("too many arguments (no arguments expected)"));
 	std::vector<std::string> clnames = vsmodel->conceptClassNames();
 	std::vector<std::string>::const_iterator ci = clnames.begin(), ce = clnames.end();
 	for (; ci != ce; ++ci)
@@ -473,7 +473,7 @@ static void inspectConceptClassNames( const strus::VectorStorageClientInterface*
 static void inspectFeatureConcepts( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
 	std::vector<strus::Index> far;
-	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (class name as first argument expected)"));
+	if (inspectargsize < 1) throw strus::runtime_error( "%s", _TXT("too few arguments (class name as first argument expected)"));
 	std::string clname = inspectarg[0];
 	std::size_t ai = 1, ae = inspectargsize;
 	for (; ai != ae; ++ai)
@@ -487,7 +487,7 @@ static void inspectFeatureConcepts( const strus::VectorStorageClientInterface* v
 		std::vector<strus::Index> car = vsmodel->featureConcepts( clname, *fi);
 		if (car.empty() && g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("failed to get feature concepts"));
+			throw strus::runtime_error( "%s", _TXT("failed to get feature concepts"));
 		}
 		res.insert( res.end(), car.begin(), car.end());
 	}
@@ -546,7 +546,7 @@ static void inspectFeatureName( const strus::VectorStorageClientInterface* vsmod
 			std::string name = vsmodel->featureName( *fi);
 			if (name.empty() && g_errorBuffer->hasError())
 			{
-				throw strus::runtime_error(_TXT("failed to get feature name"));
+				throw strus::runtime_error( "%s", _TXT("failed to get feature name"));
 			}
 			if (fidx) std::cout << " ";
 			std::cout << name;
@@ -573,7 +573,7 @@ static void inspectFeatureIndex( const strus::VectorStorageClientInterface* vsmo
 		far.push_back( vsmodel->featureIndex( inspectarg[ai]));
 		if (far.back() < 0 && g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("failed to get feature index"));
+			throw strus::runtime_error( "%s", _TXT("failed to get feature index"));
 		}
 	}
 	std::vector<strus::Index>::const_iterator fi = far.begin(), fe = far.end();
@@ -588,7 +588,7 @@ static void inspectFeatureIndex( const strus::VectorStorageClientInterface* vsmo
 // Inspect strus::VectorStorageClientInterface::conceptFeatures()
 static void inspectConceptFeatures( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
 {
-	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (class name as first argument expected)"));
+	if (inspectargsize < 1) throw strus::runtime_error( "%s", _TXT("too few arguments (class name as first argument expected)"));
 	std::string clname = inspectarg[0];
 
 	if (inspectargsize > 1)
@@ -606,7 +606,7 @@ static void inspectConceptFeatures( const strus::VectorStorageClientInterface* v
 			std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, *ci);
 			if (far.empty() && g_errorBuffer->hasError())
 			{
-				throw strus::runtime_error(_TXT("failed to get concept features"));
+				throw strus::runtime_error( "%s", _TXT("failed to get concept features"));
 			}
 			res.insert( res.end(), far.begin(), far.end());
 		}
@@ -628,7 +628,7 @@ static void inspectConceptFeatures( const strus::VectorStorageClientInterface* v
 // Inspect strus::VectorStorageClientInterface::featureConcepts() & conceptFeatures()
 static void inspectNeighbourFeatures( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode)
 {
-	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (class name as first argument expected)"));
+	if (inspectargsize < 1) throw strus::runtime_error( "%s", _TXT("too few arguments (class name as first argument expected)"));
 	std::string clname = inspectarg[0];
 
 	std::vector<strus::Index> far;
@@ -644,7 +644,7 @@ static void inspectNeighbourFeatures( const strus::VectorStorageClientInterface*
 		std::vector<strus::Index> car = vsmodel->featureConcepts( clname, *fi);
 		if (car.empty() && g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("failed to get feature concepts"));
+			throw strus::runtime_error( "%s", _TXT("failed to get feature concepts"));
 		}
 		std::vector<strus::Index>::const_iterator ci = car.begin(), ce = car.end();
 		for (; ci != ce; ++ci)
@@ -659,7 +659,7 @@ static void inspectNeighbourFeatures( const strus::VectorStorageClientInterface*
 		std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, *ci);
 		if (far.empty() && g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("failed to get concept features"));
+			throw strus::runtime_error( "%s", _TXT("failed to get concept features"));
 		}
 		res.insert( res.end(), far.begin(), far.end());
 	}
@@ -669,8 +669,8 @@ static void inspectNeighbourFeatures( const strus::VectorStorageClientInterface*
 // Inspect strus::VectorStorageClientInterface::nofConcepts()
 static void inspectNofConcepts( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize)
 {
-	if (inspectargsize < 1) throw strus::runtime_error(_TXT("too few arguments (class name as first argument expected)"));
-	if (inspectargsize > 1) throw strus::runtime_error(_TXT("too many arguments (only class name as argument expected)"));
+	if (inspectargsize < 1) throw strus::runtime_error( "%s", _TXT("too few arguments (class name as first argument expected)"));
+	if (inspectargsize > 1) throw strus::runtime_error( "%s", _TXT("too many arguments (only class name as argument expected)"));
 	std::string clname = inspectarg[0];
 
 	std::cout << vsmodel->nofConcepts( clname) << std::endl;
@@ -679,7 +679,7 @@ static void inspectNofConcepts( const strus::VectorStorageClientInterface* vsmod
 // Inspect strus::VectorStorageClientInterface::nofFeatures()
 static void inspectNofFeatures( const strus::VectorStorageClientInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
-	if (inspectargsize > 0) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
+	if (inspectargsize > 0) throw strus::runtime_error( "%s", _TXT("too many arguments (no arguments expected)"));
 	std::cout << vsmodel->nofFeatures() << std::endl;
 }
 
@@ -699,21 +699,21 @@ static void inspectFeatureSimilarity( const strus::VectorStorageClientInterface*
 // Inspect strus::VectorStorageClientInterface::config()
 static void inspectConfig( const strus::VectorStorageClientInterface* vsmodel, const char**, std::size_t inspectargsize)
 {
-	if (inspectargsize) throw strus::runtime_error(_TXT("too many arguments (no arguments expected)"));
+	if (inspectargsize) throw strus::runtime_error( "%s", _TXT("too many arguments (no arguments expected)"));
 	std::cout << vsmodel->config() << std::endl;
 }
 
 // Inspect dump of VSM storage with VectorStorageDumpInterface
 static void inspectDump( const strus::VectorStorageInterface* vsi, const strus::DatabaseInterface* dbi, const std::string& config, const char** inspectarg, std::size_t inspectargsize)
 {
-	if (inspectargsize > 1) throw strus::runtime_error(_TXT("too many arguments (one argument expected)"));
+	if (inspectargsize > 1) throw strus::runtime_error( "%s", _TXT("too many arguments (one argument expected)"));
 	strus::local_ptr<strus::VectorStorageDumpInterface> dumpitr( vsi->createDump( config, dbi, inspectargsize?inspectarg[0]:""));
 	const char* chunk;
 	std::size_t chunksize;
 	while (dumpitr->nextChunk( chunk, chunksize))
 	{
 		std::cout << std::string( chunk, chunksize);
-		if (g_errorBuffer->hasError()) throw strus::runtime_error(_TXT("error dumping VSM storage to stdout"));
+		if (g_errorBuffer->hasError()) throw strus::runtime_error( "%s", _TXT("error dumping VSM storage to stdout"));
 	}
 }
 
@@ -741,7 +741,7 @@ int main( int argc, const char* argv[])
 				"x,realmeasure");
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -933,7 +933,7 @@ int main( int argc, const char* argv[])
 		// Create root object:
 		strus::local_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
-		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+		if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -963,15 +963,15 @@ int main( int argc, const char* argv[])
 		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
-		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database"));
+		if (errorBuffer->hasError()) throw strus::runtime_error( "%s", _TXT("cannot evaluate database"));
 
 		const strus::VectorStorageInterface* vsi = storageBuilder->getVectorStorage( modelname);
-		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
+		if (!vsi) throw strus::runtime_error( "%s", _TXT("failed to get vector space model interface"));
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+		if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
 
 		strus::local_ptr<strus::VectorStorageClientInterface> vsmodel( vsi->createClient( config, dbi));
-		if (!vsmodel.get()) throw strus::runtime_error(_TXT("failed to create vector space model client interface"));
+		if (!vsmodel.get()) throw strus::runtime_error( "%s", _TXT("failed to create vector space model client interface"));
 
 		std::string what = opt[0];
 		const char** inspectarg = opt.argv() + 1;
@@ -1064,7 +1064,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in command"));
+			throw strus::runtime_error( "%s", _TXT("unhandled error in command"));
 		}
 		return 0;
 	}

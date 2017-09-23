@@ -64,12 +64,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
+	if (!sti) throw strus::runtime_error( "%s", _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -84,9 +84,9 @@ typedef std::map<std::string,strus::GlobalCounter> DfMap;
 static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const std::string& feattype, strus::StorageClientInterface* storage)
 {
 	const strus::StatisticsProcessorInterface* statproc = storage->getStatisticsProcessor();
-	if (!statproc) throw strus::runtime_error(_TXT("failed to get statistics processor"));
+	if (!statproc) throw strus::runtime_error( "%s", _TXT("failed to get statistics processor"));
 	strus::Reference<strus::StatisticsIteratorInterface> statitr( storage->createAllStatisticsIterator());
-	if (!statitr.get()) throw strus::runtime_error(_TXT("failed to initialize statistics iterator"));
+	if (!statitr.get()) throw strus::runtime_error( "%s", _TXT("failed to initialize statistics iterator"));
 	collectionSize += storage->nofDocumentsInserted();
 	const void* statmsg;
 	std::size_t statmsgsize;
@@ -94,7 +94,7 @@ static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const
 	{
 		strus::Reference<strus::StatisticsViewerInterface>
 			viewer( statproc->createViewer( statmsg, statmsgsize));
-		if (!viewer.get()) throw strus::runtime_error(_TXT("failed to statistics viewer"));
+		if (!viewer.get()) throw strus::runtime_error( "%s", _TXT("failed to statistics viewer"));
 
 		strus::StatisticsViewerInterface::DocumentFrequencyChange dfchg;
 		while (viewer->nextDfChange( dfchg))
@@ -111,12 +111,12 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 {
 	strus::Reference<strus::StorageTransactionInterface>
 		transaction( storage->createTransaction());
-	if (!transaction.get()) throw strus::runtime_error(_TXT("failed to create storage transaction"));
+	if (!transaction.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage transaction"));
 	unsigned int transactionCount = 0;
 	unsigned int transactionTotalCount = 0;
 	strus::Reference<strus::DocumentTermIteratorInterface>
 		termitr( storage->createDocumentTermIterator( feattype));
-	if (!termitr.get()) throw strus::runtime_error(_TXT("failed to create document term iterator"));
+	if (!termitr.get()) throw strus::runtime_error( "%s", _TXT("failed to create document term iterator"));
 	strus::Index di = 1, de = storage->maxDocumentNumber();
 	fprintf( stderr, "\n");
 	for (; di <= de; ++di)
@@ -139,9 +139,9 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 		transaction->updateMetaData( docno, fieldname, strus::NumericVariant( weight));
 		if (++transactionCount >= transactionSize)
 		{
-			if (!transaction->commit()) throw strus::runtime_error(_TXT("transaction commit failed"));
+			if (!transaction->commit()) throw strus::runtime_error( "%s", _TXT("transaction commit failed"));
 			transaction.reset( storage->createTransaction());
-			if (!transaction.get()) throw strus::runtime_error(_TXT("failed to create storage transaction"));
+			if (!transaction.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage transaction"));
 
 			transactionTotalCount += transactionCount;
 			fprintf( stderr, "\rupdated %u documents           ", transactionTotalCount);
@@ -153,7 +153,7 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 	{
 		transactionTotalCount += transactionCount;
 		transactionCount = 0;
-		if (!transaction->commit()) throw strus::runtime_error(_TXT("transaction commit failed"));
+		if (!transaction->commit()) throw strus::runtime_error( "%s", _TXT("transaction commit failed"));
 		fprintf( stderr, "\rupdated %u documents\n", transactionTotalCount);
 	}
 }
@@ -182,7 +182,7 @@ int main( int argc, const char* argv[])
 			printUsageAndExit = true;
 		}
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -329,17 +329,17 @@ int main( int argc, const char* argv[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error( _TXT("error creating rpc client messaging"));
+			if (!messaging.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error( _TXT("error creating rpc client"));
+			if (!rpcClient.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc client"));
 			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating rpc storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc storage object builder"));
 		}
 		else
 		{
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating storage object builder"));
 		}
 		// Calculate the df map:
 		DfMap dfmap;
@@ -367,7 +367,7 @@ int main( int argc, const char* argv[])
 
 		// Build the functions for calculating the statistics:
 		strus::Reference<strus::ScalarFunctionParserInterface> funcparser( strus::createScalarFunctionParser_default( errorBuffer.get()));
-		if (!funcparser.get()) throw strus::runtime_error(_TXT("failed to load scalar function parser"));
+		if (!funcparser.get()) throw strus::runtime_error( "%s", _TXT("failed to load scalar function parser"));
 
 		std::vector<std::string> args;
 		args.push_back("df");
@@ -423,7 +423,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("error in update storage"));
+			throw strus::runtime_error( "%s", _TXT("error in update storage"));
 		}
 		fprintf( stderr, "done\n");
 		return 0;

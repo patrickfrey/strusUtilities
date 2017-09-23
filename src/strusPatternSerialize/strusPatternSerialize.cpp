@@ -100,7 +100,7 @@ int main( int argc, const char* argv[])
 		}
 		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -234,17 +234,17 @@ int main( int argc, const char* argv[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc analyzer object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
@@ -257,7 +257,7 @@ int main( int argc, const char* argv[])
 		}
 		if (g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("error in initialization"));
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
 		}
 		// Create objects:
 		strus::PatternSerializerType serializerType = use_feeder
@@ -272,7 +272,7 @@ int main( int argc, const char* argv[])
 		{
 			serializer.reset( strus::createPatternSerializer( outputfile, serializerType, g_errorBuffer));
 		}
-		if (!serializer.get()) throw strus::runtime_error(_TXT("failed to create serializer"));
+		if (!serializer.get()) throw strus::runtime_error( "%s", _TXT("failed to create serializer"));
 
 		std::cerr << "serialize program ..." << std::endl;
 		std::string programsrc;
@@ -282,7 +282,7 @@ int main( int argc, const char* argv[])
 		bool result = (use_feeder)
 			? strus::loadPatternMatcherProgramWithFeeder( serializer->feeder(), serializer->matcher(), programsrc, g_errorBuffer, warnings)
 			: strus::loadPatternMatcherProgramWithLexer( serializer->lexer(), serializer->matcher(), programsrc, g_errorBuffer, warnings);
-		if (!result) throw strus::runtime_error(_TXT("failed to load program"));
+		if (!result) throw strus::runtime_error( "%s", _TXT("failed to load program"));
 
 		std::vector<std::string>::const_iterator wi = warnings.begin(), we = warnings.end();
 		for (; wi != we; ++wi)
@@ -291,7 +291,7 @@ int main( int argc, const char* argv[])
 		}
 		if (g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("uncaught error in pattern serialize"));
+			throw strus::runtime_error( "%s", _TXT("uncaught error in pattern serialize"));
 		}
 		serializer->close();
 		std::cerr << _TXT("OK done") << std::endl;

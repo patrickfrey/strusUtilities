@@ -45,12 +45,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
+	if (!sti) throw strus::runtime_error( "%s", _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -220,7 +220,7 @@ int main( int argc, const char* argv[])
 		}
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader(
 			strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("error creating module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("error creating module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -357,7 +357,7 @@ int main( int argc, const char* argv[])
 		strus::local_ptr<strus::StorageAlterMetaDataTableInterface> md;
 
 		builder.reset( moduleLoader->createStorageObjectBuilder());
-		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+		if (!builder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -369,7 +369,7 @@ int main( int argc, const char* argv[])
 		}
 
 		md.reset( strus::createAlterMetaDataTable( builder.get(), errorBuffer.get(), storagecfg));
-		if (!md.get()) throw strus::runtime_error(_TXT("failed to create storage alter metadata table structure"));
+		if (!md.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage alter metadata table structure"));
 
 		// Execute alter meta data table commands:
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();
@@ -395,12 +395,12 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::cerr << _TXT("updating meta data table changes...") << std::endl;
-		if (!md->commit()) throw strus::runtime_error(_TXT("alter meta data commit failed"));
+		if (!md->commit()) throw strus::runtime_error( "%s", _TXT("alter meta data commit failed"));
 
 		std::cerr << _TXT("done") << std::endl;
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in alter meta data"));
+			throw strus::runtime_error( "%s", _TXT("unhandled error in alter meta data"));
 		}
 		return 0;
 	}

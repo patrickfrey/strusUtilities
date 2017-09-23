@@ -87,11 +87,11 @@ std::string parser::parse_STRING_noskip( char const*& src)
 	char eb = *src++;
 	while (*src != eb)
 	{
-		if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string"));
+		if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error( "%s", _TXT("unterminated string"));
 		if (*src == '\\')
 		{
 			src++;
-			if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string"));
+			if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error( "%s", _TXT("unterminated string"));
 		}
 		rt.push_back( *src++);
 	}
@@ -131,7 +131,7 @@ unsigned int parser::parse_UNSIGNED( char const*& src)
 	while (isDigit( *src))
 	{
 		unsigned int vv = (rt * 10) + (*src - '0');
-		if (vv <= rt) throw strus::runtime_error(_TXT("index out of range"));
+		if (vv <= rt) throw strus::runtime_error( "%s", _TXT("index out of range"));
 		rt = vv;
 		++src;
 	}
@@ -142,7 +142,7 @@ unsigned int parser::parse_UNSIGNED( char const*& src)
 unsigned int parser::parse_UNSIGNED1( char const*& src)
 {
 	unsigned int rt = parse_UNSIGNED( src);
-	if (rt == 0) throw strus::runtime_error(_TXT("positive unsigned integer expected"));
+	if (rt == 0) throw strus::runtime_error( "%s", _TXT("positive unsigned integer expected"));
 	return rt;
 }
 
@@ -207,22 +207,22 @@ int parser::parse_INTEGER( char const*& src)
 {
 	int rt = 0;
 	int prev = 0;
-	if (!*src) throw strus::runtime_error(_TXT("integer expected"));
+	if (!*src) throw strus::runtime_error( "%s", _TXT("integer expected"));
 	bool neg = false;
 	if (*src == '-')
 	{
 		++src;
 		neg = true;
 	}
-	if (!(*src >= '0' && *src <= '9')) throw strus::runtime_error(_TXT("integer expected"));
+	if (!(*src >= '0' && *src <= '9')) throw strus::runtime_error( "%s", _TXT("integer expected"));
 
 	for (; *src >= '0' && *src <= '9'; ++src)
 	{
 		rt = (rt * 10) + (*src - '0');
-		if (prev > rt) throw strus::runtime_error(_TXT("integer number out of range"));
+		if (prev > rt) throw strus::runtime_error( "%s", _TXT("integer number out of range"));
 		prev = rt;
 	}
-	if (isAlpha(*src)) throw strus::runtime_error(_TXT("integer expected"));
+	if (isAlpha(*src)) throw strus::runtime_error( "%s", _TXT("integer expected"));
 
 	skipSpaces( src);
 	if (neg)
@@ -347,7 +347,7 @@ MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( con
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT( "unknown compare operator"));
+			throw strus::runtime_error( "%s", _TXT( "unknown compare operator"));
 		}
 	}
 	else if (si[0] == '=')
@@ -365,7 +365,7 @@ MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( con
 	}
 	else
 	{
-		throw strus::runtime_error( _TXT( "unknown compare operator"));
+		throw strus::runtime_error( "%s", _TXT( "unknown compare operator"));
 	}
 	skipSpaces( si);
 	return rt;

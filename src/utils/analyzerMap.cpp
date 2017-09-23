@@ -23,7 +23,7 @@ AnalyzerMap::AnalyzerMap( const AnalyzerObjectBuilderInterface* builder_, ErrorB
 	,m_builder(builder_),m_textproc(builder_->getTextProcessor())
 	,m_warnings(),m_errorhnd(errorhnd_)
 {
-	if (!m_textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+	if (!m_textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));
 }
 
 static const std::string getAnalyzerMapKey( const std::string& mimeType, const std::string& encoding, const std::string& scheme)
@@ -84,7 +84,7 @@ void AnalyzerMap::loadDefaultAnalyzerProgram(
 	}
 	utils::SharedPtr<strus::DocumentAnalyzerInterface>
 		analyzer( m_builder->createDocumentAnalyzer( segmenter));
-	if (!analyzer.get()) throw strus::runtime_error(_TXT("error creating analyzer"));
+	if (!analyzer.get()) throw strus::runtime_error( "%s", _TXT("error creating analyzer"));
 
 	if (!strus::loadDocumentAnalyzerProgram( *analyzer, m_textproc, programSource, true/*allow includes*/, m_warnings, m_errorhnd))
 	{
@@ -106,7 +106,7 @@ void AnalyzerMap::loadAnalyzerProgram(
 	const strus::SegmenterInterface* segmenter;
 	if (!documentClass.defined())
 	{
-		throw strus::runtime_error(_TXT("defining analyzer program for undefined document class"));
+		throw strus::runtime_error( "%s", _TXT("defining analyzer program for undefined document class"));
 	}
 	if (segmentername.empty())
 	{
@@ -120,7 +120,7 @@ void AnalyzerMap::loadAnalyzerProgram(
 	}
 	utils::SharedPtr<strus::DocumentAnalyzerInterface>
 		analyzer( m_builder->createDocumentAnalyzer( segmenter));
-	if (!analyzer.get()) throw strus::runtime_error(_TXT("error creating analyzer"));
+	if (!analyzer.get()) throw strus::runtime_error( "%s", _TXT("error creating analyzer"));
 
 	if (!strus::loadDocumentAnalyzerProgram( *analyzer, m_textproc, programSource, true/*allow includes*/, m_warnings, m_errorhnd))
 	{
@@ -151,7 +151,7 @@ void AnalyzerMap::loadAnalyzerMap( const std::string& prgfile)
 	std::vector<AnalyzerMapElement> mapdef;
 	if (!strus::loadAnalyzerMap( mapdef, programSource, m_errorhnd))
 	{
-		throw strus::runtime_error( _TXT( "error loading analyzer map"));
+		throw strus::runtime_error( "%s", _TXT( "error loading analyzer map"));
 	}
 	std::vector<AnalyzerMapElement>::iterator mi = mapdef.begin(), me = mapdef.end();
 	for (; mi != me; ++mi)
@@ -161,7 +161,7 @@ void AnalyzerMap::loadAnalyzerMap( const std::string& prgfile)
 			std::string programpath = m_textproc->getResourcePath( mi->program);
 			if (programpath.empty())
 			{
-				throw strus::runtime_error( _TXT( "program path not found"));
+				throw strus::runtime_error( "%s", _TXT( "program path not found"));
 			}
 			loadAnalyzerProgram( mi->doctype, mi->segmenter, programpath);
 		}
@@ -194,6 +194,6 @@ const DocumentAnalyzerInterface* AnalyzerMap::get( const analyzer::DocumentClass
 	}
 	Map::const_iterator di = m_map.find( "");
 	if (di != m_map.end()) return di->second.get();
-	throw strus::runtime_error(_TXT("no analyzer defined for this document class"));
+	throw strus::runtime_error( "%s", _TXT("no analyzer defined for this document class"));
 }
 

@@ -160,7 +160,7 @@ void KeyMapGenProcessor::run()
 						continue;
 					}
 					analyzerContext.reset( analyzer->createContext( dclass));
-					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
+					if (!analyzerContext.get()) throw strus::runtime_error( "%s", _TXT("error creating analyzer context"));
 
 					// Analyze the document (with subdocuments) and update the key map:
 					enum {AnalyzerBufSize=8192};

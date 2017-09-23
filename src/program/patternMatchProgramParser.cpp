@@ -40,7 +40,7 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
-	if (!m_patternMatcher || !m_patternLexer) throw strus::runtime_error("failed to create pattern matching structures to instrument");
+	if (!m_patternMatcher || !m_patternLexer) throw strus::runtime_error( "%s", "failed to create pattern matching structures to instrument");
 }
 
 PatternMatcherProgramParser::PatternMatcherProgramParser(
@@ -57,7 +57,7 @@ PatternMatcherProgramParser::PatternMatcherProgramParser(
 	,m_symbolRegexIdList()
 	,m_unresolvedPatternNameSet()
 {
-	if (!m_patternMatcher || !m_patternTermFeeder) throw strus::runtime_error("failed to create pattern matching structures to instrument");
+	if (!m_patternMatcher || !m_patternTermFeeder) throw strus::runtime_error( "%s", "failed to create pattern matching structures to instrument");
 }
 
 bool PatternMatcherProgramParser::load( const std::string& source)
@@ -73,19 +73,19 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				(void)parse_OPERATOR( si);
 				if (!isAlpha(*si))
 				{
-					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%%' (option)"));
+					throw strus::runtime_error( "%s", _TXT("expected key word 'LEXER' or 'MATCHER' after percent '%' (option)"));
 				}
 				unsigned int dupf = 0;
 				int id = parse_KEYWORD( dupf, si, 3, "LEXER", "MATCHER", "FEEDER");
 				if (id < 0)
 				{
-					throw strus::runtime_error(_TXT("expected key word 'LEXER' or 'MATCHER' after percent '%%' (option)"));
+					throw strus::runtime_error( "%s", _TXT("expected key word 'LEXER' or 'MATCHER' after percent '%' (option)"));
 				}
 				else if (id == 0)
 				{
 					if (!m_patternLexer)
 					{
-						throw strus::runtime_error(_TXT("defined 'LEXER' option without lexer defined"));
+						throw strus::runtime_error( "%s", _TXT("defined 'LEXER' option without lexer defined"));
 					}
 					for (;;)
 					{
@@ -107,7 +107,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				{
 					if (!m_patternTermFeeder)
 					{
-						throw strus::runtime_error(_TXT("defined 'FEEDER' option without feeder defined"));
+						throw strus::runtime_error( "%s", _TXT("defined 'FEEDER' option without feeder defined"));
 					}
 					for (;;)
 					{
@@ -131,7 +131,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				std::string name = nameIsString ? parse_STRING( si) : parse_IDENTIFIER( si);
 				if (name.empty())
 				{
-					throw strus::runtime_error(_TXT("pattern name is empty"));
+					throw strus::runtime_error( "%s", _TXT("pattern name is empty"));
 				}
 				unsigned int level = 0;
 				bool has_level = false;
@@ -148,16 +148,16 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 						//... lexem expression declaration
 						if (nameIsString)
 						{
-							throw strus::runtime_error(_TXT("string not allowed as lexem type"));
+							throw strus::runtime_error( "%s", _TXT("string not allowed as lexem type"));
 						}
 						if (!visible)
 						{
-							throw strus::runtime_error(_TXT("unexpected colon ':' after dot '.' followed by an identifier, that starts an token pattern declaration marked as private (invisible in output)"));
+							throw strus::runtime_error( "%s", _TXT("unexpected colon ':' after dot '.' followed by an identifier, that starts an token pattern declaration marked as private (invisible in output)"));
 						}
 						unsigned int nameid = m_regexNameSymbolTab.getOrCreate( name);
 						if (nameid == 0)
 						{
-							throw strus::runtime_error(_TXT("failed to define lexem name symbol"));
+							throw strus::runtime_error( "%s", _TXT("failed to define lexem name symbol"));
 						}
 						if (nameid >= MaxPatternTermNameId)
 						{
@@ -179,7 +179,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 							}
 							else
 							{
-								throw strus::runtime_error(_TXT("regular expression definition (inside chosen characters) expected after colon ':'"));
+								throw strus::runtime_error( "%s", _TXT("regular expression definition (inside chosen characters) expected after colon ':'"));
 							}
 							if (isTilde(*si) && isDigit(*(si+1)))
 							{
@@ -197,7 +197,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 								resultIndex = parse_UNSIGNED( si);
 								if (!isCloseSquareBracket(*si))
 								{
-									throw strus::runtime_error(_TXT("close square bracket ']' expected at end of result index definition"));
+									throw strus::runtime_error( "%s", _TXT("close square bracket ']' expected at end of result index definition"));
 								}
 								(void)parse_OPERATOR(si);
 							}
@@ -219,20 +219,20 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 					}
 					else if (m_patternTermFeeder)
 					{
-						throw strus::runtime_error(_TXT("pattern analyzer terms are defined by option %%lexem type and not with id : regex"));
+						throw strus::runtime_error( "%s", _TXT("pattern analyzer terms are defined by option %%lexem type and not with id : regex"));
 					}
 				}
 				else if (isAssign(*si))
 				{
 					if (has_level)
 					{
-						throw strus::runtime_error(_TXT("unsupported definition of level \"^N\" in token pattern definition"));
+						throw strus::runtime_error( "%s", _TXT("unsupported definition of level \"^N\" in token pattern definition"));
 					}
 					//... token pattern expression declaration
 					unsigned int nameid = m_patternNameSymbolTab.getOrCreate( name);
 					if (nameid == 0)
 					{
-						throw strus::runtime_error(_TXT("failed to define pattern name symbol"));
+						throw strus::runtime_error( "%s", _TXT("failed to define pattern name symbol"));
 					}
 					do
 					{
@@ -260,21 +260,21 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 				}
 				else
 				{
-					throw strus::runtime_error(_TXT("assign '=' (token pattern definition) or colon ':' (lexem pattern definition) expected after name starting a pattern declaration"));
+					throw strus::runtime_error( "%s", _TXT("assign '=' (token pattern definition) or colon ':' (lexem pattern definition) expected after name starting a pattern declaration"));
 				}
 				if (!isSemiColon(*si))
 				{
-					throw strus::runtime_error(_TXT("semicolon ';' expected at end of rule"));
+					throw strus::runtime_error( "%s", _TXT("semicolon ';' expected at end of rule"));
 				}
 				(void)parse_OPERATOR(si);
 				if (m_errorhnd->hasError())
 				{
-					throw strus::runtime_error(_TXT("error in rule definition"));
+					throw strus::runtime_error( "%s", _TXT("error in rule definition"));
 				}
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("identifier or string expected at start of rule"));
+				throw strus::runtime_error( "%s", _TXT("identifier or string expected at start of rule"));
 			}
 		}
 		return true;
@@ -373,7 +373,7 @@ uint32_t PatternMatcherProgramParser::getOrCreateSymbol( unsigned int regexid, c
 		m_symbolRegexIdList.push_back( regexid);
 		if ((std::size_t)( symid - MaxPatternTermNameId) != m_symbolRegexIdList.size())
 		{
-			throw strus::runtime_error(_TXT("internal: inconsisteny in lexem symbol map"));
+			throw strus::runtime_error( "%s", _TXT("internal: inconsisteny in lexem symbol map"));
 		}
 		if (m_patternLexer)
 		{
@@ -386,7 +386,7 @@ uint32_t PatternMatcherProgramParser::getOrCreateSymbol( unsigned int regexid, c
 		}
 		else
 		{
-			throw strus::runtime_error(_TXT("internal: no lexer or term feeder defined"));
+			throw strus::runtime_error( "%s", _TXT("internal: no lexer or term feeder defined"));
 		}
 	}
 	return symid;
@@ -396,7 +396,7 @@ const char* PatternMatcherProgramParser::getSymbolRegexId( unsigned int id) cons
 {
 	const char* symkey = m_lexemSymbolTab.key( id);
 	unsigned int symkeyhdrlen = utf8charlen( *symkey);
-	if (!symkeyhdrlen) throw strus::runtime_error(_TXT("illegal key in pattern lexem symbol table"));
+	if (!symkeyhdrlen) throw strus::runtime_error( "%s", _TXT("illegal key in pattern lexem symbol table"));
 	int regexid = utf8decode( symkey, symkeyhdrlen) - 1;
 	return m_regexNameSymbolTab.key( regexid);
 }
@@ -406,7 +406,7 @@ unsigned int PatternMatcherProgramParser::defineAnalyzerTermType( const std::str
 	unsigned int typid = m_regexNameSymbolTab.getOrCreate( type);
 	if (typid == 0)
 	{
-		throw strus::runtime_error(_TXT("failed to define term type symbol"));
+		throw strus::runtime_error( "%s", _TXT("failed to define term type symbol"));
 	}
 	if (typid >= MaxPatternTermNameId)
 	{
@@ -509,7 +509,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 						(void)parse_OPERATOR( si);
 						if (!is_UNSIGNED( si))
 						{
-							throw strus::runtime_error(_TXT("unsigned integer expected as proximity range value after '|' in expression parameter list"));
+							throw strus::runtime_error( "%s", _TXT("unsigned integer expected as proximity range value after '|' in expression parameter list"));
 						}
 						range = parse_UNSIGNED( si);
 					}
@@ -519,13 +519,13 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 						(void)parse_OPERATOR( si);
 						if (!is_UNSIGNED( si))
 						{
-							throw strus::runtime_error(_TXT("unsigned integer expected as cardinality value after '^' in expression parameter list"));
+							throw strus::runtime_error( "%s", _TXT("unsigned integer expected as cardinality value after '^' in expression parameter list"));
 						}
 						cardinality = parse_UNSIGNED( si);
 					}
 					else if (isComma(*si))
 					{
-						throw strus::runtime_error(_TXT("unexpected comma ',' after proximity range and/or cardinality specification than must only appear at the end of the arguments list"));
+						throw strus::runtime_error( "%s", _TXT("unexpected comma ',' after proximity range and/or cardinality specification than must only appear at the end of the arguments list"));
 					}
 				}
 			}
@@ -533,12 +533,12 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 		while (isComma( *si));
 		if (!isCloseOvalBracket( *si))
 		{
-			throw strus::runtime_error(_TXT("close bracket ')' expected at end of join operation expression"));
+			throw strus::runtime_error( "%s", _TXT("close bracket ')' expected at end of join operation expression"));
 		}
 		(void)parse_OPERATOR( si);
 		if (range == 0 && exprinfo.maxrange == 0)
 		{
-			throw strus::runtime_error(_TXT("cannot evaluate length of expression, range has to be specified here"));
+			throw strus::runtime_error( "%s", _TXT("cannot evaluate length of expression, range has to be specified here"));
 		}
 		switch (operation)
 		{
@@ -572,7 +572,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 	}
 	else if (isAssign(*si))
 	{
-		throw strus::runtime_error(_TXT("unexpected assignment operator '=', only one assignment allowed per node"));
+		throw strus::runtime_error( "%s", _TXT("unexpected assignment operator '=', only one assignment allowed per node"));
 	}
 	else
 	{
@@ -621,7 +621,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 					id = m_patternNameSymbolTab.getOrCreate( name);
 					if (id == 0)
 					{
-						throw strus::runtime_error(_TXT("failed to define pattern name symbol"));
+						throw strus::runtime_error( "%s", _TXT("failed to define pattern name symbol"));
 					}
 					m_unresolvedPatternNameSet.insert( id);
 					exprinfo.minrange = 0;
@@ -632,7 +632,7 @@ void PatternMatcherProgramParser::loadExpressionNode( const std::string& name, c
 					std::map<uint32_t,unsigned int>::const_iterator li = m_patternLengthMap.find( id);
 					if (li == m_patternLengthMap.end())
 					{
-						throw strus::runtime_error( _TXT("cannot evaluate length of pattern"));
+						throw strus::runtime_error( "%s",  _TXT("cannot evaluate length of pattern"));
 					}
 					exprinfo.minrange = li->second;
 					exprinfo.maxrange = li->second;
@@ -648,14 +648,14 @@ void PatternMatcherProgramParser::loadExpression( char const*& si, SubExpression
 	std::string name = parse_IDENTIFIER( si);
 	if (name.empty())
 	{
-		throw strus::runtime_error(_TXT("name in expression is empty"));
+		throw strus::runtime_error( "%s", _TXT("name in expression is empty"));
 	}
 	if (isAssign(*si))
 	{
 		(void)parse_OPERATOR( si);
 		if (!isAlpha(*si))
 		{
-			throw strus::runtime_error(_TXT("expected variable after assign '='"));
+			throw strus::runtime_error( "%s", _TXT("expected variable after assign '='"));
 		}
 		std::string op = parse_IDENTIFIER( si);
 		loadExpressionNode( op, si, exprinfo);
@@ -682,7 +682,7 @@ void PatternMatcherProgramParser::loadMatcherOption( char const*& si)
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("expected number as matcher option value after assign"));
+				throw strus::runtime_error( "%s", _TXT("expected number as matcher option value after assign"));
 			}
 		}
 		else
@@ -692,7 +692,7 @@ void PatternMatcherProgramParser::loadMatcherOption( char const*& si)
 	}
 	else
 	{
-		throw strus::runtime_error(_TXT("identifier expected at start of pattern matcher option declaration"));
+		throw strus::runtime_error( "%s", _TXT("identifier expected at start of pattern matcher option declaration"));
 	}
 }
 
@@ -705,7 +705,7 @@ void PatternMatcherProgramParser::loadLexerOption( char const*& si)
 	}
 	else
 	{
-		throw strus::runtime_error(_TXT("identifier expected at start of pattern lexer option declaration"));
+		throw strus::runtime_error( "%s", _TXT("identifier expected at start of pattern lexer option declaration"));
 	}
 }
 
@@ -718,7 +718,7 @@ void PatternMatcherProgramParser::loadFeederOption( char const*& si)
 		{
 			if (!isAlpha(*si))
 			{
-				throw strus::runtime_error(_TXT("identifier expected as argument of feeder option 'lexem'"));
+				throw strus::runtime_error( "%s", _TXT("identifier expected as argument of feeder option 'lexem'"));
 			}
 			std::string lexemid( parse_IDENTIFIER( si));
 			(void)defineAnalyzerTermType( lexemid);
@@ -730,7 +730,7 @@ void PatternMatcherProgramParser::loadFeederOption( char const*& si)
 	}
 	else
 	{
-		throw strus::runtime_error(_TXT("option name expected at start of pattern feeder option declaration"));
+		throw strus::runtime_error( "%s", _TXT("option name expected at start of pattern feeder option declaration"));
 	}
 }
 

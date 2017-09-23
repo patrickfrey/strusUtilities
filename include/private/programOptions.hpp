@@ -44,7 +44,7 @@ private:
 				{
 					if (aa - arg != 1)
 					{
-						throw strus::runtime_error( _TXT("one character option expected before comma ',' in option definition string"));
+						throw strus::runtime_error( "%s",  _TXT("one character option expected before comma ',' in option definition string"));
 					}
 					alias = *arg;
 					longnamestart = aa+1;
@@ -53,7 +53,7 @@ private:
 				{
 					if (longnameend - aa != 1)
 					{
-						throw strus::runtime_error( _TXT("colon expected only at end of option definition string"));
+						throw strus::runtime_error( "%s",  _TXT("colon expected only at end of option definition string"));
 					}
 					longnameend = aa;
 					hasArg = true;
@@ -64,7 +64,7 @@ private:
 			{
 				if (!alias)
 				{
-					throw strus::runtime_error( _TXT("empty option definition"));
+					throw strus::runtime_error( "%s",  _TXT("empty option definition"));
 				}
 				longname.push_back( alias);
 			}

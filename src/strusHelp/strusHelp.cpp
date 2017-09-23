@@ -218,7 +218,7 @@ int main( int argc_, const char* argv_[])
 
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir" ,"--rpc");
@@ -321,12 +321,12 @@ int main( int argc_, const char* argv_[])
 		if (opt.nofargs() > 0)
 		{
 			what = opt[0];
-			if (what.empty()) throw strus::runtime_error(_TXT("illegal empty item type as program argument"));
+			if (what.empty()) throw strus::runtime_error( "%s", _TXT("illegal empty item type as program argument"));
 		}
 		if (opt.nofargs() > 1)
 		{
 			item = opt[1];
-			if (item.empty()) throw strus::runtime_error(_TXT("illegal empty item value as program argument"));
+			if (item.empty()) throw strus::runtime_error( "%s", _TXT("illegal empty item value as program argument"));
 		}
 
 		// Declare trace proxy objects:
@@ -362,21 +362,21 @@ int main( int argc_, const char* argv_[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc analyzer object builder"));
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
@@ -393,10 +393,10 @@ int main( int argc_, const char* argv_[])
 
 		// Print help:
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));
 
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
-		if (!queryproc) throw strus::runtime_error(_TXT("failed to get query processor"));
+		if (!queryproc) throw strus::runtime_error( "%s", _TXT("failed to get query processor"));
 
 		if (what.empty())
 		{

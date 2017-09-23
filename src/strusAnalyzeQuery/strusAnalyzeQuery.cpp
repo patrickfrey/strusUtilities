@@ -133,7 +133,7 @@ public:
 		}
 		if (argc > m_stack.size())
 		{
-			throw strus::runtime_error( _TXT("illegal expression (more arguments than on stack)"));
+			throw strus::runtime_error( "%s",  _TXT("illegal expression (more arguments than on stack)"));
 		}
 		std::size_t stkidx = m_stack.size() - argc;
 		for (;stkidx < m_stack.size(); ++stkidx)
@@ -141,7 +141,7 @@ public:
 			int node = m_stack[ stkidx];
 			if (m_tree[ node].left >= 0)
 			{
-				throw strus::runtime_error( _TXT("corrupt tree data structure"));
+				throw strus::runtime_error( "%s",  _TXT("corrupt tree data structure"));
 			}
 			m_tree.push_back( m_tree[ node]);
 			if (stkidx+1 < m_stack.size())
@@ -159,7 +159,7 @@ public:
 		std::cerr << strus::string_format( _TXT("called attachVariable %s"), name_.c_str()) << std::endl;
 		printState( std::cerr);
 #endif
-		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of variable assignment without term or expression defined"));
+		if (m_stack.empty()) throw strus::runtime_error( "%s",  _TXT("illegal definition of variable assignment without term or expression defined"));
 		m_variables[ m_stack.back()] = name_;
 	}
 
@@ -169,7 +169,7 @@ public:
 		std::cerr << strus::string_format( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;
 		printState( std::cerr);
 #endif
-		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of feature without term or expression defined"));
+		if (m_stack.empty()) throw strus::runtime_error( "%s",  _TXT("illegal definition of feature without term or expression defined"));
 		m_features.push_back( Feature( set_, weight_, m_stack.back()));
 		m_stack.pop_back();
 	}
@@ -278,7 +278,7 @@ public:
 	{
 		if (m_stack.size() > 0)
 		{
-			throw strus::runtime_error( _TXT("query definition not complete, stack not empty"));
+			throw strus::runtime_error( "%s",  _TXT("query definition not complete, stack not empty"));
 		}
 	}
 
@@ -397,7 +397,7 @@ private:
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("illegal node in query tree"));
+				throw strus::runtime_error( "%s", _TXT("illegal node in query tree"));
 			}
 			treeidx = nod.left;
 		}
@@ -548,10 +548,10 @@ int main( int argc, const char* argv[])
 				"M,moduledir:", "R,resourcedir:", "T,trace:", "F,fileinput");
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
-			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options --moduledir and --rpc"));
+			if (opt("rpc")) throw strus::runtime_error( "%s",  _TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -562,7 +562,7 @@ int main( int argc, const char* argv[])
 		}
 		if (opt("module"))
 		{
-			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options --module and --rpc"));
+			if (opt("rpc")) throw strus::runtime_error( "%s",  _TXT("specified mutual exclusive options --module and --rpc"));
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
@@ -678,7 +678,7 @@ int main( int argc, const char* argv[])
 		std::string resourcepath;
 		if (0!=strus::getParentPath( analyzerprg, resourcepath))
 		{
-			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
+			throw strus::runtime_error( "%s",  _TXT("failed to evaluate resource path"));
 		}
 		if (!resourcepath.empty())
 		{
@@ -698,21 +698,21 @@ int main( int argc, const char* argv[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc analyzer object builder"));
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 		}
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -745,7 +745,7 @@ int main( int argc, const char* argv[])
 
 		strus::local_ptr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer"));
+		if (!analyzer.get()) throw strus::runtime_error( "%s", _TXT("failed to create query analyzer"));
 
 		// Load analyzer program:
 		unsigned int ec;
@@ -756,7 +756,7 @@ int main( int argc, const char* argv[])
 			strus::runtime_error( _TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));
 		strus::QueryDescriptors querydescr;
 		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
 		{
@@ -766,7 +766,7 @@ int main( int argc, const char* argv[])
 		// Load and print the query:
 		Query query;
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
-		if (!queryproc) throw strus::runtime_error(_TXT("failed to get query processor"));
+		if (!queryproc) throw strus::runtime_error( "%s", _TXT("failed to get query processor"));
 		if (!strus::loadQuery( query, analyzer.get(), queryproc, querystring, querydescr, errorBuffer.get()))
 		{
 			throw strus::runtime_error( _TXT("failed to load query '%s'"), querystring.c_str());
@@ -776,7 +776,7 @@ int main( int argc, const char* argv[])
 		query.print( std::cout);
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("error in analyze query"));
+			throw strus::runtime_error( "%s", _TXT("error in analyze query"));
 		}
 		return 0;
 	}

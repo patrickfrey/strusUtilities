@@ -190,7 +190,7 @@ public:
 		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorBuffer));
 		if (g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("global context initialization failed"));
+			throw strus::runtime_error( "%s", _TXT("global context initialization failed"));
 		}
 	}
 
@@ -214,7 +214,7 @@ public:
 		strus::TokenMarkupContextInterface* rt = m_tokenMarkup->createContext();
 		if (!rt)
 		{
-			throw strus::runtime_error(_TXT("failed to create token markup context"));
+			throw strus::runtime_error( "%s", _TXT("failed to create token markup context"));
 		}
 		return rt;
 	}
@@ -400,7 +400,7 @@ public:
 			strus::analyzer::DocumentClass rt;
 			if (!m_globalContext->textproc()->detectDocumentClass( rt, content.c_str(), content.size()))
 			{
-				throw strus::runtime_error(_TXT("failed to detect document class"));
+				throw strus::runtime_error( "%s", _TXT("failed to detect document class"));
 			}
 			return rt;
 		}
@@ -756,7 +756,7 @@ int main( int argc, const char* argv[])
 		}
 		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -1000,17 +1000,17 @@ int main( int argc, const char* argv[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc analyzer object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
@@ -1023,22 +1023,22 @@ int main( int argc, const char* argv[])
 		}
 		if (g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("error in initialization"));
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
 		}
 		// Create objects:
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("could not get text processor interface"));
+		if (!textproc) throw strus::runtime_error( "%s", _TXT("could not get text processor interface"));
 		const strus::PatternMatcherInterface* pti = textproc->getPatternMatcher( matcher);
-		if (!pti) throw strus::runtime_error(_TXT("unknown pattern matcher"));
+		if (!pti) throw strus::runtime_error( "%s", _TXT("unknown pattern matcher"));
 		const strus::PatternLexerInterface* lxi = textproc->getPatternLexer( lexer);
-		if (!lxi) throw strus::runtime_error(_TXT("unknown pattern lexer"));
+		if (!lxi) throw strus::runtime_error( "%s", _TXT("unknown pattern lexer"));
 		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pti->createInstance());
 		strus::local_ptr<strus::PatternLexerInstanceInterface> lxinst( lxi->createInstance());
 
 		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
-			throw strus::runtime_error(_TXT("failed to parse document class"));
+			throw strus::runtime_error( "%s", _TXT("failed to parse document class"));
 		}
 		std::cerr << "load program ..." << std::endl;
 		std::string programsrc;
@@ -1047,7 +1047,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string> warnings;
 		if (!strus::loadPatternMatcherProgramWithLexer( lxinst.get(), ptinst.get(), programsrc, g_errorBuffer, warnings))
 		{
-			throw strus::runtime_error(_TXT("failed to load program"));
+			throw strus::runtime_error( "%s", _TXT("failed to load program"));
 		}
 		std::vector<std::string>::const_iterator wi = warnings.begin(), we = warnings.end();
 		for (; wi != we; ++wi)
@@ -1130,7 +1130,7 @@ int main( int argc, const char* argv[])
 		}
 		if (g_errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("uncaught error in pattern matcher"));
+			throw strus::runtime_error( "%s", _TXT("uncaught error in pattern matcher"));
 		}
 		std::cerr << _TXT("OK done") << std::endl;
 		return 0;
