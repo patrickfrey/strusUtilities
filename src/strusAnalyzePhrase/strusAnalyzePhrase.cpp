@@ -153,7 +153,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-q|--quot <STR>" << std::endl;
 			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default \"\'\")") << std::endl;
 			std::cout << "-P|--plain" << std::endl;
-			std::cout << "    " << _TXT("Do not print position and define default quotes as empty") << std::endl;
+			std::cout << "    " << _TXT("Print results without quotes and without an end of line for each result") << std::endl;
 			std::cout << "-F|--fileinput" << std::endl;
 			std::cout << "    " << _TXT("Interpret phrase argument as a file name containing the input") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
@@ -264,16 +264,20 @@ int main( int argc, const char* argv[])
 		std::vector<strus::analyzer::QueryTerm> terms;
 		std::vector<strus::analyzer::QueryTermExpression::Instruction>::const_iterator
 			ii = qry.instructions().begin(), ie = qry.instructions().end();
-		for (; ii != ie; ++ii)
+		for (int iidx=0; ii != ie; ++ii,++iidx)
 		{
 			if (ii->opCode() == strus::analyzer::QueryTermExpression::Instruction::Term)
 			{
 				const strus::analyzer::QueryTerm& term = qry.term( ii->idx());
-				if (!resultPlain)
+				if (resultPlain)
 				{
-					std::cout << " ";
+					if (iidx) std::cout << " ";
+					std::cout << term.value();
 				}
-				std::cout << resultQuot << term.value() << resultQuot << std::endl;
+				else
+				{
+					std::cout << resultQuot << term.value() << resultQuot << std::endl;
+				}
 			}
 		}
 		if (errorBuffer->hasError())
