@@ -20,6 +20,8 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/statisticsIteratorInterface.hpp"
+#include "strus/statisticsProcessorInterface.hpp"
+#include "strus/statisticsViewerInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -84,10 +86,10 @@ int main( int argc, const char* argv[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc, argv, 7,
+				argc, argv, 9,
 				"h,help", "v,version", "license", 
-				"m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "T,trace:");
+				"m,module:", "M,moduledir:", "r,rpc:",
+				"b,binary", "s,storage:", "T,trace:");
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
@@ -178,6 +180,8 @@ int main( int argc, const char* argv[])
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
+			std::cout << "-b|--binary" << std::endl;
+			std::cout << "    " << _TXT("Dump binary, not readable") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -197,6 +201,7 @@ int main( int argc, const char* argv[])
 			storagecfg = opt["storage"];
 		}
 		std::string outputfile( opt[0]);
+		bool dumpBinary = opt("binary");
 
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -244,8 +249,7 @@ int main( int argc, const char* argv[])
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("could not create storage client"));
 
-		strus::local_ptr<strus::StatisticsIteratorInterface>
-			statsqueue( storage->createAllStatisticsIterator());
+		strus::local_ptr<strus::StatisticsIteratorInterface> statsqueue( storage->createAllStatisticsIterator());
 		if (!statsqueue.get())
 		{
 			throw strus::runtime_error( "%s",  _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
@@ -257,12 +261,56 @@ int main( int argc, const char* argv[])
 		FILE* outfile = ::fopen( outputfile.c_str(), "ab");
 		if (!outfile) throw strus::runtime_error( _TXT( "error opening file '%s' for writing (errno %u)"), outputfile.c_str(), errno);
 
-		while (statsqueue->getNext( msg, msgsize))
+		if (dumpBinary)
 		{
-			std::size_t written = ::fwrite( msg, 1, msgsize, outfile);
-			if (written != msgsize)
+			std::cerr << "Dumping statistics in binary format ..." << std::endl;
+			while (statsqueue->getNext( msg, msgsize))
 			{
-				throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+				std::size_t written = ::fwrite( msg, 1, msgsize, outfile);
+				if (written != msgsize)
+				{
+					throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+				}
+			}
+		}
+		else
+		{
+			std::cerr << "Dumping statistics in text format [<increment> <type> <value>] ..." << std::endl;
+
+			const strus::StatisticsProcessorInterface* statsproc = storage->getStatisticsProcessor();
+			long nofDocuments = 0;
+			while (statsqueue->getNext( msg, msgsize))
+			{
+				char buf[ 4096];
+				strus::local_ptr<strus::StatisticsViewerInterface> viewer( statsproc->createViewer( msg, msgsize));
+				if (!viewer.get()) throw strus::runtime_error( _TXT( "failed to create statistics viewer for block"));
+
+				nofDocuments += viewer->nofDocumentsInsertedChange();
+				strus::StatisticsViewerInterface::DocumentFrequencyChange rec;
+				while (viewer->nextDfChange( rec))
+				{
+					std::size_t nn = std::snprintf( buf, sizeof(buf), "%d %s %s\n", rec.increment(), rec.type(), rec.value());
+					if (nn >= sizeof(buf))
+					{
+						buf[ sizeof(buf)-5] = '.';
+						buf[ sizeof(buf)-4] = '.';
+						buf[ sizeof(buf)-3] = '.';
+						buf[ sizeof(buf)-2] = '\n';
+						buf[ sizeof(buf)-1] = '\0';
+						nn = sizeof(buf);
+					}
+					std::size_t written = ::fwrite( buf, 1, nn, outfile);
+					if (written != nn)
+					{
+						throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+					}
+				}
+				std::size_t nn = std::snprintf( buf, sizeof(buf), "%ld\n", nofDocuments);
+				std::size_t written = ::fwrite( buf, 1, nn, outfile);
+				if (written != nn)
+				{
+					throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+				}
 			}
 		}
 		::fclose( outfile);
