@@ -7,7 +7,8 @@ mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release \
 	-DWITH_STRUS_VECTOR=YES \
-	-DWITH_STRUS_PATTERN=YES ..
+	-DWITH_STRUS_PATTERN=YES \
+	-DCPP_LANGUAGE_VERSION=11 -DC_LANGUAGE_VERSION=99 ..
 make -j<N>
 make test ARGS=-j<N>
 
