@@ -286,7 +286,7 @@ int main( int argc, const char* argv[])
 				if (!viewer.get()) throw strus::runtime_error( _TXT( "failed to create statistics viewer for block"));
 
 				nofDocuments += viewer->nofDocumentsInsertedChange();
-				strus::StatisticsViewerInterface::DocumentFrequencyChange rec;
+				strus::TermStatisticsChange rec;
 				while (viewer->nextDfChange( rec))
 				{
 					std::size_t nn = std::snprintf( buf, sizeof(buf), "%d %s %s\n", rec.increment(), rec.type(), rec.value());

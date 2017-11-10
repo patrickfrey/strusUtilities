@@ -96,7 +96,7 @@ static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const
 			viewer( statproc->createViewer( statmsg, statmsgsize));
 		if (!viewer.get()) throw strus::runtime_error( "%s", _TXT("failed to statistics viewer"));
 
-		strus::StatisticsViewerInterface::DocumentFrequencyChange dfchg;
+		strus::TermStatisticsChange dfchg;
 		while (viewer->nextDfChange( dfchg))
 		{
 			if (feattype == dfchg.type())

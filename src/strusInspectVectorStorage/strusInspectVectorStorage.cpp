@@ -140,9 +140,9 @@ static void printResultFeatures( const strus::VectorStorageClientInterface* vsmo
 	std::cout << std::endl;
 }
 
-static void printResultFeaturesWithWeights( const strus::VectorStorageClientInterface* vsmodel, const std::vector<strus::VectorStorageSearchInterface::Result>& res, FeatureResultPrintMode mode)
+static void printResultFeaturesWithWeights( const strus::VectorStorageClientInterface* vsmodel, const std::vector<strus::VectorQueryResult>& res, FeatureResultPrintMode mode)
 {
-	std::vector<strus::VectorStorageSearchInterface::Result>::const_iterator ri = res.begin(), re = res.end();
+	std::vector<strus::VectorQueryResult>::const_iterator ri = res.begin(), re = res.end();
 	for (;ri != re; ++ri)
 	{
 		if (mode == PrintIndex || mode == PrintIndexName)
@@ -263,27 +263,27 @@ public:
 		:vsmodel(vsmodel_),range_from(range_from_),range_to(range_to_){}
 	virtual ~VectorStorageSearchCosimReal(){}
 
-	static void insertResultSet( std::set<Result>& reslist, unsigned int maxNofResults, double sim, const strus::Index& fidx)
+	static void insertResultSet( std::set<strus::VectorQueryResult>& reslist, unsigned int maxNofResults, double sim, const strus::Index& fidx)
 	{
 		if (reslist.size() >= maxNofResults)
 		{
 			if (reslist.rbegin()->weight() < sim)
 			{
-				reslist.insert( Result( fidx, sim));
+				reslist.insert( strus::VectorQueryResult( fidx, sim));
 				reslist.erase( reslist.begin());
 			}
 		}
 		else
 		{
-			reslist.insert( Result( fidx, sim));
+			reslist.insert( strus::VectorQueryResult( fidx, sim));
 		}
 	}
 
-	virtual std::vector<Result> findSimilar( const std::vector<double>& vec, unsigned int maxNofResults) const
+	virtual std::vector<strus::VectorQueryResult> findSimilar( const std::vector<double>& vec, unsigned int maxNofResults) const
 	{
 		try
 		{
-			std::set<Result> reslist;
+			std::set<strus::VectorQueryResult> reslist;
 			for (strus::Index fidx=range_from; fidx<range_to; ++fidx)
 			{
 				std::vector<double> candidate_vec = vsmodel->featureVector( fidx);
@@ -297,16 +297,16 @@ public:
 					insertResultSet( reslist, maxNofResults, sim, fidx);
 				}
 			}
-			return std::vector<Result>( reslist.rbegin(), reslist.rend());
+			return std::vector<strus::VectorQueryResult>( reslist.rbegin(), reslist.rend());
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("error in find similar: %s"), *g_errorBuffer, std::vector<Result>());
+		CATCH_ERROR_MAP_RETURN( _TXT("error in find similar: %s"), *g_errorBuffer, std::vector<strus::VectorQueryResult>());
 	}
 
-	virtual std::vector<Result> findSimilarFromSelection( const std::vector<strus::Index>& candidates, const std::vector<double>& vec, unsigned int maxNofResults) const
+	virtual std::vector<strus::VectorQueryResult> findSimilarFromSelection( const std::vector<strus::Index>& candidates, const std::vector<double>& vec, unsigned int maxNofResults) const
 	{
 		try
 		{
-			std::set<Result> reslist;
+			std::set<strus::VectorQueryResult> reslist;
 			std::vector<strus::Index>::const_iterator ci = candidates.begin(), ce = candidates.end();
 			for (; ci != ce; ++ci)
 			{
@@ -317,9 +317,9 @@ public:
 					insertResultSet( reslist, maxNofResults, sim, *ci);
 				}
 			}
-			return std::vector<Result>( reslist.rbegin(), reslist.rend());
+			return std::vector<strus::VectorQueryResult>( reslist.rbegin(), reslist.rend());
 		}
-		CATCH_ERROR_MAP_RETURN( _TXT("error in find similar: %s"), *g_errorBuffer, std::vector<Result>());
+		CATCH_ERROR_MAP_RETURN( _TXT("error in find similar: %s"), *g_errorBuffer, std::vector<strus::VectorQueryResult>());
 	}
 
 	virtual void close(){}
@@ -344,14 +344,14 @@ public:
 		m_feats = m_searcher->findSimilar( vec, maxNofRanks);
 	}
 
-	const std::vector<strus::VectorStorageSearchInterface::Result>& results() const
+	const std::vector<strus::VectorQueryResult>& results() const
 	{
 		return m_feats;
 	}
 
 private:
 	strus::Reference<strus::VectorStorageSearchInterface> m_searcher;
-	std::vector<strus::VectorStorageSearchInterface::Result> m_feats;
+	std::vector<strus::VectorQueryResult> m_feats;
 };
 
 static void inspectVectorOperations( const strus::VectorStorageClientInterface* vsmodel, const char** inspectarg, std::size_t inspectargsize, FeatureResultPrintMode mode, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration, bool withWeights, bool withRealSimilarityMeasure)
@@ -373,7 +373,7 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 				break;
 		}
 	}
-	std::vector<strus::VectorStorageSearchInterface::Result> results;
+	std::vector<strus::VectorQueryResult> results;
 	std::vector<strus::Index> feats;
 
 	if (nofThreads == 0)
@@ -447,7 +447,7 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 	}
 	else
 	{
-		std::vector<strus::VectorStorageSearchInterface::Result>::const_iterator ri = results.begin(), re = results.end();
+		std::vector<strus::VectorQueryResult>::const_iterator ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
 			feats.push_back( ri->featidx());

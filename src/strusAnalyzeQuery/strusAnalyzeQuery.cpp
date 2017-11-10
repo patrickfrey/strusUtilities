@@ -551,7 +551,7 @@ int main( int argc, const char* argv[])
 		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
-			if (opt("rpc")) throw strus::runtime_error( "%s",  _TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
