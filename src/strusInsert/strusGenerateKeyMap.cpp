@@ -250,14 +250,15 @@ int main( int argc_, const char* argv_[])
 		if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
 
 		// Create proxy objects if tracing enabled:
-		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
-		for (; ti != te; ++ti)
 		{
-			strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
-			analyzerBuilder.release();
-			analyzerBuilder.reset( aproxy);
+			std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+			for (; ti != te; ++ti)
+			{
+				strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
+				analyzerBuilder.release();
+				analyzerBuilder.reset( aproxy);
+			}
 		}
-		
 		// Create objects for keymap generation:
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));

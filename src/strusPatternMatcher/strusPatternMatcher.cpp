@@ -609,13 +609,15 @@ public:
 			ri = results.begin(), re = results.end();
 		for (; ri != re; ++ri)
 		{
-			std::map<std::string,int>::const_iterator mi = m_globalContext->markups().find( ri->name());
-			if (mi != m_globalContext->markups().end())
 			{
-				markupContext->putMarkup(
-					ri->start_origseg(), ri->start_origpos(),
-					ri->end_origseg(), ri->end_origpos(),
-					strus::analyzer::TokenMarkup( ri->name()), mi->second);
+				std::map<std::string,int>::const_iterator mi = m_globalContext->markups().find( ri->name());
+				if (mi != m_globalContext->markups().end())
+				{
+					markupContext->putMarkup(
+						ri->start_origseg(), ri->start_origpos(),
+						ri->end_origseg(), ri->end_origpos(),
+						strus::analyzer::TokenMarkup( ri->name()), mi->second);
+				}
 			}
 			std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
 				ei = ri->items().begin(), ee = ri->items().end();
@@ -1069,7 +1071,7 @@ int main( int argc, const char* argv[])
 		std::string fileprefix;
 		if (inputIsAListOfFiles)
 		{
-			int ec = strus::getParentPath( inputpath, fileprefix);
+			ec = strus::getParentPath( inputpath, fileprefix);
 			if (ec)
 			{
 				throw strus::runtime_error(_TXT("error (%u) getting parent path of %s: %s"), ec, inputpath.c_str(), ::strerror(ec));
@@ -1089,7 +1091,7 @@ int main( int argc, const char* argv[])
 			}
 			else
 			{
-				int ec = strus::getParentPath( inputpath, fileprefix);
+				ec = strus::getParentPath( inputpath, fileprefix);
 				if (ec)
 				{
 					throw strus::runtime_error(_TXT("error (%u) getting parent path of %s: %s"), ec, inputpath.c_str(), ::strerror(ec));
@@ -1110,15 +1112,15 @@ int main( int argc, const char* argv[])
 
 			std::vector<strus::Reference<ThreadContext> > processorList;
 			processorList.reserve( nofThreads);
-			for (unsigned int ti=0; ti<nofThreads; ++ti)
+			for (unsigned int pi=0; pi<nofThreads; ++pi)
 			{
-				processorList.push_back( new ThreadContext( &globalContext, analyzerBuilder.get(), ti+1, outputfile, outerrfile));
+				processorList.push_back( new ThreadContext( &globalContext, analyzerBuilder.get(), pi+1, outputfile, outerrfile));
 			}
 			{
 				boost::thread_group tgroup;
-				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				for (unsigned int pi=0; pi<nofThreads; ++pi)
 				{
-					tgroup.create_thread( boost::bind( &ThreadContext::run, processorList[ti].get()));
+					tgroup.create_thread( boost::bind( &ThreadContext::run, processorList[ pi].get()));
 				}
 				tgroup.join_all();
 			}

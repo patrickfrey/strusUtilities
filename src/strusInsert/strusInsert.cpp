@@ -363,17 +363,18 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// Create proxy objects if tracing enabled:
-		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
-		for (; ti != te; ++ti)
 		{
-			strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
-			analyzerBuilder.release();
-			analyzerBuilder.reset( aproxy);
-			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
-			storageBuilder.release();
-			storageBuilder.reset( sproxy);
+			std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+			for (; ti != te; ++ti)
+			{
+				strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
+				analyzerBuilder.release();
+				analyzerBuilder.reset( aproxy);
+				strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
+				storageBuilder.release();
+				storageBuilder.reset( sproxy);
+			}
 		}
-
 		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage client"));

@@ -17,5 +17,12 @@ else()
 endif()
 
 MESSAGE( STATUS "Boost includes: ${Boost_INCLUDE_DIRS}" )
+IF (BOOST_WARNINGS STREQUAL "YES")
+MESSAGE( STATUS "Boost includes with warnings" )
+ELSE (BOOST_WARNINGS STREQUAL "YES")
+MESSAGE( STATUS "Boost includes as system headers (-isystem) to switch of warnings" )
+set( Boost_INCLUDE_DIRS "SYSTEM ${Boost_INCLUDE_DIRS}" )
+ENDIF (BOOST_WARNINGS STREQUAL "YES")
+
 MESSAGE( STATUS "Boost library directories: ${Boost_LIBRARY_DIRS}" )
 MESSAGE( STATUS "Boost libraries: ${Boost_LIBRARIES}" )

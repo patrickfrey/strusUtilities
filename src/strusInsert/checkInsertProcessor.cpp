@@ -94,28 +94,29 @@ void CheckInsertProcessor::run()
 	
 		// Evaluate the expected types of the meta data elements to make them comparable
 		std::vector<strus::NumericVariant::Type> metadatatype;
-		strus::Index mi=0, me=metadata->nofElements();
-		for (; mi != me; ++mi)
 		{
-			const char* tp = metadata->getType( mi);
-			if ((tp[0]|32) == 'i')
+			strus::Index mi=0, me=metadata->nofElements();
+			for (; mi != me; ++mi)
 			{
-				metadatatype.push_back( strus::NumericVariant::Int);
-			}
-			else if ((tp[0]|32) == 'u')
-			{
-				metadatatype.push_back( strus::NumericVariant::UInt);
-			}
-			else if ((tp[0]|32) == 'f')
-			{
-				metadatatype.push_back( strus::NumericVariant::Float);
-			}
-			else
-			{
-				metadatatype.push_back( strus::NumericVariant::Null);
+				const char* tp = metadata->getType( mi);
+				if ((tp[0]|32) == 'i')
+				{
+					metadatatype.push_back( strus::NumericVariant::Int);
+				}
+				else if ((tp[0]|32) == 'u')
+				{
+					metadatatype.push_back( strus::NumericVariant::UInt);
+				}
+				else if ((tp[0]|32) == 'f')
+				{
+					metadatatype.push_back( strus::NumericVariant::Float);
+				}
+				else
+				{
+					metadatatype.push_back( strus::NumericVariant::Null);
+				}
 			}
 		}
-	
 		unsigned int filesChecked = 0;
 		while (!(files=m_crawler->fetch()).empty())
 		{

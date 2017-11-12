@@ -2521,27 +2521,28 @@ static void loadVectorStorageVectors_word2vecBin(
 		}
 		unsigned int collsize;
 		unsigned int vecsize;
-	
-		// Read first text line, that contains two numbers, the collection size and the vector size:
-		char firstline[ 256];
-		std::size_t size = infile.readAhead( firstline, sizeof(firstline)-1);
-		firstline[ size] = '\0';
-		char const* si = firstline;
-		const char* se = std::strchr( si, '\n');
-		if (!se) throw strus::runtime_error( "%s", _TXT("failed to parse header line"));
-		skipSpaces( si);
-		if (!is_UNSIGNED(si)) throw strus::runtime_error( "%s", _TXT("expected collection size as first element of the header line"));
-		collsize = parse_UNSIGNED1( si);
-		skipSpaces( si);
-		if (!is_UNSIGNED(si)) throw strus::runtime_error( "%s", _TXT("expected vector size as second element of the header line"));
-		vecsize = parse_UNSIGNED1( si);
-		if (*(si-1) != '\n')
+		std::size_t linesize;
 		{
-			skipToEoln( si);
-			++si;
+			// Read first text line, that contains two numbers, the collection size and the vector size:
+			char firstline[ 256];
+			linesize = infile.readAhead( firstline, sizeof(firstline)-1);
+			firstline[ linesize] = '\0';
+			char const* si = firstline;
+			const char* se = std::strchr( si, '\n');
+			if (!se) throw strus::runtime_error( "%s", _TXT("failed to parse header line"));
+			skipSpaces( si);
+			if (!is_UNSIGNED(si)) throw strus::runtime_error( "%s", _TXT("expected collection size as first element of the header line"));
+			collsize = parse_UNSIGNED1( si);
+			skipSpaces( si);
+			if (!is_UNSIGNED(si)) throw strus::runtime_error( "%s", _TXT("expected vector size as second element of the header line"));
+			vecsize = parse_UNSIGNED1( si);
+			if (*(si-1) != '\n')
+			{
+				skipToEoln( si);
+				++si;
+			}
+			infile.read( firstline, si - firstline);
 		}
-		infile.read( firstline, si - firstline);
-
 		// Declare buffer for reading lines:
 		struct charp_scope
 		{
@@ -2555,12 +2556,12 @@ static void loadVectorStorageVectors_word2vecBin(
 		charp_scope linebuf_scope( linebuf);
 	
 		// Parse vector by vector and add them to the transaction till EOF:
-		size = infile.readAhead( linebuf, linebufsize);
-		while (size)
+		linesize = infile.readAhead( linebuf, linebufsize);
+		while (linesize)
 		{
 			++linecnt;
 			char const* si = linebuf;
-			const char* se = linebuf + size;
+			const char* se = linebuf + linesize;
 			for (; si < se && (unsigned char)*si > 32; ++si){}
 			const char* term = linebuf;
 			std::size_t termsize = si - linebuf;
@@ -2637,7 +2638,7 @@ static void loadVectorStorageVectors_word2vecBin(
 				throw strus::runtime_error(_TXT("end of line marker expected after binary vector instead of '%x'"), (unsigned int)(unsigned char)*si);
 			}
 			infile.read( linebuf, si - linebuf);
-			size = infile.readAhead( linebuf, linebufsize);
+			linesize = infile.readAhead( linebuf, linebufsize);
 		}
 		if (infile.error())
 		{

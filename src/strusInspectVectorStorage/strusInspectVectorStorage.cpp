@@ -405,16 +405,18 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 		double startTime = 0.0;
 		unsigned int chunksize = (vsmodel->nofFeatures() + nofThreads - 1) / nofThreads;
 		std::vector<FindSimProcess> procar;
-		unsigned int ti = 0, te = nofThreads;
-		for (unsigned int range_from=0; ti != te; ++ti,range_from+=chunksize)
 		{
-			if (withRealSimilarityMeasure)
+			unsigned int ti = 0, te = nofThreads;
+			for (unsigned int range_from=0; ti != te; ++ti,range_from+=chunksize)
 			{
-				procar.push_back( FindSimProcess( new VectorStorageSearchCosimReal( vsmodel, range_from, range_from + chunksize)));
-			}
-			else
-			{
-				procar.push_back( FindSimProcess( vsmodel->createSearcher( range_from, range_from + chunksize)));
+				if (withRealSimilarityMeasure)
+				{
+					procar.push_back( FindSimProcess( new VectorStorageSearchCosimReal( vsmodel, range_from, range_from + chunksize)));
+				}
+				else
+				{
+					procar.push_back( FindSimProcess( vsmodel->createSearcher( range_from, range_from + chunksize)));
+				}
 			}
 		}
 		if (doMeasureDuration)
@@ -656,12 +658,12 @@ static void inspectNeighbourFeatures( const strus::VectorStorageClientInterface*
 	std::set<strus::Index>::const_iterator ci = concepts.begin(), ce = concepts.end();
 	for (std::size_t cidx=0; ci != ce; ++ci,++cidx)
 	{
-		std::vector<strus::Index> far = vsmodel->conceptFeatures( clname, *ci);
-		if (far.empty() && g_errorBuffer->hasError())
+		std::vector<strus::Index> car = vsmodel->conceptFeatures( clname, *ci);
+		if (car.empty() && g_errorBuffer->hasError())
 		{
 			throw strus::runtime_error( "%s", _TXT("failed to get concept features"));
 		}
-		res.insert( res.end(), far.begin(), far.end());
+		res.insert( res.end(), car.begin(), car.end());
 	}
 	printResultFeatures( vsmodel, res, mode, true);
 }
