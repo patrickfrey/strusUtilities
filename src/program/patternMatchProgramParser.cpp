@@ -65,6 +65,7 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 	char const* si = source.c_str();
 	try
 	{
+		skipSpaces( si);
 		while (*si)
 		{
 			if (isPercent(*si))
