@@ -171,7 +171,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-C|--contenttype <CT>" << std::endl;
 			std::cout << "    " << _TXT("forced definition of the document class of the document processed.") << std::endl;
 			std::cout << "-e|--expression <EXPR>" << std::endl;
-			std::cout << "    " << _TXT("Use the expression <EXPR> to select documents (default '//()')") << std::endl;
+			std::cout << "    " << _TXT("Use the expression <EXPR> to select document contents.") << std::endl;
+			std::cout << "    " << _TXT("Select all content if nothing specified)") << std::endl;
 			std::cout << "-i|--index" << std::endl;
 			std::cout << "    " << _TXT("Print the indices of the expressions matching as prefix with ':'") << std::endl;
 			std::cout << "-p|--position" << std::endl;
@@ -295,7 +296,7 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			segmenter->defineSelectorExpression( 0, "//()");
+			segmenter->defineSelectorExpression( 0, "");
 		}
 
 		// Create the segmenter

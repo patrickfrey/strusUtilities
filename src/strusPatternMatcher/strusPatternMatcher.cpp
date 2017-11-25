@@ -851,8 +851,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-F|--filelist" << std::endl;
 			std::cout << "    " << _TXT("inputpath is a file containing the list of files to process.") << std::endl;
 			std::cout << "-e|--expression <EXP>" << std::endl;
-			std::cout << "    " << _TXT("Define a selection expression <EXP> for the content to process") << std::endl;
-			std::cout << "    " << _TXT("  (default if nothing specified is \"//()\"") << std::endl;
+			std::cout << "    " << _TXT("Define a selection expression <EXP> for the content to process.") << std::endl;
+			std::cout << "    " << _TXT("Process all content if nothing specified)") << std::endl;
 			std::cout << "-H|--markup <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Output the content with markups of the rules or variables with name <NAME>") << std::endl;
 			std::cout << "-Z|--marker <MRK>" << std::endl;
@@ -1058,14 +1058,7 @@ int main( int argc, const char* argv[])
 		}
 		if (expressions.empty())
 		{
-			if (segmentername == "plain")
-			{
-				expressions.push_back( "");
-			}
-			else
-			{
-				expressions.push_back( "//()");
-			}
+			expressions.push_back( "");
 		}
 		std::vector<std::string> inputfiles;
 		std::string fileprefix;
