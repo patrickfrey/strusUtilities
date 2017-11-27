@@ -53,6 +53,7 @@ dist/redhat/strusutilities.spec
 build
 
 # Compiled Programs
+tests/scripts/execTest
 src/strusCreate/strusCreate
 src/strusDestroy/strusDestroy
 src/strusAnalyze/strusAnalyze

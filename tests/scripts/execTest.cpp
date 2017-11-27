@@ -28,6 +28,7 @@ static std::string g_testname;
 static std::string g_maindir;
 static std::string g_bindir;
 static std::string g_testdir;
+static std::string g_execdir;
 static std::map<std::string,std::string> g_env;
 
 struct ProgramPath
@@ -202,6 +203,11 @@ static std::string parseArgument( char const*& si)
 			rt.append( g_testdir);
 			ti = te + 2;
 		}
+		else if (te[1] == 'E')
+		{
+			rt.append( g_execdir);
+			ti = te + 2;
+		}
 		else
 		{
 			throw std::runtime_error(_TXT("unknown substitution char in arguments"));
@@ -338,9 +344,14 @@ int main( int argc, const char* argv[])
 		rt = strus::getAncestorPath( argv[0], 3, g_bindir);
 		if (rt) throw std::runtime_error( _TXT("could not retrieve ancestor path of test program"));
 
+		std::string mainexecdir = g_bindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + "exec";
+		g_execdir = mainexecdir + strus::dirSeparator() + g_testname;
+
 		std::cerr << _TXT("test name: ") << g_testname << std::endl;
 		std::cerr << _TXT("test directory: ") << g_testdir << std::endl;
 		std::cerr << _TXT("binary directory: ") << g_bindir << std::endl;
+		std::cerr << _TXT("main execution directory: ") << mainexecdir << std::endl;
+		std::cerr << _TXT("execution directory: ") << g_execdir << std::endl;
 		std::cerr << _TXT("project directory: ") << g_maindir << std::endl;
 		int argi=3;
 		for (; argi < argc; ++argi)
@@ -387,19 +398,25 @@ int main( int argc, const char* argv[])
 			}
 			skipSpacesAndComments( si);
 		}
-		rt = strus::removeDirRecursive( g_testname);
+		rt = strus::removeDirRecursive( g_execdir);
 		if (rt)
 		{
 			std::cerr << _TXT("failed to remove old test execution directory: ") << ::strerror(rt) << std::endl;
 			return rt;
 		}
-		rt = strus::createDir( g_testname);
+		rt = strus::createDir( mainexecdir, false);
+		if (rt)
+		{
+			std::cerr << _TXT("failed to create main test execution directory: ") << ::strerror(rt) << std::endl;
+			return rt;
+		}
+		rt = strus::createDir( g_execdir);
 		if (rt)
 		{
 			std::cerr << _TXT("failed to create test execution directory: ") << ::strerror(rt) << std::endl;
 			return rt;
 		}
-		rt = strus::changeDir( g_testname);
+		rt = strus::changeDir( g_execdir);
 		if (rt)
 		{
 			std::cerr << _TXT("failed to change to test execution directory: ") << ::strerror(rt) << std::endl;
@@ -420,12 +437,12 @@ int main( int argc, const char* argv[])
 		}
 		else if (!diffTestOutput( output, expected))
 		{
-			rt = strus::writeFile( g_testname + strus::dirSeparator() + "OUT", output);
+			rt = strus::writeFile( g_execdir + strus::dirSeparator() + "OUT", output);
 			if (rt)
 			{
 				std::cerr << _TXT("failed to write OUT file of test: ") << ::strerror(rt) << std::endl;
 			}
-			rt = strus::writeFile( g_testname + strus::dirSeparator() + "EXP", expected);
+			rt = strus::writeFile( g_execdir + strus::dirSeparator() + "EXP", expected);
 			if (rt)
 			{
 				std::cerr << _TXT("failed to write EXP file of test: ") << ::strerror(rt) << std::endl;
