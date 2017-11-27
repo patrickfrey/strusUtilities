@@ -48,17 +48,141 @@
 #include <cstring>
 #include <stdexcept>
 
-static void printTextProcessorDescription( const strus::TextProcessorInterface* textproc, strus::TextProcessorInterface::FunctionType type, const char* name)
+static bool g_html_output = false;
+
+static void print_header( std::ostream& out)
+{
+	if (g_html_output)
+	{
+		out << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 2.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n"
+			<< "<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\" xml:lang=\"en\">\n"
+			<< "<head>\n"
+			<< "<link rel=\"icon\" type=\"image/ico\" href=\"images/strus.ico\" />\n"
+			<< "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />\n"
+			<< "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+			<< "<meta name=\"description\" content=\"Documentation of the built-in functions of strus, a collection of C++ libraries for building a full-text search engine.\" />\n"
+			<< "<meta name=\"keywords\" content=\"fulltext search engine C++\" />\n"
+			<< "<meta name=\"author\" content=\"Patrick Frey &lt;patrickpfrey (a) yahoo (dt) com&gt;\" />\n"
+			<< "<link rel=\"stylesheet\" type=\"text/css\" href=\"text-profile.css\" title=\"Text Profile\" media=\"all\" />\n"
+			<< "<title>Strus built-in functions</title>\n"
+			<< "</head>\n"
+			<< "<body>\n"
+			<< "<div id=\"wrap\">\n"
+			<< "<div id=\"content\">\n"
+			<< "<p><font color=green><i>This document is the output of </i><b>strusHelp --html -m analyzer_pattern -m storage_vector_std</b></font></p>\n"
+			<< "<h1>Strus built-in functions</h1>\n";
+	}
+}
+
+static void print_trailer( std::ostream& out)
+{
+	if (g_html_output)
+	{
+		out << "</div>\n</div>\n</body>\n</html>\n" << std::endl;
+		
+	}
+}
+
+static void print_title( std::ostream& out, const std::string& title, const std::string& description)
+{
+	if (g_html_output)
+	{
+		out << "<h2>" << title << "</h2>" << std::endl;
+		out << "<p>" << description << "</p>" << std::endl;
+	}
+	else
+	{
+		out << std::endl;
+		out << title << std::endl << std::string( title.size(), '=') << std::endl;
+		out << "  " << description << ":" << std::endl;
+	}
+}
+
+static void print_subtitle( std::ostream& out, const std::string& subtitle, const std::string& description)
+{
+	if (g_html_output)
+	{
+		out << "<h3>" << subtitle << "</h3>" << std::endl;
+		out << "<p>" << description << "</p>" << std::endl;
+	}
+	else
+	{
+		out << std::endl;
+		out << subtitle << std::endl << std::string( subtitle.size(), '-') << std::endl;
+		out << "  " << description << ":" << std::endl;
+	}
+}
+
+static void print_startlist( std::ostream& out, const char* listdescr)
+{
+	if (g_html_output)
+	{
+		if (listdescr)
+		{
+			out << "<p>" << listdescr << "<p>" << std::endl;
+		}
+		out << "<ul>" << std::endl;
+	}
+	else
+	{
+		if (listdescr) out << listdescr << ":" << std::endl;
+	}
+}
+
+static void print_endlist( std::ostream& out)
+{
+	if (g_html_output)
+	{
+		out << "</ul>" << std::endl;
+	}
+}
+
+static void print_function_description( std::ostream& out, const std::string& name, const std::string& descr)
+{
+	if (g_html_output)
+	{
+		out << "<li><b>" << name << "</b>&nbsp;&nbsp;&nbsp;&nbsp;" << descr << "</li>" << std::endl;
+	}
+	else
+	{
+		out << "[" << name << "]" << std::endl << "  " << descr << std::endl;
+	}
+}
+
+static void print_parameter_description( std::ostream& out, const std::string& name, const std::string& type, const std::string& domain, const std::string& text)
+{
+	if (g_html_output)
+	{
+		out << "<li><b>" << name << "</b>&nbsp;&nbsp;[" << type << "]&nbsp;&nbsp;";
+		if (!domain.empty())
+		{
+			out << "(" << domain << ")&nbsp;&nbsp;";
+		}
+		out << text << "</li>" << std::endl;
+	}
+	else
+	{
+		out << "\t" << name << " [" << type << "] ";
+		if (!domain.empty())
+		{
+			out << "(" << domain << ") ";
+		}
+		out << text << std::endl;
+	}
+}
+
+static void printTextProcessorDescription( std::ostream& out, const strus::TextProcessorInterface* textproc, strus::TextProcessorInterface::FunctionType type, const char* name)
 {
 	const char* label = "";
+	const char* label_descr = "";
 	switch (type)
 	{
-		case strus::TextProcessorInterface::Segmenter: label = _TXT("Segmenter "); break;
-		case strus::TextProcessorInterface::TokenizerFunction: label = _TXT("Tokenizer "); break;
-		case strus::TextProcessorInterface::NormalizerFunction: label = _TXT("Normalizer "); break;
-		case strus::TextProcessorInterface::AggregatorFunction: label = _TXT("Aggregator "); break;
-		case strus::TextProcessorInterface::PatternLexer: label = _TXT("PatternLexer "); break;
-		case strus::TextProcessorInterface::PatternMatcher: label = _TXT("PatternMatcher "); break;
+		case strus::TextProcessorInterface::Segmenter: label = _TXT("Segmenter"); label_descr = _TXT("list of segmenters"); break;
+		case strus::TextProcessorInterface::TokenizerFunction: label = _TXT("Tokenizer"); label_descr = _TXT("list of functions for tokenization"); break;
+		case strus::TextProcessorInterface::NormalizerFunction: label = _TXT("Normalizer"); label_descr = _TXT("list of functions for token normalization"); break;
+		case strus::TextProcessorInterface::AggregatorFunction: label = _TXT("Aggregator"); label_descr = _TXT("list of functions for aggregating values after document analysis, e.g. counting of words"); break;
+		case strus::TextProcessorInterface::PatternLexer: label = _TXT("PatternLexer"); label_descr = _TXT("list of lexers for pattern matching"); break;
+		case strus::TextProcessorInterface::PatternMatcher: label = _TXT("PatternMatcher"); label_descr = _TXT("list of modules for pattern matching"); break;
 	};
 	std::vector<std::string> funcs;
 	std::vector<std::string>::const_iterator fi,fe;
@@ -70,10 +194,14 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 	{
 		funcs = textproc->getFunctionList( type);
 	}
+	if (!funcs.empty())
+	{
+		print_subtitle( out, label, label_descr);
+		print_startlist( out, 0);
+	}
 	fi = funcs.begin(), fe = funcs.end();
 	for (; fi != fe; ++fi)
 	{
-		std::cout << label << "'" << *fi << "' :" << std::endl;
 		const char* descr = 0;
 		switch (type)
 		{
@@ -122,8 +250,12 @@ static void printTextProcessorDescription( const strus::TextProcessorInterface* 
 		};
 		if (descr && *descr)
 		{
-			std::cout << "* " << descr << std::endl << std::endl;
+			print_function_description( out, *fi, descr);
 		}
+	}
+	if (!funcs.empty())
+	{
+		print_endlist( out);
 	}
 }
 
@@ -133,31 +265,31 @@ static const char* functionDescriptionParameterTypeName( strus::FunctionDescript
 	return ar[ (unsigned int)type_];
 }
 
-static void printFunctionDescription( std::ostream& out, const strus::FunctionDescription& descr)
+static void printFunctionDescription( std::ostream& out, const std::string& label, const std::string& name, const strus::FunctionDescription& descr)
 {
 	typedef strus::FunctionDescription::Parameter Param;
-	out << "* " << descr.text() << std::endl;
+	std::ostringstream descrout;
+
+	descrout << descr.text() << std::endl;
+	print_startlist( descrout, _TXT("List of parameters"));
 	std::vector<Param>::const_iterator pi = descr.parameter().begin(), pe = descr.parameter().end();
 	for (; pi != pe; ++pi)
 	{
-		out << "\t" << pi->name() << " [" << functionDescriptionParameterTypeName( pi->type());
-		if (!pi->domain().empty())
-		{
-			out << " (" << pi->domain() << ")";
-		}
-		out << "] " << pi->text() << std::endl;
+		print_parameter_description( descrout, pi->name(), functionDescriptionParameterTypeName( pi->type()), pi->domain(), pi->text());
 	}
-	out << std::endl;
+	print_endlist( descrout);
+	print_function_description( out, name, descrout.str());
 }
 
-static void printQueryProcessorDescription( const strus::QueryProcessorInterface* queryproc, strus::QueryProcessorInterface::FunctionType type, const char* name)
+static void printQueryProcessorDescription( std::ostream& out, const strus::QueryProcessorInterface* queryproc, strus::QueryProcessorInterface::FunctionType type, const char* name)
 {
 	const char* label = "";
+	const char* label_descr = "";
 	switch (type)
 	{
-		case strus::QueryProcessorInterface::PostingJoinOperator: label = _TXT("Posting join operator"); break;
-		case strus::QueryProcessorInterface::WeightingFunction: label = _TXT("Weighting function"); break;
-		case strus::QueryProcessorInterface::SummarizerFunction: label = _TXT("Summarizer"); break;
+		case strus::QueryProcessorInterface::PostingJoinOperator: label = _TXT("Posting join operator"); label_descr = _TXT("List of posting join operators"); break;
+		case strus::QueryProcessorInterface::WeightingFunction: label = _TXT("Weighting function"); label_descr = _TXT("List of query evaluation weighting functions"); break;
+		case strus::QueryProcessorInterface::SummarizerFunction: label = _TXT("Summarizer"); label_descr = _TXT("List of summarization functions for the presentation of a query evaluation result"); break;
 	}
 	std::vector<std::string> funcs;
 	std::vector<std::string>::const_iterator fi,fe;
@@ -169,31 +301,39 @@ static void printQueryProcessorDescription( const strus::QueryProcessorInterface
 	{
 		funcs = queryproc->getFunctionList( type);
 	}
+	if (!funcs.empty())
+	{
+		print_subtitle( out, label, label_descr);
+		print_startlist( out, 0);
+	}
 	fi = funcs.begin(), fe = funcs.end();
 	for (; fi != fe; ++fi)
 	{
-		std::cout << label << " '" << *fi << "' :" << std::endl;
 		switch (type)
 		{
 			case strus::QueryProcessorInterface::PostingJoinOperator:
 			{
 				const strus::PostingJoinOperatorInterface* opr = queryproc->getPostingJoinOperator( *fi);
-				if (opr) std::cout << "* " << opr->getDescription().text() << std::endl;
+				print_function_description( out, *fi, opr->getDescription().text());
 				break;
 			}
 			case strus::QueryProcessorInterface::WeightingFunction: 
 			{
 				const strus::WeightingFunctionInterface* func = queryproc->getWeightingFunction( *fi);
-				if (func) printFunctionDescription( std::cout, func->getDescription());
+				if (func) printFunctionDescription( out, label, *fi, func->getDescription());
 				break;
 			}
 			case strus::QueryProcessorInterface::SummarizerFunction:
 			{
 				const strus::SummarizerFunctionInterface* func = queryproc->getSummarizerFunction( *fi);
-				if (func) printFunctionDescription( std::cout, func->getDescription());
+				if (func) printFunctionDescription( out, label, *fi, func->getDescription());
 				break;
 			}
 		};
+	}
+	if (!funcs.empty())
+	{
+		print_endlist( out);
 	}
 }
 
@@ -211,10 +351,10 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		opt = strus::ProgramOptions(
-				argc_, argv_, 8,
+				argc_, argv_, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "R,resourcedir:", "r,rpc:",
-				"T,trace:");
+				"T,trace:", "H,html");
 
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
@@ -300,6 +440,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Print this usage and do nothing else") << std::endl;
 			std::cout << "-v|--version" << std::endl;
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
+			std::cout << "-H|--html" << std::endl;
+			std::cout << "    " << _TXT("Print output as html") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
@@ -378,7 +520,10 @@ int main( int argc_, const char* argv_[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
 		}
-
+		if (opt("html"))
+		{
+			g_html_output = true;
+		}
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
 		for (; ti != te; ++ti)
@@ -398,43 +543,57 @@ int main( int argc_, const char* argv_[])
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
 		if (!queryproc) throw strus::runtime_error( "%s", _TXT("failed to get query processor"));
 
+		print_header( std::cout);
 		if (what.empty())
 		{
-			printTextProcessorDescription( textproc, strus::TextProcessorInterface::Segmenter, 0);
-			printTextProcessorDescription( textproc, strus::TextProcessorInterface::TokenizerFunction, 0);
-			printTextProcessorDescription( textproc, strus::TextProcessorInterface::NormalizerFunction, 0);
-			printTextProcessorDescription( textproc, strus::TextProcessorInterface::AggregatorFunction, 0);
-			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::PostingJoinOperator, 0);
-			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::WeightingFunction, 0);
-			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::SummarizerFunction, 0);
+			print_title( std::cout, _TXT("Query Processor"), _TXT("List of functions and operators predefined in the storage query processor"));
+			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::PostingJoinOperator, 0);
+			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::WeightingFunction, 0);
+			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::SummarizerFunction, 0);
+
+			print_title( std::cout, _TXT("Analyzer"), _TXT("List of functions and operators predefined in the analyzer text processor"));
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::Segmenter, 0);
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::TokenizerFunction, 0);
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::NormalizerFunction, 0);
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::AggregatorFunction, 0);
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::PatternLexer, 0);
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::PatternMatcher, 0);
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "segmenter"))
 		{
-			printTextProcessorDescription( textproc, strus::TextProcessorInterface::Segmenter, item.empty()?0:item.c_str());
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::Segmenter, item.empty()?0:item.c_str());
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "tokenizer"))
 		{
-			printTextProcessorDescription( textproc, strus::TextProcessorInterface::TokenizerFunction, item.empty()?0:item.c_str());
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::TokenizerFunction, item.empty()?0:item.c_str());
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "normalizer"))
 		{
-			printTextProcessorDescription( textproc, strus::TextProcessorInterface::NormalizerFunction, item.empty()?0:item.c_str());
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::NormalizerFunction, item.empty()?0:item.c_str());
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "aggregator"))
 		{
-			printTextProcessorDescription( textproc, strus::TextProcessorInterface::AggregatorFunction, item.empty()?0:item.c_str());
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::AggregatorFunction, item.empty()?0:item.c_str());
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "patternlexer"))
+		{
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::PatternLexer, item.empty()?0:item.c_str());
+		}
+		else if (strus::utils::caseInsensitiveEquals( what, "patternmatcher"))
+		{
+			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::PatternMatcher, item.empty()?0:item.c_str());
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "join"))
 		{
-			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::PostingJoinOperator, item.empty()?0:item.c_str());
+			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::PostingJoinOperator, item.empty()?0:item.c_str());
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "weighting"))
 		{
-			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::WeightingFunction, item.empty()?0:item.c_str());
+			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::WeightingFunction, item.empty()?0:item.c_str());
 		}
 		else if (strus::utils::caseInsensitiveEquals( what, "summarizer"))
 		{
-			printQueryProcessorDescription( queryproc, strus::QueryProcessorInterface::SummarizerFunction, item.empty()?0:item.c_str());
+			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::SummarizerFunction, item.empty()?0:item.c_str());
 		}
 		else
 		{
@@ -444,6 +603,7 @@ int main( int argc_, const char* argv_[])
 		{
 			throw strus::runtime_error( "%s", errorBuffer->fetchError());
 		}
+		print_trailer( std::cout);
 		return 0;
 	}
 	catch (const std::bad_alloc&)
