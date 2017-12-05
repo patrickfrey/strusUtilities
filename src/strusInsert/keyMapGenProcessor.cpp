@@ -143,7 +143,7 @@ void KeyMapGenProcessor::run()
 							std::cerr << string_format( _TXT( "failed to read document file '%s': %s"), fitr->c_str(), ::strerror( input.error())) << std::endl; 
 							break;
 						}
-						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
 						{
 							std::cerr << string_format( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 							continue;

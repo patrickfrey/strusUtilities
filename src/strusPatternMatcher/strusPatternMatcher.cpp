@@ -398,7 +398,9 @@ public:
 		else
 		{
 			strus::analyzer::DocumentClass rt;
-			if (!m_globalContext->textproc()->detectDocumentClass( rt, content.c_str(), content.size()))
+			enum {MaxHdrSize = 8092};
+			std::size_t hdrsize = content.size() > MaxHdrSize ? MaxHdrSize : content.size();
+			if (!m_globalContext->textproc()->detectDocumentClass( rt, content.c_str(), hdrsize, MaxHdrSize < content.size()))
 			{
 				throw strus::runtime_error( "%s", _TXT("failed to detect document class"));
 			}

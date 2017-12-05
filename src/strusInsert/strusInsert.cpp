@@ -400,7 +400,7 @@ int main( int argc_, const char* argv_[])
 			{
 				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), datapath.c_str(), ::strerror(input.error())); 
 			}
-			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize))
+			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
 			{
 				throw strus::runtime_error( "%s",  _TXT("failed to detect document class")); 
 			}
