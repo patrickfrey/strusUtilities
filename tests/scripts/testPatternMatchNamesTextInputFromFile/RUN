@@ -1,1 +1,1 @@
-StrusPatternMatcher -C text/plain -g plain -F -K -m modstrus_analyzer_pattern -p $T/program.rul $T/inputlist.txt 
+StrusPatternMatcher -C text/plain -F -K -m modstrus_analyzer_pattern -p $T/program.rul $T/inputlist.txt 

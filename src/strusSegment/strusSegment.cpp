@@ -253,7 +253,7 @@ int main( int argc, const char* argv[])
 		}
 		if (!documentClass.defined())
 		{
-			char hdrbuf[ 1024];
+			char hdrbuf[ 4096];
 			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
 			if (input.error())
 			{

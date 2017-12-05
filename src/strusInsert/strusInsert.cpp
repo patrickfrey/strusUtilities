@@ -394,7 +394,7 @@ int main( int argc_, const char* argv_[])
 		else if (strus::isFile( datapath))
 		{
 			strus::InputStream input( datapath);
-			char hdrbuf[ 1024];
+			char hdrbuf[ 4096];
 			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
 			if (input.error())
 			{

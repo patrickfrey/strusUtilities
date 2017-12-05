@@ -89,7 +89,7 @@ void InsertProcessor::run()
 					if (!m_defaultDocumentClass.defined())
 					{
 						// Read the input file to analyze and detect its document type:
-						char hdrbuf[ 1024];
+						char hdrbuf[ 4096];
 						std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
 						if (input.error())
 						{
