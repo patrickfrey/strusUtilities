@@ -2813,7 +2813,7 @@ DLL_PUBLIC bool strus::loadPatternMatcherProgramWithLexer(
 			}
 			if (!program.compile())
 			{
-				errorhnd->explain(_TXT("failed to compile pattern match program"));
+				errorhnd->explain(_TXT("failed to compile pattern match program: %s"));
 				return false;
 			}
 			warnings = program.warnings();
