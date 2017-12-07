@@ -5,7 +5,7 @@ git submodule foreach --recursive git checkout master
 git submodule foreach --recursive git pull
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DWITH_STRUS_VECTOR=YES -DWITH_STRUS_PATTERN=YES -DBOOST_WARNINGS=NO -DCPP_LANGUAGE_VERSION=11 -DC_LANGUAGE_VERSION=99 ..
+cmake -DCMAKE_BUILD_TYPE=Release -DWITH_STRUS_VECTOR=YES -DWITH_STRUS_PATTERN=YES -DCPP_LANGUAGE_VERSION=11 -DC_LANGUAGE_VERSION=99 ..
 make -j<N>
 make test ARGS=-j<N>
 
