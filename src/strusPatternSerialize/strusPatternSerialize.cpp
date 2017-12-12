@@ -52,8 +52,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
 

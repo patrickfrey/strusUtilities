@@ -47,6 +47,7 @@
 #include <cstring>
 #include <stdexcept>
 
+static int g_output_precision = 8;
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
@@ -511,11 +512,11 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 				if (ehandle > 0)
 				{
 					areader->skipDoc(docno);
-					std::cout << areader->getValue( ehandle) << ' ' << value.tostring().c_str() << std::endl;
+					std::cout << areader->getValue( ehandle) << ' ' << value.tostring( g_output_precision).c_str() << std::endl;
 				}
 				else
 				{
-					std::cout << docno << ' ' << value.tostring().c_str() << std::endl;
+					std::cout << docno << ' ' << value.tostring( g_output_precision).c_str() << std::endl;
 				}
 			}
 		}
@@ -532,7 +533,7 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 			strus::NumericVariant value = metadata->getValue( hnd);
 			if (value.defined())
 			{
-				std::cout << value.tostring().c_str() << std::endl;
+				std::cout << value.tostring( g_output_precision).c_str() << std::endl;
 			}
 			else
 			{
