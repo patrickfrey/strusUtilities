@@ -23,7 +23,7 @@ include_directories(
 	"${strusrpc_INCLUDE_DIRS}"	    
 )
 link_directories( 
-	"${Boost_LIBRARY_DIRS}"
+	${Boost_LIBRARY_DIRS}
 	"${UTILS_LIBRARY_DIRS}" 
 	"${strusbase_LIBRARY_DIRS}"
 	"${strus_LIBRARY_DIRS}"

@@ -8,7 +8,7 @@ include_directories(
 )
 link_directories( 
 	   "${strusbase_LIBRARY_DIRS}"
-            "${Boost_LIBRARY_DIRS}"
+            ${Boost_LIBRARY_DIRS}
 	    "${UTILS_INCLUDE_DIRS}" 
 )
 
