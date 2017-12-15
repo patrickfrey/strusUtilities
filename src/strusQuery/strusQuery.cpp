@@ -32,7 +32,6 @@
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "strus/base/unique_ptr.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -356,12 +355,10 @@ int main( int argc_, const char* argv_[])
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client: %s"), errorBuffer->fetchError());
 
-		strus::unique_ptr<strus::QueryAnalyzerInterface>
-			analyzer( analyzerBuilder->createQueryAnalyzer());
+		strus::local_ptr<strus::QueryAnalyzerInterface> analyzer( analyzerBuilder->createQueryAnalyzer());
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer: %s"), errorBuffer->fetchError());
 
-		strus::unique_ptr<strus::QueryEvalInterface>
-			qeval( storageBuilder->createQueryEval());
+		strus::local_ptr<strus::QueryEvalInterface> qeval( storageBuilder->createQueryEval());
 		if (!qeval.get()) throw strus::runtime_error(_TXT("failed to create query evaluation interface: %s"), errorBuffer->fetchError());
 
 		const strus::QueryProcessorInterface* qproc = storageBuilder->getQueryProcessor();

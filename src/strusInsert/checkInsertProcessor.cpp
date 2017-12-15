@@ -22,7 +22,6 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "strus/base/unique_ptr.hpp"
 #include "strus/base/shared_ptr.hpp"
 #include "strus/base/thread.hpp"
 #include "private/errorUtils.hpp"

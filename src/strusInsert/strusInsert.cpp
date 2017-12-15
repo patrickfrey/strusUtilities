@@ -32,7 +32,6 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "strus/base/unique_ptr.hpp"
 #include "strus/base/thread.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionStorage.hpp"
@@ -423,7 +422,7 @@ int main( int argc_, const char* argv_[])
 		}
 
 		// Start inserter process:
-		strus::unique_ptr<strus::CommitQueue>
+		strus::local_ptr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get(), verbose, errorBuffer.get()));
 
 		strus::FileCrawler fileCrawler( datapath, fetchSize, fileext);

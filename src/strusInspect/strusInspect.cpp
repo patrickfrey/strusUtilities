@@ -39,7 +39,6 @@
 #include "strus/numericVariant.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "strus/base/unique_ptr.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
 #include "private/errorUtils.hpp"
@@ -79,10 +78,10 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 namespace strus
 {
-	typedef strus::unique_ptr<PostingIteratorInterface> PostingIteratorReference;
-	typedef strus::unique_ptr<DocumentTermIteratorInterface> DocumentTermIteratorReference;
-	typedef strus::unique_ptr<ForwardIteratorInterface> ForwardIteratorReference;
-	typedef strus::unique_ptr<MetaDataReaderInterface> MetaDataReaderReference;
+	typedef strus::Reference<PostingIteratorInterface> PostingIteratorReference;
+	typedef strus::Reference<DocumentTermIteratorInterface> DocumentTermIteratorReference;
+	typedef strus::Reference<ForwardIteratorInterface> ForwardIteratorReference;
+	typedef strus::Reference<MetaDataReaderInterface> MetaDataReaderReference;
 }
 
 static strus::Index stringToIndex( const char* value)
