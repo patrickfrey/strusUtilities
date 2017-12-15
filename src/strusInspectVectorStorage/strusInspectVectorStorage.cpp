@@ -25,7 +25,6 @@
 #include "private/version.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -33,6 +32,8 @@
 #include "strus/base/configParser.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
+#include "strus/base/numstring.hpp"
 #include "strus/base/local_ptr.hpp"
 #include <iostream>
 #include <iomanip>
@@ -41,6 +42,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <ctime>
+#include <limits>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 
@@ -61,7 +63,7 @@ static strus::Index getFeatureIndex( const strus::VectorStorageClientInterface* 
 	strus::Index idx;
 	if (inspectarg[0] == FEATNUM_PREFIX_CHAR && inspectarg[1] >= '0' && inspectarg[1] <= '9')
 	{
-		idx = strus::utils::toint( inspectarg+1);
+		idx = strus::numstring_conv::toint( inspectarg+1, std::numeric_limits<strus::Index>::max());
 		if (idx < 0) strus::runtime_error( "%s", _TXT("feature number must not be negative"));
 	}
 	else
@@ -539,7 +541,7 @@ static void inspectFeatureName( const strus::VectorStorageClientInterface* vsmod
 			}
 			else
 			{
-				far.push_back( strus::utils::toint( inspectarg[ai]));
+				far.push_back( strus::numstring_conv::toint( inspectarg[ai], std::numeric_limits<strus::Index>::max()));
 			}
 		}
 		std::vector<strus::Index>::const_iterator fi = far.begin(), fe = far.end();
@@ -599,7 +601,7 @@ static void inspectConceptFeatures( const strus::VectorStorageClientInterface* v
 		std::size_t ai = 1, ae = inspectargsize;
 		for (; ai != ae; ++ai)
 		{
-			car.push_back( strus::utils::toint( inspectarg[ai]));
+			car.push_back( strus::numstring_conv::toint( inspectarg[ai], std::numeric_limits<strus::Index>::max()));
 		}
 		std::vector<strus::Index> res;
 		std::vector<strus::Index>::const_iterator ci = car.begin(), ce = car.end();
@@ -980,83 +982,83 @@ int main( int argc, const char* argv[])
 		std::size_t inspectargsize = opt.nofargs() - 1;
 
 		// Do inspect what is requested:
-		if (strus::utils::caseInsensitiveEquals( what, "classnames"))
+		if (strus::caseInsensitiveEquals( what, "classnames"))
 		{
 			inspectConceptClassNames( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "featsim"))
+		else if (strus::caseInsensitiveEquals( what, "featsim"))
 		{
 			inspectFeatureSimilarity( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "featcon"))
+		else if (strus::caseInsensitiveEquals( what, "featcon"))
 		{
 			inspectFeatureConcepts( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "featvec"))
+		else if (strus::caseInsensitiveEquals( what, "featvec"))
 		{
 			inspectFeatureVector( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "featname"))
+		else if (strus::caseInsensitiveEquals( what, "featname"))
 		{
 			inspectFeatureName( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "featidx"))
+		else if (strus::caseInsensitiveEquals( what, "featidx"))
 		{
 			inspectFeatureIndex( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "confeatidx"))
+		else if (strus::caseInsensitiveEquals( what, "confeatidx"))
 		{
 			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndex);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "confeatname"))
+		else if (strus::caseInsensitiveEquals( what, "confeatname"))
 		{
 			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintName);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "confeat"))
+		else if (strus::caseInsensitiveEquals( what, "confeat"))
 		{
 			inspectConceptFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "opfeat"))
+		else if (strus::caseInsensitiveEquals( what, "opfeat"))
 		{
 			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/, realmeasure);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "opfeatw"))
+		else if (strus::caseInsensitiveEquals( what, "opfeatw"))
 		{
 			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/, realmeasure);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "opfeatname"))
+		else if (strus::caseInsensitiveEquals( what, "opfeatname"))
 		{
 			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/, realmeasure);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "opfeatwname"))
+		else if (strus::caseInsensitiveEquals( what, "opfeatwname"))
 		{
 			inspectVectorOperations( vsmodel.get(), inspectarg, inspectargsize, PrintName, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/, realmeasure);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatidx"))
+		else if (strus::caseInsensitiveEquals( what, "nbfeatidx"))
 		{
 			inspectNeighbourFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndex);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "nbfeatname"))
+		else if (strus::caseInsensitiveEquals( what, "nbfeatname"))
 		{
 			inspectNeighbourFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintName);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "nbfeat"))
+		else if (strus::caseInsensitiveEquals( what, "nbfeat"))
 		{
 			inspectNeighbourFeatures( vsmodel.get(), inspectarg, inspectargsize, PrintIndexName);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "nofcon"))
+		else if (strus::caseInsensitiveEquals( what, "nofcon"))
 		{
 			inspectNofConcepts( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "noffeat"))
+		else if (strus::caseInsensitiveEquals( what, "noffeat"))
 		{
 			inspectNofFeatures( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "config"))
+		else if (strus::caseInsensitiveEquals( what, "config"))
 		{
 			inspectConfig( vsmodel.get(), inspectarg, inspectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "dump"))
+		else if (strus::caseInsensitiveEquals( what, "dump"))
 		{
 			inspectDump( vsi, dbi, config, inspectarg, inspectargsize);
 		}

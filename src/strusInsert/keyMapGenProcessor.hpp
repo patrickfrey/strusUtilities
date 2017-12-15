@@ -10,7 +10,8 @@
 #include "strus/index.hpp"
 #include <vector>
 #include <string>
-#include "private/utils.hpp"
+#include "strus/base/thread.hpp"
+#include "strus/base/atomic.hpp"
 #include "private/analyzerMap.hpp"
 
 namespace strus {
@@ -53,7 +54,7 @@ public:
 	void printKeyOccurrenceList( std::ostream& out, std::size_t maxNofResults) const;
 
 private:
-	utils::Mutex m_mutex;
+	strus::mutex m_mutex;
 	std::vector<KeyOccurrenceList> m_keyOccurrenceListBuf;
 };
 
@@ -80,7 +81,7 @@ private:
 	analyzer::DocumentClass m_defaultDocumentClass;
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
-	utils::AtomicBool m_terminated;
+	strus::AtomicFlag m_terminated;
 	ErrorBufferInterface* m_errorhnd;
 };
 

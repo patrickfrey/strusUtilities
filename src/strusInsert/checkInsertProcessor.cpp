@@ -22,16 +22,14 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "private/utils.hpp"
+#include "strus/base/shared_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "fileCrawlerInterface.hpp"
 #include <cmath>
 #include <limits>
 #include <iostream>
-#include <boost/thread.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/interprocess/smart_ptr/unique_ptr.hpp>
 #include <stdarg.h>
 
 using namespace strus;
@@ -61,25 +59,8 @@ CheckInsertProcessor::~CheckInsertProcessor()
 
 void CheckInsertProcessor::sigStop()
 {
-	m_terminated = true;
+	m_terminated.set( true);
 }
-
-template<typename T>
-struct ShouldBeDefaultDeleter {
-	void operator()(T *p)
-	{
-		delete p;
-	}
-};
-
-template<typename T>
-class unique_ptr
-	:public boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >
-{
-public:
-	unique_ptr( T* p)
-		:boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >(p){}
-};
 
 void CheckInsertProcessor::run()
 {
@@ -87,9 +68,8 @@ void CheckInsertProcessor::run()
 	{
 		std::vector<std::string> files;
 		std::vector<std::string>::const_iterator fitr;
-	
-		boost::scoped_ptr<strus::MetaDataReaderInterface> metadata( 
-			m_storage->createMetaDataReader());
+
+		strus::local_ptr<strus::MetaDataReaderInterface> metadata( m_storage->createMetaDataReader());
 		if (!metadata.get()) throw strus::runtime_error( "%s", _TXT("error creating meta data reader"));
 	
 		// Evaluate the expected types of the meta data elements to make them comparable
@@ -121,7 +101,7 @@ void CheckInsertProcessor::run()
 		while (!(files=m_crawler->fetch()).empty())
 		{
 			fitr = files.begin();
-			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
+			for (int fidx=0; !m_terminated.test() && fitr != files.end(); ++fitr,++fidx)
 			{
 				try
 				{
@@ -190,7 +170,7 @@ void CheckInsertProcessor::run()
 								&& oi->name() != strus::Constants::attribute_docid();
 								++oi){}
 							const char* docid = 0;
-							boost::scoped_ptr<strus::StorageDocumentInterface> storagedoc;
+							strus::local_ptr<strus::StorageDocumentInterface> storagedoc;
 							if (oi != oe)
 							{
 								storagedoc.reset(
@@ -351,10 +331,6 @@ void CheckInsertProcessor::run()
 					filesChecked) << std::endl;
 		}
 	}
-	catch (const boost::thread_interrupted&)
-	{
-		std::cerr << _TXT("failed to complete check inserts: thread interrupted") << std::endl; 
-	}
 	catch (const std::bad_alloc& err)
 	{
 		std::cerr << _TXT("failed to complete check inserts: memory allocation error") << std::endl; 
@@ -362,6 +338,10 @@ void CheckInsertProcessor::run()
 	catch (const std::runtime_error& err)
 	{
 		std::cerr << string_format( _TXT( "failed to check documents: %s"), err.what()) << std::endl;
+	}
+	catch (...)
+	{
+		std::cerr << _TXT("failed to complete check inserts: unexpected exception") << std::endl; 
 	}
 	m_errorhnd->releaseContext();
 }

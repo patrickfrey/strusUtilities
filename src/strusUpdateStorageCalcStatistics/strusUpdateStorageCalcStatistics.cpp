@@ -38,10 +38,10 @@
 #include "strus/versionBase.hpp"
 #include "strus/numericVariant.hpp"
 #include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
 #include "strus/base/local_ptr.hpp"
 #include "private/version.hpp"
 #include "private/errorUtils.hpp"
@@ -391,15 +391,15 @@ int main( int argc, const char* argv[])
 		std::vector<std::string>::const_iterator vi = variables.begin(), ve = variables.end();
 		for (; vi != ve; ++vi)
 		{
-			if (strus::utils::caseInsensitiveEquals( *vi, "N")) funcinst->setVariableValue( "N", collectionSize);
-			if (strus::utils::caseInsensitiveEquals( *vi, "T")) funcinst->setVariableValue( "T", collectionNofTerms);
+			if (strus::caseInsensitiveEquals( *vi, "N")) funcinst->setVariableValue( "N", collectionSize);
+			if (strus::caseInsensitiveEquals( *vi, "T")) funcinst->setVariableValue( "T", collectionNofTerms);
 		}
 		variables = normfunc->getVariables();
 		vi = variables.begin(), ve = variables.end();
 		for (; vi != ve; ++vi)
 		{
-			if (strus::utils::caseInsensitiveEquals( *vi, "N")) normfuncinst->setVariableValue( "N", collectionSize);
-			if (strus::utils::caseInsensitiveEquals( *vi, "T")) normfuncinst->setVariableValue( "T", collectionNofTerms);
+			if (strus::caseInsensitiveEquals( *vi, "N")) normfuncinst->setVariableValue( "N", collectionSize);
+			if (strus::caseInsensitiveEquals( *vi, "T")) normfuncinst->setVariableValue( "T", collectionNofTerms);
 		}
 
 		// Do the updates:

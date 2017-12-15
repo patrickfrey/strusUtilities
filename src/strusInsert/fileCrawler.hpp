@@ -8,9 +8,9 @@
 #ifndef _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
 #define _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
 #include "strus/base/fileio.hpp"
+#include "strus/base/thread.hpp"
 #include "strus/index.hpp"
 #include "fileCrawlerInterface.hpp"
-#include "private/utils.hpp"
 #include <vector>
 #include <string>
 #include <list>
@@ -61,7 +61,7 @@ private:
 	std::string m_extension;
 
 	std::list<Chunk> m_chunkque;
-	utils::Mutex m_chunkque_mutex;
+	strus::mutex m_chunkque_mutex;
 };
 
 }//namespace

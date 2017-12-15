@@ -35,7 +35,6 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/local_ptr.hpp"
 #include "private/version.hpp"
-#include "private/utils.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"

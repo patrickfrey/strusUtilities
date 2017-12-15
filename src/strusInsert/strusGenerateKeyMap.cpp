@@ -28,7 +28,6 @@
 #include "strus/versionBase.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"

@@ -9,6 +9,8 @@
 #include "strus/textProcessorInterface.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/base/fileio.hpp"
+#include "strus/base/string_conv.hpp"
+#include "strus/base/shared_ptr.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
@@ -32,22 +34,22 @@ static const std::string getAnalyzerMapKey( const std::string& mimeType, const s
 	{
 		if (!encoding.empty())
 		{
-			return utils::tolower( mimeType + "[" + encoding + "]" + ":" + scheme);
+			return string_conv::tolower( mimeType + "[" + encoding + "]" + ":" + scheme);
 		}
 		else
 		{
-			return utils::tolower( mimeType + ":" + scheme);
+			return string_conv::tolower( mimeType + ":" + scheme);
 		}
 	}
 	else
 	{
 		if (!encoding.empty())
 		{
-			return utils::tolower( mimeType + "[" + encoding + "]");
+			return string_conv::tolower( mimeType + "[" + encoding + "]");
 		}
 		else
 		{
-			return utils::tolower( mimeType);
+			return string_conv::tolower( mimeType);
 		}
 	}
 }
@@ -82,7 +84,7 @@ void AnalyzerMap::loadDefaultAnalyzerProgram(
 		segmenter = m_textproc->getSegmenterByName( segmentername);
 		if (!segmenter) throw strus::runtime_error( _TXT( "failed to load segmenter by name '%s': %s"), segmentername.c_str(), m_errorhnd->fetchError());
 	}
-	utils::SharedPtr<strus::DocumentAnalyzerInterface>
+	strus::shared_ptr<strus::DocumentAnalyzerInterface>
 		analyzer( m_builder->createDocumentAnalyzer( segmenter));
 	if (!analyzer.get()) throw strus::runtime_error( "%s", _TXT("error creating analyzer"));
 
@@ -118,7 +120,7 @@ void AnalyzerMap::loadAnalyzerProgram(
 		segmenter = m_textproc->getSegmenterByName( segmentername);
 		if (!segmenter) throw strus::runtime_error( _TXT( "failed to load segmenter by name '%s': %s"), segmentername.c_str(), m_errorhnd->fetchError());
 	}
-	utils::SharedPtr<strus::DocumentAnalyzerInterface>
+	strus::shared_ptr<strus::DocumentAnalyzerInterface>
 		analyzer( m_builder->createDocumentAnalyzer( segmenter));
 	if (!analyzer.get()) throw strus::runtime_error( "%s", _TXT("error creating analyzer"));
 

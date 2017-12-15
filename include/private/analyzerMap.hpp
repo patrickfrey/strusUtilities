@@ -9,8 +9,11 @@
 #define _STRUS_ANALYZER_MAP_HPP_INCLUDED
 #include "strus/analyzer/documentClass.hpp"
 #include "strus/documentAnalyzerInterface.hpp"
-#include "private/utils.hpp"
+#include "strus/base/shared_ptr.hpp"
 #include <string>
+#include <iostream>
+#include <sstream>
+#include <map>
 
 namespace strus {
 
@@ -51,7 +54,7 @@ private:
 		const std::string& prgfile);
 
 private:
-	typedef std::map<std::string,utils::SharedPtr<DocumentAnalyzerInterface> > Map;
+	typedef std::map< std::string, strus::shared_ptr<DocumentAnalyzerInterface> > Map;
 
 	AnalyzerMap( const AnalyzerMap&){}		//... non copyable
 	void operator=( const AnalyzerMap&){}		//... non copyable

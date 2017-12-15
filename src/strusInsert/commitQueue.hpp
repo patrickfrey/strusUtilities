@@ -11,7 +11,7 @@
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/reference.hpp"
-#include "private/utils.hpp"
+#include "strus/base/thread.hpp"
 #include <vector>
 #include <string>
 #include <queue>
@@ -46,8 +46,8 @@ private:
 	Index m_nofDocuments;
 	unsigned int m_nofOpenTransactions;
 	std::queue<StorageTransactionReference> m_openTransactions;
-	utils::Mutex m_mutex_openTransactions;
-	utils::Mutex m_mutex_errors;
+	strus::mutex m_mutex_openTransactions;
+	strus::mutex m_mutex_errors;
 	std::vector<std::string> m_errors;
 	bool m_verbose;
 	ErrorBufferInterface* m_errorhnd;

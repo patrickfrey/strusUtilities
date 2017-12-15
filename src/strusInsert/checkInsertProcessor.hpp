@@ -7,8 +7,8 @@
  */
 #ifndef _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
 #define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#include "private/utils.hpp"
 #include "private/analyzerMap.hpp"
+#include "strus/base/atomic.hpp"
 #include <string>
 
 namespace strus {
@@ -47,7 +47,7 @@ private:
 	const AnalyzerMap* m_analyzerMap;
 	analyzer::DocumentClass m_defaultDocumentClass;
 	FileCrawlerInterface* m_crawler;
-	utils::AtomicBool m_terminated;
+	strus::AtomicFlag m_terminated;
 	std::string m_logfile;
 	ErrorBufferInterface* m_errorhnd;
 };

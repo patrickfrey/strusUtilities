@@ -28,7 +28,6 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
 #include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"

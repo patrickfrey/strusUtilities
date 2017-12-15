@@ -31,10 +31,10 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
 #include "strus/base/inputStream.hpp"
 #include "strus/base/local_ptr.hpp"
 #include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -48,6 +48,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -97,7 +98,7 @@ static DumpConfigElem getNextDumpConfigElem( char const*& di)
 			char eb = *di++;
 			char const* valstart = di;
 			for (; *di && *di != eb; ++di){}
-			value = strus::utils::unescape( std::string( valstart, di-valstart));
+			value = strus::string_conv::unescape( std::string( valstart, di-valstart));
 			if (*di) ++di;
 			skipSpace( di);
 		}

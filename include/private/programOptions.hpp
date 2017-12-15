@@ -7,13 +7,14 @@
  */
 #ifndef _STRUS_UTILITIES_PROGRAM_OPTIONS_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_OPTIONS_HPP_INCLUDED
-#include "private/utils.hpp"
 #include "private/internationalization.hpp"
+#include "strus/base/numstring.hpp"
 #include <cstring>
 #include <stdexcept>
 #include <map>
 #include <set>
 #include <vector>
+#include <limits>
 #include <algorithm>
 #include <stdexcept>
 #include <cstdarg>
@@ -222,7 +223,7 @@ public:
 		if (oi == m_opt.end()) return 0;
 		try
 		{
-			return utils::toint( oi->second);
+			return numstring_conv::toint( oi->second, std::numeric_limits<int>::max());
 		}
 		catch (const std::runtime_error&)
 		{

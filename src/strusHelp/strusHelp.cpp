@@ -27,6 +27,7 @@
 #include "strus/errorBufferInterface.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
 #include "strus/base/local_ptr.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionStorage.hpp"
@@ -38,7 +39,6 @@
 #include "strus/functionDescription.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -559,39 +559,39 @@ int main( int argc_, const char* argv_[])
 			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::PatternLexer, 0);
 			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::PatternMatcher, 0);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "segmenter"))
+		else if (strus::caseInsensitiveEquals( what, "segmenter"))
 		{
 			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::Segmenter, item.empty()?0:item.c_str());
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "tokenizer"))
+		else if (strus::caseInsensitiveEquals( what, "tokenizer"))
 		{
 			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::TokenizerFunction, item.empty()?0:item.c_str());
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "normalizer"))
+		else if (strus::caseInsensitiveEquals( what, "normalizer"))
 		{
 			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::NormalizerFunction, item.empty()?0:item.c_str());
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "aggregator"))
+		else if (strus::caseInsensitiveEquals( what, "aggregator"))
 		{
 			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::AggregatorFunction, item.empty()?0:item.c_str());
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "patternlexer"))
+		else if (strus::caseInsensitiveEquals( what, "patternlexer"))
 		{
 			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::PatternLexer, item.empty()?0:item.c_str());
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "patternmatcher"))
+		else if (strus::caseInsensitiveEquals( what, "patternmatcher"))
 		{
 			printTextProcessorDescription( std::cout, textproc, strus::TextProcessorInterface::PatternMatcher, item.empty()?0:item.c_str());
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "join"))
+		else if (strus::caseInsensitiveEquals( what, "join"))
 		{
 			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::PostingJoinOperator, item.empty()?0:item.c_str());
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "weighting"))
+		else if (strus::caseInsensitiveEquals( what, "weighting"))
 		{
 			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::WeightingFunction, item.empty()?0:item.c_str());
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "summarizer"))
+		else if (strus::caseInsensitiveEquals( what, "summarizer"))
 		{
 			printQueryProcessorDescription( std::cout, queryproc, strus::QueryProcessorInterface::SummarizerFunction, item.empty()?0:item.c_str());
 		}
