@@ -7,7 +7,7 @@
  */
 #ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
-#include "private/utils.hpp"
+#include "strus/base/atomic.hpp"
 #include "private/analyzerMap.hpp"
 
 namespace strus {
@@ -54,7 +54,7 @@ private:
 	FileCrawlerInterface* m_crawler;
 	unsigned int m_transactionSize;
 	bool m_verbose;
-	utils::AtomicBool m_terminated;
+	strus::AtomicFlag m_terminated;
 	ErrorBufferInterface* m_errorhnd;
 };
 

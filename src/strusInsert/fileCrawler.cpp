@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "fileCrawler.hpp"
-#include "private/utils.hpp"
 #include "private/internationalization.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
@@ -82,7 +81,7 @@ void FileCrawler::collectFilesToProcess( const std::string& dir)
 
 std::vector<std::string> FileCrawler::fetch()
 {
-	utils::UniqueLock lock(m_chunkque_mutex);
+	strus::scoped_lock lock( m_chunkque_mutex);
 	if (m_chunkque.empty())
 	{
 		return std::vector<std::string>();

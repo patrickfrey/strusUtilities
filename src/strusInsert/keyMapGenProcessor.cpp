@@ -15,8 +15,8 @@
 #include "strus/base/local_ptr.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
+#include "strus/base/thread.hpp"
 #include "fileCrawlerInterface.hpp"
-#include "private/utils.hpp"
 #include "private/internationalization.hpp"
 #include <iostream>
 
@@ -31,7 +31,7 @@ static bool compareKeyMapOccurrenceFrequency( const KeyOccurrence& aa, const Key
 
 void KeyMapGenResultList::push( KeyOccurrenceList& lst)
 {
-	utils::ScopedLock lock( m_mutex);
+	strus::scoped_lock lock( m_mutex);
 	m_keyOccurrenceListBuf.push_back( KeyOccurrenceList());
 	m_keyOccurrenceListBuf.back().swap( lst);
 }
@@ -109,7 +109,7 @@ KeyMapGenProcessor::~KeyMapGenProcessor()
 
 void KeyMapGenProcessor::sigStop()
 {
-	m_terminated = true;
+	m_terminated.set( true);
 }
 
 
@@ -126,7 +126,7 @@ void KeyMapGenProcessor::run()
 			KeyOccurrenceMap keyOccurrenceMap;
 
 			fitr = files.begin();
-			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
+			for (int fidx=0; !m_terminated.test() && fitr != files.end(); ++fitr,++fidx)
 			{
 				try
 				{
@@ -214,7 +214,7 @@ void KeyMapGenProcessor::run()
 					std::cerr << string_format(_TXT("failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
 				}
 			}
-			if (!m_terminated)
+			if (!m_terminated.test())
 			{
 				KeyOccurrenceList keyOccurrenceList;
 				KeyOccurrenceMap::const_iterator

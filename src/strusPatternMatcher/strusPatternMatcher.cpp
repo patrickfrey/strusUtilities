@@ -41,8 +41,8 @@
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/shared_ptr.hpp"
 #include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -693,10 +693,10 @@ private:
 	SegmenterMap m_segmentermap;
 	unsigned int m_threadid;
 	std::string m_outputfile;
-	strus::utils::SharedPtr<std::ofstream> m_outputfilestream;
+	strus::shared_ptr<std::ofstream> m_outputfilestream;
 	std::ostream* m_output;
 	std::string m_outerrfile;
-	strus::utils::SharedPtr<std::ofstream> m_outerrfilestream;
+	strus::shared_ptr<std::ofstream> m_outerrfilestream;
 	std::ostream* m_outerr;
 };
 

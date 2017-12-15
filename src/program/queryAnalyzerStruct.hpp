@@ -8,10 +8,10 @@
 #ifndef _STRUS_BINDING_QUERY_ANALYZER_STRUCT_HPP_INCLUDED
 #define _STRUS_BINDING_QUERY_ANALYZER_STRUCT_HPP_INCLUDED
 #include "strus/queryAnalyzerContextInterface.hpp"
+#include "strus/base/string_conv.hpp"
 #include <vector>
 #include <string>
 #include <map>
-#include "private/utils.hpp"
 
 namespace strus {
 
@@ -49,7 +49,7 @@ public:
 
 	void autoGroupBy( const std::string& fieldtype_, const std::string& name, int range, unsigned int cardinality, QueryAnalyzerContextInterface::GroupBy groupBy, bool groupSingle)
 	{
-		std::string fieldtype = utils::tolower( fieldtype_);
+		std::string fieldtype = string_conv::tolower( fieldtype_);
 		GroupOperator gop( Operator( name, range, cardinality), groupBy, groupSingle);
 		GroupMap::iterator gi = m_groupmap.find( fieldtype);
 		if (gi == m_groupmap.end())
@@ -64,7 +64,7 @@ public:
 
 	const GroupOperatorList& autoGroupOperators( const std::string& fieldtype_) const
 	{
-		std::string fieldtype = utils::tolower( fieldtype_);
+		std::string fieldtype = string_conv::tolower( fieldtype_);
 		static const std::vector<GroupOperator> empty;
 		GroupMap::const_iterator gi = m_groupmap.find( fieldtype);
 		if (gi == m_groupmap.end())

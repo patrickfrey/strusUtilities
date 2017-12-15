@@ -14,9 +14,9 @@
 #include "strus/patternLexerInterface.hpp"
 #include "strus/patternTermFeederInterface.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
 #include "strus/base/utf8.hpp"
 #include "private/internationalization.hpp"
-#include "private/utils.hpp"
 #include "lexems.hpp"
 #include "errorPosition.hpp"
 #include <iostream>
@@ -354,7 +354,7 @@ static JoinOperation joinOperation( const std::string& name)
 	std::size_t ai = 0;
 	for (; ar[ai]; ++ai)
 	{
-		if (utils::caseInsensitiveEquals( name, ar[ai]))
+		if (strus::caseInsensitiveEquals( name, ar[ai]))
 		{
 			return (JoinOperation)ai;
 		}

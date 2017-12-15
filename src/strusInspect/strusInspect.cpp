@@ -34,18 +34,22 @@
 #include "strus/versionBase.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
+#include "strus/base/numstring.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/unique_ptr.hpp"
 #include "private/programOptions.hpp"
 #include "private/version.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
+#include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <limits>
 
 static int g_output_precision = 8;
 
@@ -75,16 +79,16 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 namespace strus
 {
-	typedef strus::utils::ScopedPtr<PostingIteratorInterface> PostingIteratorReference;
-	typedef strus::utils::ScopedPtr<DocumentTermIteratorInterface> DocumentTermIteratorReference;
-	typedef strus::utils::ScopedPtr<ForwardIteratorInterface> ForwardIteratorReference;
-	typedef strus::utils::ScopedPtr<MetaDataReaderInterface> MetaDataReaderReference;
+	typedef strus::unique_ptr<PostingIteratorInterface> PostingIteratorReference;
+	typedef strus::unique_ptr<DocumentTermIteratorInterface> DocumentTermIteratorReference;
+	typedef strus::unique_ptr<ForwardIteratorInterface> ForwardIteratorReference;
+	typedef strus::unique_ptr<MetaDataReaderInterface> MetaDataReaderReference;
 }
 
 static strus::Index stringToIndex( const char* value)
 {
 	std::ostringstream val;
-	return strus::utils::toint( std::string( value));
+	return strus::numstring_conv::toint( std::string( value), std::numeric_limits<strus::Index>::max());
 }
 static bool isIndex( char const* cc)
 {
@@ -1048,79 +1052,79 @@ int main( int argc, const char* argv[])
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage client"));
 
-		if (strus::utils::caseInsensitiveEquals( what, "pos"))
+		if (strus::caseInsensitiveEquals( what, "pos"))
 		{
 			inspectPositions( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "ff"))
+		else if (strus::caseInsensitiveEquals( what, "ff"))
 		{
 			inspectFeatureFrequency( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "df"))
+		else if (strus::caseInsensitiveEquals( what, "df"))
 		{
 			inspectDocumentFrequency( *storage, inpectarg, inpectargsize, attribute);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "ttf"))
+		else if (strus::caseInsensitiveEquals( what, "ttf"))
 		{
 			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTermOccurrencies, inpectarg, inpectargsize, attribute);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "ttc"))
+		else if (strus::caseInsensitiveEquals( what, "ttc"))
 		{
 			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTerms, inpectarg, inpectargsize, attribute);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "featuretypes"))
+		else if (strus::caseInsensitiveEquals( what, "featuretypes"))
 		{
 			inspectDocumentIndexFeatureTypes( *storage);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "indexterms"))
+		else if (strus::caseInsensitiveEquals( what, "indexterms"))
 		{
 			inspectDocumentIndexTerms( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "nofdocs"))
+		else if (strus::caseInsensitiveEquals( what, "nofdocs"))
 		{
 			inspectNofDocuments( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "maxdocno"))
+		else if (strus::caseInsensitiveEquals( what, "maxdocno"))
 		{
 			inspectMaxDocumentNumber( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "metadata"))
+		else if (strus::caseInsensitiveEquals( what, "metadata"))
 		{
 			inspectDocMetaData( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "metatable"))
+		else if (strus::caseInsensitiveEquals( what, "metatable"))
 		{
 			inspectDocMetaTable( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "attribute"))
+		else if (strus::caseInsensitiveEquals( what, "attribute"))
 		{
 			inspectDocAttribute( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "attrnames"))
+		else if (strus::caseInsensitiveEquals( what, "attrnames"))
 		{
 			inspectDocAttributeNames( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "content"))
+		else if (strus::caseInsensitiveEquals( what, "content"))
 		{
 			inspectContent( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "fwstats"))
+		else if (strus::caseInsensitiveEquals( what, "fwstats"))
 		{
 			inspectForwardIndexStats( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "fwmap"))
+		else if (strus::caseInsensitiveEquals( what, "fwmap"))
 		{
 			inspectForwardIndexMap( *storage, inpectarg, inpectargsize, attribute);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "docno"))
+		else if (strus::caseInsensitiveEquals( what, "docno"))
 		{
 			inspectDocno( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "token"))
+		else if (strus::caseInsensitiveEquals( what, "token"))
 		{
 			inspectToken( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "config"))
+		else if (strus::caseInsensitiveEquals( what, "config"))
 		{
 			inspectConfig( *storage, inpectarg, inpectargsize);
 		}

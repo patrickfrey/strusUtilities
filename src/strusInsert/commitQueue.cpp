@@ -8,6 +8,7 @@
 #include "commitQueue.hpp"
 #include "private/internationalization.hpp"
 #include "strus/errorBufferInterface.hpp"
+#include "strus/base/thread.hpp"
 #include <cstdio>
 #include <stdexcept>
 
@@ -61,7 +62,7 @@ void CommitQueue::handleWaitingTransactions()
 				::fprintf( stderr, _TXT("error handling transaction in queue: %s\n"), err.what());
 				::fflush( stderr);
 			}
-			utils::ScopedLock lock( m_mutex_errors);
+			strus::scoped_lock lock( m_mutex_errors);
 			m_errors.push_back( m_errorhnd->fetchError());
 		}
 	}
@@ -70,7 +71,7 @@ void CommitQueue::handleWaitingTransactions()
 void CommitQueue::pushTransaction( StorageTransactionInterface* transaction)
 {
 	{
-		utils::ScopedLock lock( m_mutex_openTransactions);
+		strus::scoped_lock lock( m_mutex_openTransactions);
 		m_openTransactions.push( StorageTransactionReference( transaction));
 		++m_nofOpenTransactions;
 	}
@@ -79,7 +80,7 @@ void CommitQueue::pushTransaction( StorageTransactionInterface* transaction)
 
 Reference<StorageTransactionInterface> CommitQueue::getNextTransaction()
 {
-	utils::ScopedLock lock( m_mutex_openTransactions);
+	strus::scoped_lock lock( m_mutex_openTransactions);
 
 	if (m_nofOpenTransactions == 0) return Reference<StorageTransactionInterface>();
 	--m_nofOpenTransactions;

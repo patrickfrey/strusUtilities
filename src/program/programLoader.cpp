@@ -53,7 +53,7 @@
 #include "strus/base/inputStream.hpp"
 #include "strus/base/symbolTable.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "private/utils.hpp"
+#include "strus/base/string_conv.hpp"
 #include "private/internationalization.hpp"
 #include "metadataExpression.hpp"
 #include "termExpression.hpp"
@@ -95,7 +95,7 @@ static void parseTermConfig(
 {
 	if (isAlpha(*src))
 	{
-		std::string termset = utils::tolower( parse_IDENTIFIER( src));
+		std::string termset = string_conv::tolower( parse_IDENTIFIER( src));
 		if (!isStringQuote( *src) && !isTextChar( *src))
 		{
 			throw strus::runtime_error( "%s", _TXT( "term value (string,identifier,number) after the feature identifier"));
@@ -110,7 +110,7 @@ static void parseTermConfig(
 		{
 			throw strus::runtime_error( "%s", _TXT( "term type identifier expected after colon and term value"));
 		}
-		std::string termtype = utils::tolower( parse_IDENTIFIER( src));
+		std::string termtype = string_conv::tolower( parse_IDENTIFIER( src));
 		qeval.addTerm( termset, termtype, termvalue);
 	}
 	else
@@ -223,7 +223,7 @@ static void parseWeightingConfig(
 			throw strus::runtime_error( "%s", _TXT( "assingment operator '=' expected after weighting function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
-		if (!isFeatureParam && utils::caseInsensitiveEquals( parameterName, "debug"))
+		if (!isFeatureParam && strus::caseInsensitiveEquals( parameterName, "debug"))
 		{
 			if (!debuginfoName.empty())
 			{
@@ -308,7 +308,7 @@ static void parseSummarizerConfig(
 	{
 		throw strus::runtime_error( "%s", _TXT( "name of summarizer function expected at start of summarizer definition"));
 	}
-	functionName = utils::tolower( parse_IDENTIFIER( src));
+	functionName = string_conv::tolower( parse_IDENTIFIER( src));
 	std::string debuginfoName;
 
 	const SummarizerFunctionInterface* sf = queryproc->getSummarizerFunction( functionName);
@@ -341,7 +341,7 @@ static void parseSummarizerConfig(
 			throw strus::runtime_error( "%s", _TXT( "assignment operator '=' expected after summarizer function parameter name"));
 		}
 		(void)parse_OPERATOR(src);
-		if (!isFeatureParam && utils::caseInsensitiveEquals( parameterName, "debug"))
+		if (!isFeatureParam && strus::caseInsensitiveEquals( parameterName, "debug"))
 		{
 			if (!debuginfoName.empty())
 			{
@@ -739,17 +739,17 @@ static analyzer::FeatureOptions
 				{
 					throw strus::runtime_error( "%s",  _TXT("identifier or string expected as option value"));
 				}
-				if (utils::caseInsensitiveEquals( optname, "position"))
+				if (strus::caseInsensitiveEquals( optname, "position"))
 				{
-					if (utils::caseInsensitiveEquals( optval, "succ"))
+					if (strus::caseInsensitiveEquals( optval, "succ"))
 					{
 						rt.definePositionBind( analyzer::BindSuccessor);
 					}
-					else if (utils::caseInsensitiveEquals( optval, "pred"))
+					else if (strus::caseInsensitiveEquals( optval, "pred"))
 					{
 						rt.definePositionBind( analyzer::BindPredecessor);
 					}
-					else if (utils::caseInsensitiveEquals( optval, "unique"))
+					else if (strus::caseInsensitiveEquals( optval, "unique"))
 					{
 						rt.definePositionBind( analyzer::BindUnique);
 					}
@@ -1047,7 +1047,7 @@ static void parseQueryFeatureDef(
 		throw strus::runtime_error( "%s", _TXT("expected field type name"));
 	}
 	fieldType = parse_IDENTIFIER( src);
-	qdescr.defaultFieldTypeDefined |= utils::caseInsensitiveEquals( fieldType, "default");
+	qdescr.defaultFieldTypeDefined |= strus::caseInsensitiveEquals( fieldType, "default");
 
 	switch (featureClass)
 	{

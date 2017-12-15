@@ -23,7 +23,6 @@
 #include "strus/base/local_ptr.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
-#include "private/utils.hpp"
 #include "fileCrawlerInterface.hpp"
 #include "commitQueue.hpp"
 #include <memory>
@@ -61,7 +60,7 @@ InsertProcessor::~InsertProcessor()
 
 void InsertProcessor::sigStop()
 {
-	m_terminated = true;
+	m_terminated.set( true);
 }
 
 void InsertProcessor::run()
@@ -79,7 +78,7 @@ void InsertProcessor::run()
 		while (!(files=m_crawler->fetch()).empty())
 		{
 			fitr = files.begin();
-			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
+			for (int fidx=0; !m_terminated.test() && fitr != files.end(); ++fitr,++fidx)
 			{
 				try
 				{
@@ -135,7 +134,7 @@ void InsertProcessor::run()
 						analyzerContext->putInput( buf, readsize, eof);
 						// Analyze the document and print the result:
 						strus::analyzer::Document doc;
-						while (!m_terminated && analyzerContext->analyzeNext( doc))
+						while (!m_terminated.test() && analyzerContext->analyzeNext( doc))
 						{
 							// Create the storage transaction document with the correct docid:
 							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
@@ -232,7 +231,7 @@ void InsertProcessor::run()
 							storagedoc->done();
 							docCount++;
 
-							if (docCount == m_transactionSize && docCount && !m_terminated)
+							if (docCount == m_transactionSize && docCount && !m_terminated.test())
 							{
 								m_commitque->pushTransaction( transaction.get());
 								transaction.release();
@@ -276,7 +275,7 @@ void InsertProcessor::run()
 				}
 			}
 		}
-		if (!m_terminated && docCount)
+		if (!m_terminated.test() && docCount)
 		{
 			m_commitque->pushTransaction( transaction.get());
 			transaction.release();

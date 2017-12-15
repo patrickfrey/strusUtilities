@@ -24,13 +24,13 @@
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
 #include "strus/base/local_ptr.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
@@ -145,7 +145,7 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 	for (si = skipSpaces( si, se); si != se; si = skipSpaces( si, se))
 	{
 		std::string cmd( parseIdentifier( si, se, _TXT("command name")));
-		if (strus::utils::caseInsensitiveEquals( cmd, "Alter"))
+		if (strus::caseInsensitiveEquals( cmd, "Alter"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("old element name")));
 			std::string newname( parseIdentifier( si, se, _TXT("new element name")));
@@ -153,27 +153,27 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 
 			rt.push_back( AlterMetaDataCommand::AlterElement( name, newname, type));
 		}
-		else if (strus::utils::caseInsensitiveEquals( cmd, "Add"))
+		else if (strus::caseInsensitiveEquals( cmd, "Add"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("element name")));
 			std::string type( parseIdentifier( si, se, _TXT("element type name")));
 
 			rt.push_back( AlterMetaDataCommand::AddElement( name, type));
 		}
-		else if (strus::utils::caseInsensitiveEquals( cmd, "Rename"))
+		else if (strus::caseInsensitiveEquals( cmd, "Rename"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("old element name")));
 			std::string newname( parseIdentifier( si, se, _TXT("new element name")));
 
 			rt.push_back( AlterMetaDataCommand::RenameElement( name, newname));
 		}
-		else if (strus::utils::caseInsensitiveEquals( cmd, "Delete"))
+		else if (strus::caseInsensitiveEquals( cmd, "Delete"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("element name")));
 
 			rt.push_back( AlterMetaDataCommand::DeleteElement( name));
 		}
-		else if (strus::utils::caseInsensitiveEquals( cmd, "Clear"))
+		else if (strus::caseInsensitiveEquals( cmd, "Clear"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("element name")));
 			

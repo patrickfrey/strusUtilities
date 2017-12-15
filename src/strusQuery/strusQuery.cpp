@@ -32,6 +32,7 @@
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/unique_ptr.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -41,7 +42,6 @@
 #include "strus/versionBase.hpp"
 #include "private/version.hpp"
 #include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -52,6 +52,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <stdexcept>
+#include <sys/time.h>
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -355,11 +356,11 @@ int main( int argc_, const char* argv_[])
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client: %s"), errorBuffer->fetchError());
 
-		strus::utils::ScopedPtr<strus::QueryAnalyzerInterface>
+		strus::unique_ptr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer: %s"), errorBuffer->fetchError());
 
-		strus::utils::ScopedPtr<strus::QueryEvalInterface>
+		strus::unique_ptr<strus::QueryEvalInterface>
 			qeval( storageBuilder->createQueryEval());
 		if (!qeval.get()) throw strus::runtime_error(_TXT("failed to create query evaluation interface: %s"), errorBuffer->fetchError());
 
