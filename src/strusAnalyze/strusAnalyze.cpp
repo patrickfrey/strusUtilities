@@ -48,6 +48,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #undef STRUS_LOWLEVEL_DEBUG
 

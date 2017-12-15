@@ -19,6 +19,7 @@
 #include "fileCrawlerInterface.hpp"
 #include "private/internationalization.hpp"
 #include <iostream>
+#include <algorithm>
 
 using namespace strus;
 
