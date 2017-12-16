@@ -32,6 +32,7 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
@@ -51,8 +52,6 @@
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
@@ -100,7 +99,7 @@ int main( int argc_, const char* argv_[])
 				"g,segmenter:", "s,storage:", "S,configfile:",
 				"T,trace:");
 
-		unsigned int nofThreads = 0;
+		int nofThreads = 0;
 		if (opt("threads"))
 		{
 			nofThreads = opt.asUint( "threads");
@@ -413,7 +412,7 @@ int main( int argc_, const char* argv_[])
 		{
 			std::vector<strus::Reference<strus::CheckInsertProcessor> > processorList;
 			processorList.reserve( nofThreads);
-			for (unsigned int ti = 0; ti<nofThreads; ++ti)
+			for (int ti = 0; ti<nofThreads; ++ti)
 			{
 				processorList.push_back(
 					new strus::CheckInsertProcessor(
@@ -421,12 +420,15 @@ int main( int argc_, const char* argv_[])
 						&fileCrawler, logfile, errorBuffer.get()));
 			}
 			{
-				boost::thread_group tgroup;
-				for (unsigned int ti = 0; ti<nofThreads; ++ti)
+				std::vector<strus::Reference<strus::thread> > threadGroup;
+				for (int ti=0; ti<nofThreads; ++ti)
 				{
-					tgroup.create_thread( boost::bind( &strus::CheckInsertProcessor::run, processorList[ti].get()));
+					strus::CheckInsertProcessor* tc = processorList[ ti].get();
+					strus::Reference<strus::thread> th( new strus::thread( &strus::CheckInsertProcessor::run, tc));
+					threadGroup.push_back( th);
 				}
-				tgroup.join_all();
+				std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
+				for (; gi != ge; ++gi) (*gi)->join();
 			}
 		}
 		if (errorBuffer->hasError())

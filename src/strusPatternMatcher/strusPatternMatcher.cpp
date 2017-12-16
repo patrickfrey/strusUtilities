@@ -40,8 +40,10 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
 #include "strus/base/local_ptr.hpp"
 #include "strus/base/shared_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -52,9 +54,6 @@
 #include <cstring>
 #include <stdexcept>
 #include <memory>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/algorithm/string.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
 
@@ -227,7 +226,7 @@ public:
 	std::vector<std::string> fetchFiles()
 	{
 		unsigned int filecnt = m_nofFilesPerFetch;
-		boost::mutex::scoped_lock lock( m_mutex);
+		strus::unique_lock lock( m_mutex);
 		std::vector<std::string> rt;
 		for (; m_fileitr != m_files.end() && filecnt; ++m_fileitr,--filecnt)
 		{
@@ -254,7 +253,7 @@ public:
 	}
 
 private:
-	boost::mutex m_mutex;
+	strus::mutex m_mutex;
 	const strus::PatternMatcherInstanceInterface* m_ptinst;
 	const strus::PatternLexerInstanceInterface* m_crinst;
 	const strus::TextProcessorInterface* m_textproc;
@@ -497,7 +496,7 @@ public:
 		const strus::SegmenterInstanceInterface* segmenterInstance = getSegmenterInstance( content, documentClass);
 		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
 
-		if (boost::starts_with( filename, m_globalContext->fileprefix()))
+		if (strus::stringStartsWith( filename, m_globalContext->fileprefix()))
 		{
 			char const* di = filename.c_str() + m_globalContext->fileprefix().size();
 			while (*di == strus::dirSeparator()) ++di;
@@ -1112,12 +1111,15 @@ int main( int argc, const char* argv[])
 				processorList.push_back( new ThreadContext( &globalContext, analyzerBuilder.get(), pi+1, outputfile, outerrfile));
 			}
 			{
-				boost::thread_group tgroup;
+				std::vector<strus::Reference<strus::thread> > threadGroup;
 				for (unsigned int pi=0; pi<nofThreads; ++pi)
 				{
-					tgroup.create_thread( boost::bind( &ThreadContext::run, processorList[ pi].get()));
+					ThreadContext* tc = processorList[ pi].get();
+					strus::Reference<strus::thread> th( new strus::thread( &ThreadContext::run, tc));
+					threadGroup.push_back( th);
 				}
-				tgroup.join_all();
+				std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
+				for (; gi != ge; ++gi) (*gi)->join();
 			}
 		}
 		else

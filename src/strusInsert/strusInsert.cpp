@@ -53,8 +53,6 @@
 #include <memory>
 #include <cstring>
 #include <stdexcept>
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
@@ -104,7 +102,7 @@ int main( int argc_, const char* argv_[])
 				"r,rpc:", "x,extension:", "s,storage:",
 				"S,configfile:", "V,verbose", "T,trace:");
 
-		unsigned int nofThreads = 0;
+		int nofThreads = 0;
 		if (opt("threads"))
 		{
 			nofThreads = opt.asUint( "threads");
@@ -437,7 +435,7 @@ int main( int argc_, const char* argv_[])
 		{
 			std::vector<strus::Reference<strus::InsertProcessor> > processorList;
 			processorList.reserve( nofThreads);
-			for (unsigned int ti = 0; ti<nofThreads; ++ti)
+			for (int ti = 0; ti<nofThreads; ++ti)
 			{
 				processorList.push_back(
 					new strus::InsertProcessor(
@@ -445,12 +443,15 @@ int main( int argc_, const char* argv_[])
 						&fileCrawler, transactionSize, verbose, errorBuffer.get()));
 			}
 			{
-				boost::thread_group tgroup;
-				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				std::vector<strus::Reference<strus::thread> > threadGroup;
+				for (int ti=0; ti<nofThreads; ++ti)
 				{
-					tgroup.create_thread( boost::bind( &strus::InsertProcessor::run, processorList[ti].get()));
+					strus::InsertProcessor* tc = processorList[ ti].get();
+					strus::Reference<strus::thread> th( new strus::thread( &strus::InsertProcessor::run, tc));
+					threadGroup.push_back( th);
 				}
-				tgroup.join_all();
+				std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
+				for (; gi != ge; ++gi) (*gi)->join();
 			}
 		}
 		storage->close();
