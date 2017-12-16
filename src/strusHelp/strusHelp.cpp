@@ -46,6 +46,8 @@
 #include <sstream>
 #include <memory>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 
 static bool g_html_output = false;

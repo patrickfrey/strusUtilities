@@ -40,6 +40,8 @@
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <memory>
 

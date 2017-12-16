@@ -52,6 +52,8 @@
 #include <sstream>
 #include <memory>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)

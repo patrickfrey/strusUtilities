@@ -50,6 +50,8 @@
 #include <cstring>
 #include <algorithm>
 #include <iomanip>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <sys/time.h>
 

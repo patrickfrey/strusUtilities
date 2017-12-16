@@ -38,6 +38,8 @@
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <map>
 
@@ -238,7 +240,6 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
 		// Set logger:
 		if (opt("logerror"))
 		{

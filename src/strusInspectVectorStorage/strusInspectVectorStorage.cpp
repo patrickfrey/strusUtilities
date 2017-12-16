@@ -43,6 +43,8 @@
 #include <stdexcept>
 #include <cmath>
 #include <ctime>
+#include <cerrno>
+#include <cstdio>
 #include <limits>
 
 #undef STRUS_LOWLEVEL_DEBUG
