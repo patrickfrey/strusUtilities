@@ -39,6 +39,8 @@
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <cerrno>
+#include <cstdio>
 #include <memory>
 
 std::string escapeEndOfLine( const std::string& str)

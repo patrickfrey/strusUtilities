@@ -52,6 +52,8 @@
 #include <memory>
 #include <algorithm>
 #include <iomanip>
+#include <cerrno>
+#include <cstdio>
 #include <inttypes.h>
 
 static void print_number( char* buf, unsigned int bufsize, strus::GlobalCounter num)

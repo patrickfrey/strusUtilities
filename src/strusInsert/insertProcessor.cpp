@@ -21,6 +21,7 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "fileCrawlerInterface.hpp"
@@ -28,7 +29,6 @@
 #include <memory>
 #include <iostream>
 #include <fstream>
-#include <boost/thread.hpp>
 
 using namespace strus;
 
@@ -298,9 +298,9 @@ void InsertProcessor::run()
 			std::cerr << string_format( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
 		}
 	}
-	catch (const boost::thread_interrupted&)
+	catch (...)
 	{
-		std::cerr << _TXT("failed to complete inserts: thread interrupted") << std::endl; 
+		std::cerr << _TXT("failed to complete inserts: uncaught exception in thread") << std::endl; 
 	}
 	m_errorhnd->releaseContext();
 }

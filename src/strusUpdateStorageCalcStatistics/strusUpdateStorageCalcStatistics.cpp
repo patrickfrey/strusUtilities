@@ -50,6 +50,8 @@
 #include <iostream>
 #include <cstring>
 #include <cstdio>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <map>
 

@@ -35,6 +35,7 @@
 #include "strus/base/string_conv.hpp"
 #include "strus/base/numstring.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -42,9 +43,9 @@
 #include <stdexcept>
 #include <cmath>
 #include <ctime>
+#include <cerrno>
+#include <cstdio>
 #include <limits>
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
 
 #undef STRUS_LOWLEVEL_DEBUG
 #define FEATNUM_PREFIX_CHAR   '%'
@@ -425,12 +426,16 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 		{
 			startTime = getTimeStamp();
 		}
-		boost::thread_group tgroup;
-		for (unsigned int ti=0; ti<nofThreads; ++ti)
+		std::vector<strus::Reference<strus::thread> > threadGroup;
+		int ti = 0, te = procar.size();
+		for (ti=0; ti<te; ++ti)
 		{
-			tgroup.create_thread( boost::bind( &FindSimProcess::run, &procar[ti], res, maxNofRanks));
+			strus::Reference<strus::thread> th( new strus::thread( &FindSimProcess::run, &procar[ti], res, maxNofRanks));
+			threadGroup.push_back( th);
 		}
-		tgroup.join_all();
+		std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
+		for (; gi != ge; ++gi) (*gi)->join();
+
 		std::vector<FindSimProcess>::const_iterator pi = procar.begin(), pe = procar.end();
 		for (; pi != pe; ++pi)
 		{

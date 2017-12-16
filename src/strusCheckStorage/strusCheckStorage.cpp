@@ -38,6 +38,8 @@
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
+#include <cerrno>
+#include <cstdio>
 #include <memory>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)

@@ -30,6 +30,8 @@
 #include "strus/base/local_ptr.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 
 
