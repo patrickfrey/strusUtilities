@@ -37,6 +37,7 @@
 #include "strus/base/local_ptr.hpp"
 #include "strus/base/thread.hpp"
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <algorithm>
 #include <cstring>
