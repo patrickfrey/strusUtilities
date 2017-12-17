@@ -43,6 +43,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <ctime>
+#include <sys/time.h>
 #include <cerrno>
 #include <cstdio>
 #include <limits>
