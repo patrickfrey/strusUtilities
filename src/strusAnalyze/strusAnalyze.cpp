@@ -48,6 +48,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cerrno>
+#include <cstdio>
 #include <algorithm>
 
 #undef STRUS_LOWLEVEL_DEBUG

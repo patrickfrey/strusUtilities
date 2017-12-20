@@ -50,6 +50,8 @@
 #include <cstring>
 #include <algorithm>
 #include <iomanip>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <sys/time.h>
 
@@ -457,7 +459,7 @@ int main( int argc_, const char* argv_[])
 			{
 				for (int widx=1; wi != we; ++wi,++widx)
 				{
-					std::cout << strus::string_format( _TXT( "[%u] %u score %f"), widx, wi->docno(), wi->weight()) << std::endl;
+					std::cout << strus::string_format( _TXT( "[%u] score %f"), widx, wi->weight()) << std::endl;
 					std::vector<strus::SummaryElement>::const_iterator
 						ai = wi->summaryElements().begin(),
 						ae = wi->summaryElements().end();

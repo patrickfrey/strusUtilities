@@ -1,11 +1,11 @@
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
-[1] 1 score 0.000034
+[1] score 0.000034
 	title = 'Software' 1
 	phrase = 'In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
-[1] 1 score 0.000034
+[1] score 0.000034
 	title = 'Software' 1
 	phrase = 'In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.' 1
 	debugsummary = 'summarize matchphrase

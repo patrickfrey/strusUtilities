@@ -19,13 +19,12 @@ case $OS in
 			brew install gcc48 --enable-all-languages || true
 			brew link --force gcc48 || true
 		fi
-		brew install \
-			cmake \
-			boost \
-			gettext \
-			snappy \
-			leveldb \
-			|| true
+		brew tap homebrew/dupes
+		brew tap homebrew/versions
+		brew upgrade cmake
+		brew upgrade boost
+		brew install gettext snappy leveldb || true
+
 		# make sure cmake finds the brew version of gettext
 		brew link --force gettext || true
 		brew link leveldb || true

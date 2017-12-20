@@ -47,6 +47,8 @@
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <limits>
 

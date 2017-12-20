@@ -17,7 +17,7 @@ target_link_libraries( execTest strus_base ${Intl_LIBRARIES})
 
 IF( UNIX )
 macro( add_utilities_test NAME )
-    add_test( Test${NAME} execTest test${NAME} ${PROJECT_SOURCE_DIR} STRUS_MODULE_PATH=${STRUS_MODULE_PATH} )
+    add_test( Test${NAME} execTest test${NAME} ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/../..  STRUS_MODULE_PATH=${STRUS_MODULE_PATH} )
 endmacro( add_utilities_test )
 
 IF (WITH_STRUS_PATTERN STREQUAL "YES")
