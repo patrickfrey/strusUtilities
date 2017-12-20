@@ -37,12 +37,14 @@
 #include "strus/base/local_ptr.hpp"
 #include "strus/base/thread.hpp"
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
 #include <cmath>
 #include <ctime>
+#include <sys/time.h>
 #include <cerrno>
 #include <cstdio>
 #include <limits>

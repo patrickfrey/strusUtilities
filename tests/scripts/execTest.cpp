@@ -336,13 +336,17 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("missing project directory (2nd argument) of ") << argv[0] << std::endl;
 		return -1;
 	}
+	if (argc <= 3)
+	{
+		std::cerr << _TXT("missing project binary directory (3nd argument) of ") << argv[0] << std::endl;
+		return -1;
+	}
 	try
 	{
 		g_testname = argv[1];
 		g_maindir = argv[2];
 		g_testdir = g_maindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + g_testname;
-		rt = strus::getAncestorPath( argv[0], 3, g_bindir);
-		if (rt) throw std::runtime_error( _TXT("could not retrieve ancestor path of test program"));
+		g_bindir = argv[3];
 
 		std::string mainexecdir = g_bindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + "exec";
 		g_execdir = mainexecdir + strus::dirSeparator() + g_testname;
@@ -353,7 +357,7 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("main execution directory: ") << mainexecdir << std::endl;
 		std::cerr << _TXT("execution directory: ") << g_execdir << std::endl;
 		std::cerr << _TXT("project directory: ") << g_maindir << std::endl;
-		int argi=3;
+		int argi=4;
 		for (; argi < argc; ++argi)
 		{
 			const char* sep = std::strchr( argv[argi], '=');
