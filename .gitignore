@@ -40,8 +40,6 @@ Testing/
 CPackConfig.cmake
 CPackSourceConfig.cmake
 *.cmake.user
-include/private/version.hpp
-src/utils/internationalization.cpp
 dist/obs/deploy_to_obs.sh
 dist/archlinux/PKGBUILD
 dist/obs/strusutilities.dsc

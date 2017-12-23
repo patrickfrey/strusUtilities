@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 
 add_subdirectory( utils )
 add_subdirectory( program )
-add_subdirectory( strusHelp )
 add_subdirectory( strusAlterMetaData )
 add_subdirectory( strusAnalyze )
 add_subdirectory( strusAnalyzePhrase )
@@ -24,3 +23,5 @@ add_subdirectory( strusBuildVectorStorage )
 add_subdirectory( strusInspectVectorStorage )
 add_subdirectory( strusPatternMatcher )
 add_subdirectory( strusPatternSerialize )
+add_subdirectory( strusHelp )
+
