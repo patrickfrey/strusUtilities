@@ -40,8 +40,6 @@ Testing/
 CPackConfig.cmake
 CPackSourceConfig.cmake
 *.cmake.user
-include/private/version.hpp
-src/utils/internationalization.cpp
 dist/obs/deploy_to_obs.sh
 dist/archlinux/PKGBUILD
 dist/obs/strusutilities.dsc
@@ -49,8 +47,9 @@ dist/obs/strusutilities-Debian_7.0.dsc
 dist/obs/strusutilities-xUbuntu_12.04.dsc
 dist/redhat/strusutilities.spec
 
-# Suggested build directory
+# Suggested build directories
 build
+build_clang
 
 # Compiled Programs
 tests/scripts/execTest
