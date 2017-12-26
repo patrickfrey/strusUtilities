@@ -49,7 +49,7 @@ MESSAGE( STATUS  "Standard module and tests for strusPattern not enabled (WITH_S
 ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 
 set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
-configure_file( "${PROJECT_SOURCE_DIR}/include/private/version.hpp.in"  "${PROJECT_SOURCE_DIR}/include/private/version.hpp"  @ONLY )
+configure_file( "${PROJECT_SOURCE_DIR}/include/private/versionUtilities.hpp.in"  "${CMAKE_CURRENT_BINARY_DIR}/include/private/versionUtilities.hpp"  @ONLY )
 
 if( APPLE OR WIN32 )
 	set( PROJECT_BIN_AFFIX "${CMAKE_BUILD_TYPE}/" )

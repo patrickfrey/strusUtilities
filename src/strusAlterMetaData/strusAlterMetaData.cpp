@@ -20,7 +20,7 @@
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "private/programOptions.hpp"

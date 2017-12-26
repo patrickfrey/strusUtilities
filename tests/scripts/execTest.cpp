@@ -27,42 +27,44 @@
 static std::string g_testname;
 static std::string g_maindir;
 static std::string g_bindir;
+static std::string g_binext;
 static std::string g_testdir;
 static std::string g_execdir;
 static std::map<std::string,std::string> g_env;
+static std::map<std::string,std::string> g_prgmap;
 
 struct ProgramPath
 {
 	const char* name;
-	const char* path;
+	const char* prgname;
 };
 
 static ProgramPath g_prgpathmap[] =
 {
-	{"StrusDumpStorage", "src/strusDumpStorage/strusDumpStorage"},
-	{"StrusAnalyze", "src/strusAnalyze/strusAnalyze"},
-	{"StrusDeleteDocument", "src/strusDeleteDocument/strusDeleteDocument"},
-	{"StrusPatternSerialize", "src/strusPatternSerialize/strusPatternSerialize"},
-	{"StrusDestroy", "src/strusDestroy/strusDestroy"},
-	{"StrusBuildVectorStorage", "src/strusBuildVectorStorage/strusBuildVectorStorage"},
-	{"StrusAnalyzeQuery", "src/strusAnalyzeQuery/strusAnalyzeQuery"},
-	{"StrusDumpStatistics", "src/strusDumpStatistics/strusDumpStatistics"},
-	{"StrusPatternMatcher", "src/strusPatternMatcher/strusPatternMatcher"},
-	{"StrusQuery", "src/strusQuery/strusQuery"},
-	{"StrusCreate", "src/strusCreate/strusCreate"},
-	{"StrusCheckStorage", "src/strusCheckStorage/strusCheckStorage"},
-	{"StrusHelp", "src/strusHelp/strusHelp"},
-	{"StrusUpdateStorageCalcStatistics", "src/strusUpdateStorageCalcStatistics/strusUpdateStorageCalcStatistics"},
-	{"StrusInspectVectorStorage", "src/strusInspectVectorStorage/strusInspectVectorStorage"},
-	{"StrusAnalyzePhrase", "src/strusAnalyzePhrase/strusAnalyzePhrase"},
-	{"StrusAlterMetaData", "src/strusAlterMetaData/strusAlterMetaData"},
-	{"StrusUpdateStorage", "src/strusUpdateStorage/strusUpdateStorage"},
-	{"StrusCreateVectorStorage", "src/strusCreateVectorStorage/strusCreateVectorStorage"},
-	{"StrusCheckInsert", "src/strusInsert/strusCheckInsert"},
-	{"StrusGenerateKeyMap", "src/strusInsert/strusGenerateKeyMap"},
-	{"StrusInsert", "src/strusInsert/strusInsert"},
-	{"StrusInspect", "src/strusInspect/strusInspect"},
-	{"StrusSegment", "src/strusSegment/strusSegment"},
+	{"StrusDumpStorage", "strusDumpStorage"},
+	{"StrusAnalyze", "strusAnalyze"},
+	{"StrusDeleteDocument", "strusDeleteDocument"},
+	{"StrusPatternSerialize", "strusPatternSerialize"},
+	{"StrusDestroy", "strusDestroy"},
+	{"StrusBuildVectorStorage", "strusBuildVectorStorage"},
+	{"StrusAnalyzeQuery", "strusAnalyzeQuery"},
+	{"StrusDumpStatistics", "strusDumpStatistics"},
+	{"StrusPatternMatcher", "strusPatternMatcher"},
+	{"StrusQuery", "strusQuery"},
+	{"StrusCreate", "strusCreate"},
+	{"StrusCheckStorage", "strusCheckStorage"},
+	{"StrusHelp", "strusHelp"},
+	{"StrusUpdateStorageCalcStatistics", "strusUpdateStorageCalcStatistics"},
+	{"StrusInspectVectorStorage", "strusInspectVectorStorage"},
+	{"StrusAnalyzePhrase", "strusAnalyzePhrase"},
+	{"StrusAlterMetaData", "strusAlterMetaData"},
+	{"StrusUpdateStorage", "strusUpdateStorage"},
+	{"StrusCreateVectorStorage", "strusCreateVectorStorage"},
+	{"StrusCheckInsert", "strusCheckInsert"},
+	{"StrusGenerateKeyMap", "strusGenerateKeyMap"},
+	{"StrusInsert", "strusInsert"},
+	{"StrusInspect", "strusInspect"},
+	{"StrusSegment", "strusSegment"},
 	{0,0}
 };
 
@@ -217,6 +219,37 @@ static std::string parseArgument( char const*& si)
 	return rt;
 }
 
+static int findProgram( std::string& prgpath, const std::string& searchpath, const std::string& name)
+{
+	prgpath.clear();
+	std::vector<std::string> res;
+	std::string prgname = name + g_binext;
+
+	int ec = strus::readDirFiles( searchpath, g_binext, res);
+	if (ec) return ec;
+	std::vector<std::string>::const_iterator ri = res.begin(), re = res.end();
+	for (; ri != re; ++ri)
+	{
+		if (prgname == *ri)
+		{
+			prgpath = searchpath + strus::dirSeparator() + *ri;
+			return 0;
+		}
+	}
+	res.clear();
+	ec = strus::readDirSubDirs( searchpath, res);
+	if (ec) return ec;
+	ri = res.begin(), re = res.end();
+	for (; ri != re; ++ri)
+	{
+		std::string subdir = searchpath + strus::dirSeparator() + *ri;
+		ec = findProgram( prgpath, subdir, name);
+		if (ec) return ec;
+		if (!prgpath.empty()) return 0;
+	}
+	return 0;
+}
+
 struct TestCommand
 {
 	enum {MaxNofArguments=30};
@@ -234,7 +267,25 @@ struct TestCommand
 		{
 			if (std::strcmp( pi->name, pnam.c_str()) == 0)
 			{
-				prg = g_bindir + strus::dirSeparator() + pi->path;
+				std::map<std::string,std::string>::const_iterator gi = g_prgmap.find( pi->prgname);
+				if (gi != g_prgmap.end())
+				{
+					prg = gi->second;
+					break;
+				}
+				int ec = findProgram( prg, g_bindir, pi->prgname);
+				char msgbuf[ 2048];
+				if (ec)
+				{
+					snprintf( msgbuf, sizeof(msgbuf), _TXT("error searching for program '%s': %s"), pi->prgname, ::strerror(ec));
+					throw std::runtime_error( msgbuf);
+				}
+				if (prg.empty())
+				{
+					snprintf( msgbuf, sizeof(msgbuf), _TXT("program not found: '%s'"), pi->prgname);
+					throw std::runtime_error( msgbuf);
+				}
+				g_prgmap[ pi->prgname] = prg;
 				break;
 			}
 		}
@@ -343,6 +394,13 @@ int main( int argc, const char* argv[])
 	}
 	try
 	{
+		int ec = strus::getFileExtension( argv[0], g_binext);
+		if (ec)
+		{
+			char msgbuf[ 1024];
+			snprintf( msgbuf, sizeof(msgbuf), _TXT("error getting extension of file '%s': %s"), argv[0], strerror( ec));
+			throw std::runtime_error( msgbuf);
+		}
 		g_testname = argv[1];
 		g_maindir = argv[2];
 		g_testdir = g_maindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + g_testname;
@@ -371,7 +429,7 @@ int main( int argc, const char* argv[])
 
 		std::string prgsrc;
 		std::string prgfilename( g_testdir + strus::dirSeparator() + "RUN");
-		unsigned int ec = strus::readFile( prgfilename, prgsrc);
+		ec = strus::readFile( prgfilename, prgsrc);
 		if (ec)
 		{
 			char msgbuf[ 2024];
@@ -394,7 +452,7 @@ int main( int argc, const char* argv[])
 				}
 				catch (const std::runtime_error& err)
 				{
-					char msgbuf[ 2024];
+					char msgbuf[ 2048];
 					snprintf( msgbuf, sizeof(msgbuf), _TXT("error on line %u of program file '%s': %s"), lineno, prgfilename.c_str(), err.what());
 					throw std::runtime_error( msgbuf);
 				}
