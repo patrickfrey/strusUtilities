@@ -73,6 +73,12 @@ set( PROGRAM_LIBRARY_DIRS          "${CMAKE_CURRENT_BINARY_DIR}/src/program" )
 set( UTILS_INCLUDE_DIRS                 "${CMAKE_CURRENT_BINARY_DIR}/include"  "${PROJECT_SOURCE_DIR}/include" )
 set( UTILS_LIBRARY_DIRS                 "${CMAKE_CURRENT_BINARY_DIR}/src/utils" )
 
+# Module path:
+if (NOT STRUS_MODULE_PATH)
+set( STRUS_MODULE_PATH  "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/strus/modules" )
+endif (NOT STRUS_MODULE_PATH)
+MESSAGE( STATUS  "Strus module path: ${STRUS_MODULE_PATH}" )
+
 # Subdirectories:
 add_subdirectory( src )
 add_subdirectory( tests )
