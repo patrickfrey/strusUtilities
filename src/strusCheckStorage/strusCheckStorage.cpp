@@ -25,7 +25,7 @@
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/constants.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"

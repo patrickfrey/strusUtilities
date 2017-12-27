@@ -20,7 +20,7 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"

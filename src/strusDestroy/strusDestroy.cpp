@@ -21,7 +21,7 @@
 #include "strus/versionBase.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "private/programOptions.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"

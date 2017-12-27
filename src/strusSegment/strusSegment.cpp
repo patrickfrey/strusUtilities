@@ -22,7 +22,7 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/segmenterOptions.hpp"
 #include "strus/base/fileio.hpp"
