@@ -24,6 +24,7 @@ link_directories(
 	"${strusbase_LIBRARY_DIRS}"
 	"${strus_LIBRARY_DIRS}"
 	"${strusanalyzer_LIBRARY_DIRS}"
+	${Intl_LIBRARIES}
 )
 
 # -------------------------------------------
