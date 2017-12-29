@@ -37,7 +37,7 @@
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
 #include "strus/functionDescription.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "private/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"

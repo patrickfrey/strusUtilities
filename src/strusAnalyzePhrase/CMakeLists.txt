@@ -10,7 +10,7 @@ set(source_files
 include_directories(
 	"${Intl_INCLUDE_DIRS}"
 	${Boost_INCLUDE_DIRS}
-	"${PROJECT_SOURCE_DIR}/include"
+	"${PROGRAM_INCLUDE_DIRS}"
 	"${strusbase_INCLUDE_DIRS}"
 	"${strus_INCLUDE_DIRS}"
 	"${strusanalyzer_INCLUDE_DIRS}"

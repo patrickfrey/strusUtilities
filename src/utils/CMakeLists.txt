@@ -31,7 +31,7 @@ link_directories(
 # Library with some helper functions used by strus libraries and programs but not part of the public interface
 # -------------------------------------------
 add_library( strusutilities_private_utils STATIC  ${source_files} )
-target_link_libraries( strusutilities_private_utils  "${Boost_LIBRARIES}" )
+target_link_libraries( strusutilities_private_utils  ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
 set_property( TARGET strusutilities_private_utils PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 

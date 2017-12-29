@@ -19,7 +19,6 @@ case $OS in
 			brew install gcc48 --enable-all-languages || true
 			brew link --force gcc48 || true
 		fi
-		brew tap homebrew/dupes
 		brew tap homebrew/versions
 		brew upgrade cmake
 		brew upgrade boost

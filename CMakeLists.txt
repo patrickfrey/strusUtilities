@@ -7,7 +7,7 @@ include(cmake/install_prefix.cmake)
 project( StrusUtilities )
 set( STRUS_MAJOR_VERSION 0 )
 set( STRUS_MINOR_VERSION 15 )
-set( STRUS_PATCH_VERSION 4 )
+set( STRUS_PATCH_VERSION 5 )
 set( STRUS_VERSION ${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}.${STRUS_PATCH_VERSION} )
 
 if(NOT STRUS_ALL)
@@ -49,7 +49,7 @@ MESSAGE( STATUS  "Standard module and tests for strusPattern not enabled (WITH_S
 ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 
 set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
-configure_file( "${PROJECT_SOURCE_DIR}/include/private/version.hpp.in"  "${PROJECT_SOURCE_DIR}/include/private/version.hpp"  @ONLY )
+configure_file( "${PROJECT_SOURCE_DIR}/include/private/versionUtilities.hpp.in"  "${CMAKE_CURRENT_BINARY_DIR}/include/private/versionUtilities.hpp"  @ONLY )
 
 if( APPLE OR WIN32 )
 	set( PROJECT_BIN_AFFIX "${CMAKE_BUILD_TYPE}/" )
@@ -72,6 +72,12 @@ set( PROGRAM_INCLUDE_DIRS          "${CMAKE_CURRENT_BINARY_DIR}/include"  "${PRO
 set( PROGRAM_LIBRARY_DIRS          "${CMAKE_CURRENT_BINARY_DIR}/src/program" )
 set( UTILS_INCLUDE_DIRS                 "${CMAKE_CURRENT_BINARY_DIR}/include"  "${PROJECT_SOURCE_DIR}/include" )
 set( UTILS_LIBRARY_DIRS                 "${CMAKE_CURRENT_BINARY_DIR}/src/utils" )
+
+# Module path:
+if (NOT STRUS_MODULE_PATH)
+set( STRUS_MODULE_PATH  "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/strus/modules" )
+endif (NOT STRUS_MODULE_PATH)
+MESSAGE( STATUS  "Strus module path: ${STRUS_MODULE_PATH}" )
 
 # Subdirectories:
 add_subdirectory( src )
