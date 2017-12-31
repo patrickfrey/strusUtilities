@@ -1,0 +1,11 @@
+--- strusutilities-0.15.5/cmake/build_rules.cmake	2017-12-31 12:32:51.561242632 +0100
++++ strusutilities-0.15.5-sles11-long-long-patch/cmake/build_rules.cmake	2017-12-31 12:34:03.313243709 +0100
+@@ -27,7 +27,7 @@
+ set_property(GLOBAL PROPERTY rule_launch_link ccache)
+ 
+ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wshadow -pedantic -Wfatal-errors -fvisibility=hidden" )
++set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wno-long-long  -Wshadow -pedantic -Wfatal-errors -fvisibility=hidden" )
+ set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -Wall -pedantic -Wfatal-errors" )
+ endif()
+ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "[cC]lang")
