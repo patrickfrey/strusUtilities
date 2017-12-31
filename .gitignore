@@ -83,7 +83,6 @@ src/strusPatternSerialize/strusPatternSerialize
 # Generated sources:
 include/private/versionUtilities.hpp
 src/utils/internationalization.cpp
-strusutilities-*.tar.gz
 
 # Generated files for tests:
 tests/scripts/ENV
@@ -91,3 +90,7 @@ tests/scripts/exec
 examples/vector/eigenwords/model.vs
 examples/vector/eigenwords/classes.txt
 examples/vector/eigenwords/features.txt
+
+# deploy to obs tar:
+strusutilities-*.tar.gz
+
