@@ -80,6 +80,11 @@ src/strusPatternMatcher/strusPatternMatcher
 src/strusPatternSerialize/strusPatternSerialize
 .travis.yml
 
+# Generated sources:
+include/private/versionUtilities.hpp
+src/utils/internationalization.cpp
+strusutilities-*.tar.gz
+
 # Generated files for tests:
 tests/scripts/ENV
 tests/scripts/exec
