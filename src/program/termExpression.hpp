@@ -24,7 +24,7 @@ namespace strus {
 class TermExpression
 {
 public:
-	enum {VariableOfs=1<<31,FeatureOfs=1<<30,MaxValue=1<<28};
+	enum {VariableOfs=2<<30,FeatureOfs=1<<30,MaxValue=(1<<30)-1};
 
 	struct Operator
 	{
@@ -57,18 +57,15 @@ public:
 	}
 	static bool isVariable( int groupidx)
 	{
-		return groupidx >= (int)VariableOfs
-			&& groupidx < (int)VariableOfs + (int)MaxValue;
+		return groupidx >= (int)VariableOfs && groupidx < (int)VariableOfs + (int)MaxValue;
 	}
 	static bool isFeature( int groupidx)
 	{
-		return groupidx >= (int)FeatureOfs
-			&& groupidx < (int)FeatureOfs + (int)MaxValue;
+		return groupidx >= (int)FeatureOfs && groupidx < (int)FeatureOfs + (int)MaxValue;
 	}
 	static bool isOperator( int groupidx)
 	{
-		return groupidx
-			&& groupidx < (int)MaxValue;
+		return groupidx && groupidx < (int)MaxValue;
 	}
 	const std::string& variableName( int groupidx) const
 	{

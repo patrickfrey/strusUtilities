@@ -23,7 +23,7 @@ namespace strus {
 class MetaDataExpression
 {
 public:
-	enum {BooleanOpOfs=1<<31};
+	enum {BooleanOpOfs=1<<30};
 
 	/// \brief Constructor
 	MetaDataExpression( const QueryAnalyzerInterface* analyzer_, ErrorBufferInterface* errorhnd_)
@@ -59,11 +59,11 @@ public:
 	{
 		return (MetaDataRestrictionInterface::CompareOperator)( groupidx-1);
 	}
-	static unsigned int getCompareOp( const MetaDataRestrictionInterface::CompareOperator& op)
+	static int getCompareOp( const MetaDataRestrictionInterface::CompareOperator& op)
 	{
 		return op+1;
 	}
-	static unsigned int getBooleanOp( const BooleanOp& op)
+	static int getBooleanOp( const BooleanOp& op)
 	{
 		return op+BooleanOpOfs+1;
 	}
