@@ -55,24 +55,24 @@ public:
 	{
 		return m_expr;
 	}
-	static bool isVariable( unsigned int groupidx)
+	static bool isVariable( int groupidx)
 	{
-		return groupidx >= (unsigned int)VariableOfs
-			&& groupidx < (unsigned int)VariableOfs + (unsigned int)MaxValue;
+		return groupidx >= (int)VariableOfs
+			&& groupidx < (int)VariableOfs + (int)MaxValue;
 	}
-	static bool isFeature( unsigned int groupidx)
+	static bool isFeature( int groupidx)
 	{
-		return groupidx >= (unsigned int)FeatureOfs
-			&& groupidx < (unsigned int)FeatureOfs + (unsigned int)MaxValue;
+		return groupidx >= (int)FeatureOfs
+			&& groupidx < (int)FeatureOfs + (int)MaxValue;
 	}
-	static bool isOperator( unsigned int groupidx)
+	static bool isOperator( int groupidx)
 	{
 		return groupidx
-			&& groupidx < (unsigned int)MaxValue;
+			&& groupidx < (int)MaxValue;
 	}
-	const std::string& variableName( unsigned int groupidx) const
+	const std::string& variableName( int groupidx) const
 	{
-		return m_variables[ groupidx-(unsigned int)VariableOfs-1];
+		return m_variables[ groupidx-(int)VariableOfs-1];
 	}
 	struct Feature
 	{
@@ -84,11 +84,11 @@ public:
 		Feature( const Feature& o)
 			:name(o.name),weight(o.weight){}
 	};
-	const Feature& feature( unsigned int groupidx) const
+	const Feature& feature( int groupidx) const
 	{
-		return m_features[ groupidx-(unsigned int)FeatureOfs-1];
+		return m_features[ groupidx-(int)FeatureOfs-1];
 	}
-	const Operator& operatorStruct( unsigned int groupidx) const
+	const Operator& operatorStruct( int groupidx) const
 	{
 		return m_operators[ groupidx-1];
 	}
@@ -140,8 +140,8 @@ private:
 	ErrorBufferInterface* m_errorhnd;
 	const QueryAnalyzerStruct* m_analyzerStruct;
 	QueryAnalyzerContextInterface* m_analyzer;
-	std::vector<unsigned int> m_fieldno_stack;
-	unsigned int m_fieldno_cnt;
+	std::vector<int> m_fieldno_stack;
+	int m_fieldno_cnt;
 	analyzer::QueryTermExpression m_expr;
 	std::vector<Operator> m_operators;
 	std::vector<std::string> m_variables;
