@@ -19,12 +19,12 @@ void TermExpression::pushField( const std::string& fieldtype, const std::string&
 	const GroupOperatorList& gop = m_analyzerStruct->autoGroupOperators( fieldtype);
 	if (!gop.empty())
 	{
-		std::vector<unsigned int> fieldnoList( m_fieldno_stack.end()-1, m_fieldno_stack.end());
+		std::vector<int> fieldnoList( m_fieldno_stack.end()-1, m_fieldno_stack.end());
 	
 		GroupOperatorList::const_iterator gi = gop.begin(), ge = gop.end();
 		for (; gi != ge; ++gi)
 		{
-			unsigned int groupid = newOperator( gi->opr.name, gi->opr.range, gi->opr.cardinality);
+			int groupid = newOperator( gi->opr.name, gi->opr.range, gi->opr.cardinality);
 			m_analyzer->groupElements( groupid, fieldnoList, gi->groupBy, gi->groupSingle);
 		}
 	}
@@ -33,11 +33,11 @@ void TermExpression::pushField( const std::string& fieldtype, const std::string&
 void TermExpression::pushExpression( const std::string& op, unsigned int argc, int range, unsigned int cardinality)
 {
 	if (m_fieldno_stack.size() < argc) throw strus::runtime_error( "%s", _TXT("push expression without all arguments defined"));
-	unsigned int* fnstart = m_fieldno_stack.data() + m_fieldno_stack.size() - argc;
-	unsigned int* fnend = fnstart + argc;
-	std::vector<unsigned int> fieldnoList( fnstart, fnend);
+	int* fnstart = m_fieldno_stack.data() + m_fieldno_stack.size() - argc;
+	int* fnend = fnstart + argc;
+	std::vector<int> fieldnoList( fnstart, fnend);
 
-	unsigned int groupid = newOperator( op, range, cardinality);
+	int groupid = newOperator( op, range, cardinality);
 	QueryAnalyzerContextInterface::GroupBy groupBy = QueryAnalyzerContextInterface::GroupAll;
 	m_analyzer->groupElements( groupid, fieldnoList, groupBy, true/*groupSingle*/);
 	m_fieldno_stack.resize( m_fieldno_stack.size() - argc + 1);
@@ -46,9 +46,9 @@ void TermExpression::pushExpression( const std::string& op, unsigned int argc, i
 void TermExpression::attachVariable( const std::string& name)
 {
 	if (m_fieldno_stack.empty()) throw strus::runtime_error( "%s", _TXT("attach variable not allowed without any fields defined"));
-	std::vector<unsigned int> fieldnoList( m_fieldno_stack.end()-1, m_fieldno_stack.end());
+	std::vector<int> fieldnoList( m_fieldno_stack.end()-1, m_fieldno_stack.end());
 
-	unsigned int groupid = newVariable( name);
+	int groupid = newVariable( name);
 	QueryAnalyzerContextInterface::GroupBy groupBy = QueryAnalyzerContextInterface::GroupEvery;
 	m_analyzer->groupElements( groupid, fieldnoList, groupBy, true/*groupSingle*/);
 }
@@ -56,9 +56,9 @@ void TermExpression::attachVariable( const std::string& name)
 void TermExpression::assignFeature( const std::string& name, double weight)
 {
 	if (m_fieldno_stack.empty()) throw strus::runtime_error( "%s", _TXT("assign feature not allowed without any fields defined"));
-	std::vector<unsigned int> fieldnoList( m_fieldno_stack.end()-1, m_fieldno_stack.end());
+	std::vector<int> fieldnoList( m_fieldno_stack.end()-1, m_fieldno_stack.end());
 
-	unsigned int groupid = newFeature( name, weight);
+	int groupid = newFeature( name, weight);
 	QueryAnalyzerContextInterface::GroupBy groupBy = QueryAnalyzerContextInterface::GroupEvery;
 	m_analyzer->groupElements( groupid, fieldnoList, groupBy, true/*groupSingle*/);
 }

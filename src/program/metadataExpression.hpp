@@ -23,7 +23,7 @@ namespace strus {
 class MetaDataExpression
 {
 public:
-	enum {BooleanOpOfs=1<<31};
+	enum {BooleanOpOfs=1<<30};
 
 	/// \brief Constructor
 	MetaDataExpression( const QueryAnalyzerInterface* analyzer_, ErrorBufferInterface* errorhnd_)
@@ -43,27 +43,27 @@ public:
 	{
 		return m_expr;
 	}
-	static bool isBooleanOp( unsigned int groupidx)
+	static bool isBooleanOp( int groupidx)
 	{
-		return groupidx >= (unsigned int)BooleanOpOfs;
+		return groupidx >= (int)BooleanOpOfs;
 	}
-	static bool isCompareOp( unsigned int groupidx)
+	static bool isCompareOp( int groupidx)
 	{
-		return groupidx && groupidx < (unsigned int)BooleanOpOfs;
+		return groupidx && groupidx < (int)BooleanOpOfs;
 	}
-	static BooleanOp booleanOp( unsigned int groupidx)
+	static BooleanOp booleanOp( int groupidx)
 	{
 		return (BooleanOp)( groupidx-BooleanOpOfs-1);
 	}
-	static MetaDataRestrictionInterface::CompareOperator compareOp( unsigned int groupidx)
+	static MetaDataRestrictionInterface::CompareOperator compareOp( int groupidx)
 	{
 		return (MetaDataRestrictionInterface::CompareOperator)( groupidx-1);
 	}
-	static unsigned int getCompareOp( const MetaDataRestrictionInterface::CompareOperator& op)
+	static int getCompareOp( const MetaDataRestrictionInterface::CompareOperator& op)
 	{
 		return op+1;
 	}
-	static unsigned int getBooleanOp( const BooleanOp& op)
+	static int getBooleanOp( const BooleanOp& op)
 	{
 		return op+BooleanOpOfs+1;
 	}
@@ -87,8 +87,8 @@ private:
 private:
 	ErrorBufferInterface* m_errorhnd;
 	QueryAnalyzerContextInterface* m_analyzer;
-	std::vector<unsigned int> m_fieldno_stack;
-	unsigned int m_fieldno_cnt;
+	std::vector<int> m_fieldno_stack;
+	int m_fieldno_cnt;
 	analyzer::QueryTermExpression m_expr;
 };
 
