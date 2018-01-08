@@ -54,7 +54,7 @@ struct MetaDataComparison
 void MetaDataExpression::translate( QueryInterface& query)
 {
 	const analyzer::QueryTermExpression& expr = expression();
-	unsigned int termc = 0;
+	int termc = 0;
 
 	// Build a simpler data structure of a CNF (conjunctive normal form):
 	std::vector<MetaDataComparison> cmplist;
