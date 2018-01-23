@@ -494,13 +494,13 @@ DLL_PUBLIC bool strus::loadQueryEvalProgram(
 	catch (const std::bad_alloc&)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("out of memory parsing query evaluation program %s"), pos.c_str());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory parsing query evaluation program %s"), pos.c_str());
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("error in query evaluation program %s: %s"), pos.c_str(), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error in query evaluation program %s: %s"), pos.c_str(), e.what());
 		return false;
 	}
 }
@@ -1385,13 +1385,13 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 	catch (const std::bad_alloc&)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("out of memory parsing document analyzer program %s"), pos.c_str());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory parsing document analyzer program %s"), pos.c_str());
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("error in document analyzer program %s: %s"), pos.c_str(), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error in document analyzer program %s: %s"), pos.c_str(), e.what());
 		return false;
 	}
 }
@@ -1491,13 +1491,13 @@ DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
 	catch (const std::bad_alloc&)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("out of memory parsing query analyzer program %s"), pos.c_str());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory parsing query analyzer program %s"), pos.c_str());
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("error in query analyzer program %s: %s"), pos.c_str(), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error in query analyzer program %s: %s"), pos.c_str(), e.what());
 		return false;
 	}
 }
@@ -1522,7 +1522,7 @@ DLL_PUBLIC bool strus::isAnalyzerConfigSource(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report(_TXT("out of memory in check for analyzer map source"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory in check for analyzer map source"));
 		return false;
 	}
 	catch (const std::runtime_error& e)
@@ -1613,13 +1613,13 @@ DLL_PUBLIC bool strus::loadAnalyzerMap(
 	catch (const std::bad_alloc&)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("out of memory parsing query document class to analyzer map program %s"), pos.c_str());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory parsing query document class to analyzer map program %s"), pos.c_str());
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report(_TXT("error in query document class to analyzer map program %s: %s"), pos.c_str(), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error in query document class to analyzer map program %s: %s"), pos.c_str(), e.what());
 		return false;
 	}
 }
@@ -1944,13 +1944,13 @@ DLL_PUBLIC bool strus::loadQuery(
 	catch (const std::bad_alloc&)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report( _TXT("out of memory parsing query source %s"), pos.c_str());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory parsing query source %s"), pos.c_str());
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
 		ErrorPosition pos( source.c_str(), src);
-		errorhnd->report( _TXT("error in query source %s: %s"), pos.c_str(), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error in query source %s: %s"), pos.c_str(), e.what());
 		return false;
 	}
 }
@@ -2012,12 +2012,12 @@ DLL_PUBLIC bool strus::loadPhraseAnalyzer(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report(_TXT("out of memory loading query analyzer phrase type"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory loading query analyzer phrase type"));
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report(_TXT("error in query analyzer phrase type: %s"), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error in query analyzer phrase type: %s"), e.what());
 		return false;
 	}
 }
@@ -2059,12 +2059,12 @@ DLL_PUBLIC bool strus::scanNextProgram(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory scanning next program"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory scanning next program"));
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("error scanning next program: %s"), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error scanning next program: %s"), e.what());
 		return false;
 	}
 }
@@ -2331,12 +2331,12 @@ DLL_PUBLIC unsigned int strus::loadDocumentMetaDataAssignments(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading meta data assignments"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory loading meta data assignments"));
 		return 0;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("error loading meta data assignments: %s"), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error loading meta data assignments: %s"), e.what());
 		return 0;
 	}
 }
@@ -2356,12 +2356,12 @@ DLL_PUBLIC unsigned int strus::loadDocumentAttributeAssignments(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading attribute assignments"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory loading attribute assignments"));
 		return 0;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("error loading attribute assignments: %s"), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error loading attribute assignments: %s"), e.what());
 		return 0;
 	}
 }
@@ -2380,12 +2380,12 @@ DLL_PUBLIC unsigned int strus::loadDocumentUserRightsAssignments(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading user right assignments"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory loading user right assignments"));
 		return 0;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("error loading user right assignments: %s"), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error loading user right assignments: %s"), e.what());
 		return 0;
 	}
 }
@@ -2477,12 +2477,12 @@ DLL_PUBLIC bool strus::parseDocumentClass(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory parsing document class"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory parsing document class"));
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("error parsing document class: %s"), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error parsing document class: %s"), e.what());
 		return false;
 	}
 }
@@ -2779,12 +2779,12 @@ DLL_PUBLIC bool strus::loadVectorStorageVectors(
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading feature vectors from file %s (file format: %s)"), vectorfile.c_str(), filetype);
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory loading feature vectors from file %s (file format: %s)"), vectorfile.c_str(), filetype);
 		return false;
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("error loading feature vectors from file %s (file format: %s): %s"), vectorfile.c_str(), filetype, e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error loading feature vectors from file %s (file format: %s): %s"), vectorfile.c_str(), filetype, e.what());
 		return false;
 	}
 }
@@ -2822,12 +2822,12 @@ DLL_PUBLIC bool strus::loadPatternMatcherProgramWithLexer(
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("failed to load pattern match program: %s"), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("failed to load pattern match program: %s"), e.what());
 		return false;
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading pattern match program"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("out of memory loading pattern match program"));
 		return false;
 	}
 }
@@ -2863,12 +2863,12 @@ DLL_PUBLIC bool strus::loadPatternMatcherProgramWithFeeder(
 	}
 	catch (const std::runtime_error& e)
 	{
-		errorhnd->report( _TXT("failed to load pattern match program (for analyzer output): %s"), e.what());
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("failed to load pattern match program (for analyzer output): %s"), e.what());
 		return false;
 	}
 	catch (const std::bad_alloc&)
 	{
-		errorhnd->report( _TXT("out of memory loading pattern match program (for analyzer output)"));
+		errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("out of memory loading pattern match program (for analyzer output)"));
 		return false;
 	}
 }

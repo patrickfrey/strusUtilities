@@ -297,12 +297,12 @@ bool PatternMatcherProgramParser::load( const std::string& source)
 			}
 		}
 		ErrorPosition errpos( source.c_str(), si);
-		m_errorhnd->report( _TXT("error in pattern match program %s: \"%s\" [at '%s']"), errpos.c_str(), err.what(), snippet);
+		m_errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("error in pattern match program %s: \"%s\" [at '%s']"), errpos.c_str(), err.what(), snippet);
 		return false;
 	}
 	catch (const std::bad_alloc&)
 	{
-		m_errorhnd->report( _TXT("out of memory when loading program source"));
+		m_errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("out of memory when loading program source"));
 		return false;
 	}
 }
@@ -337,12 +337,12 @@ bool PatternMatcherProgramParser::compile()
 	}
 	catch (const std::runtime_error& e)
 	{
-		m_errorhnd->report( _TXT("failed to compile pattern match program source: %s"), e.what());
+		m_errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("failed to compile pattern match program source: %s"), e.what());
 		return false;
 	}
 	catch (const std::bad_alloc&)
 	{
-		m_errorhnd->report( _TXT("out of memory when compiling pattern match program source"));
+		m_errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("out of memory when compiling pattern match program source"));
 		return false;
 	}
 }

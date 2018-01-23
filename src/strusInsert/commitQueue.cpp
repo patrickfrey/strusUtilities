@@ -43,7 +43,7 @@ void CommitQueue::handleWaitingTransactions()
 		}
 		catch (const std::bad_alloc&)
 		{
-			m_errorhnd->report( _TXT("out of memory handling transaction in queue"));
+			m_errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseOutOfMem), _TXT("out of memory handling transaction in queue"));
 			::fprintf( stderr, _TXT("out of memory handling transaction in queue\n"));
 			::fflush( stderr);
 		}
@@ -52,13 +52,13 @@ void CommitQueue::handleWaitingTransactions()
 			const char* errmsg = m_errorhnd->fetchError();
 			if (errmsg)
 			{
-				m_errorhnd->report( _TXT("error handling transaction in queue: %s, %s"), err.what(), errmsg);
+				m_errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error handling transaction in queue: %s, %s"), err.what(), errmsg);
 				::fprintf( stderr, _TXT("error handling transaction in queue: %s, %s\n"), err.what(), errmsg);
 				::fflush( stderr);
 			}
 			else
 			{
-				m_errorhnd->report( _TXT("error handling transaction in queue: %s"), err.what());
+				m_errorhnd->report( *ErrorCode(StrusComponentUtilities,ErrorOperationParse,ErrorCauseRuntimeError), _TXT("error handling transaction in queue: %s"), err.what());
 				::fprintf( stderr, _TXT("error handling transaction in queue: %s\n"), err.what());
 				::fflush( stderr);
 			}
