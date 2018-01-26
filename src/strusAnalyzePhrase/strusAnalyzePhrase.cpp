@@ -49,12 +49,11 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 12,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 12,
 				"h,help", "v,version", "license", "t,tokenizer:", "n,normalizer:",
 				"m,module:", "M,moduledir:", "q,quot:", "P,plain", "F,fileinput",
 				"R,resourcedir:", "T,trace:");
@@ -225,6 +224,11 @@ int main( int argc, const char* argv[])
 				analyzerBuilder.reset( proxy);
 			}
 		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+		}
+
 		// Create objects for analyzer:
 		strus::local_ptr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());

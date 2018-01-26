@@ -70,12 +70,11 @@ int main( int argc, const char* argv[])
 	}
 	g_errorBuffer = errorBuffer.get();
 
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 10,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 10,
 				"h,help", "v,version", "license",
 				"o,output:", "F,feeder",
 				"M,moduledir:", "m,module:", "r,rpc:",

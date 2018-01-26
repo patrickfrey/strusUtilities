@@ -828,12 +828,11 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 10,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 10,
 				"h,help", "v,version","license",
 				"m,module:", "M,moduledir:",
 				"r,rpc:", "s,storage:", "T,trace:",
@@ -1014,6 +1013,10 @@ int main( int argc, const char* argv[])
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
 		}
 
 		// Create objects for inspecting storage:

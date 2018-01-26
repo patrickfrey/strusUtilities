@@ -75,12 +75,11 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 9,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "r,rpc:",
 				"s,storage:", "e,exists", "T,trace:");
@@ -229,6 +228,11 @@ int main( int argc, const char* argv[])
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
 		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+		}
+
 		if (opt("exists"))
 		{
 			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);

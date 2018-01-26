@@ -53,12 +53,11 @@ int main( int argc, const char* argv[])
 	}
 	g_errorBuffer = errorBuffer.get();
 
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 9,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "t,threads:" );
@@ -231,6 +230,11 @@ int main( int argc, const char* argv[])
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
 		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+		}
+
 		// Create objects:
 		std::string modelname;
 		if (!strus::extractStringFromConfigString( modelname, config, "storage", errorBuffer.get()))

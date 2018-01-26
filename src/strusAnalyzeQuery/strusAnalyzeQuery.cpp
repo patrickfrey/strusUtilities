@@ -540,12 +540,11 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 9,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 9,
 				"h,help", "v,version", "license", "m,module:", "r,rpc:",
 				"M,moduledir:", "R,resourcedir:", "T,trace:", "F,fileinput");
 		if (opt( "help")) printUsageAndExit = true;
@@ -743,6 +742,10 @@ int main( int argc, const char* argv[])
 				if (ec) throw strus::runtime_error(_TXT("failed to read query from file %s (errno %u)"), querystring.c_str(), ec);
 			}
 			querystring = qs;
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
 		}
 
 		strus::local_ptr<strus::QueryAnalyzerInterface>

@@ -348,12 +348,11 @@ int main( int argc_, const char* argv_[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc_, argv_, 9,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc_, argv_, 9,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "R,resourcedir:", "r,rpc:",
 				"T,trace:", "H,html");
@@ -536,6 +535,10 @@ int main( int argc_, const char* argv_[])
 			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
 		}
 
 		// Print help:

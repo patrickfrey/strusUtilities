@@ -88,12 +88,11 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 8,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 8,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:",
 				"r,rpc:", "s,storage:", "T,trace:");
@@ -213,7 +212,11 @@ int main( int argc, const char* argv[])
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
 			storagecfg = opt["storage"];
 		}
-		
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+		}
+
 		// Create objects for storage document update:
 		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
 		strus::local_ptr<strus::RpcClientInterface> rpcClient;
@@ -233,6 +236,7 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
 			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating storage object builder"));
 		}
+
 		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage client"));

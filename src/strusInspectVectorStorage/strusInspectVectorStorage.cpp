@@ -739,12 +739,11 @@ int main( int argc, const char* argv[])
 	}
 	g_errorBuffer = errorBuffer.get();
 
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 12,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 12,
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:",
@@ -940,6 +939,10 @@ int main( int argc, const char* argv[])
 			}
 		}
 		bool realmeasure( opt("realmeasure"));
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+		}
 
 		// Create root object:
 		strus::local_ptr<strus::StorageObjectBuilderInterface>

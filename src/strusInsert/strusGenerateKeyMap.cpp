@@ -51,12 +51,11 @@ int main( int argc_, const char* argv_[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc_, argv_, 13,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc_, argv_, 13,
 				"h,help",  "v,version", "license",
 				"t,threads:", "u,unit:",
 				"n,results:","m,module:", "x,extension:",
@@ -259,6 +258,11 @@ int main( int argc_, const char* argv_[])
 				analyzerBuilder.reset( aproxy);
 			}
 		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+		}
+
 		// Create objects for keymap generation:
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));

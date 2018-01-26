@@ -88,12 +88,11 @@ int main( int argc_, const char* argv_[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc_, argv_, 16,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc_, argv_, 16,
 				"h,help", "v,version", "license",
 				"t,threads:", "l,logfile:", "n,notify:",
 				"R,resourcedir:", "M,moduledir:", "m,module:", 
@@ -314,6 +313,10 @@ int main( int argc_, const char* argv_[])
 		else
 		{
 			moduleLoader->addResourcePath( "./");
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
 		}
 
 		// Create root objects:

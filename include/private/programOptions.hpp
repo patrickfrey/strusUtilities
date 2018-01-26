@@ -7,280 +7,92 @@
  */
 #ifndef _STRUS_UTILITIES_PROGRAM_OPTIONS_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_OPTIONS_HPP_INCLUDED
-#include "private/internationalization.hpp"
-#include "strus/base/numstring.hpp"
-#include <cstring>
-#include <stdexcept>
+#include "strus/errorBufferInterface.hpp"
 #include <map>
-#include <set>
 #include <vector>
-#include <limits>
-#include <algorithm>
-#include <stdexcept>
-#include <cstdarg>
+#include <string>
 #include <iostream>
 
 namespace strus {
 
+/// \brief Program options parser
 class ProgramOptions
 {
 private:
-	struct OptMapDef
+	/// \brief Internal program options name map
+	class OptMapDef
 	{
-		std::map<std::string,bool> longnamemap;
-		std::map<char,std::string> aliasmap;
-
+	public:
 		OptMapDef(){}
 
-		void add( const char* arg)
-		{
-			bool hasArg = false;
-			char alias = '\0';
-			char const* aa = arg;
-			const char* longnamestart = arg;
-			const char* longnameend = arg + std::strlen(arg);
-			for (;*aa;++aa)
-			{
-				if (*aa == ',')
-				{
-					if (aa - arg != 1)
-					{
-						throw strus::runtime_error( "%s",  _TXT("one character option expected before comma ',' in option definition string"));
-					}
-					alias = *arg;
-					longnamestart = aa+1;
-				}
-				if (*aa == ':')
-				{
-					if (longnameend - aa != 1)
-					{
-						throw strus::runtime_error( "%s",  _TXT("colon expected only at end of option definition string"));
-					}
-					longnameend = aa;
-					hasArg = true;
-				}
-			}
-			std::string longname( longnamestart, longnameend-longnamestart);
-			if (longname.empty())
-			{
-				if (!alias)
-				{
-					throw strus::runtime_error( "%s",  _TXT("empty option definition"));
-				}
-				longname.push_back( alias);
-			}
-			if (alias)
-			{
-				aliasmap[ alias] = longname;
-			}
-			longnamemap[ longname] = hasArg;
-		}
+		void add( const char* arg);
 
-		bool getOpt( const char* argv, std::vector<std::string>& optlist, std::string& optarg)
-		{
-			optlist.clear();
-			optarg.clear();
+		bool getOpt( const char* argv, std::vector<std::string>& optlist, std::string& optarg);
 
-			if (argv[0] != '-' || argv[1] == '\0') return false;
-
-			if (argv[1] == '-')
-			{
-				const char* oo = argv+2;
-				const char* aa = std::strchr( oo, '=');
-				if (aa)
-				{
-					optlist.push_back( std::string( oo, aa-oo));
-					optarg = std::string( aa+1);
-				}
-				else
-				{
-					optlist.push_back( std::string( oo));
-				}
-			}
-			else
-			{
-				const char* oo = argv+1;
-				for (;*oo; ++oo)
-				{
-					std::map<char,std::string>::const_iterator oi = aliasmap.find( *oo);
-					if (oi == aliasmap.end())
-					{
-						if (oo == argv+1) throw strus::runtime_error( _TXT("unknown option '-%c'"), *oo);
-						optarg = std::string( oo);
-						break;
-					}
-					optlist.push_back( std::string( oi->second));
-				}
-			}
-			return true;
-		}
+		std::map<std::string,bool> longnamemap;
+		std::map<char,std::string> aliasmap;
 	};
 
 public:
-	ProgramOptions()
-		:m_argc(0),m_argv(0){}
+	/// \brief Default constructor
+	ProgramOptions( ErrorBufferInterface* errorhnd_)
+		:m_errorhnd(errorhnd_),m_argc(0),m_argv(0){}
 
+	/// \brief Copy constructor
 	ProgramOptions( const ProgramOptions& o)
-		:m_argc(o.m_argc),m_argv(o.m_argv),m_opt(o.m_opt){}
+		:m_errorhnd(o.m_errorhnd),m_argc(o.m_argc),m_argv(o.m_argv),m_opt(o.m_opt){}
 
-	ProgramOptions(
-			int argc_, const char** argv_,
-			int nofopt, ...)
+	/// \brief Constructor
+	ProgramOptions( ErrorBufferInterface* errorhnd_, int argc_, const char** argv_, int nofopt, ...);
 
-		:m_argc(argc_-1),m_argv(argv_+1)
-	{
-		//[1] Initialize options map:
-		OptMapDef optmapdef;
-		va_list ap;
-		va_start( ap, nofopt);
+	/// \brief Test if an option specified by its long name is defined
+	bool operator()( const std::string& optname) const;
 
-		for (int ai=0; ai<nofopt; ai++)
-		{
-			const char* av = va_arg( ap, const char*);
-			optmapdef.add( av);
-		}
-		va_end(ap);
+	/// \brief Get the value of an argument specified by its index
+	/// \param[in] index of the argument starting with 0
+	/// \note first argument (not the program name!) has index 0
+	/// \return the argument value as string or NULL on failure
+	const char* operator[]( std::size_t idx) const;
 
-		//[2] Parse options and fill m_opt:
-		std::vector<std::string> optlist;
-		std::string optarg;
+	/// \brief Get the value of an option specified by its long name
+	/// \param[in] optname long name of the option
+	/// \return the option value as string or NULL on failure
+	const char* operator[]( const std::string& optname) const;
 
-		for (; m_argc && optmapdef.getOpt( *m_argv, optlist, optarg); ++m_argv,--m_argc)
-		{
-			std::vector<std::string>::const_iterator oi = optlist.begin(), oe = optlist.end();
-			for (; oi != oe; ++oi)
-			{
-				std::map<std::string,bool>::iterator li = optmapdef.longnamemap.find( *oi);
-				if (li == optmapdef.longnamemap.end()) throw strus::runtime_error( _TXT("unknown option '--%s'"), oi->c_str());
-				if (li->second && oi+1 == oe)
-				{
-					if (optarg.empty() && m_argc > 1 && m_argv[1][0] != '-')
-					{
-						if (m_argv[1][0] == '=')
-						{
-							if (!m_argv[1][1] && m_argc > 2)
-							{
-								--m_argc;
-								++m_argv;
-								m_opt.insert( OptMapElem( *oi, std::string( m_argv[1])));
-							}
-							else
-							{
-								m_opt.insert( OptMapElem( *oi, std::string( m_argv[1]+1)));
-							}
-						}
-						else
-						{
-							m_opt.insert( OptMapElem( *oi, std::string( m_argv[1])));
-						}
-						--m_argc;
-						++m_argv;
-					}
-					else
-					{
-						m_opt.insert( OptMapElem( *oi, optarg));
-					}
-				}
-				else
-				{
-					m_opt.insert( OptMapElem( *oi, std::string()));
-				}
-			}
-		}
-	}
+	/// \brief Get the value of an option specified by its long name as signed integer
+	/// \param[in] optname long name of the option
+	/// \return the option value as integer or 0 on failure
+	int asInt( const std::string& optname) const;
 
-	bool operator()( const std::string& optname) const
-	{
-		return (m_opt.find( optname) != m_opt.end());
-	}
+	/// \brief Get the value of an option specified by its long name as unsigned integer
+	/// \param[in] optname long name of the option
+	/// \return the option value as integer or 0 on failure
+	unsigned int asUint( const std::string& optname) const;
 
-	const char* operator[]( std::size_t idx) const
-	{
-		if (idx >= m_argc) return 0;
-		return m_argv[ idx];
-	}
+	/// \brief Get the list of values of an option specified by its long name
+	/// \param[in] optname long name of the option
+	/// \return the option values as vector, empty on failure
+	std::vector<std::string> list( const std::string& optname) const;
 
-	const char* operator[]( const std::string& optname) const
-	{
-		if (m_opt.count( optname) > 1)
-		{
-			throw strus::runtime_error( _TXT("option '%s' specified more than once"), optname.c_str());
-		}
-		std::map<std::string,std::string>::const_iterator
-			oi = m_opt.find( optname);
-		if (oi == m_opt.end()) return 0;
-		return oi->second.c_str();
-	}
+	/// \brief Get the number of program arguments
+	/// \return the number of program arguments without options and the program name
+	int nofargs() const;
 
-	int asInt( const std::string& optname) const
-	{
-		if (m_opt.count( optname) > 1)
-		{
-			throw strus::runtime_error( _TXT("option '%s' specified more than once"), optname.c_str());
-		}
-		std::map<std::string,std::string>::const_iterator
-			oi = m_opt.find( optname);
-		if (oi == m_opt.end()) return 0;
-		try
-		{
-			return numstring_conv::toint( oi->second, std::numeric_limits<int>::max());
-		}
-		catch (const std::runtime_error&)
-		{
-			throw strus::runtime_error( _TXT("option '%s' has not the requested value type"), optname.c_str());
-		}
-	}
+	/// \brief Get the list of program arguments
+	/// \return the list of program arguments without options and the program name
+	const char** argv() const;
 
-	unsigned int asUint( const std::string& optname) const
-	{
-		int rt = asInt( optname);
-		if (rt < 0) throw strus::runtime_error( _TXT("non negative value expected for option '%s'"), optname.c_str());
-		return (unsigned int)rt;
-	}
-
-	std::vector<std::string> list( const std::string& optname) const
-	{
-		std::vector<std::string> rt;
-		std::pair<OptMap::const_iterator,OptMap::const_iterator>
-			range = m_opt.equal_range( optname);
-		OptMap::const_iterator ei = range.first, ee = range.second;
-		for (; ei != ee; ++ei)
-		{
-			rt.push_back( ei->second);
-		}
-		return rt;
-	}
-
-	int nofargs() const
-	{
-		return m_argc;
-	}
-
-	const char** argv() const
-	{
-		return m_argv;
-	}
-
-	void print( std::ostream& out)
-	{
-		std::map<std::string,std::string>::const_iterator oi = m_opt.begin(), oe = m_opt.end();
-		for (; oi != oe; ++oi)
-		{
-			out << "--" << oi->first << "=" << oi->second << std::endl;
-		}
-		std::size_t ai = 0, ae = m_argc;
-		for (; ai != ae; ++ai)
-		{
-			out << "[" << ai << "] " << m_argv[ai] << std::endl;
-		}
-	}
+	/// \brief Print all proram options defined
+	/// \param[in] where to print the options to
+	void print( std::ostream& out);
 
 private:
-	std::size_t m_argc;
-	char const** m_argv;
+	ErrorBufferInterface* m_errorhnd;				///< error buffer for reporting errors and exceptions
+	std::size_t m_argc;						///< number of arguments without program and options
+	char const** m_argv;						///< array of arguments without program and options
 	typedef std::multimap<std::string,std::string> OptMap;
 	typedef std::pair<std::string,std::string> OptMapElem;
-	OptMap m_opt;
+	OptMap m_opt;							///< options map
 };
 
 }//namespace

@@ -98,12 +98,11 @@ int main( int argc_, const char* argv_[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc_, argv_, 18,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc_, argv_, 18,
 				"h,help", "v,version", "license",
 				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:", "F,fileinput",
 				"D,time", "G,debug", "m,module:", "M,moduledir:", "R,resourcedir:",
@@ -315,6 +314,11 @@ int main( int argc_, const char* argv_[])
 		{
 			moduleLoader->addResourcePath( "./");
 		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+		}
+
 		// Create objects for query evaluation:
 		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
 		strus::local_ptr<strus::RpcClientInterface> rpcClient;

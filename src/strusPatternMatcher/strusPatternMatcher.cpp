@@ -713,12 +713,11 @@ int main( int argc, const char* argv[])
 	}
 	g_errorBuffer = errorBuffer.get();
 
-	strus::ProgramOptions opt;
 	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 23,
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 23,
 				"h,help", "v,version", "license",
 				"g,segmenter:", "x,ext:", "C,contenttype:", "F,filelist",
 				"e,expression:", "K,tokens", "p,program:",
@@ -983,6 +982,10 @@ int main( int argc, const char* argv[])
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
+		}
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error( "%s", _TXT("error in initialization"));
 		}
 
 		// Set paths for locating resources:
