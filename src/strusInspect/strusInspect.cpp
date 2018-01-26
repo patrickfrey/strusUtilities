@@ -39,7 +39,7 @@
 #include "strus/numericVariant.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "private/programOptions.hpp"
+#include "strus/base/programOptions.hpp"
 #include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"

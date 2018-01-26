@@ -23,7 +23,7 @@
 #include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
-#include "private/programOptions.hpp"
+#include "strus/base/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "strus/base/cmdLineOpt.hpp"

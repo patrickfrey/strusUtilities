@@ -7,7 +7,6 @@ set(source_files
 	${CMAKE_CURRENT_BINARY_DIR}/internationalization.cpp
 	traceUtils.cpp
 	analyzerMap.cpp
-	programOptions.cpp
 )
 
 include_directories(
