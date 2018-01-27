@@ -53,9 +53,9 @@ int main( int argc, const char* argv[])
 	}
 	g_errorBuffer = errorBuffer.get();
 
-	bool printUsageAndExit = false;
 	try
 	{
+		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
 				errorBuffer.get(), argc, argv, 10,
 				"h,help", "v,version", "license",

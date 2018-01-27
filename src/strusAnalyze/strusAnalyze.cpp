@@ -154,9 +154,9 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	bool printUsageAndExit = false;
 	try
 	{
+		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
 				errorBuffer.get(), argc, argv, 11,
 				"h,help", "v,version", "license", "m,module:",

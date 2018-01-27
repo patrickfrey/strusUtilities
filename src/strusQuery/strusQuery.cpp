@@ -98,9 +98,9 @@ int main( int argc_, const char* argv_[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	bool printUsageAndExit = false;
 	try
 	{
+		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
 				errorBuffer.get(), argc_, argv_, 18,
 				"h,help", "v,version", "license",
