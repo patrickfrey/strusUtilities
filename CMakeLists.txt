@@ -48,17 +48,22 @@ set( STRUS_PATTERN_STD_ENABLED 0 )
 MESSAGE( STATUS  "Standard module and tests for strusPattern not enabled (WITH_STRUS_PATTERN != 'YES')." )
 ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 
-set( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" )
-configure_file( "${PROJECT_SOURCE_DIR}/include/private/versionUtilities.hpp.in"  "${CMAKE_CURRENT_BINARY_DIR}/include/private/versionUtilities.hpp"  @ONLY )
-
 if( APPLE OR WIN32 )
 	set( PROJECT_BIN_AFFIX "${CMAKE_BUILD_TYPE}/" )
 else( APPLE OR WIN32 )
 	set( PROJECT_BIN_AFFIX "" )
 endif( APPLE OR WIN32 )
 
+# Module path:
+if (NOT STRUS_MODULE_PATH)
+set( STRUS_MODULE_PATH  "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/strus/modules" )
+endif (NOT STRUS_MODULE_PATH)
+MESSAGE( STATUS  "Strus module path: ${STRUS_MODULE_PATH}" )
+
 set( STRUS_GETTEXT_PACKAGE "strus-dom" )	#... 1st parameter of bindtextdomain(...)
 set( STRUS_GETTEXT_LOCALEDIR "" )			#... 2nd parameter of bindtextdomain(...)
+
+configure_file( "${PROJECT_SOURCE_DIR}/include/private/versionUtilities.hpp.in"  "${CMAKE_CURRENT_BINARY_DIR}/include/private/versionUtilities.hpp"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/src/utils/internationalization.cpp.in"  "${CMAKE_CURRENT_BINARY_DIR}/src/utils/internationalization.cpp"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/obs/deploy_to_obs.sh.in"  "${PROJECT_SOURCE_DIR}/dist/obs/deploy_to_obs.sh"  @ONLY )
 configure_file( "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD.in"  "${PROJECT_SOURCE_DIR}/dist/archlinux/PKGBUILD"  @ONLY )
@@ -72,12 +77,6 @@ set( PROGRAM_INCLUDE_DIRS          "${CMAKE_CURRENT_BINARY_DIR}/include"  "${PRO
 set( PROGRAM_LIBRARY_DIRS          "${CMAKE_CURRENT_BINARY_DIR}/src/program" )
 set( UTILS_INCLUDE_DIRS                 "${CMAKE_CURRENT_BINARY_DIR}/include"  "${PROJECT_SOURCE_DIR}/include" )
 set( UTILS_LIBRARY_DIRS                 "${CMAKE_CURRENT_BINARY_DIR}/src/utils" )
-
-# Module path:
-if (NOT STRUS_MODULE_PATH)
-set( STRUS_MODULE_PATH  "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/strus/modules" )
-endif (NOT STRUS_MODULE_PATH)
-MESSAGE( STATUS  "Strus module path: ${STRUS_MODULE_PATH}" )
 
 # Subdirectories:
 add_subdirectory( src )
