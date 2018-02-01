@@ -61,7 +61,12 @@ int main( int argc, const char* argv[])
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "t,threads:" );
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
+
 		if (opt( "threads"))
 		{
 			unsigned int nofThreads = opt.asUint( "threads");

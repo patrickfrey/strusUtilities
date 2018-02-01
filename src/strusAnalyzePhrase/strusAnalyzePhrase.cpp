@@ -57,7 +57,12 @@ int main( int argc, const char* argv[])
 				"h,help", "v,version", "license", "t,tokenizer:", "n,normalizer:",
 				"m,module:", "M,moduledir:", "q,quot:", "P,plain", "F,fileinput",
 				"R,resourcedir:", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
+
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 

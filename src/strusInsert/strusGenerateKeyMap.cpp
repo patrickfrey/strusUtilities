@@ -61,6 +61,10 @@ int main( int argc_, const char* argv_[])
 				"n,results:","m,module:", "x,extension:",
 				"s,segmenter:", "C,contenttype:", "M,moduledir:", "R,resourcedir:",
 				"T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 
 		int nofThreads = 0;
 		if (opt("threads"))
@@ -68,6 +72,7 @@ int main( int argc_, const char* argv_[])
 			nofThreads = opt.asUint( "threads");
 		}
 		if (opt( "help")) printUsageAndExit = true;
+
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
 		if (opt("moduledir"))

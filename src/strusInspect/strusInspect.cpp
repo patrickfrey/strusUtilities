@@ -837,6 +837,10 @@ int main( int argc, const char* argv[])
 				"m,module:", "M,moduledir:",
 				"r,rpc:", "s,storage:", "T,trace:",
 				"A,attribute:", "E,empty");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;

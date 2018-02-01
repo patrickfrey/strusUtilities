@@ -215,6 +215,10 @@ int main( int argc, const char* argv[])
 		strus::ProgramOptions opt(
 			errorBuffer.get(), argc, argv, 6,
 			"h,help", "v,version", "license", "m,module:", "M,moduledir:", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;

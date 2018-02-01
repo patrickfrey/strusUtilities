@@ -99,6 +99,10 @@ int main( int argc_, const char* argv_[])
 				"C,contenttype:", "x,extension:", "r,rpc:",
 				"g,segmenter:", "s,storage:", "S,configfile:",
 				"T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 
 		int nofThreads = 0;
 		if (opt("threads"))

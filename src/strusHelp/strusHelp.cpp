@@ -356,6 +356,10 @@ int main( int argc_, const char* argv_[])
 				"h,help", "v,version", "license",
 				"m,module:", "M,moduledir:", "R,resourcedir:", "r,rpc:",
 				"T,trace:", "H,html");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));

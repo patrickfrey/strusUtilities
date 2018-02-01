@@ -108,6 +108,10 @@ int main( int argc, const char* argv[])
 				"r,rpc:", "s,storage:", "c,commit:",
 				"a,attribute:", "x,mapattribute:",
 				"m,metadata:","u,useraccess", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
