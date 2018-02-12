@@ -292,6 +292,7 @@ static void printQueryProcessorDescription( std::ostream& out, const strus::Quer
 		case strus::QueryProcessorInterface::PostingJoinOperator: label = _TXT("Posting join operator"); label_descr = _TXT("List of posting join operators"); break;
 		case strus::QueryProcessorInterface::WeightingFunction: label = _TXT("Weighting function"); label_descr = _TXT("List of query evaluation weighting functions"); break;
 		case strus::QueryProcessorInterface::SummarizerFunction: label = _TXT("Summarizer"); label_descr = _TXT("List of summarization functions for the presentation of a query evaluation result"); break;
+		case strus::QueryProcessorInterface::ScalarFunctionParser: label = _TXT("Scalar function parser"); label_descr = _TXT("List of scalar function parsers"); break;
 	}
 	std::vector<std::string> funcs;
 	std::vector<std::string>::const_iterator fi,fe;
@@ -329,6 +330,19 @@ static void printQueryProcessorDescription( std::ostream& out, const strus::Quer
 			{
 				const strus::SummarizerFunctionInterface* func = queryproc->getSummarizerFunction( *fi);
 				if (func) printFunctionDescription( out, label, *fi, func->getDescription());
+				break;
+			}
+			case strus::QueryProcessorInterface::ScalarFunctionParser:
+			{
+				const strus::ScalarFunctionParserInterface* func = queryproc->getScalarFunctionParser( *fi);
+				if (func)
+				{
+					const char* descr = func->getDescription();
+					if (descr && *descr)
+					{
+						print_function_description( out, *fi, descr);
+					}
+				}
 				break;
 			}
 		};
