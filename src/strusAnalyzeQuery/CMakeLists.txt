@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 # --------------------------------------
 # SOURCES AND INCLUDES
 # --------------------------------------
-set(source_files
+set( source_files
 	strusAnalyzeQuery.cpp
 )
 
@@ -34,6 +34,8 @@ link_directories(
 # ------------------------------
 # PROGRAMS
 # ------------------------------
+add_cppcheck( strusAnalyzeQuery  ${source_files} )
+
 add_executable( strusAnalyzeQuery ${source_files} )
 target_link_libraries( strusAnalyzeQuery  strusutilities_private_utils  ${strusmodule_LIBRARIES} strus_program strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
 

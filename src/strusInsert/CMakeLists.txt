@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 # --------------------------------------
 # SOURCES AND INCLUDES
 # --------------------------------------
-set(source_files
+set( source_files
 	checkInsertProcessor.cpp
 	commitQueue.cpp
 	fileCrawler.cpp
@@ -39,6 +39,8 @@ link_directories(
 # ------------------------------
 # PROGRAMS
 # ------------------------------
+add_cppcheck( local_objs_static  ${source_files} strusInsert.cpp strusCheckInsert.cpp strusGenerateKeyMap.cpp )
+
 add_library( local_objs_static STATIC ${source_files})
 set_property( TARGET local_objs_static PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 set_property( TARGET local_objs_static PROPERTY POSITION_INDEPENDENT_CODE TRUE )

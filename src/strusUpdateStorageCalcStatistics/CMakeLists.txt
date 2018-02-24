@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 # --------------------------------------
 # SOURCES AND INCLUDES
 # --------------------------------------
-set(source_files
+set( source_files
 	strusUpdateStorageCalcStatistics.cpp
 )
 
@@ -35,6 +35,8 @@ link_directories(
 # ------------------------------
 # PROGRAMS
 # ------------------------------
+add_cppcheck( strusUpdateStorageCalcStatistics  ${source_files} )
+
 add_executable( strusUpdateStorageCalcStatistics ${source_files} )
 target_link_libraries( strusUpdateStorageCalcStatistics strus_storage_objbuild strusutilities_private_utils strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket strus_scalarfunc ${Intl_LIBRARIES})
 

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 # --------------------------------------
 # SOURCES AND INCLUDES
 # --------------------------------------
-set(source_files
+set( source_files
 	lexems.cpp
 	errorPosition.cpp
 	termExpression.cpp
@@ -35,6 +35,8 @@ link_directories(
 # -------------------------------------------
 # LIBRARIES
 # -------------------------------------------
+add_cppcheck( strus_program  ${source_files} )
+
 add_library( strus_program SHARED ${source_files} )
 target_link_libraries( strus_program strusutilities_private_utils "${Boost_LIBRARIES}"  strus_base strus_error strus_module strus_pattern_serialize strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES} )
 

@@ -30,6 +30,8 @@ link_directories(
 # -------------------------------------------
 # PROGRAMS
 # -------------------------------------------
+add_cppcheck( strusPatternMatcher  strusPatternMatcher.cpp )
+
 add_executable( strusPatternMatcher  strusPatternMatcher.cpp )
 target_link_libraries( strusPatternMatcher  strusutilities_private_utils strusutilities_private_utils  ${strusmodule_LIBRARIES} strus_program strus_error strus_markup_std strus_module strus_rpc_client strus_rpc_client_socket strus_base ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
