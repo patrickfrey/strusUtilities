@@ -55,7 +55,9 @@ void FileCrawler::collectFilesToProcess( const std::string& dir)
 			{
 				m_chunkque.push_back( Chunk());
 			}
-			m_chunkque.back().files.push_back( dir + strus::dirSeparator() + *fi);
+			std::string fullpath = strus::joinFilePath( dir, *fi);
+			if (fullpath.empty()) throw std::bad_alloc();
+			m_chunkque.back().files.push_back( fullpath);
 		}
 		std::vector<std::string> subdirs;
 		ec = strus::readDirSubDirs( dir, subdirs);
