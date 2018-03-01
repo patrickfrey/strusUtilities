@@ -71,7 +71,7 @@ void FileCrawler::collectFilesToProcess( const std::string& dir)
 			std::vector<std::string>::const_iterator di = subdirs.begin(), de = subdirs.end();
 			for (; di != de; ++di)
 			{
-				std::string subdir( dir + strus::dirSeparator() + *di);
+				std::string subdir = strus::joinFilePath( dir, *di);
 				if (strus::isDir( subdir))
 				{
 					collectFilesToProcess( subdir);
