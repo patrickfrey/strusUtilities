@@ -731,7 +731,13 @@ static void inspectDump( const strus::VectorStorageInterface* vsi, const strus::
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -743,9 +749,9 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 12,
+				errorBuffer.get(), argc, argv, 13,
 				"h,help", "v,version", "license",
-				"m,module:", "M,moduledir:", "T,trace:",
+				"G,debug:", "m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:",
 				"t,threads:", "D,time", "N,nofranks:",
 				"x,realmeasure");
@@ -905,6 +911,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>.") << std::endl;
 			std::cout << "    " << _TXT("The module modstrus_storage_vector is implicitely defined") << std::endl;
@@ -941,6 +949,18 @@ int main( int argc, const char* argv[])
 			for (; ti != te; ++ti)
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
+			}
+		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
 			}
 		}
 		bool realmeasure( opt("realmeasure"));
@@ -1085,6 +1105,11 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error( "%s", _TXT("unhandled error in command"));
 		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

@@ -55,8 +55,6 @@
 #include <stdexcept>
 #include <sys/time.h>
 
-#undef STRUS_LOWLEVEL_DEBUG
-
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
 	std::string configstr( config);
@@ -92,9 +90,16 @@ static double getTimeStamp()
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
-	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
+		delete dbgtrace;
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
@@ -104,8 +109,8 @@ int main( int argc_, const char* argv_[])
 		strus::ProgramOptions opt(
 				errorBuffer.get(), argc_, argv_, 18,
 				"h,help", "v,version", "license",
-				"Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:", "F,fileinput",
-				"D,time", "G,debug", "m,module:", "M,moduledir:", "R,resourcedir:",
+				"G,debug:", "Q,quiet", "u,user:", "N,nofranks:", "I,firstrank:", "F,fileinput",
+				"D,time", "m,module:", "M,moduledir:", "R,resourcedir:",
 				"s,storage:", "S,configfile:", "r,rpc:", "T,trace:", "V,verbose");
 		if (errorBuffer->hasError())
 		{
@@ -219,10 +224,10 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("No output of results") << std::endl;
 			std::cout << "-D|--time" << std::endl;
 			std::cout << "    " << _TXT("Do print duration of pure query evaluation") << std::endl;
-			std::cout << "-G|--debug" << std::endl;
-			std::cout << "    " << _TXT("Switch debug info of weighting and summarization on") << std::endl;
 			std::cout << "-F|--fileinput" << std::endl;
 			std::cout << "    " << _TXT("Interpret query argument as a file name containing the input") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -247,7 +252,24 @@ int main( int argc_, const char* argv_[])
 		std::size_t firstRank = 0;
 		std::string storagecfg;
 		bool queryIsFile = opt("fileinput");
-		bool withDebugInfo = opt("debug");
+		bool withDebugInfo = false;
+
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (*gi == "weighting")
+				{
+					withDebugInfo = true;
+				}
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		if (opt("user"))
 		{
 			username = opt[ "user"];
@@ -294,7 +316,18 @@ int main( int argc_, const char* argv_[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -495,6 +528,11 @@ int main( int argc_, const char* argv_[])
 		{
 			throw strus::runtime_error(_TXT("unhandled error in command line query: %s"), errorBuffer->fetchError());
 		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

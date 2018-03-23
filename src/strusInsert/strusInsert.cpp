@@ -85,7 +85,13 @@ int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
 	FILE* logfile = 0;
-	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -97,7 +103,7 @@ int main( int argc_, const char* argv_[])
 		strus::ProgramOptions opt(
 				errorBuffer.get(), argc_, argv_, 18,
 				"h,help", "v,version", "license",
-				"t,threads:", "c,commit:", "f,fetch:",
+				"G,debug:", "t,threads:", "c,commit:", "f,fetch:",
 				"g,segmenter:", "C,contenttype:", "m,module:",
 				"L,logerror:", "M,moduledir:", "R,resourcedir:",
 				"r,rpc:", "x,extension:", "s,storage:",
@@ -231,6 +237,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -273,7 +281,18 @@ int main( int argc_, const char* argv_[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		unsigned int transactionSize = 1000;
 		if (opt("logerror"))
 		{
@@ -475,7 +494,11 @@ int main( int argc_, const char* argv_[])
 		}
 		else
 		{
-			std::cerr << std::endl << "done" << std::endl;
+			if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+			{
+				std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+			}
+			std::cerr << _TXT("done.") << std::endl;
 		}
 		if (logfile) fclose( logfile);
 		return 0;
