@@ -54,8 +54,6 @@
 #include <stdexcept>
 #include <memory>
 
-#undef STRUS_LOWLEVEL_DEBUG
-
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
 

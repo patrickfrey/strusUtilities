@@ -34,6 +34,7 @@
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
 #include "private/versionUtilities.hpp"
+#include "strus/debugTraceInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/documentClass.hpp"
 #include "strus/reference.hpp"
@@ -57,7 +58,6 @@
 #include <stdexcept>
 #include <memory>
 
-#undef STRUS_LOWLEVEL_DEBUG
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
@@ -279,6 +279,7 @@ public:
 
 	ThreadContext( const ThreadContext& o)
 		:m_globalContext(o.m_globalContext)
+		,m_debugTrace(o.m_debugTrace)
 		,m_objbuilder(o.m_objbuilder)
 		,m_defaultSegmenter(o.m_defaultSegmenter)
 		,m_defaultSegmenterInstance(o.m_defaultSegmenterInstance)
@@ -319,6 +320,7 @@ private:
 public:
 	ThreadContext( GlobalContext* globalContext_, const strus::AnalyzerObjectBuilderInterface* objbuilder_, unsigned int threadid_, const std::string& outputfile_="", const std::string& outerrfile_="")
 		:m_globalContext(globalContext_)
+		,m_debugTrace(g_errorBuffer->debugTrace())
 		,m_objbuilder(objbuilder_)
 		,m_defaultSegmenter(0)
 		,m_defaultSegmenterInstance()
@@ -457,9 +459,15 @@ public:
 			:segpos(o.segpos),srcpos(o.srcpos){}
 	};
 
-	static std::string encodeOutput( const char* ptr, std::size_t size)
+	static std::string encodeOutput( const char* ptr, std::size_t size, std::size_t maxsize)
 	{
 		std::string rt;
+		if (maxsize && maxsize < size)
+		{
+			enum {B10000000=(128),B11000000=(128+64)};
+			size = maxsize;
+			while (size && (ptr[size-1] & B11000000) == B10000000) --size;
+		}
 		std::size_t si = 0, se = size;
 		for (; si != se; ++si)
 		{
@@ -473,6 +481,15 @@ public:
 			}
 		}
 		return rt;
+	}
+
+	std::string lexemOutputString( const strus::SegmenterPosition& segmentpos, const char* segment, const strus::analyzer::PatternLexem& lx) const
+	{
+		const char* lexemname = m_globalContext->PatternLexerInstance()->getLexemName( lx.id());
+		std::string content = encodeOutput( segment+lx.origpos(), lx.origsize(), 0/*no maxsize*/);
+		return strus::string_format(
+				"%d [%d] : %u %s %s",
+				(int)lx.ordpos(), (unsigned int)(segmentpos+lx.origpos()), lx.id(), lexemname?lexemname:"?", content.c_str());
 	}
 
 	void processDocument( const std::string& filename)
@@ -498,16 +515,20 @@ public:
 		const strus::SegmenterInstanceInterface* segmenterInstance = getSegmenterInstance( content, documentClass);
 		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
 
+		const char* resultid;
 		if (strus::stringStartsWith( filename, m_globalContext->fileprefix()))
 		{
 			char const* di = filename.c_str() + m_globalContext->fileprefix().size();
 			while (*di == strus::dirSeparator()) ++di;
-			*m_output << m_globalContext->resultMarker() << di << ":" << std::endl;
+			resultid = di;
 		}
 		else
 		{
-			*m_output << m_globalContext->resultMarker() << filename << ":" << std::endl;
+			resultid = filename.c_str();
 		}
+		*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
+		if (DBG) DBG->open( "input", resultid);
+
 		segmenter->putInput( content.c_str(), content.size(), true);
 		int id;
 		strus::SegmenterPosition segmentpos;
@@ -518,6 +539,7 @@ public:
 		std::size_t segmentidx;
 		unsigned int ordposOffset = 0;
 		strus::SegmenterPosition prev_segmentpos = (strus::SegmenterPosition)std::numeric_limits<std::size_t>::max();
+
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
 			segmentidx = segmentposmap.size();
@@ -525,9 +547,11 @@ public:
 			{
 				segmentposmap.push_back( PositionInfo( segmentpos, source.size()));
 				source.append( segment, segmentsize);
-#ifdef STRUS_LOWLEVEL_DEBUG
-				*m_outerr << "processing segment " << id << " [" << encodeOutput(segment,segmentsize) << "] at " << segmentpos << std::endl;
-#endif
+				if (DBG)
+				{
+					std::string dbgseg  = encodeOutput(segment,segmentsize,200);
+					DBG->event( "segment", "%d [%s] at %d", id, dbgseg.c_str(), (int)segmentpos);
+				}
 				std::vector<strus::analyzer::PatternLexem> crmatches = crctx->match( segment, segmentsize);
 				if (crmatches.size() == 0 && g_errorBuffer->hasError())
 				{
@@ -540,15 +564,12 @@ public:
 					ti->setOrdpos( ti->ordpos() + ordposOffset);
 					if (m_globalContext->printTokens())
 					{
-						const char* lexemname = m_globalContext->PatternLexerInstance()->getLexemName( ti->id());
-						if (lexemname)
-						{
-							*m_output << ti->ordpos() << " [" << (segmentpos+ti->origpos()) << "] : " << ti->id() << " " << lexemname << " " << encodeOutput( segment+ti->origpos(), ti->origsize()) << std::endl;
-						}
-						else
-						{
-							*m_output << ti->ordpos() << ": " << ti->id() << " ? " << encodeOutput( segment+ti->origpos(), ti->origsize()) << std::endl;
-						}
+						*m_output << lexemOutputString( segmentpos, segment, *ti) << std::endl;
+					}
+					if (DBG)
+					{
+						std::string eventstr = lexemOutputString( segmentpos, segment, *ti);
+						DBG->event( "token", "%s", eventstr.c_str());
 					}
 					mt->putInput( *ti);
 				}
@@ -557,6 +578,10 @@ public:
 					ordposOffset = crmatches.back().ordpos();
 				}
 			}
+		}
+		if (DBG)
+		{
+			DBG->close();
 		}
 		if (g_errorBuffer->hasError())
 		{
@@ -595,7 +620,7 @@ public:
 						<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
 				std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
 				std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
-				out << " '" << encodeOutput( src.c_str() + start_srcpos, end_srcpos - start_srcpos) << "'";
+				out << " '" << encodeOutput( src.c_str() + start_srcpos, end_srcpos - start_srcpos, 0/*no maxsize*/) << "'";
 			}
 			out << std::endl;
 		}
@@ -643,6 +668,7 @@ public:
 
 	void run()
 	{
+		DBG = m_debugTrace ? m_debugTrace->createTraceContext( "patternMatcher") : NULL;
 		for (;;)
 		{
 			std::vector<std::string> filenames = m_globalContext->fetchFiles();
@@ -650,9 +676,8 @@ public:
 			std::vector<std::string>::const_iterator fi = filenames.begin(), fe = filenames.end();
 			for (; fi != fe; ++fi)
 			{
-#ifdef STRUS_LOWLEVEL_DEBUG
-				*m_outerr << strus::string_format( _TXT("thread %u processing file '%s'"), m_threadid, *fi) << std::endl;
-#endif
+				if (DBG) DBG->open( "file", *fi);
+				*m_outerr << strus::string_format( _TXT("thread %u processing file '%s'"), m_threadid, fi->c_str()) << std::endl;
 				try
 				{
 					processDocument( *fi);
@@ -660,6 +685,7 @@ public:
 					{
 						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s"), m_threadid, fi->c_str(), g_errorBuffer->fetchError()) << std::endl;
 					}
+					if (DBG) DBG->close();
 				}
 				catch (const std::runtime_error& err)
 				{
@@ -671,10 +697,12 @@ public:
 					{
 						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s"), m_threadid, fi->c_str(), err.what()) << std::endl;
 					}
+					if (DBG) DBG->close();
 				}
 				catch (const std::bad_alloc&)
 				{
 					*m_outerr << strus::string_format( _TXT( "out of memory thread %u processing document '%s'"), m_threadid, fi->c_str()) << std::endl;
+					if (DBG) DBG->close();
 				}
 			}
 		}
@@ -687,6 +715,8 @@ public:
 
 private:
 	GlobalContext* m_globalContext;
+	strus::DebugTraceInterface* m_debugTrace;
+	strus::DebugTraceContextInterface* DBG;
 	const strus::AnalyzerObjectBuilderInterface* m_objbuilder;
 	const strus::SegmenterInterface* m_defaultSegmenter;
 	strus::Reference<strus::SegmenterInstanceInterface> m_defaultSegmenterInstance;
