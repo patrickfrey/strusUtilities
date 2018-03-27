@@ -58,7 +58,7 @@
 #include <stdexcept>
 #include <memory>
 
-
+#define STRUS_COMPONENT_NAME "pattern"
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
 static std::string trimString( const char* li, const char* le)
@@ -668,7 +668,7 @@ public:
 
 	void run()
 	{
-		DBG = m_debugTrace ? m_debugTrace->createTraceContext( "patternMatcher") : NULL;
+		DBG = m_debugTrace ? m_debugTrace->createTraceContext( STRUS_COMPONENT_NAME) : NULL;
 		for (;;)
 		{
 			std::vector<std::string> filenames = m_globalContext->fetchFiles();
