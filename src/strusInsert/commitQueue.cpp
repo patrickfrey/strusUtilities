@@ -24,7 +24,7 @@ void CommitQueue::handleWaitingTransactions()
 			if (!transaction.get()) break;
 			if (!transaction->commit())
 			{
-				throw strus::runtime_error( "%s", _TXT("transaction commit failed"));
+				throw std::runtime_error( _TXT("transaction commit failed"));
 			}
 			Index totalNofDocuments = m_storage->nofDocumentsInserted();
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;

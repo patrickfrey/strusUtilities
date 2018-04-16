@@ -70,7 +70,7 @@ void CheckInsertProcessor::run()
 		std::vector<std::string>::const_iterator fitr;
 
 		strus::local_ptr<strus::MetaDataReaderInterface> metadata( m_storage->createMetaDataReader());
-		if (!metadata.get()) throw strus::runtime_error( "%s", _TXT("error creating meta data reader"));
+		if (!metadata.get()) throw std::runtime_error( _TXT("error creating meta data reader"));
 	
 		// Evaluate the expected types of the meta data elements to make them comparable
 		std::vector<strus::NumericVariant::Type> metadatatype;
@@ -138,7 +138,7 @@ void CheckInsertProcessor::run()
 						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
 						continue;
 					}
-					if (!analyzerContext.get()) throw strus::runtime_error( "%s", _TXT("error creating analyzer context"));
+					if (!analyzerContext.get()) throw std::runtime_error( _TXT("error creating analyzer context"));
 
 					// Analyze the document (with subdocuments) and check it:
 					enum {AnalyzerBufSize=8192};
@@ -176,7 +176,7 @@ void CheckInsertProcessor::run()
 								storagedoc.reset(
 									m_storage->createDocumentChecker(
 										oi->value(), m_logfile));
-								if (!storagedoc.get()) throw strus::runtime_error( "%s", _TXT("error creating document checker"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document checker"));
 								docid = oi->value().c_str();
 								//... use the docid from the analyzer if defined there
 							}
@@ -185,7 +185,7 @@ void CheckInsertProcessor::run()
 								storagedoc.reset(
 									m_storage->createDocumentChecker(
 										*fitr, m_logfile));
-								if (!storagedoc.get()) throw strus::runtime_error( "%s", _TXT("error creating document checker"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document checker"));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();

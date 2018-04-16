@@ -73,7 +73,7 @@ void InsertProcessor::run()
 	
 		strus::local_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
-		if (!transaction.get()) throw strus::runtime_error( "%s", _TXT("error creating storage transaction"));
+		if (!transaction.get()) throw std::runtime_error( _TXT("error creating storage transaction"));
 
 		while (!(files=m_crawler->fetch()).empty())
 		{
@@ -112,7 +112,7 @@ void InsertProcessor::run()
 						continue;
 					}
 					analyzerContext.reset( analyzer->createContext( dclass));
-					if (!analyzerContext.get()) throw strus::runtime_error( "%s", _TXT("error creating analyzer context"));
+					if (!analyzerContext.get()) throw std::runtime_error( _TXT("error creating analyzer context"));
 
 					// Analyze the document (with subdocuments) and insert it:
 					enum {AnalyzerBufSize=8192};
@@ -148,14 +148,14 @@ void InsertProcessor::run()
 							if (oi != oe)
 							{
 								storagedoc.reset( transaction->createDocument( oi->value()));
-								if (!storagedoc.get()) throw strus::runtime_error( "%s", _TXT("error creating document structure"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document structure"));
 								docid = oi->value().c_str();
 								//... use the docid from the analyzer if defined there
 							}
 							else
 							{
 								storagedoc.reset( transaction->createDocument( *fitr));
-								if (!storagedoc.get()) throw strus::runtime_error( "%s", _TXT("error creating document structure"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document structure"));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();
@@ -236,7 +236,7 @@ void InsertProcessor::run()
 								m_commitque->pushTransaction( transaction.get());
 								transaction.release();
 								transaction.reset( m_storage->createTransaction());
-								if (!transaction.get()) throw strus::runtime_error( "%s", _TXT("error recreating storage transaction"));
+								if (!transaction.get()) throw std::runtime_error( _TXT("error recreating storage transaction"));
 								docCount = 0;
 							}
 						}
@@ -255,7 +255,7 @@ void InsertProcessor::run()
 				{
 					std::cerr << string_format( _TXT( "failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 					transaction.reset( m_storage->createTransaction());
-					if (!transaction.get()) throw strus::runtime_error( "%s", _TXT("error recreating storage transaction"));
+					if (!transaction.get()) throw std::runtime_error( _TXT("error recreating storage transaction"));
 					docCount = 0;
 				}
 				catch (const std::runtime_error& err)
@@ -270,7 +270,7 @@ void InsertProcessor::run()
 						std::cerr << string_format( _TXT( "failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
 					}
 					transaction.reset( m_storage->createTransaction());
-					if (!transaction.get()) throw strus::runtime_error( "%s", _TXT("error recreating storage transaction"));
+					if (!transaction.get()) throw std::runtime_error( _TXT("error recreating storage transaction"));
 					docCount = 0;
 				}
 			}

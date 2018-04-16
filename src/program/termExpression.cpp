@@ -32,7 +32,7 @@ void TermExpression::pushField( const std::string& fieldtype, const std::string&
 
 void TermExpression::pushExpression( const std::string& op, unsigned int argc, int range, unsigned int cardinality)
 {
-	if (m_fieldno_stack.size() < argc) throw strus::runtime_error( "%s", _TXT("push expression without all arguments defined"));
+	if (m_fieldno_stack.size() < argc) throw std::runtime_error( _TXT("push expression without all arguments defined"));
 	int* fnstart = m_fieldno_stack.data() + m_fieldno_stack.size() - argc;
 	int* fnend = fnstart + argc;
 	std::vector<int> fieldnoList( fnstart, fnend);
@@ -45,7 +45,7 @@ void TermExpression::pushExpression( const std::string& op, unsigned int argc, i
 
 void TermExpression::attachVariable( const std::string& name)
 {
-	if (m_fieldno_stack.empty()) throw strus::runtime_error( "%s", _TXT("attach variable not allowed without any fields defined"));
+	if (m_fieldno_stack.empty()) throw std::runtime_error( _TXT("attach variable not allowed without any fields defined"));
 	std::vector<int> fieldnoList( m_fieldno_stack.end()-1, m_fieldno_stack.end());
 
 	int groupid = newVariable( name);
@@ -55,7 +55,7 @@ void TermExpression::attachVariable( const std::string& name)
 
 void TermExpression::assignFeature( const std::string& name, double weight)
 {
-	if (m_fieldno_stack.empty()) throw strus::runtime_error( "%s", _TXT("assign feature not allowed without any fields defined"));
+	if (m_fieldno_stack.empty()) throw std::runtime_error( _TXT("assign feature not allowed without any fields defined"));
 	std::vector<int> fieldnoList( m_fieldno_stack.end()-1, m_fieldno_stack.end());
 
 	int groupid = newFeature( name, weight);
@@ -105,7 +105,7 @@ void TermExpression::translate( QueryInterface& query, const QueryProcessorInter
 	}
 	if (nofargs)
 	{
-		throw strus::runtime_error( "%s", _TXT("not all term expressions assigned to features"));
+		throw std::runtime_error( _TXT("not all term expressions assigned to features"));
 	}
 }
 

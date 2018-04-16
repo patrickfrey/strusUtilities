@@ -94,7 +94,7 @@ int main( int argc, const char* argv[])
 		if (opt( "help")) printUsageAndExit = true;
 
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -254,13 +254,13 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		// Create objects for segmenter:
 		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
-		if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
+		if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -272,14 +272,14 @@ int main( int argc, const char* argv[])
 		}
 
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
 
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
 		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
-			throw strus::runtime_error( "%s", _TXT("failed to parse document class"));
+			throw std::runtime_error( _TXT("failed to parse document class"));
 		}
 		if (!documentClass.defined())
 		{
@@ -291,7 +291,7 @@ int main( int argc, const char* argv[])
 			}
 			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
 			{
-				throw strus::runtime_error( "%s", _TXT("failed to detect document class")); 
+				throw std::runtime_error( _TXT("failed to detect document class")); 
 			}
 		}
 		// Create the document segmenter either defined by the document class or by content or by the name specified:
@@ -312,7 +312,7 @@ int main( int argc, const char* argv[])
 			if (!segmenterType) throw strus::runtime_error(_TXT("failed to find document segmenter specified by name '%s'"), segmenterName.c_str());
 		}
 		strus::local_ptr<strus::SegmenterInstanceInterface> segmenter( segmenterType->createInstance( segmenteropts));
-		if (!segmenter.get()) throw strus::runtime_error( "%s", _TXT("failed to segmenter instance"));
+		if (!segmenter.get()) throw std::runtime_error( _TXT("failed to segmenter instance"));
 
 		// Load expressions:
 		if (opt("expression"))
@@ -331,7 +331,7 @@ int main( int argc, const char* argv[])
 
 		// Create the segmenter
 		strus::local_ptr<strus::SegmenterContextInterface> segmenterContext( segmenter->createContext( documentClass));
-		if (!segmenterContext.get()) throw strus::runtime_error( "%s", _TXT("failed to segmenter context"));
+		if (!segmenterContext.get()) throw std::runtime_error( _TXT("failed to segmenter context"));
 
 		// Process the document:
 		enum {SegmenterBufSize=8192};
@@ -384,7 +384,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("unhandled error in segment document"));
+			throw std::runtime_error( _TXT("unhandled error in segment document"));
 		}
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{

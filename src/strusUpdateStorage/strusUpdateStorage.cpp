@@ -53,12 +53,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error( "%s", _TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -73,7 +73,7 @@ static std::multimap<std::string,strus::Index> loadAttributeDocnoMap(
 {
 	std::multimap<std::string,strus::Index> rt;
 	strus::local_ptr<strus::AttributeReaderInterface> attributeReader( storage->createAttributeReader());
-	if (!attributeReader.get()) throw strus::runtime_error( "%s", _TXT("failed to create attribute reader"));
+	if (!attributeReader.get()) throw std::runtime_error( _TXT("failed to create attribute reader"));
 	strus::Index ehnd = attributeReader->elementHandle( attributeName.c_str());
 	if (ehnd == 0) throw strus::runtime_error(_TXT("unknown attribute name '%s'"), attributeName.c_str());
 	strus::Index di = 1, de = storage->maxDocumentNumber()+1;
@@ -125,7 +125,7 @@ int main( int argc, const char* argv[])
 			printUsageAndExit = true;
 		}
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -275,7 +275,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		// Parse arguments:
@@ -313,7 +313,7 @@ int main( int argc, const char* argv[])
 		}
 		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage client"));
+		if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
 		if (!mapattribute.empty())
 		{
 			attributemap = loadAttributeDocnoMap( storage.get(), mapattribute);
@@ -373,7 +373,7 @@ int main( int argc, const char* argv[])
 		}
 		if (!nofUpdates && errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in update storage"));
+			throw std::runtime_error( _TXT("error in update storage"));
 		}
 		storage->close();
 		std::cerr << strus::string_format( _TXT("done %u update operations"), nofUpdates) << std::endl;

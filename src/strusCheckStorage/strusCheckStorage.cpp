@@ -51,12 +51,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error( "%s", _TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -253,13 +253,13 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		if (opt("exists"))
 		{
 			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( storagecfg);
-			if (!dbi) throw strus::runtime_error( "%s", _TXT("could not find key/value store database"));
+			if (!dbi) throw std::runtime_error( _TXT("could not find key/value store database"));
 
 			if (dbi->exists( storagecfg))
 			{
@@ -271,20 +271,20 @@ int main( int argc, const char* argv[])
 			}
 			if (errorBuffer->hasError())
 			{
-				throw strus::runtime_error( "%s", _TXT("unhandled error in analyze"));
+				throw std::runtime_error( _TXT("unhandled error in analyze"));
 			}
 		}
 		else
 		{
 			strus::local_ptr<strus::StorageClientInterface>
 				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-			if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage client"));
+			if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
 	
 			if (!storage->checkStorage( std::cerr))
 			{
 				if (errorBuffer->hasError())
 				{
-					throw strus::runtime_error( "%s", _TXT("error in check storage"));
+					throw std::runtime_error( _TXT("error in check storage"));
 				}
 				std::cerr << _TXT("check storage failed") << std::endl;
 			}

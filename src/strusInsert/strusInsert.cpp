@@ -65,12 +65,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error( "%s", _TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -125,7 +125,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt( "help")) printUsageAndExit = true;
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir" ,"--rpc");
@@ -360,7 +360,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		// Create objects for inserter:
@@ -371,21 +371,21 @@ int main( int argc_, const char* argv_[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw std::runtime_error( _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw std::runtime_error( _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc analyzer object builder"));
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc storage object builder"));
+			if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
+			if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
@@ -403,10 +403,10 @@ int main( int argc_, const char* argv_[])
 		}
 		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage client"));
+		if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
 
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
 
 		// Try to determine document class:
 		strus::analyzer::DocumentClass documentClass;
@@ -414,7 +414,7 @@ int main( int argc_, const char* argv_[])
 		{
 			if (!strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 			{
-				throw strus::runtime_error( "%s", _TXT("failed to parse document class"));
+				throw std::runtime_error( _TXT("failed to parse document class"));
 			}
 		}
 		else if (strus::isFile( datapath))
@@ -486,7 +486,7 @@ int main( int argc_, const char* argv_[])
 
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("unhandled error in insert storage"));
+			throw std::runtime_error( _TXT("unhandled error in insert storage"));
 		}
 		if (commitQue->errors().size() > 0)
 		{

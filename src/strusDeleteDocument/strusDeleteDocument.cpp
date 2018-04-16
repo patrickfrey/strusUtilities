@@ -52,12 +52,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error( "%s", _TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -111,7 +111,7 @@ int main( int argc, const char* argv[])
 			printUsageAndExit = true;
 		}
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -237,7 +237,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		// Create objects for storage document update:
@@ -262,12 +262,12 @@ int main( int argc, const char* argv[])
 
 		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage client"));
+		if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
 
 		deleteDocuments( storage.get(), opt.nofargs(), opt.argv());
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("failed to delete documents"));
+			throw std::runtime_error( _TXT("failed to delete documents"));
 		}
 		storage->close();
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))

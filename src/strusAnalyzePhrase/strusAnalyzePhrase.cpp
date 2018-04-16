@@ -70,7 +70,7 @@ int main( int argc, const char* argv[])
 		if (opt( "help")) printUsageAndExit = true;
 
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -236,7 +236,7 @@ int main( int argc, const char* argv[])
 		// Create root object for analyzer:
 		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
-		if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
+		if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 
 		// Create proxy objects if tracing enabled:
 		{
@@ -250,20 +250,20 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		// Create objects for analyzer:
 		strus::local_ptr<strus::QueryAnalyzerInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
-		if (!analyzer.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer"));
+		if (!analyzer.get()) throw std::runtime_error( _TXT("failed to create analyzer"));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
 
 		// Create phrase type (tokenizer and normalizer):
 		if (!loadPhraseAnalyzer( *analyzer, textproc, normalizer, tokenizer, errorBuffer.get()))
 		{
-			throw strus::runtime_error( "%s", _TXT("failed to load analyze phrase analyzer"));
+			throw std::runtime_error( _TXT("failed to load analyze phrase analyzer"));
 		}
 
 		// Load the phrase:
@@ -286,11 +286,11 @@ int main( int argc, const char* argv[])
 
 		// Analyze the phrase and print the result:
 		strus::local_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
-		if (!qryanactx.get()) throw strus::runtime_error( "%s", _TXT("failed to create query analyzer context"));
+		if (!qryanactx.get()) throw std::runtime_error( _TXT("failed to create query analyzer context"));
 	
 		qryanactx->putField( 1, "", phrasestring);
 		strus::analyzer::QueryTermExpression qry = qryanactx->analyze();
-		if (errorBuffer->hasError()) throw strus::runtime_error( "%s", _TXT("query analysis failed"));
+		if (errorBuffer->hasError()) throw std::runtime_error( _TXT("query analysis failed"));
 		std::vector<strus::analyzer::QueryTerm> terms;
 		std::vector<strus::analyzer::QueryTermExpression::Instruction>::const_iterator
 			ii = qry.instructions().begin(), ie = qry.instructions().end();
@@ -312,7 +312,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in analyze phrase"));
+			throw std::runtime_error( _TXT("error in analyze phrase"));
 		}
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{

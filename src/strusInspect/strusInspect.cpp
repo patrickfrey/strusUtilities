@@ -63,12 +63,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error( "%s", _TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error( "%s", _TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -113,7 +113,7 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1]), 1));
-	if (!itr.get()) throw strus::runtime_error( "%s", _TXT("failed to create term posting iterator"));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 
 	if (size == 2)
 	{
@@ -200,7 +200,7 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 
 	strus::DocumentTermIteratorReference itr(
 		storage.createDocumentTermIterator( std::string(key[0])));
-	if (!itr.get()) throw strus::runtime_error( "%s", _TXT("failed to create document term iterator"));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create document term iterator"));
 
 	if (size == 1)
 	{
@@ -265,7 +265,7 @@ static void inspectDocumentFrequency( strus::StorageClientInterface& storage, co
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1]), 1));
-	if (!itr.get()) throw strus::runtime_error( "%s", _TXT("failed to create term posting iterator"));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 	std::cout << itr->documentFrequency() << std::endl;
 }
 
@@ -331,7 +331,7 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1]), 1));
-	if (!itr.get()) throw strus::runtime_error( "%s", _TXT("failed to create term posting iterator"));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 
 	if (size == 2)
 	{
@@ -418,7 +418,7 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 
 	strus::local_ptr<strus::AttributeReaderInterface>
 		attreader( storage.createAttributeReader());
-	if (!attreader.get()) throw strus::runtime_error( "%s", _TXT("failed to create attribute reader"));
+	if (!attreader.get()) throw std::runtime_error( _TXT("failed to create attribute reader"));
 
 	strus::Index ehandle = attribute.empty()?0:attreader->elementHandle( attribute.c_str());
 	strus::Index hnd = attreader->elementHandle( key[0]);
@@ -472,7 +472,7 @@ static void inspectDocAttributeNames( const strus::StorageClientInterface& stora
 
 	strus::local_ptr<strus::AttributeReaderInterface>
 		attreader( storage.createAttributeReader());
-	if (!attreader.get()) throw strus::runtime_error( "%s", _TXT("failed to create attribute reader"));
+	if (!attreader.get()) throw std::runtime_error( _TXT("failed to create attribute reader"));
 
 	std::vector<std::string> alist = attreader->getNames();
 	std::vector<std::string>::const_iterator ai = alist.begin(), ae = alist.end();
@@ -497,7 +497,7 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 	}
 
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
-	if (!metadata.get()) throw strus::runtime_error( "%s", _TXT("failed to create meta data reader"));
+	if (!metadata.get()) throw std::runtime_error( _TXT("failed to create meta data reader"));
 	strus::Index hnd = metadata->elementHandle( key[0]);
 	if (hnd < 0)
 	{
@@ -557,7 +557,7 @@ static void inspectDocMetaTable( const strus::StorageClientInterface& storage, c
 	if (size > 0) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
 
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
-	if (!metadata.get()) throw strus::runtime_error( "%s", _TXT("failed to create meta data reader"));
+	if (!metadata.get()) throw std::runtime_error( _TXT("failed to create meta data reader"));
 
 	strus::Index ei = 0, ee = metadata->nofElements();
 	for (; ei != ee; ++ei)
@@ -581,7 +581,7 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 	}
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	if (!viewer.get()) throw strus::runtime_error( "%s", _TXT("failed to create forward index iterator"));
+	if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator"));
 	if (size == 1)
 	{
 		strus::Index maxDocno = storage.maxDocumentNumber();
@@ -701,7 +701,7 @@ static void inspectForwardIndexStats( strus::StorageClientInterface& storage, co
 	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	if (!viewer.get()) throw strus::runtime_error( "%s", _TXT("failed to create forward index iterator"));
+	if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator"));
 	std::map<std::string,unsigned int> statmap;
 	if (size == 1)
 	{
@@ -739,7 +739,7 @@ static void inspectForwardIndexMap( strus::StorageClientInterface& storage, cons
 	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	if (!viewer.get()) throw strus::runtime_error( "%s", _TXT("failed to create forward index iterator"));
+	if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator"));
 	if (size == 1)
 	{
 		strus::Index maxDocno = storage.maxDocumentNumber();
@@ -789,7 +789,7 @@ static void inspectToken( strus::StorageClientInterface& storage, const char** k
 	if (docno)
 	{
 		strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-		if (!viewer.get()) throw strus::runtime_error( "%s", _TXT("failed to create forward index iterator"));
+		if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator"));
 		viewer->skipDoc( docno);
 		strus::Index pos=0;
 		while (0!=(pos=viewer->skipPos(pos+1)))
@@ -852,7 +852,7 @@ int main( int argc, const char* argv[])
 			printUsageAndExit = true;
 		}
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
@@ -1040,7 +1040,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		// Create objects for inspecting storage:
@@ -1078,7 +1078,7 @@ int main( int argc, const char* argv[])
 		// Do inspect what is requested:
 		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error( "%s", _TXT("failed to create storage client"));
+		if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
 
 		if (strus::caseInsensitiveEquals( what, "pos"))
 		{
@@ -1162,7 +1162,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("unhandled error in inspect storage"));
+			throw std::runtime_error( _TXT("unhandled error in inspect storage"));
 		}
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{

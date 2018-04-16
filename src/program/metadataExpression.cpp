@@ -21,7 +21,7 @@ void MetaDataExpression::pushCompare( MetaDataRestrictionInterface::CompareOpera
 
 void MetaDataExpression::pushOperator( const BooleanOp& op, unsigned int argc)
 {
-	if (m_fieldno_stack.size() < argc) throw strus::runtime_error( "%s", _TXT("push metadata operator without all arguments defined"));
+	if (m_fieldno_stack.size() < argc) throw std::runtime_error( _TXT("push metadata operator without all arguments defined"));
 	int* fnstart = m_fieldno_stack.data() + m_fieldno_stack.size() - argc;
 	int* fnend = fnstart + argc;
 	std::vector<int> fieldnoList( fnstart, fnend);
@@ -46,7 +46,7 @@ struct MetaDataComparison
 	void translate( QueryInterface& query) const
 	{
 		NumericVariant numval;
-		if (!numval.initFromString( term->value().c_str())) throw strus::runtime_error( "%s", _TXT("metadata value not convertible to numeric value"));
+		if (!numval.initFromString( term->value().c_str())) throw std::runtime_error( _TXT("metadata value not convertible to numeric value"));
 		query.addMetaDataRestrictionCondition( cmpop, term->type(), numval, newGroup);
 	}
 };
@@ -79,7 +79,7 @@ void MetaDataExpression::translate( QueryInterface& query)
 				}
 				else
 				{
-					throw strus::runtime_error( "%s", _TXT("internal: metadata compare operator got lost"));
+					throw std::runtime_error( _TXT("internal: metadata compare operator got lost"));
 				}
 				break;
 			}
@@ -94,7 +94,7 @@ void MetaDataExpression::translate( QueryInterface& query)
 						{
 							if (termc > ii->nofOperands())
 							{
-								throw strus::runtime_error( "%s", _TXT("CNF (conjunctive normal form) expected for meta data expression"));
+								throw std::runtime_error( _TXT("CNF (conjunctive normal form) expected for meta data expression"));
 							}
 							// We check that all operands of an OR are atomic terms (CNF):
 							std::vector<MetaDataComparison>::iterator
@@ -109,7 +109,7 @@ void MetaDataExpression::translate( QueryInterface& query)
 				}
 				else
 				{
-					throw strus::runtime_error( "%s", _TXT("internal: encountered illegal meta data operator, boolean operator expected as join of comparisons"));
+					throw std::runtime_error( _TXT("internal: encountered illegal meta data operator, boolean operator expected as join of comparisons"));
 				}
 				break;
 			}

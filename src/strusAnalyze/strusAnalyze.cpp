@@ -176,7 +176,7 @@ int main( int argc, const char* argv[])
 
 		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error( "%s", _TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -372,7 +372,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		// Create objects for analyzer:
@@ -383,17 +383,17 @@ int main( int argc, const char* argv[])
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw std::runtime_error( _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw std::runtime_error( _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc analyzer object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error( "%s", _TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
@@ -407,14 +407,14 @@ int main( int argc, const char* argv[])
 			}
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error( "%s", _TXT("failed to get text processor"));
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
 
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
 		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
 		{
-			throw strus::runtime_error( "%s", _TXT("failed to parse document class"));
+			throw std::runtime_error( _TXT("failed to parse document class"));
 		}
 		// Detect document content type if not explicitely defined:
 		if (!documentClass.defined())
@@ -452,7 +452,7 @@ int main( int argc, const char* argv[])
 		}
 		strus::local_ptr<strus::DocumentAnalyzerContextInterface>
 			analyzerContext( analyzer->createContext( documentClass));
-		if (!analyzerContext.get()) throw strus::runtime_error( "%s", _TXT("failed to create document analyzer context"));
+		if (!analyzerContext.get()) throw std::runtime_error( _TXT("failed to create document analyzer context"));
 
 		// Process the document:
 		enum {AnalyzerBufSize=8192};
@@ -587,7 +587,7 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( "%s", _TXT("error in analyze document"));
+			throw std::runtime_error( _TXT("error in analyze document"));
 		}
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{
