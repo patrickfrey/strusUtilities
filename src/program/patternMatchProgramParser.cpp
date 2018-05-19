@@ -665,7 +665,7 @@ void PatternMatcherProgramParser::loadExpression( char const*& si, SubExpression
 		}
 		std::string op = parse_IDENTIFIER( si);
 		loadExpressionNode( op, si, exprinfo);
-		m_patternMatcher->attachVariable( name);
+		m_patternMatcher->attachVariable( name, "");
 	}
 	else
 	{
