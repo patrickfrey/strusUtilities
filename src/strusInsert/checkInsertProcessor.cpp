@@ -10,7 +10,7 @@
 #include "strus/index.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/analyzer/documentClass.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/storageClientInterface.hpp"
@@ -128,7 +128,7 @@ void CheckInsertProcessor::run()
 					{
 						dclass = m_defaultDocumentClass;
 					}
-					const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( dclass);
+					const strus::DocumentAnalyzerInstanceInterface* analyzer = m_analyzerMap->get( dclass);
 					if (analyzer)
 					{
 						analyzerContext.reset( analyzer->createContext( dclass));

@@ -17,7 +17,7 @@
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerInstanceInterface.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
@@ -399,7 +399,7 @@ int main( int argc_, const char* argv_[])
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client: %s"), errorBuffer->fetchError());
 
-		strus::local_ptr<strus::QueryAnalyzerInterface> analyzer( analyzerBuilder->createQueryAnalyzer());
+		strus::local_ptr<strus::QueryAnalyzerInstanceInterface> analyzer( analyzerBuilder->createQueryAnalyzer());
 		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer: %s"), errorBuffer->fetchError());
 
 		strus::local_ptr<strus::QueryEvalInterface> qeval( storageBuilder->createQueryEval());

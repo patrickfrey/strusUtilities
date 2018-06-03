@@ -19,7 +19,7 @@
 #include "strus/index.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"

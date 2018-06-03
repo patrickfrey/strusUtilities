@@ -8,7 +8,7 @@
 #ifndef _STRUS_BINDING_IMPL_TERM_EXPRESSION_HPP_INCLUDED
 #define _STRUS_BINDING_IMPL_TERM_EXPRESSION_HPP_INCLUDED
 #include "strus/analyzer/queryTermExpression.hpp"
-#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerInstanceInterface.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/queryProcessorInterface.hpp"
@@ -39,7 +39,7 @@ public:
 	};
 
 	/// \brief Constructor
-	TermExpression( const QueryAnalyzerStruct* analyzerStruct_, const QueryAnalyzerInterface* analyzer_, ErrorBufferInterface* errorhnd_)
+	TermExpression( const QueryAnalyzerStruct* analyzerStruct_, const QueryAnalyzerInstanceInterface* analyzer_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_analyzerStruct(analyzerStruct_),m_analyzer(analyzer_->createContext()),m_fieldno_stack(),m_fieldno_cnt(0)
 		,m_expr(),m_operators(),m_variables()
 	{

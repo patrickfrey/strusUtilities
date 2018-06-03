@@ -29,9 +29,9 @@ class QueryEvalInterface;
 /// \brief Forward declaration
 class QueryInterface;
 /// \brief Forward declaration
-class DocumentAnalyzerInterface;
+class DocumentAnalyzerInstanceInterface;
 /// \brief Forward declaration
-class QueryAnalyzerInterface;
+class QueryAnalyzerInstanceInterface;
 /// \brief Forward declaration
 class StorageClientInterface;
 /// \brief Forward declaration
@@ -83,7 +83,7 @@ struct QueryDescriptors
 /// \return true on success, false on failure
 /// \note The grammar of the analyzer program source is defined <a href="http://www.project-strus.net/grammar_analyerprg.htm">here</a>.
 bool loadDocumentAnalyzerProgram(
-		DocumentAnalyzerInterface& analyzer,
+		DocumentAnalyzerInstanceInterface& analyzer,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
 		bool allowIncludes,
@@ -99,7 +99,7 @@ bool loadDocumentAnalyzerProgram(
 /// \param[in,out] errorhnd buffer for reporting errors (exceptions)
 /// \return true on success, false on failure
 bool loadQueryAnalyzerProgram(
-		QueryAnalyzerInterface& analyzer,
+		QueryAnalyzerInstanceInterface& analyzer,
 		QueryDescriptors& qdescr,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
@@ -163,7 +163,7 @@ bool loadQueryEvalProgram(
 /// \return true on success, false on failure
 bool loadQuery(
 		QueryInterface& query,
-		const QueryAnalyzerInterface* analyzer,
+		const QueryAnalyzerInstanceInterface* analyzer,
 		const QueryProcessorInterface* qproc,
 		const std::string& source,
 		const QueryDescriptors& qdescr,
@@ -178,7 +178,7 @@ bool loadQuery(
 /// \return true on success, false on failure
 /// \note This simplistic function is mainly intended for debugging and the program strusAnalyzePhrase that just checks the result of a tokenizer with some normalizers
 bool loadPhraseAnalyzer(
-		QueryAnalyzerInterface& analyzer,
+		QueryAnalyzerInstanceInterface& analyzer,
 		const TextProcessorInterface* textproc,
 		const std::string& normalizersrc,
 		const std::string& tokenizersrc,

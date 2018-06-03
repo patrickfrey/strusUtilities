@@ -14,7 +14,7 @@
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/programLoader.hpp"
@@ -445,7 +445,7 @@ int main( int argc, const char* argv[])
 			analyzerMap.loadAnalyzerMap( analyzerprg);
 		}
 		// Create the document analyzer context:
-		const strus::DocumentAnalyzerInterface* analyzer = analyzerMap.get( documentClass);
+		const strus::DocumentAnalyzerInstanceInterface* analyzer = analyzerMap.get( documentClass);
 		if (!analyzer)
 		{
 			throw strus::runtime_error( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), documentClass.mimeType().c_str(), documentClass.scheme().c_str()); 

@@ -15,9 +15,9 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
-#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerInstanceInterface.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/metaDataRestrictionInterface.hpp"
@@ -772,7 +772,7 @@ int main( int argc, const char* argv[])
 			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
-		strus::local_ptr<strus::QueryAnalyzerInterface>
+		strus::local_ptr<strus::QueryAnalyzerInstanceInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
 		if (!analyzer.get()) throw std::runtime_error( _TXT("failed to create query analyzer"));
 

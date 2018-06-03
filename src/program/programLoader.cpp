@@ -33,8 +33,8 @@
 #include "strus/queryEvalInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/metaDataRestrictionInterface.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
-#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
+#include "strus/queryAnalyzerInstanceInterface.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
@@ -860,7 +860,7 @@ struct FeatureDef
 };
 
 static void parseDocumentPatternFeatureDef(
-	DocumentAnalyzerInterface& analyzer,
+	DocumentAnalyzerInstanceInterface& analyzer,
 	const TextProcessorInterface* textproc,
 	const std::string& featureName,
 	char const*& src,
@@ -929,7 +929,7 @@ static void parseDocumentPatternFeatureDef(
 }
 
 static void parseQueryPatternFeatureDef(
-	QueryAnalyzerInterface& analyzer,
+	QueryAnalyzerInstanceInterface& analyzer,
 	const TextProcessorInterface* textproc,
 	const std::string& featureName,
 	char const*& src)
@@ -950,7 +950,7 @@ static void parseQueryPatternFeatureDef(
 }
 
 static void parseDocumentFeatureDef(
-	DocumentAnalyzerInterface& analyzer,
+	DocumentAnalyzerInstanceInterface& analyzer,
 	const TextProcessorInterface* textproc,
 	const std::string& featureName,
 	char const*& src,
@@ -1027,7 +1027,7 @@ static void parseDocumentFeatureDef(
 }
 
 static void parseQueryFeatureDef(
-	QueryAnalyzerInterface& analyzer,
+	QueryAnalyzerInstanceInterface& analyzer,
 	QueryDescriptors& qdescr,
 	const TextProcessorInterface* textproc,
 	const std::string& featureName,
@@ -1112,9 +1112,9 @@ enum StatementType
 	AssignPatternResult
 };
 
-template <class AnalyzerInterface>
+template <class AnalyzerInstanceInterface>
 static void parseAnalyzerPatternMatchProgramDef(
-		AnalyzerInterface& analyzer,
+		AnalyzerInstanceInterface& analyzer,
 		const TextProcessorInterface* textproc,
 		const std::string& patternModuleName,
 		const std::string& patternTypeName,
@@ -1253,7 +1253,7 @@ static void expandIncludes(
 }
 
 DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
-		DocumentAnalyzerInterface& analyzer,
+		DocumentAnalyzerInstanceInterface& analyzer,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
 		bool allowIncludes,
@@ -1397,7 +1397,7 @@ DLL_PUBLIC bool strus::loadDocumentAnalyzerProgram(
 }
 
 DLL_PUBLIC bool strus::loadQueryAnalyzerProgram(
-		QueryAnalyzerInterface& analyzer,
+		QueryAnalyzerInstanceInterface& analyzer,
 		QueryDescriptors& qdescr,
 		const TextProcessorInterface* textproc,
 		const std::string& source,
@@ -1869,7 +1869,7 @@ static void parseQueryStructureExpression(
 
 DLL_PUBLIC bool strus::loadQuery(
 		QueryInterface& query,
-		const QueryAnalyzerInterface* analyzer,
+		const QueryAnalyzerInstanceInterface* analyzer,
 		const QueryProcessorInterface* queryproc,
 		const std::string& source,
 		const QueryDescriptors& qdescr,
@@ -1957,7 +1957,7 @@ DLL_PUBLIC bool strus::loadQuery(
 
 
 DLL_PUBLIC bool strus::loadPhraseAnalyzer(
-		QueryAnalyzerInterface& analyzer,
+		QueryAnalyzerInstanceInterface& analyzer,
 		const TextProcessorInterface* textproc,
 		const std::string& normalizersrc,
 		const std::string& tokenizersrc,

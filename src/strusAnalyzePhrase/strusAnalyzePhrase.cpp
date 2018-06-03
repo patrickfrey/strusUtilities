@@ -10,7 +10,7 @@
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerInstanceInterface.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionModule.hpp"
@@ -254,7 +254,7 @@ int main( int argc, const char* argv[])
 		}
 
 		// Create objects for analyzer:
-		strus::local_ptr<strus::QueryAnalyzerInterface>
+		strus::local_ptr<strus::QueryAnalyzerInstanceInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
 		if (!analyzer.get()) throw std::runtime_error( _TXT("failed to create analyzer"));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();

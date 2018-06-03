@@ -84,7 +84,7 @@ void AnalyzerMap::loadDefaultAnalyzerProgram(
 		segmenter = m_textproc->getSegmenterByName( segmentername);
 		if (!segmenter) throw strus::runtime_error( _TXT( "failed to load segmenter by name '%s': %s"), segmentername.c_str(), m_errorhnd->fetchError());
 	}
-	strus::shared_ptr<strus::DocumentAnalyzerInterface>
+	strus::shared_ptr<strus::DocumentAnalyzerInstanceInterface>
 		analyzer( m_builder->createDocumentAnalyzer( segmenter));
 	if (!analyzer.get()) throw std::runtime_error( _TXT("error creating analyzer"));
 
@@ -120,7 +120,7 @@ void AnalyzerMap::loadAnalyzerProgram(
 		segmenter = m_textproc->getSegmenterByName( segmentername);
 		if (!segmenter) throw strus::runtime_error( _TXT( "failed to load segmenter by name '%s': %s"), segmentername.c_str(), m_errorhnd->fetchError());
 	}
-	strus::shared_ptr<strus::DocumentAnalyzerInterface>
+	strus::shared_ptr<strus::DocumentAnalyzerInstanceInterface>
 		analyzer( m_builder->createDocumentAnalyzer( segmenter));
 	if (!analyzer.get()) throw std::runtime_error( _TXT("error creating analyzer"));
 
@@ -174,7 +174,7 @@ void AnalyzerMap::loadAnalyzerMap( const std::string& prgfile)
 	}
 }
 
-const DocumentAnalyzerInterface* AnalyzerMap::get( const analyzer::DocumentClass& dclass) const
+const DocumentAnalyzerInstanceInterface* AnalyzerMap::get( const analyzer::DocumentClass& dclass) const
 {
 	if (!dclass.scheme().empty())
 	{

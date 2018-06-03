@@ -9,7 +9,7 @@
 #define _STRUS_BINDING_IMPL_METADATA_EXPRESSION_HPP_INCLUDED
 #include "strus/analyzer/queryTermExpression.hpp"
 #include "strus/metaDataRestrictionInterface.hpp"
-#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerInstanceInterface.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
@@ -26,7 +26,7 @@ public:
 	enum {BooleanOpOfs=1<<30};
 
 	/// \brief Constructor
-	MetaDataExpression( const QueryAnalyzerInterface* analyzer_, ErrorBufferInterface* errorhnd_)
+	MetaDataExpression( const QueryAnalyzerInstanceInterface* analyzer_, ErrorBufferInterface* errorhnd_)
 		:m_errorhnd(errorhnd_),m_analyzer(analyzer_->createContext()),m_fieldno_stack(),m_fieldno_cnt(0),m_expr()
 	{
 		if (!m_analyzer) throw strus::runtime_error(_TXT("failed to create analyzer context: %s"), m_errorhnd->fetchError());

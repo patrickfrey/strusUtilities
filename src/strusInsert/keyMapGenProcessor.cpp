@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "keyMapGenProcessor.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
@@ -154,7 +154,7 @@ void KeyMapGenProcessor::run()
 					{
 						dclass = m_defaultDocumentClass;
 					}
-					const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( dclass);
+					const strus::DocumentAnalyzerInstanceInterface* analyzer = m_analyzerMap->get( dclass);
 					if (!analyzer)
 					{
 						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 

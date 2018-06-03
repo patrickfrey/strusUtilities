@@ -11,7 +11,7 @@
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/reference.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
