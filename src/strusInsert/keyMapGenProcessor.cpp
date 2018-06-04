@@ -89,7 +89,7 @@ void KeyMapGenResultList::printKeyOccurrenceList( std::ostream& out, std::size_t
 
 KeyMapGenProcessor::KeyMapGenProcessor(
 		const TextProcessorInterface* textproc_,
-		const AnalyzerMap* analyzerMap_,
+		const strus::DocumentAnalyzer* analyzerMap_,
 		const analyzer::DocumentClass& defaultDocumentClass_,
 		KeyMapGenResultList* que_,
 		FileCrawlerInterface* crawler_,

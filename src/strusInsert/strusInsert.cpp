@@ -45,6 +45,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/documentAnalyzer.hpp"
 #include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "insertProcessor.hpp"
@@ -310,16 +311,29 @@ int main( int argc_, const char* argv_[])
 		{
 			fetchSize = opt.asUint( "fetch");
 		}
-		std::string analyzerprg = opt[0];
+		std::string programFileName = opt[0];
+		std::string programDir;
+		int ec;
+		if (!strus::isRelativePath( programFileName))
+		{
+			std::string filedir;
+			std::string filenam;
+			ec = strus::getFileName( programFileName, filenam);
+			if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+			ec = strus::getParentPath( programFileName, filedir);
+			if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+			programDir = filedir;
+			programFileName = filenam;
+		}
 		std::string datapath = opt[1];
 		std::string fileext = "";
-		std::string segmentername;
+		std::string segmenterName;
 		std::string contenttype;
 		bool verbose = opt( "verbose");
 
 		if (opt( "segmenter"))
 		{
-			segmentername = opt[ "segmenter"];
+			segmenterName = opt[ "segmenter"];
 		}
 		if (opt( "contenttype"))
 		{
@@ -345,14 +359,9 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		std::string resourcepath;
-		if (0!=strus::getParentPath( analyzerprg, resourcepath))
+		if (!programDir.empty())
 		{
-			throw strus::runtime_error( "%s",  _TXT("failed to evaluate resource path"));
-		}
-		if (!resourcepath.empty())
-		{
-			moduleLoader->addResourcePath( resourcepath);
+			moduleLoader->addResourcePath( programDir);
 		}
 		else
 		{
@@ -431,21 +440,8 @@ int main( int argc_, const char* argv_[])
 				throw strus::runtime_error( "%s",  _TXT("failed to detect document class")); 
 			}
 		}
-
 		// Load analyzer program(s):
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), errorBuffer.get());
-		if (analyzerMap.isAnalyzerConfigSource( analyzerprg))
-		{
-			analyzerMap.loadDefaultAnalyzerProgram( documentClass, segmentername, analyzerprg);
-		}
-		else
-		{
-			if (!segmentername.empty())
-			{
-				throw strus::runtime_error(_TXT("specified default segmenter (option --segmenter) '%s' with analyzer map as argument"), segmentername.c_str());
-			}
-			analyzerMap.loadAnalyzerMap( analyzerprg);
-		}
+		strus::DocumentAnalyzer analyzerMap( analyzerBuilder.get(), documentClass, segmenterName, programFileName, errorBuffer.get());
 
 		// Start inserter process:
 		strus::local_ptr<strus::CommitQueue>

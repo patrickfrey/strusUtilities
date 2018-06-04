@@ -8,7 +8,7 @@
 #ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #include "strus/base/atomic.hpp"
-#include "private/analyzerMap.hpp"
+#include "private/documentAnalyzer.hpp"
 
 namespace strus {
 
@@ -32,7 +32,7 @@ public:
 	InsertProcessor(
 			StorageClientInterface* storage_,
 			const TextProcessorInterface* textproc_,
-			const AnalyzerMap* analyzerMap_,
+			const strus::DocumentAnalyzer* analyzerMap_,
 			const analyzer::DocumentClass& defaultDocumentClass_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
@@ -48,7 +48,7 @@ public:
 private:
 	StorageClientInterface* m_storage;
 	const TextProcessorInterface* m_textproc;
-	const AnalyzerMap* m_analyzerMap;
+	const strus::DocumentAnalyzer* m_analyzerMap;
 	analyzer::DocumentClass m_defaultDocumentClass;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;

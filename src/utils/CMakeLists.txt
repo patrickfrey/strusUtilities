@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 set( source_files
 	${CMAKE_CURRENT_BINARY_DIR}/internationalization.cpp
 	traceUtils.cpp
-	analyzerMap.cpp
+	documentAnalyzer.cpp
 )
 
 include_directories(
@@ -33,7 +33,7 @@ link_directories(
 add_cppcheck( strusutilities_private_utils  ${source_files} )
 
 add_library( strusutilities_private_utils STATIC  ${source_files} )
-target_link_libraries( strusutilities_private_utils  ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
+target_link_libraries( strusutilities_private_utils  strus_analyzer_prgload_std ${Boost_LIBRARIES} ${Intl_LIBRARIES} )
 set_property( TARGET strusutilities_private_utils PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 

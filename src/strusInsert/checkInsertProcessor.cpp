@@ -25,6 +25,7 @@
 #include "strus/base/shared_ptr.hpp"
 #include "strus/base/thread.hpp"
 #include "private/errorUtils.hpp"
+#include "private/documentAnalyzer.hpp"
 #include "private/internationalization.hpp"
 #include "fileCrawlerInterface.hpp"
 #include <cmath>
@@ -37,7 +38,7 @@ using namespace strus;
 CheckInsertProcessor::CheckInsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
-		const AnalyzerMap* analyzerMap_,
+		const strus::DocumentAnalyzer* analyzerMap_,
 		const analyzer::DocumentClass& defaultDocumentClass_,
 		FileCrawlerInterface* crawler_,
 		const std::string& logfile_,

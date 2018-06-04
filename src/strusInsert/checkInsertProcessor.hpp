@@ -7,7 +7,7 @@
  */
 #ifndef _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
 #define _STRUS_CHECK_INSERT_PROCESSOR_HPP_INCLUDED
-#include "private/analyzerMap.hpp"
+#include "private/documentAnalyzer.hpp"
 #include "strus/base/atomic.hpp"
 #include <string>
 
@@ -30,7 +30,7 @@ public:
 	CheckInsertProcessor(
 			StorageClientInterface* storage_,
 			const TextProcessorInterface* textproc_,
-			const AnalyzerMap* analyzerMap_,
+			const strus::DocumentAnalyzer* analyzerMap_,
 			const analyzer::DocumentClass& defaultDocumentClass_,
 			FileCrawlerInterface* crawler_,
 			const std::string& logfile_,
@@ -44,7 +44,7 @@ public:
 private:
 	StorageClientInterface* m_storage;
 	const TextProcessorInterface* m_textproc;
-	const AnalyzerMap* m_analyzerMap;
+	const strus::DocumentAnalyzer* m_analyzerMap;
 	analyzer::DocumentClass m_defaultDocumentClass;
 	FileCrawlerInterface* m_crawler;
 	strus::AtomicFlag m_terminated;

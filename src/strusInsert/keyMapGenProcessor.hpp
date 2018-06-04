@@ -12,7 +12,7 @@
 #include <string>
 #include "strus/base/thread.hpp"
 #include "strus/base/atomic.hpp"
-#include "private/analyzerMap.hpp"
+#include "private/documentAnalyzer.hpp"
 
 namespace strus {
 
@@ -64,7 +64,7 @@ class KeyMapGenProcessor
 public:
 	KeyMapGenProcessor(
 			const TextProcessorInterface* textproc_,
-			const AnalyzerMap* analyzerMap_,
+			const strus::DocumentAnalyzer* analyzerMap_,
 			const analyzer::DocumentClass& defaultDocumentClass_,
 			KeyMapGenResultList* que_,
 			FileCrawlerInterface* crawler_,
@@ -77,7 +77,7 @@ public:
 
 private:
 	const TextProcessorInterface* m_textproc;
-	const AnalyzerMap* m_analyzerMap;
+	const strus::DocumentAnalyzer* m_analyzerMap;
 	analyzer::DocumentClass m_defaultDocumentClass;
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;

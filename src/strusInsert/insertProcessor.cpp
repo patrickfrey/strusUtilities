@@ -35,7 +35,7 @@ using namespace strus;
 InsertProcessor::InsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
-		const AnalyzerMap* analyzerMap_,
+		const strus::DocumentAnalyzer* analyzerMap_,
 		const analyzer::DocumentClass& defaultDocumentClass_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
