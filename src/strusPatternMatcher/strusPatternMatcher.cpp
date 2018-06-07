@@ -11,6 +11,7 @@
 #include "strus/lib/markup_std.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/constants.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
@@ -731,6 +732,29 @@ private:
 	std::ostream* m_outerr;
 };
 
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
 
 int main( int argc, const char* argv[])
 {
@@ -973,10 +997,6 @@ int main( int argc, const char* argv[])
 		{
 			lexer = opt[ "lexer"];
 		}
-		if (opt( "program"))
-		{
-			programfile = opt[ "program"];
-		}
 		if (opt( "markup"))
 		{
 			std::vector<std::string> list = opt.list( "markup");
@@ -1048,6 +1068,10 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
+		if (opt( "program"))
+		{
+			programfile = getFileArg( opt[ "program"], moduleLoader.get());
+		}
 		// Create objects for analyzer:
 		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
 		strus::local_ptr<strus::RpcClientInterface> rpcClient;
@@ -1092,23 +1116,18 @@ int main( int argc, const char* argv[])
 		strus::local_ptr<strus::PatternLexerInstanceInterface> lxinst( lxi->createInstance());
 
 		strus::analyzer::DocumentClass documentClass;
-		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+		if (!contenttype.empty())
 		{
-			throw std::runtime_error( _TXT("failed to parse document class"));
+			documentClass = strus::parse_DocumentClass( contenttype, errorBuffer.get());
+			if (!documentClass.defined() && errorBuffer->hasError())
+			{
+				throw std::runtime_error( _TXT("failed to parse document class"));
+			}
 		}
 		std::cerr << "load program ..." << std::endl;
-		std::string programsrc;
-		int ec = strus::readFile( programfile, programsrc);
-		if (ec) throw strus::runtime_error(_TXT("error (%u) reading rule file %s: %s"), ec, programfile.c_str(), ::strerror(ec));
-		std::vector<std::string> warnings;
-		if (!strus::loadPatternMatcherProgramWithLexer( lxinst.get(), ptinst.get(), programsrc, g_errorBuffer, warnings))
+		if (!strus::load_PatternMatcher_programfile( textproc, lxinst.get(), ptinst.get(), programfile, errorBuffer.get()))
 		{
 			throw std::runtime_error( _TXT("failed to load program"));
-		}
-		std::vector<std::string>::const_iterator wi = warnings.begin(), we = warnings.end();
-		for (; wi != we; ++wi)
-		{
-			std::cerr << "warning: " << *we << std::endl;
 		}
 		if (expressions.empty())
 		{
@@ -1118,7 +1137,7 @@ int main( int argc, const char* argv[])
 		std::string fileprefix;
 		if (inputIsAListOfFiles)
 		{
-			ec = strus::getParentPath( inputpath, fileprefix);
+			int ec = strus::getParentPath( inputpath, fileprefix);
 			if (ec)
 			{
 				throw strus::runtime_error(_TXT("error (%u) getting parent path of %s: %s"), ec, inputpath.c_str(), ::strerror(ec));
@@ -1138,7 +1157,7 @@ int main( int argc, const char* argv[])
 			}
 			else
 			{
-				ec = strus::getParentPath( inputpath, fileprefix);
+				int ec = strus::getParentPath( inputpath, fileprefix);
 				if (ec)
 				{
 					throw strus::runtime_error(_TXT("error (%u) getting parent path of %s: %s"), ec, inputpath.c_str(), ::strerror(ec));

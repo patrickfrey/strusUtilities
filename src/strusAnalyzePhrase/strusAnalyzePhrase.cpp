@@ -7,6 +7,12 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
+#include "strus/rpcClientInterface.hpp"
+#include "strus/rpcClientMessagingInterface.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
@@ -233,10 +239,26 @@ int main( int argc, const char* argv[])
 			}
 		}
 
-		// Create root object for analyzer:
-		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
-			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
-		if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
+		// Create objects for analyzer:
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+
+		if (opt("rpc"))
+		{
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
+			if (!messaging.get()) throw std::runtime_error( _TXT("failed to create rpc client messaging"));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
+			if (!rpcClient.get()) throw std::runtime_error( _TXT("failed to create rpc client"));
+			(void)messaging.release();
+			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc analyzer object builder"));
+		}
+		else
+		{
+			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
+		}
 
 		// Create proxy objects if tracing enabled:
 		{
@@ -260,30 +282,31 @@ int main( int argc, const char* argv[])
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
 
+		std::string analyzerConfig = strus::string_format( "[Element]\nfeature = %s %s text", normalizer.c_str(), tokenizer.c_str());
 		// Create phrase type (tokenizer and normalizer):
-		if (!loadPhraseAnalyzer( *analyzer, textproc, normalizer, tokenizer, errorBuffer.get()))
+		if (!strus::load_QueryAnalyzer_program_std( analyzer.get(), textproc, analyzerConfig, errorBuffer.get()))
 		{
-			throw std::runtime_error( _TXT("failed to load analyze phrase analyzer"));
+			throw strus::runtime_error( _TXT("failed to load query analyzer: %s"), errorBuffer->fetchError());
 		}
 
 		// Load the phrase:
 		bool queryIsFile = opt("fileinput");
 		if (queryIsFile)
 		{
+			int ec;
 			std::string ps;
 			if (phrasestring == "-")
 			{
-				unsigned int ec = strus::readStdin( ps);
+				ec = strus::readStdin( ps);
 				if (ec) throw strus::runtime_error( _TXT("failed to read query from stdin (errno %u)"), ec);
 			}
 			else
 			{
-				unsigned int ec = strus::readFile( phrasestring, ps);
+				ec = strus::readFile( phrasestring, ps);
 				if (ec) throw strus::runtime_error(_TXT("failed to read query from file %s (errno %u)"), phrasestring.c_str(), ec);
 			}
 			phrasestring = ps;
 		}
-
 		// Analyze the phrase and print the result:
 		strus::local_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
 		if (!qryanactx.get()) throw std::runtime_error( _TXT("failed to create query analyzer context"));

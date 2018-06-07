@@ -10,6 +10,7 @@
 #include "strus/lib/error.hpp"
 #include "strus/lib/markup_std.hpp"
 #include "strus/lib/pattern_serialize.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/constants.hpp"
@@ -54,8 +55,31 @@
 #include <stdexcept>
 #include <memory>
 
-static strus::ErrorBufferInterface* g_errorBuffer = 0;
+static strus::ErrorBufferInterface* g_errorhnd = 0;
 
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
 
 int main( int argc, const char* argv[])
 {
@@ -72,7 +96,7 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	g_errorBuffer = errorBuffer.get();
+	g_errorhnd = errorBuffer.get();
 
 	try
 	{
@@ -135,7 +159,7 @@ int main( int argc, const char* argv[])
 #if STRUS_PATTERN_STD_ENABLED
 		if (!moduleLoader->loadModule( strus::Constants::standard_pattern_matcher_module()))
 		{
-			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_pattern_matcher_module() << "': " << g_errorBuffer->fetchError() << std::endl;
+			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_pattern_matcher_module() << "': " << g_errorhnd->fetchError() << std::endl;
 		}
 #endif
 		if (opt("license"))
@@ -201,7 +225,6 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		// Parse arguments:
-		std::string programfile = opt[ 0];
 		std::string outputfile;
 		bool use_feeder = opt( "feeder");
 		if (opt( "output"))
@@ -245,6 +268,8 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
+		std::string programfile = getFileArg( opt[ 0], moduleLoader.get());
+
 		// Create objects for analyzer:
 		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
 		strus::local_ptr<strus::RpcClientInterface> rpcClient;
@@ -274,7 +299,7 @@ int main( int argc, const char* argv[])
 			analyzerBuilder.release();
 			analyzerBuilder.reset( proxy);
 		}
-		if (g_errorBuffer->hasError())
+		if (g_errorhnd->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
 		}
@@ -285,30 +310,31 @@ int main( int argc, const char* argv[])
 		strus::local_ptr<strus::PatternSerializer> serializer;
 		if (outputfile.empty())
 		{
-			serializer.reset( strus::createPatternSerializerText( std::cout, serializerType, g_errorBuffer));
+			serializer.reset( strus::createPatternSerializerText( std::cout, serializerType, g_errorhnd));
 		}
 		else
 		{
-			serializer.reset( strus::createPatternSerializer( outputfile, serializerType, g_errorBuffer));
+			serializer.reset( strus::createPatternSerializer( outputfile, serializerType, g_errorhnd));
 		}
 		if (!serializer.get()) throw std::runtime_error( _TXT("failed to create serializer"));
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 
 		std::cerr << "serialize program ..." << std::endl;
-		std::string programsrc;
-		unsigned int ec = strus::readFile( programfile, programsrc);
-		if (ec) throw strus::runtime_error(_TXT("error (%u) reading rule file %s: %s"), ec, programfile.c_str(), ::strerror(ec));
-		std::vector<std::string> warnings;
-		bool result = (use_feeder)
-			? strus::loadPatternMatcherProgramWithFeeder( serializer->feeder(), serializer->matcher(), programsrc, g_errorBuffer, warnings)
-			: strus::loadPatternMatcherProgramWithLexer( serializer->lexer(), serializer->matcher(), programsrc, g_errorBuffer, warnings);
-		if (!result) throw std::runtime_error( _TXT("failed to load program"));
-
-		std::vector<std::string>::const_iterator wi = warnings.begin(), we = warnings.end();
-		for (; wi != we; ++wi)
+		if (use_feeder)
 		{
-			std::cerr << "warning: " << *we << std::endl;
+			if (!strus::load_PatternMatcher_programfile( textproc, serializer->feeder(), serializer->matcher(), programfile, g_errorhnd))
+			{
+				throw std::runtime_error( _TXT("failed to load program to serialize"));
+			}
 		}
-		if (g_errorBuffer->hasError())
+		else
+		{
+			if (!strus::load_PatternMatcher_programfile( textproc, serializer->lexer(), serializer->matcher(), programfile, g_errorhnd))
+			{
+				throw std::runtime_error( _TXT("failed to load program to serialize"));
+			}
+		}
+		if (g_errorhnd->hasError())
 		{
 			throw std::runtime_error( _TXT("uncaught error in pattern serialize"));
 		}

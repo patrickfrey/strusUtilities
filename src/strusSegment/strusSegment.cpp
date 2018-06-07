@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/reference.hpp"
 #include "strus/analyzer/documentClass.hpp"
 #include "strus/moduleLoaderInterface.hpp"
@@ -61,6 +62,30 @@ std::string escapeEndOfLine( const std::string& str)
 		}
 	}
 	return rt;
+}
+
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
 }
 
 int main( int argc, const char* argv[])
@@ -203,7 +228,6 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		// Parse arguments:
-		std::string docpath = opt[0];
 		std::string segmenterName;
 		std::string contenttype;
 		std::string resultPrefix;
@@ -227,6 +251,7 @@ int main( int argc, const char* argv[])
 		{
 			contenttype = opt[ "contenttype"];
 		}
+		std::string docpath = getFileArg( opt[0], moduleLoader.get());
 
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -277,9 +302,13 @@ int main( int argc, const char* argv[])
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
 		strus::analyzer::DocumentClass documentClass;
-		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+		if (!contenttype.empty())
 		{
-			throw std::runtime_error( _TXT("failed to parse document class"));
+			documentClass = strus::parse_DocumentClass( contenttype, errorBuffer.get());
+			if (!documentClass.defined() && errorBuffer->hasError())
+			{
+				throw std::runtime_error( _TXT("failed to parse document class"));
+			}
 		}
 		if (!documentClass.defined())
 		{

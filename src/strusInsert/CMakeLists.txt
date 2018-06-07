@@ -46,7 +46,7 @@ set_property( TARGET local_objs_static PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 set_property( TARGET local_objs_static PROPERTY POSITION_INDEPENDENT_CODE TRUE )
 
 add_executable( strusInsert  strusInsert.cpp )
-target_link_libraries( strusInsert  strus_storage_objbuild strusutilities_private_utils  local_objs_static strus_program strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusInsert  strus_storage_objbuild strusutilities_private_utils  local_objs_static strus_program strus_analyzer_prgload_std strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )
@@ -55,14 +55,14 @@ if(LIBKVM_LIBRARIES)
 endif()
 
 add_executable( strusCheckInsert  strusCheckInsert.cpp )
-target_link_libraries( strusCheckInsert  strus_storage_objbuild strusutilities_private_utils local_objs_static strus_program  strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusCheckInsert  strus_storage_objbuild strusutilities_private_utils local_objs_static strus_program strus_analyzer_prgload_std strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 if(LIBKVM_LIBRARIES)
 	target_link_libraries( strusCheckInsert ${LIBKVM_LIBRARIES} )
 endif()
 
 add_executable( strusGenerateKeyMap strusGenerateKeyMap.cpp )
-target_link_libraries( strusGenerateKeyMap  strusutilities_private_utils local_objs_static  strus_program strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusGenerateKeyMap  strusutilities_private_utils local_objs_static strus_program strus_analyzer_prgload_std strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 if(LIBKVM_LIBRARIES)
 	target_link_libraries( strusGenerateKeyMap ${LIBKVM_LIBRARIES} )

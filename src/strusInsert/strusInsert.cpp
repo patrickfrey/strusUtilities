@@ -10,6 +10,7 @@
 #include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
@@ -81,6 +82,29 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 					strus::StorageInterface::CmdCreateClient), errorhnd);
 }
 
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
 
 int main( int argc_, const char* argv_[])
 {
@@ -311,26 +335,12 @@ int main( int argc_, const char* argv_[])
 		{
 			fetchSize = opt.asUint( "fetch");
 		}
-		std::string programFileName = opt[0];
-		std::string programDir;
-		int ec;
-		if (!strus::isRelativePath( programFileName))
-		{
-			std::string filedir;
-			std::string filenam;
-			ec = strus::getFileName( programFileName, filenam);
-			if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
-			ec = strus::getParentPath( programFileName, filedir);
-			if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
-			programDir = filedir;
-			programFileName = filenam;
-		}
-		std::string datapath = opt[1];
+		bool verbose = opt( "verbose");
+
+		// Parse arguments:
 		std::string fileext = "";
 		std::string segmenterName;
 		std::string contenttype;
-		bool verbose = opt( "verbose");
-
 		if (opt( "segmenter"))
 		{
 			segmenterName = opt[ "segmenter"];
@@ -359,14 +369,9 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		if (!programDir.empty())
-		{
-			moduleLoader->addResourcePath( programDir);
-		}
-		else
-		{
-			moduleLoader->addResourcePath( "./");
-		}
+		std::string programFileName = getFileArg( opt[0], moduleLoader.get());
+		std::string datapath = opt[1];
+
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
@@ -421,7 +426,8 @@ int main( int argc_, const char* argv_[])
 		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty())
 		{
-			if (!strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+			documentClass = strus::parse_DocumentClass( contenttype, errorBuffer.get());
+			if (!documentClass.defined() && errorBuffer->hasError())
 			{
 				throw std::runtime_error( _TXT("failed to parse document class"));
 			}

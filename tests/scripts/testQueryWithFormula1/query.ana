@@ -1,4 +1,4 @@
-[SearchIndex]
+[Element]
 	word = lc:convdia(en):stem(en) word word;
 	word = lc:convdia(en):stem(en) word default;
 

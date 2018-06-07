@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
@@ -42,6 +43,30 @@
 #include <cstdio>
 #include <stdexcept>
 #include <memory>
+
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
 
 int main( int argc_, const char* argv_[])
 {
@@ -240,22 +265,6 @@ int main( int argc_, const char* argv_[])
 				fileext = std::string(".") + fileext;
 			}
 		}
-		std::string programFileName = opt[0];
-		std::string programDir;
-		int ec;
-		if (!strus::isRelativePath( programFileName))
-		{
-			std::string filedir;
-			std::string filenam;
-			ec = strus::getFileName( programFileName, filenam);
-			if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
-			ec = strus::getParentPath( programFileName, filedir);
-			if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
-			programDir = filedir;
-			programFileName = filenam;
-		}
-		std::string datapath = opt[1];
-
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -267,14 +276,8 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		if (!programDir.empty())
-		{
-			moduleLoader->addResourcePath( programDir);
-		}
-		else
-		{
-			moduleLoader->addResourcePath( "./");
-		}
+		std::string programFileName = getFileArg( opt[0], moduleLoader.get());
+		std::string datapath = opt[1];
 
 		// Create root objects:
 		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
@@ -304,7 +307,8 @@ int main( int argc_, const char* argv_[])
 		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty())
 		{
-			if (!strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+			documentClass = strus::parse_DocumentClass( contenttype, errorBuffer.get());
+			if (!documentClass.defined() && errorBuffer->hasError())
 			{
 				throw std::runtime_error( _TXT("failed to parse document class"));
 			}

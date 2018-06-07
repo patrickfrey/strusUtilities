@@ -7,7 +7,9 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
@@ -51,8 +53,6 @@
 #include <cerrno>
 #include <cstdio>
 #include <algorithm>
-
-#undef STRUS_LOWLEVEL_DEBUG
 
 struct TermOrder
 {
@@ -143,6 +143,30 @@ static void filterTerms( std::vector<strus::analyzer::DocumentTerm>& termar, con
 			}
 		}
 	}
+}
+
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
 }
 
 int main( int argc, const char* argv[])
@@ -285,21 +309,6 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		// Parse arguments:
-		std::string programFileName = opt[0];
-		std::string programDir;
-		int ec;
-		if (!strus::isRelativePath( programFileName))
-		{
-			std::string filedir;
-			std::string filenam;
-			ec = strus::getFileName( programFileName, filenam);
-			if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
-			ec = strus::getParentPath( programFileName, filedir);
-			if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
-			programDir = filedir;
-			programFileName = filenam;
-		}
-		std::string docpath = opt[1];
 		std::string segmenterName;
 		std::string contenttype;
 		DumpConfig dumpConfig;
@@ -312,8 +321,21 @@ int main( int argc, const char* argv[])
 		{
 			contenttype = opt[ "contenttype"];
 		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		if (opt( "dump"))
 		{
+			strus::local_ptr<strus::DebugTraceContextInterface> dbgtracectx( dbgtrace->createTraceContext( "dump"));
 			doDump = true;
 			std::string ds = opt[ "dump"];
 			char const* di = ds.c_str();
@@ -321,16 +343,17 @@ int main( int argc, const char* argv[])
 			{
 				DumpConfigElem dt( getNextDumpConfigElem( di));
 				dumpConfig.insert( dt);
-#ifdef STRUS_LOWLEVEL_DEBUG
-				if (dt.second.empty())
+				if (dbgtracectx.get())
 				{
-					std::cerr << strus::string_format( "got dump config [%s]", dt.first.c_str()) << std::endl;
+					if (dt.second.empty())
+					{
+						dbgtracectx->event( "dump", "config [%s]", dt.first.c_str());
+					}
+					else
+					{
+						dbgtracectx->event( "dump", "config [%s] = '%s'", dt.first.c_str(), dt.second.c_str());
+					}
 				}
-				else
-				{
-					std::cerr << strus::string_format( "got dump config [%s] = '%s'", dt.first.c_str(), dt.second.c_str()) << std::endl;
-				}
-#endif
 			}
 		}
 
@@ -346,18 +369,6 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-		// Enable debugging selected with option 'debug':
-		{
-			std::vector<std::string> dbglist = opt.list( "debug");
-			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
-			for (; gi != ge; ++gi)
-			{
-				if (!dbgtrace->enable( *gi))
-				{
-					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
-				}
-			}
-		}
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -370,14 +381,9 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		if (!programDir.empty())
-		{
-			moduleLoader->addResourcePath( programDir);
-		}
-		else
-		{
-			moduleLoader->addResourcePath( "./");
-		}
+		std::string programFileName = getFileArg( opt[0], moduleLoader.get());
+		std::string docpath = opt[1];
+
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
@@ -420,9 +426,13 @@ int main( int argc, const char* argv[])
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
 		strus::analyzer::DocumentClass documentClass;
-		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
+		if (!contenttype.empty())
 		{
-			throw std::runtime_error( _TXT("failed to parse document class"));
+			documentClass = strus::parse_DocumentClass( contenttype, errorBuffer.get());
+			if (!documentClass.defined() && errorBuffer->hasError())
+			{
+				throw std::runtime_error( _TXT("failed to parse document class"));
+			}
 		}
 		// Detect document content type if not explicitely defined:
 		if (!documentClass.defined())

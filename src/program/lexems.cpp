@@ -235,7 +235,7 @@ int parser::parse_INTEGER( char const*& src)
 	}
 }
 
-static int checkKeyword( std::string id, int nn, va_list argp)
+static int checkKeyword( const std::string& id, int nn, va_list argp)
 {
 	for (int ii=0; ii<nn; ++ii)
 	{

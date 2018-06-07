@@ -9,6 +9,7 @@
 #include "strus/lib/error.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
@@ -530,6 +531,29 @@ private:
 	bool m_evalset_defined;
 };
 
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
 
 int main( int argc, const char* argv[])
 {
@@ -660,10 +684,6 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
-		// Parse arguments:
-		std::string analyzerprg = opt[0];
-		std::string querystring = opt[1];
-
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -700,19 +720,9 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		std::string resourcepath;
-		if (0!=strus::getParentPath( analyzerprg, resourcepath))
-		{
-			throw strus::runtime_error( "%s",  _TXT("failed to evaluate resource path"));
-		}
-		if (!resourcepath.empty())
-		{
-			moduleLoader->addResourcePath( resourcepath);
-		}
-		else
-		{
-			moduleLoader->addResourcePath( "./");
-		}
+		// Parse arguments:
+		std::string programFileName = getFileArg( opt[0], moduleLoader.get());
+		std::string querystring = opt[1];
 
 		// Create objects for analyzer:
 		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
@@ -757,12 +767,12 @@ int main( int argc, const char* argv[])
 			std::string qs;
 			if (querystring == "-")
 			{
-				unsigned int ec = strus::readStdin( qs);
+				int ec = strus::readStdin( qs);
 				if (ec) throw strus::runtime_error( _TXT("failed to read query from stdin (errno %u)"), ec);
 			}
 			else
 			{
-				unsigned int ec = strus::readFile( querystring, qs);
+				int ec = strus::readFile( querystring, qs);
 				if (ec) throw strus::runtime_error(_TXT("failed to read query from file %s (errno %u)"), querystring.c_str(), ec);
 			}
 			querystring = qs;
@@ -777,20 +787,14 @@ int main( int argc, const char* argv[])
 		if (!analyzer.get()) throw std::runtime_error( _TXT("failed to create query analyzer"));
 
 		// Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			strus::runtime_error( _TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
-		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
-		strus::QueryDescriptors querydescr;
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
+
+		if (!strus::load_QueryAnalyzer_programfile_std( analyzer.get(), textproc, programFileName, errorBuffer.get()))
 		{
-			throw strus::runtime_error( _TXT("failed to load query analyze program %s"), analyzerprg.c_str());
+			throw strus::runtime_error( _TXT("failed to load query analyzer: %s"), errorBuffer->fetchError());
 		}
+		strus::QueryDescriptors querydescr( analyzer->queryFieldTypes());
 
 		// Load and print the query:
 		Query query;

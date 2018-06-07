@@ -10,6 +10,10 @@
 #include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
+#include "strus/lib/filelocator.hpp"
+#include "strus/fileLocatorInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
@@ -86,6 +90,25 @@ static double getTimeStamp()
 	return (double)now.tv_usec / 1000000.0 + now.tv_sec;
 }
 
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	return programFileName;
+}
 
 int main( int argc_, const char* argv_[])
 {
@@ -300,9 +323,6 @@ int main( int argc_, const char* argv_[])
 			if (opt("configfile")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--configfile");
 			storagecfg = opt["storage"];
 		}
-		std::string analyzerprg = opt[0];
-		std::string queryprg = opt[1];
-		std::string querystring = opt[2];
 
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -339,19 +359,10 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		std::string resourcepath;
-		if (0!=strus::getParentPath( analyzerprg, resourcepath))
-		{
-			throw strus::runtime_error( "%s",  _TXT("failed to evaluate resource path"));
-		}
-		if (!resourcepath.empty())
-		{
-			moduleLoader->addResourcePath( resourcepath);
-		}
-		else
-		{
-			moduleLoader->addResourcePath( "./");
-		}
+		std::string analyzerprg = getFileArg( opt[0], moduleLoader.get());
+		std::string queryprg = getFileArg( opt[1], moduleLoader.get());
+		std::string querystring = opt[2];
+
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
@@ -411,19 +422,14 @@ int main( int argc_, const char* argv_[])
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor: %s"), errorBuffer->fetchError());
 
 		// Load query analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec) throw strus::runtime_error(_TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
-
-		strus::QueryDescriptors querydescr;
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
+		if (!strus::load_QueryAnalyzer_programfile_std( analyzer.get(), textproc, analyzerprg, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query analyzer program: %s"), errorBuffer->fetchError());
 		}
 		// Load query evaluation program:
+		strus::QueryDescriptors querydescr( analyzer->queryFieldTypes());
 		std::string qevalProgramSource;
-		ec = strus::readFile( queryprg, qevalProgramSource);
+		int ec = strus::readFile( queryprg, qevalProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load query eval program %s (errno %u)"), queryprg.c_str(), ec);
 
 		if (!strus::loadQueryEvalProgram( *qeval, querydescr, qproc, qevalProgramSource, errorBuffer.get()))
