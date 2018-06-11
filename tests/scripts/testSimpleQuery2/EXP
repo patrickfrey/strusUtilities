@@ -10,7 +10,7 @@ ranked list (starting with rank 0, maximum 20 results):
 	docid = '123' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
-[1] score 0.750000
+[1] score 1.000000
 	title = 'Software' 1
 	docid = '123' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):

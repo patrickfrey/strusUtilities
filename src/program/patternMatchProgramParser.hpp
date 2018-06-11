@@ -20,6 +20,8 @@
 #include <map>
 #include <set>
 
+#error DEPRECATED
+
 /// \brief strus toplevel namespace
 namespace strus {
 

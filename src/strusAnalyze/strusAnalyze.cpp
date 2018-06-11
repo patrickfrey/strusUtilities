@@ -19,7 +19,6 @@
 #include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/segmenterInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
@@ -41,6 +40,7 @@
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
 #include "private/documentAnalyzer.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>

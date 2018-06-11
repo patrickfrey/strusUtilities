@@ -28,7 +28,6 @@
 #include "strus/patternLexerInterface.hpp"
 #include "strus/patternTermFeederInterface.hpp"
 #include "strus/patternTermFeederInstanceInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
@@ -46,6 +45,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>

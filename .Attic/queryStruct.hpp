@@ -13,7 +13,7 @@
 #include "termExpression.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/reference.hpp"
-#include "strus/programLoader.hpp"
+#include "private/programLoader.hpp"
 #include <string>
 #include <vector>
 

@@ -11,6 +11,8 @@
 #include "private/internationalization.hpp"
 #include "errorPosition.hpp"
 
+#error DEPRECATED
+
 using namespace strus;
 
 ErrorPosition::ErrorPosition( const char* base, const char* itr, bool binary)

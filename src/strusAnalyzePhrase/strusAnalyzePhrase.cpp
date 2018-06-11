@@ -35,7 +35,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
-#include "strus/programLoader.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>

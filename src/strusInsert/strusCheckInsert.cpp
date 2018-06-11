@@ -35,7 +35,6 @@
 #include "strus/base/inputStream.hpp"
 #include "strus/base/local_ptr.hpp"
 #include "strus/base/thread.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -47,6 +46,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include "fileCrawler.hpp"
 #include "checkInsertProcessor.hpp"
 #include <iostream>

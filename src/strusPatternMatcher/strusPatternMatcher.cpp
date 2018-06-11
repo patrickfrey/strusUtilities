@@ -28,13 +28,11 @@
 #include "strus/patternLexerInstanceInterface.hpp"
 #include "strus/patternLexerContextInterface.hpp"
 #include "strus/patternLexerInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/versionUtilities.hpp"
 #include "strus/debugTraceInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/documentClass.hpp"
@@ -50,6 +48,8 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/versionUtilities.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -60,7 +60,7 @@
 #include <memory>
 
 #define STRUS_DBGTRACE_COMPONENT_NAME "pattern"
-static strus::ErrorBufferInterface* g_errorBuffer = 0;
+static strus::ErrorBufferInterface* g_errorhnd = 0;
 
 static std::string trimString( const char* li, const char* le)
 {
@@ -189,8 +189,8 @@ public:
 	{
 		m_fileitr = m_files.begin();
 
-		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorBuffer));
-		if (g_errorBuffer->hasError())
+		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorhnd));
+		if (g_errorhnd->hasError())
 		{
 			throw std::runtime_error( _TXT("global context initialization failed"));
 		}
@@ -321,7 +321,7 @@ private:
 public:
 	ThreadContext( GlobalContext* globalContext_, const strus::AnalyzerObjectBuilderInterface* objbuilder_, unsigned int threadid_, const std::string& outputfile_="", const std::string& outerrfile_="")
 		:m_globalContext(globalContext_)
-		,m_debugTrace(g_errorBuffer->debugTrace())
+		,m_debugTrace(g_errorhnd->debugTrace())
 		,m_objbuilder(objbuilder_)
 		,m_defaultSegmenter(0)
 		,m_defaultSegmenterInstance()
@@ -339,12 +339,12 @@ public:
 			m_defaultSegmenter = m_globalContext->textproc()->getSegmenterByName( m_globalContext->segmenterName());
 			if (!m_defaultSegmenter)
 			{
-				throw strus::runtime_error(_TXT("failed to get default segmenter by name: %s"), g_errorBuffer->fetchError());
+				throw strus::runtime_error(_TXT("failed to get default segmenter by name: %s"), g_errorhnd->fetchError());
 			}
 			m_defaultSegmenterInstance.reset( m_defaultSegmenter->createInstance());
 			if (!m_defaultSegmenterInstance.get())
 			{
-				throw strus::runtime_error(_TXT("failed to create default segmenter instace: %s"), g_errorBuffer->fetchError());
+				throw strus::runtime_error(_TXT("failed to create default segmenter instace: %s"), g_errorhnd->fetchError());
 			}
 			initSegmenterInstance( m_defaultSegmenterInstance.get());
 		}
@@ -512,6 +512,7 @@ public:
 		}
 		strus::local_ptr<strus::PatternMatcherContextInterface> mt( m_globalContext->PatternMatcherInstance()->createContext());
 		strus::local_ptr<strus::PatternLexerContextInterface> crctx( m_globalContext->PatternLexerInstance()->createContext());
+		if (!crctx.get() || !mt.get()) throw std::runtime_error(g_errorhnd->fetchError());
 		strus::analyzer::DocumentClass documentClass = getDocumentClass( content);
 		const strus::SegmenterInstanceInterface* segmenterInstance = getSegmenterInstance( content, documentClass);
 		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
@@ -554,7 +555,7 @@ public:
 					DBG->event( "segment", "%d [%s] at %d", id, dbgseg.c_str(), (int)segmentpos);
 				}
 				std::vector<strus::analyzer::PatternLexem> crmatches = crctx->match( segment, segmentsize);
-				if (crmatches.size() == 0 && g_errorBuffer->hasError())
+				if (crmatches.size() == 0 && g_errorhnd->hasError())
 				{
 					throw std::runtime_error( "failed to scan for tokens with char regex match automaton");
 				}
@@ -584,7 +585,7 @@ public:
 		{
 			DBG->close();
 		}
-		if (g_errorBuffer->hasError())
+		if (g_errorhnd->hasError())
 		{
 			throw std::runtime_error("error matching rules");
 		}
@@ -682,17 +683,17 @@ public:
 				try
 				{
 					processDocument( *fi);
-					if (g_errorBuffer->hasError())
+					if (g_errorhnd->hasError())
 					{
-						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s"), m_threadid, fi->c_str(), g_errorBuffer->fetchError()) << std::endl;
+						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s"), m_threadid, fi->c_str(), g_errorhnd->fetchError()) << std::endl;
 					}
 					if (DBG) DBG->close();
 				}
 				catch (const std::runtime_error& err)
 				{
-					if (g_errorBuffer->hasError())
+					if (g_errorhnd->hasError())
 					{
-						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s, %s"), m_threadid, fi->c_str(), err.what(), g_errorBuffer->fetchError()) << std::endl;
+						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s, %s"), m_threadid, fi->c_str(), err.what(), g_errorhnd->fetchError()) << std::endl;
 					}
 					else
 					{
@@ -707,11 +708,11 @@ public:
 				}
 			}
 		}
-		if (g_errorBuffer->hasError())
+		if (g_errorhnd->hasError())
 		{
-			*m_outerr << strus::string_format( _TXT("error thread %u: %s"), m_threadid, g_errorBuffer->fetchError()) << std::endl;
+			*m_outerr << strus::string_format( _TXT("error thread %u: %s"), m_threadid, g_errorhnd->fetchError()) << std::endl;
 		}
-		g_errorBuffer->releaseContext();
+		g_errorhnd->releaseContext();
 	}
 
 private:
@@ -771,7 +772,7 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	g_errorBuffer = errorBuffer.get();
+	g_errorhnd = errorBuffer.get();
 
 	try
 	{
@@ -847,7 +848,7 @@ int main( int argc, const char* argv[])
 #if STRUS_PATTERN_STD_ENABLED
 		if (!moduleLoader->loadModule( strus::Constants::standard_pattern_matcher_module()))
 		{
-			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_pattern_matcher_module() << "': " << g_errorBuffer->fetchError() << std::endl;
+			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_pattern_matcher_module() << "': " << g_errorhnd->fetchError() << std::endl;
 		}
 #endif
 		if (opt("license"))
@@ -1101,7 +1102,7 @@ int main( int argc, const char* argv[])
 			analyzerBuilder.release();
 			analyzerBuilder.reset( proxy);
 		}
-		if (g_errorBuffer->hasError())
+		if (g_errorhnd->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
 		}
@@ -1128,6 +1129,10 @@ int main( int argc, const char* argv[])
 		if (!strus::load_PatternMatcher_programfile( textproc, lxinst.get(), ptinst.get(), programfile, errorBuffer.get()))
 		{
 			throw std::runtime_error( _TXT("failed to load program"));
+		}
+		if (!lxinst->compile() || !ptinst->compile())
+		{
+			throw std::runtime_error( g_errorhnd->fetchError());
 		}
 		if (expressions.empty())
 		{
@@ -1199,7 +1204,7 @@ int main( int argc, const char* argv[])
 			ThreadContext ctx( &globalContext, analyzerBuilder.get(), 0, outputfile, outerrfile);
 			ctx.run();
 		}
-		if (g_errorBuffer->hasError())
+		if (g_errorhnd->hasError())
 		{
 			throw std::runtime_error( _TXT("uncaught error in pattern matcher"));
 		}

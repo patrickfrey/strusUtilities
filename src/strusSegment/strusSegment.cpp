@@ -16,7 +16,6 @@
 #include "strus/segmenterInterface.hpp"
 #include "strus/segmenterInstanceInterface.hpp"
 #include "strus/segmenterContextInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -35,6 +34,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>

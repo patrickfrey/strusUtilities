@@ -23,7 +23,6 @@
 #include "strus/queryInterface.hpp"
 #include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/segmenterInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -42,6 +41,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include <vector>
 #include <string>
 #include <map>
@@ -794,13 +794,12 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error( _TXT("failed to load query analyzer: %s"), errorBuffer->fetchError());
 		}
-		strus::QueryDescriptors querydescr( analyzer->queryFieldTypes());
 
 		// Load and print the query:
 		Query query;
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
 		if (!queryproc) throw std::runtime_error( _TXT("failed to get query processor"));
-		if (!strus::loadQuery( query, analyzer.get(), queryproc, querystring, querydescr, errorBuffer.get()))
+		if (!strus::loadQuery( query, analyzer.get(), "select", "weight", queryproc, querystring, errorBuffer.get()))
 		{
 			throw strus::runtime_error( _TXT("failed to load query '%s'"), querystring.c_str());
 		}

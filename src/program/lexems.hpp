@@ -10,6 +10,8 @@
 #include "strus/metaDataRestrictionInterface.hpp"
 #include <string>
 
+#error DEPRECATED
+
 namespace strus {
 namespace parser {
 

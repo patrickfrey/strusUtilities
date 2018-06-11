@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/storage_prgload_std.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/vectorStorageInterface.hpp"
@@ -18,7 +19,6 @@
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/reference.hpp"
 #include "strus/constants.hpp"
 #include "private/versionUtilities.hpp"
@@ -26,6 +26,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include "strus/base/programOptions.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/configParser.hpp"
@@ -276,7 +277,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::loadVectorStorageVectors( storage.get(), *fi, portable, g_errorBuffer))
+			if (!strus::load_vectors( storage.get(), *fi, portable, g_errorBuffer))
 			{
 				throw std::runtime_error( _TXT("failed to load input"));
 			}

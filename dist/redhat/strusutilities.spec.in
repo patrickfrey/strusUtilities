@@ -331,8 +331,6 @@ make test
 %files
 %defattr( -, root, root )
 %dir %{_libdir}/strus
-%{_libdir}/strus/libstrus_program.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@
-%{_libdir}/strus/libstrus_program.so.@STRUS_MAJOR_VERSION@.@STRUS_MINOR_VERSION@.@STRUS_PATCH_VERSION@
 %{_bindir}/strusDumpStorage
 %{_bindir}/strusAnalyzeQuery
 %{_bindir}/strusUpdateStorage
@@ -360,7 +358,6 @@ make test
 
 %files devel
 %defattr( -, root, root )
-%{_libdir}/strus/libstrus_program.so
 %dir %{_includedir}/strus
 %{_includedir}/strus/*.hpp
 

@@ -23,7 +23,6 @@
 #include "strus/base/inputStream.hpp"
 #include "strus/base/local_ptr.hpp"
 #include "strus/base/thread.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
@@ -34,6 +33,7 @@
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
 #include "private/documentAnalyzer.hpp"
+#include "private/programLoader.hpp"
 #include "fileCrawler.hpp"
 #include "keyMapGenProcessor.hpp"
 #include <iostream>

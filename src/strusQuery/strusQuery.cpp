@@ -11,7 +11,7 @@
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/analyzer_prgload_std.hpp"
-#include "strus/lib/analyzer_prgload_std.hpp"
+#include "strus/lib/storage_prgload_std.hpp"
 #include "strus/lib/filelocator.hpp"
 #include "strus/fileLocatorInterface.hpp"
 #include "strus/reference.hpp"
@@ -37,7 +37,7 @@
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "strus/programLoader.hpp"
+#include "private/programLoader.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -420,6 +420,7 @@ int main( int argc_, const char* argv_[])
 		if (!qproc) throw strus::runtime_error(_TXT("failed to get query processor: %s"), errorBuffer->fetchError());
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor: %s"), errorBuffer->fetchError());
+		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("error in initialization: %s"), errorBuffer->fetchError());
 
 		// Load query analyzer program:
 		if (!strus::load_QueryAnalyzer_programfile_std( analyzer.get(), textproc, analyzerprg, errorBuffer.get()))
@@ -427,12 +428,13 @@ int main( int argc_, const char* argv_[])
 			throw strus::runtime_error(_TXT("failed to load query analyzer program: %s"), errorBuffer->fetchError());
 		}
 		// Load query evaluation program:
-		strus::QueryDescriptors querydescr( analyzer->queryFieldTypes());
 		std::string qevalProgramSource;
-		int ec = strus::readFile( queryprg, qevalProgramSource);
+		std::string queryprgpath = (strus::isRelativePath( queryprg)) ? textproc->getResourceFilePath( queryprg) : queryprg;
+
+		int ec = strus::readFile( queryprgpath, qevalProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load query eval program %s (errno %u)"), queryprg.c_str(), ec);
 
-		if (!strus::loadQueryEvalProgram( *qeval, querydescr, qproc, qevalProgramSource, errorBuffer.get()))
+		if (!strus::load_queryeval_program( *qeval, analyzer->queryTermTypes(), qproc, qevalProgramSource, errorBuffer.get()))
 		{
 			throw strus::runtime_error(_TXT("failed to load query evaluation program: %s"), errorBuffer->fetchError());
 		}
@@ -453,14 +455,6 @@ int main( int argc_, const char* argv_[])
 			}
 			querystring = qs;
 		}
-		if (verbose)
-		{
-			std::cerr << "Query context:" << std::endl;
-			std::cerr << "Selection feature set: " << querydescr.selectionFeatureSet << std::endl;
-			std::cerr << "Weighting feature set: " << querydescr.weightingFeatureSet << std::endl;
-			std::cerr << "Part of features weighted in selection: " << querydescr.defaultSelectionTermPart << std::endl;
-			std::cerr << "Default selection join operator: " << querydescr.defaultSelectionJoin << std::endl;
-		}
 		unsigned int nofQueries = 0;
 		double startTime = 0.0;
 		if (doMeasureDuration)
@@ -472,11 +466,17 @@ int main( int argc_, const char* argv_[])
 		while (strus::scanNextProgram( qs, si, se, errorBuffer.get()))
 		{
 			++nofQueries;
-			strus::local_ptr<strus::QueryInterface> query(
-				qeval->createQuery( storage.get()));
+			strus::local_ptr<strus::QueryInterface> query( qeval->createQuery( storage.get()));
 			if (!query.get()) throw strus::runtime_error(_TXT("failed to create query object: %s"), errorBuffer->fetchError());
 
-			if (!strus::loadQuery( *query, analyzer.get(), qproc, qs, querydescr, errorBuffer.get()))
+			std::string selectionFeatureSet;
+			std::string weightingFeatureSet;
+			std::vector<std::string> selfset = qeval->getSelectionFeatureSets();
+			if (!selfset.empty()) selectionFeatureSet = selfset[0];
+			std::vector<std::string> weightset = qeval->getWeightingFeatureSets();
+			if (!weightset.empty()) weightingFeatureSet = weightset[0];
+
+			if (!strus::loadQuery( *query, analyzer.get(), selectionFeatureSet, weightingFeatureSet, qproc, qs, errorBuffer.get()))
 			{
 				throw strus::runtime_error(_TXT("failed to load query from source: %s"), errorBuffer->fetchError());
 			}

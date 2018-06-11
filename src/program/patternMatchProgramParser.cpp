@@ -8,7 +8,6 @@
 /// \brief Implements the parser for a pattern match program
 /// \file patternMatchProgramParser.hpp
 #include "patternMatchProgramParser.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/patternMatcherInterface.hpp"
 #include "strus/patternLexerInterface.hpp"
@@ -16,11 +15,13 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/string_conv.hpp"
 #include "strus/base/utf8.hpp"
+#include "private/programLoader.hpp"
 #include "private/internationalization.hpp"
-#include "lexems.hpp"
 #include "errorPosition.hpp"
 #include <iostream>
 #include <sstream>
+
+#error DEPRECATED
 
 using namespace strus;
 using namespace strus::parser;

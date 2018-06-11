@@ -10,11 +10,11 @@
 #include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/storage_prgload_std.hpp"
 #include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
@@ -36,6 +36,7 @@
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <cstring>
 #include <cerrno>
@@ -359,15 +360,15 @@ int main( int argc, const char* argv[])
 		switch (updateOperation)
 		{
 			case UpdateOpMetadata:
-				nofUpdates = strus::loadDocumentMetaDataAssignments(
+				nofUpdates = strus::load_metadata_assignments(
 						*storage, elemname, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 			case UpdateOpAttribute:
-				nofUpdates = strus::loadDocumentAttributeAssignments(
+				nofUpdates = strus::load_attribute_assignments(
 						*storage, elemname, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 			case UpdateOpUserAccess:
-				nofUpdates = strus::loadDocumentUserRightsAssignments(
+				nofUpdates = strus::load_user_assignments(
 						*storage, attributemapref, updateBatchPath, transactionSize, errorBuffer.get());
 				break;
 		}
