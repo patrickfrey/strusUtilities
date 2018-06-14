@@ -12,6 +12,7 @@
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/analyzer_prgload_std.hpp"
+#include "strus/lib/pattern_resultformat.hpp"
 #include "strus/constants.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
@@ -600,6 +601,26 @@ public:
 		}
 	}
 
+	void printFormatOutput( std::ostream& out, const char* value, const std::vector<PositionInfo>& segmentposmap, const std::string& src)
+	{
+		strus::PatternResultFormatChunk chunk;
+		char const* vi = value;
+		while (strus::PatternResultFormatChunk::parseNext( chunk, vi))
+		{
+			if (chunk.value)
+			{
+				out << std::string( chunk.value, chunk.valuesize);
+			}
+			else
+			{
+				std::size_t start_srcpos = segmentposmap[ chunk.start_seg].srcpos + chunk.start_pos;
+				std::size_t end_srcpos = segmentposmap[ chunk.end_seg].srcpos + chunk.end_pos;
+				std::size_t len = end_srcpos - start_srcpos;
+				out << std::string( src.c_str()+start_srcpos, len);
+			}
+		}
+	}
+
 	void printResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::analyzer::PatternMatcherResult>& results, const std::string& src)
 	{
 		std::vector<strus::analyzer::PatternMatcherResult>::const_iterator
@@ -611,18 +632,33 @@ public:
 			out << ri->name() << " [" << ri->start_ordpos() << ".." << ri->end_ordpos()
 				<< ", " << start_segpos << "|" << ri->start_origpos() << " .. "
 				<< end_segpos << "|" << ri->end_origpos() << "]:";
-			std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
-				ei = ri->items().begin(), ee = ri->items().end();
-
-			for (; ei != ee; ++ei)
+			if (ri->value())
 			{
-				start_segpos = segmentposmap[ ei->start_origseg()].segpos;
-				end_segpos = segmentposmap[ ei->end_origseg()].segpos;
-				out << " " << ei->name() << " [" << ei->start_ordpos() << ".." << ei->end_ordpos()
-						<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
-				std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
-				std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
-				out << " '" << encodeOutput( src.c_str() + start_srcpos, end_srcpos - start_srcpos, 0/*no maxsize*/) << "'";
+				out << " ";
+				printFormatOutput( out, ri->value(), segmentposmap, src);
+			}
+			else
+			{
+				std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
+					ei = ri->items().begin(), ee = ri->items().end();
+				for (; ei != ee; ++ei)
+				{
+					start_segpos = segmentposmap[ ei->start_origseg()].segpos;
+					end_segpos = segmentposmap[ ei->end_origseg()].segpos;
+					out << " " << ei->name() << " [" << ei->start_ordpos() << ".." << ei->end_ordpos()
+							<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
+					if (ei->value())
+					{
+						out << " ";
+						printFormatOutput( out, ei->value(), segmentposmap, src);
+					}
+					else
+					{
+						std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
+						std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
+						out << " '" << encodeOutput( src.c_str() + start_srcpos, end_srcpos - start_srcpos, 0/*no maxsize*/) << "'";
+					}
+				}
 			}
 			out << std::endl;
 		}

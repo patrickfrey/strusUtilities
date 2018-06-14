@@ -32,6 +32,7 @@ static std::string g_testdir;
 static std::string g_execdir;
 static std::map<std::string,std::string> g_env;
 static std::map<std::string,std::string> g_prgmap;
+static bool g_verbose = false;
 
 struct ProgramPath
 {
@@ -331,6 +332,16 @@ struct TestCommand
 		argv[ argc] = 0;
 
 		int ec;
+		if (g_verbose)
+		{
+			std::cerr << "CMD " << prg;
+			int argi = 1;
+			for (; argi < argc; ++argi)
+			{
+				std::cerr << " " << argv[ argi];
+			}
+			std::cerr << std::endl;
+		}
 		if (g_env.empty())
 		{
 			ec = strus::execv_tostring( prg.c_str(), argv, rt);
@@ -377,17 +388,30 @@ static bool diffTestOutput( std::string& output, std::string& expected)
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	if (argc <= 1)
+	int argi = 1;
+	for (; argi < argc && argv[argi][0] == '-'; ++argi)
+	{
+		if (0==std::strcmp( argv[argi], "-V"))
+		{
+			g_verbose = true;
+		}
+		if (0==std::strcmp( argv[argi], "--"))
+		{
+			++argi;
+			break;
+		}
+	}
+	if (argc - argi <= 0)
 	{
 		std::cerr << _TXT("no arguments passed to ") << argv[0] << std::endl;
 		return 0;
 	}
-	if (argc <= 2)
+	if (argc - argi <= 1)
 	{
 		std::cerr << _TXT("missing project directory (2nd argument) of ") << argv[0] << std::endl;
 		return -1;
 	}
-	if (argc <= 3)
+	if (argc - argi <= 2)
 	{
 		std::cerr << _TXT("missing project binary directory (3nd argument) of ") << argv[0] << std::endl;
 		return -1;
@@ -401,10 +425,10 @@ int main( int argc, const char* argv[])
 			snprintf( msgbuf, sizeof(msgbuf), _TXT("error getting extension of file '%s': %s"), argv[0], strerror( ec));
 			throw std::runtime_error( msgbuf);
 		}
-		g_testname = argv[1];
-		g_maindir = argv[2];
+		g_testname = argv[ argi + 0];
+		g_maindir = argv[ argi + 1];
 		g_testdir = g_maindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + g_testname;
-		g_bindir = argv[3];
+		g_bindir = argv[ argi + 2];
 
 		std::string mainexecdir = g_bindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + "exec";
 		g_execdir = mainexecdir + strus::dirSeparator() + g_testname;
@@ -415,7 +439,7 @@ int main( int argc, const char* argv[])
 		std::cerr << _TXT("main execution directory: ") << mainexecdir << std::endl;
 		std::cerr << _TXT("execution directory: ") << g_execdir << std::endl;
 		std::cerr << _TXT("project directory: ") << g_maindir << std::endl;
-		int argi=4;
+		argi += 3;
 		for (; argi < argc; ++argi)
 		{
 			const char* sep = std::strchr( argv[argi], '=');
@@ -448,6 +472,7 @@ int main( int argc, const char* argv[])
 			{
 				try
 				{
+					if (g_verbose) std::cerr << lineno << ": " << line << std::endl;
 					cmds.push_back( TestCommand( lineno, line));
 				}
 				catch (const std::runtime_error& err)

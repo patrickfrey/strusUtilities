@@ -33,7 +33,7 @@ link_directories(
 add_cppcheck( strusPatternMatcher  strusPatternMatcher.cpp )
 
 add_executable( strusPatternMatcher  strusPatternMatcher.cpp )
-target_link_libraries( strusPatternMatcher  strusutilities_private_utils strusutilities_private_utils  ${strusmodule_LIBRARIES} strus_program strus_error strus_markup_std strus_module strus_rpc_client strus_rpc_client_socket strus_base ${Boost_LIBRARIES} ${Intl_LIBRARIES})
+target_link_libraries( strusPatternMatcher strusutilities_private_utils  ${strusmodule_LIBRARIES} strus_program strus_pattern_resultformat strus_error strus_markup_std strus_module strus_rpc_client strus_rpc_client_socket strus_base ${Boost_LIBRARIES} ${Intl_LIBRARIES})
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )
