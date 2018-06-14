@@ -174,6 +174,7 @@ public:
 			const strus::analyzer::DocumentClass documentClass_,
 			const std::map<std::string,int>& markups_,
 			const std::string& resultMarker_,
+			const std::string& resultFormat_,
 			bool printTokens_)
 		:m_ptinst(ptinst_)
 		,m_crinst(crinst_)
@@ -186,10 +187,15 @@ public:
 		,m_resultMarker(resultMarker_)
 		,m_fileprefix(fileprefix_)
 		,m_files(files_)
+		,m_formatmap()
 		,m_printTokens(printTokens_)
 	{
 		m_fileitr = m_files.begin();
-
+		if (!resultFormat_.empty())
+		{
+			m_formatmap.reset( new strus::PatternResultFormatMap( resultFormat_.c_str(), g_errorhnd));
+			if (g_errorhnd->hasError()) throw std::runtime_error( g_errorhnd->fetchError());
+		}
 		m_tokenMarkup.reset( strus::createTokenMarkupInstance_standard( g_errorhnd));
 		if (g_errorhnd->hasError())
 		{
@@ -255,6 +261,10 @@ public:
 	{
 		return m_textproc;
 	}
+	const strus::PatternResultFormatMap* formatmap() const
+	{
+		return m_formatmap.get();
+	}
 
 private:
 	strus::mutex m_mutex;
@@ -271,6 +281,7 @@ private:
 	std::string m_fileprefix;
 	std::vector<std::string> m_files;
 	std::vector<std::string>::const_iterator m_fileitr;
+	strus::Reference<strus::PatternResultFormatMap> m_formatmap;
 	bool m_printTokens;
 };
 
@@ -625,42 +636,54 @@ public:
 	{
 		std::vector<strus::analyzer::PatternMatcherResult>::const_iterator
 			ri = results.begin(), re = results.end();
-		for (; ri != re; ++ri)
+		const strus::PatternResultFormatMap* formatmap = m_globalContext->formatmap();
+		if (formatmap)
 		{
-			std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
-			std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
-			out << ri->name() << " [" << ri->start_ordpos() << ".." << ri->end_ordpos()
-				<< ", " << start_segpos << "|" << ri->start_origpos() << " .. "
-				<< end_segpos << "|" << ri->end_origpos() << "]:";
-			if (ri->value())
+			for (; ri != re; ++ri)
 			{
-				out << " ";
-				printFormatOutput( out, ri->value(), segmentposmap, src);
+				std::string resdump = formatmap->map( *ri);
+				printFormatOutput( out, resdump.c_str(), segmentposmap, src);
 			}
-			else
+		}
+		else
+		{
+			for (; ri != re; ++ri)
 			{
-				std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
-					ei = ri->items().begin(), ee = ri->items().end();
-				for (; ei != ee; ++ei)
+				std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
+				std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
+				out << ri->name() << " [" << ri->start_ordpos() << ".." << ri->end_ordpos()
+					<< ", " << start_segpos << "|" << ri->start_origpos() << " .. "
+					<< end_segpos << "|" << ri->end_origpos() << "]:";
+				if (ri->value())
 				{
-					start_segpos = segmentposmap[ ei->start_origseg()].segpos;
-					end_segpos = segmentposmap[ ei->end_origseg()].segpos;
-					out << " " << ei->name() << " [" << ei->start_ordpos() << ".." << ei->end_ordpos()
-							<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
-					if (ei->value())
+					out << " ";
+					printFormatOutput( out, ri->value(), segmentposmap, src);
+				}
+				else
+				{
+					std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
+						ei = ri->items().begin(), ee = ri->items().end();
+					for (; ei != ee; ++ei)
 					{
-						out << " ";
-						printFormatOutput( out, ei->value(), segmentposmap, src);
-					}
-					else
-					{
-						std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
-						std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
-						out << " '" << encodeOutput( src.c_str() + start_srcpos, end_srcpos - start_srcpos, 0/*no maxsize*/) << "'";
+						start_segpos = segmentposmap[ ei->start_origseg()].segpos;
+						end_segpos = segmentposmap[ ei->end_origseg()].segpos;
+						out << " " << ei->name() << " [" << ei->start_ordpos() << ".." << ei->end_ordpos()
+								<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
+						if (ei->value())
+						{
+							out << " ";
+							printFormatOutput( out, ei->value(), segmentposmap, src);
+						}
+						else
+						{
+							std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
+							std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
+							out << " '" << encodeOutput( src.c_str() + start_srcpos, end_srcpos - start_srcpos, 0/*no maxsize*/) << "'";
+						}
 					}
 				}
+				out << std::endl;
 			}
-			out << std::endl;
 		}
 	}
 
@@ -814,12 +837,12 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 24,
+				errorBuffer.get(), argc, argv, 25,
 				"h,help", "v,version", "license",
 				"G,debug:", "g,segmenter:", "x,ext:", "C,contenttype:", "F,filelist",
 				"e,expression:", "K,tokens", "p,program:",
 				"Z,marker:", "H,markup:",
-				"X,lexer:", "Y,matcher:",
+				"X,lexer:", "Y,matcher:", "P,format:",
 				"t,threads:", "f,fetch:", "o,output:", "O,outerr:",
 				"M,moduledir:", "m,module:", "r,rpc:", "R,resourcedir:", "T,trace:");
 		if (errorBuffer->hasError())
@@ -962,6 +985,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-Y|--matcher <PT>" << std::endl;
 			std::cout << "    " << _TXT("Use pattern lexer named <PT>") << std::endl;
 			std::cout << "    " << _TXT("Default is 'std'") << std::endl;
+			std::cout << "-P|--format <PT>" << std::endl;
+			std::cout << "    " << _TXT("Use format string <FT> for result output") << std::endl;
 			std::cout << "-p|--program <PRG>" << std::endl;
 			std::cout << "    " << _TXT("Load program <PRG> with patterns to process") << std::endl;
 			std::cout << "-o|--output <FILE>" << std::endl;
@@ -989,6 +1014,7 @@ int main( int argc, const char* argv[])
 		bool printTokens = false;
 		std::map<std::string,int> markups;
 		std::string resultmarker;
+		std::string resultFormat;
 		unsigned int nofFilesFetch = 1;
 		std::string outputfile;
 		std::string outerrfile;
@@ -1033,6 +1059,10 @@ int main( int argc, const char* argv[])
 		if (opt( "lexer"))
 		{
 			lexer = opt[ "lexer"];
+		}
+		if (opt("format"))
+		{
+			resultFormat = opt[ "format"];
 		}
 		if (opt( "markup"))
 		{
@@ -1210,7 +1240,7 @@ int main( int argc, const char* argv[])
 		GlobalContext globalContext(
 				ptinst.get(), lxinst.get(), textproc, segmentername,
 				expressions, fileprefix, inputfiles, nofFilesFetch, documentClass,
-				markups, resultmarker, printTokens);
+				markups, resultmarker, resultFormat, printTokens);
 
 		std::cerr << "start matching ..." << std::endl;
 		if (nofThreads)
