@@ -1,8 +1,8 @@
 WORD ^1		:/\b\w+\b/;
 SENT ^2		:/[.]/;
 PG ^3		: /\b[SPp][\.]/;
-CURRENCY_CHF ^3	: /\b(Sfr[\.])|(Fr)[\.]\b/;
-CURRENCY_EUR ^1	: /\b(Euro)\b/;
+CURRENCY_CHF ^3	: /\b(([Ss]fr[\.])|([Ff]r[\.]))/;
+CURRENCY_EUR ^1	: /\b((E|e)uro)\b/;
 ART ^3		: /\b[Aa]rt[\.]/;
 BGE ^3		: /\b(BGE)|(ATF)\b/;
 ABS ^3		: /\b[Aa]bs[\.]/;
