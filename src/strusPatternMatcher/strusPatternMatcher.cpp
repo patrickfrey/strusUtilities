@@ -61,6 +61,8 @@
 #include <memory>
 
 #define STRUS_DBGTRACE_COMPONENT_NAME "pattern"
+#define STRUS_PATTERN_DEFAULT_RESULT_FORMAT  "{name} [{ordpos}..{ordend}, {startseg}\\|{startpos} .. {endseg}\\|{endpos}]:{value}| {name} [{ordpos}..{ordend}, {startseg}\\|{startpos} .. {endseg}\\|{endpos}] '{value}'|"
+
 static strus::ErrorBufferInterface* g_errorhnd = 0;
 
 static std::string trimString( const char* li, const char* le)
@@ -977,12 +979,13 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Define a character sequence inserted before every result declaration") << std::endl;
 			std::cout << "-X|--lexer <LX>" << std::endl;
 			std::cout << "    " << _TXT("Use pattern lexer named <LX>") << std::endl;
-			std::cout << "    " << _TXT("Default is 'std'") << std::endl;
+			std::cout << "    " << _TXT("The default is 'std'") << std::endl;
 			std::cout << "-Y|--matcher <PT>" << std::endl;
 			std::cout << "    " << _TXT("Use pattern lexer named <PT>") << std::endl;
-			std::cout << "    " << _TXT("Default is 'std'") << std::endl;
+			std::cout << "    " << _TXT("The default is 'std'") << std::endl;
 			std::cout << "-P|--format <PT>" << std::endl;
 			std::cout << "    " << _TXT("Use format string <FT> for result output") << std::endl;
+			std::cout << "    " << _TXT("The default result format is \"") << STRUS_PATTERN_DEFAULT_RESULT_FORMAT << "\"" << std::endl;
 			std::cout << "-p|--program <PRG>" << std::endl;
 			std::cout << "    " << _TXT("Load program <PRG> with patterns to process") << std::endl;
 			std::cout << "-o|--output <FILE>" << std::endl;
@@ -1010,7 +1013,7 @@ int main( int argc, const char* argv[])
 		bool printTokens = false;
 		std::map<std::string,int> markups;
 		std::string resultmarker;
-		std::string resultFormat;
+		std::string resultFormat = STRUS_PATTERN_DEFAULT_RESULT_FORMAT;
 		unsigned int nofFilesFetch = 1;
 		std::string outputfile;
 		std::string outerrfile;
