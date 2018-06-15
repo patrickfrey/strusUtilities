@@ -1,1 +1,2 @@
 StrusPatternMatcher  -m modstrus_analyzer_pattern -p $T/program.rul $T/input.xml 
+StrusPatternMatcher -P "{ordpos} {startseg}:{startpos} {endseg}:{endpos} {abspos}:{abslen} {name} {value}|{name}={value}|, " -m modstrus_analyzer_pattern -p $T/program.rul $T/input.xml 

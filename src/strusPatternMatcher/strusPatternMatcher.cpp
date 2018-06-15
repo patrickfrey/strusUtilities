@@ -461,16 +461,7 @@ public:
 		}
 	}
 
-	struct PositionInfo
-	{
-		strus::SegmenterPosition segpos;
-		std::size_t srcpos;
-
-		PositionInfo( strus::SegmenterPosition segpos_, std::size_t srcpos_)
-			:segpos(segpos_),srcpos(srcpos_){}
-		PositionInfo( const PositionInfo& o)
-			:segpos(o.segpos),srcpos(o.srcpos){}
-	};
+	typedef std::map<strus::SegmenterPosition,std::size_t> SegmenterPositionMap;
 
 	static std::string encodeOutput( const char* ptr, std::size_t size, std::size_t maxsize)
 	{
@@ -548,19 +539,18 @@ public:
 		strus::SegmenterPosition segmentpos;
 		const char* segment;
 		std::size_t segmentsize;
-		std::vector<PositionInfo> segmentposmap;
+		SegmenterPositionMap segmentposmap;
 		std::string source;
-		std::size_t segmentidx;
 		unsigned int ordposOffset = 0;
 		strus::SegmenterPosition prev_segmentpos = (strus::SegmenterPosition)std::numeric_limits<std::size_t>::max();
 
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
-			segmentidx = segmentposmap.size();
 			if (prev_segmentpos != segmentpos)
 			{
-				segmentposmap.push_back( PositionInfo( segmentpos, source.size()));
+				segmentposmap[ segmentpos] = source.size();
 				source.append( segment, segmentsize);
+				source.push_back('\0');
 				if (DBG)
 				{
 					std::string dbgseg  = encodeOutput(segment,segmentsize,200);
@@ -574,7 +564,7 @@ public:
 				std::vector<strus::analyzer::PatternLexem>::iterator ti = crmatches.begin(), te = crmatches.end();
 				for (; ti != te; ++ti)
 				{
-					ti->setOrigseg( segmentidx);
+					ti->setOrigseg( segmentpos);
 					ti->setOrdpos( ti->ordpos() + ordposOffset);
 					if (m_globalContext->printTokens())
 					{
@@ -610,9 +600,10 @@ public:
 		{
 			markupResults( *m_output, results, documentClass, content, segmenterInstance);
 		}
+		*m_output << std::endl;
 	}
 
-	void printFormatOutput( std::ostream& out, const char* value, const std::vector<PositionInfo>& segmentposmap, const std::string& src)
+	void printFormatOutput( std::ostream& out, const char* value, const SegmenterPositionMap& segmentposmap, const std::string& src)
 	{
 		strus::PatternResultFormatChunk chunk;
 		char const* vi = value;
@@ -624,15 +615,19 @@ public:
 			}
 			else
 			{
-				std::size_t start_srcpos = segmentposmap[ chunk.start_seg].srcpos + chunk.start_pos;
-				std::size_t end_srcpos = segmentposmap[ chunk.end_seg].srcpos + chunk.end_pos;
+				SegmenterPositionMap::const_iterator starti = segmentposmap.find( chunk.start_seg);
+				SegmenterPositionMap::const_iterator endi = segmentposmap.find( chunk.end_seg);
+				if (starti == segmentposmap.end() || endi == segmentposmap.end()) throw std::runtime_error(_TXT("corrupt result segment position"));
+
+				std::size_t start_srcpos = starti->second + chunk.start_pos;
+				std::size_t end_srcpos = endi->second + chunk.end_pos;
 				std::size_t len = end_srcpos - start_srcpos;
 				out << std::string( src.c_str()+start_srcpos, len);
 			}
 		}
 	}
 
-	void printResults( std::ostream& out, const std::vector<PositionInfo>& segmentposmap, const std::vector<strus::analyzer::PatternMatcherResult>& results, const std::string& src)
+	void printResults( std::ostream& out, const SegmenterPositionMap& segmentposmap, std::vector<strus::analyzer::PatternMatcherResult>& results, const std::string& src)
 	{
 		std::vector<strus::analyzer::PatternMatcherResult>::const_iterator
 			ri = results.begin(), re = results.end();
@@ -643,17 +638,16 @@ public:
 			{
 				std::string resdump = formatmap->map( *ri);
 				printFormatOutput( out, resdump.c_str(), segmentposmap, src);
+				out << "\n";
 			}
 		}
 		else
 		{
 			for (; ri != re; ++ri)
 			{
-				std::size_t start_segpos = segmentposmap[ ri->start_origseg()].segpos;
-				std::size_t end_segpos = segmentposmap[ ri->end_origseg()].segpos;
 				out << ri->name() << " [" << ri->start_ordpos() << ".." << ri->end_ordpos()
-					<< ", " << start_segpos << "|" << ri->start_origpos() << " .. "
-					<< end_segpos << "|" << ri->end_origpos() << "]:";
+					<< ", " << ri->start_origseg() << "|" << ri->start_origpos() << " .. "
+					<< ri->end_origseg() << "|" << ri->end_origpos() << "]:";
 				if (ri->value())
 				{
 					out << " ";
@@ -665,10 +659,9 @@ public:
 						ei = ri->items().begin(), ee = ri->items().end();
 					for (; ei != ee; ++ei)
 					{
-						start_segpos = segmentposmap[ ei->start_origseg()].segpos;
-						end_segpos = segmentposmap[ ei->end_origseg()].segpos;
 						out << " " << ei->name() << " [" << ei->start_ordpos() << ".." << ei->end_ordpos()
-								<< ", " << start_segpos << "|" << ei->start_origpos() << " .. " << end_segpos << "|" << ei->end_origpos() << "]";
+								<< ", " << ei->start_origseg() << "|" << ei->start_origpos()
+								<< " .. " << ei->end_origseg() << "|" << ei->end_origpos() << "]";
 						if (ei->value())
 						{
 							out << " ";
@@ -676,13 +669,16 @@ public:
 						}
 						else
 						{
-							std::size_t start_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->start_origpos();
-							std::size_t end_srcpos = segmentposmap[ ei->start_origseg()].srcpos + ei->end_origpos();
-							out << " '" << encodeOutput( src.c_str() + start_srcpos, end_srcpos - start_srcpos, 0/*no maxsize*/) << "'";
+							SegmenterPositionMap::const_iterator starti = segmentposmap.find( ri->start_origseg());
+							SegmenterPositionMap::const_iterator endi = segmentposmap.find( ri->end_origseg());
+							if (starti == segmentposmap.end() || endi == segmentposmap.end()) throw std::runtime_error(_TXT("corrupt result segment position"));
+							std::size_t startsrcpos = starti->second + ei->start_origpos();
+							std::size_t endsrcpos = endi->second + ei->end_origpos();
+							out << " '" << encodeOutput( src.c_str() + startsrcpos, endsrcpos-startsrcpos, 0/*no maxsize*/) << "'";
 						}
 					}
 				}
-				out << std::endl;
+				out << "\n";
 			}
 		}
 	}
@@ -724,7 +720,7 @@ public:
 			}
 		}
 		std::string content = markupContext->markupDocument( segmenterInstance, documentClass, src);
-		out << content << std::endl;
+		out << content << "\n";
 	}
 
 	void run()
