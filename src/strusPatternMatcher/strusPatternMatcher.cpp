@@ -492,10 +492,10 @@ public:
 	std::string lexemOutputString( const strus::SegmenterPosition& segmentpos, const char* segment, const strus::analyzer::PatternLexem& lx) const
 	{
 		const char* lexemname = m_globalContext->PatternLexerInstance()->getLexemName( lx.id());
-		std::string content = encodeOutput( segment+lx.origpos(), lx.origsize(), 0/*no maxsize*/);
+		std::string content = encodeOutput( segment+lx.origpos().ofs(), lx.origsize(), 0/*no maxsize*/);
 		return strus::string_format(
 				"%d [%d] : %u %s %s",
-				(int)lx.ordpos(), (unsigned int)(segmentpos+lx.origpos()), lx.id(), lexemname?lexemname:"?", content.c_str());
+				(int)lx.ordpos(), (unsigned int)(segmentpos+lx.origpos().ofs()), lx.id(), lexemname?lexemname:"?", content.c_str());
 	}
 
 	void processDocument( const std::string& filename)
@@ -566,7 +566,7 @@ public:
 				std::vector<strus::analyzer::PatternLexem>::iterator ti = crmatches.begin(), te = crmatches.end();
 				for (; ti != te; ++ti)
 				{
-					ti->setOrigseg( segmentpos);
+					ti->setOrigPosition( strus::analyzer::Position( segmentpos, ti->origpos().ofs()));
 					ti->setOrdpos( ti->ordpos() + ordposOffset);
 					if (m_globalContext->printTokens())
 					{
@@ -665,9 +665,7 @@ public:
 				if (mi != m_globalContext->markups().end())
 				{
 					markupContext->putMarkup(
-						ri->start_origseg(), ri->start_origpos(),
-						ri->end_origseg(), ri->end_origpos(),
-						strus::analyzer::TokenMarkup( ri->name()), mi->second);
+						ri->origpos(), ri->origend(), strus::analyzer::TokenMarkup( ri->name()), mi->second);
 				}
 			}
 			std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
@@ -679,9 +677,7 @@ public:
 				if (mi != m_globalContext->markups().end())
 				{
 					markupContext->putMarkup(
-						ei->start_origseg(), ei->start_origpos(),
-						ei->end_origseg(), ei->end_origpos(),
-						strus::analyzer::TokenMarkup( ri->name()), mi->second);
+						ei->origpos(), ei->origend(), strus::analyzer::TokenMarkup( ri->name()), mi->second);
 				}
 			}
 		}
