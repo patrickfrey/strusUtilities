@@ -624,7 +624,7 @@ public:
 				std::size_t start_srcpos = starti->second + chunk.start_pos;
 				std::size_t end_srcpos = endi->second + chunk.end_pos;
 				std::size_t len = end_srcpos - start_srcpos;
-				out << std::string( src.c_str()+start_srcpos, len);
+				out << encodeOutput( src.c_str()+start_srcpos, len, 0/*maxsize*/);
 			}
 		}
 	}
@@ -645,43 +645,7 @@ public:
 		}
 		else
 		{
-			for (; ri != re; ++ri)
-			{
-				out << ri->name() << " [" << ri->start_ordpos() << ".." << ri->end_ordpos()
-					<< ", " << ri->start_origseg() << "|" << ri->start_origpos() << " .. "
-					<< ri->end_origseg() << "|" << ri->end_origpos() << "]:";
-				if (ri->value())
-				{
-					out << " ";
-					printFormatOutput( out, ri->value(), segmentposmap, src);
-				}
-				else
-				{
-					std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
-						ei = ri->items().begin(), ee = ri->items().end();
-					for (; ei != ee; ++ei)
-					{
-						out << " " << ei->name() << " [" << ei->start_ordpos() << ".." << ei->end_ordpos()
-								<< ", " << ei->start_origseg() << "|" << ei->start_origpos()
-								<< " .. " << ei->end_origseg() << "|" << ei->end_origpos() << "]";
-						if (ei->value())
-						{
-							out << " ";
-							printFormatOutput( out, ei->value(), segmentposmap, src);
-						}
-						else
-						{
-							SegmenterPositionMap::const_iterator starti = segmentposmap.find( ri->start_origseg());
-							SegmenterPositionMap::const_iterator endi = segmentposmap.find( ri->end_origseg());
-							if (starti == segmentposmap.end() || endi == segmentposmap.end()) throw std::runtime_error(_TXT("corrupt result segment position"));
-							std::size_t startsrcpos = starti->second + ei->start_origpos();
-							std::size_t endsrcpos = endi->second + ei->end_origpos();
-							out << " '" << encodeOutput( src.c_str() + startsrcpos, endsrcpos-startsrcpos, 0/*no maxsize*/) << "'";
-						}
-					}
-				}
-				out << "\n";
-			}
+			throw std::runtime_error(_TXT("format string for result is empty"));
 		}
 	}
 
