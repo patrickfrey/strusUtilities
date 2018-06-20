@@ -38,3 +38,4 @@ ArtReference	= sequence_imm( ART,idx=ARBIDX,law=Law_Reference) ["ART {law} {idx}
 MoneyAmount	= sequence_imm( value=AMOUNT, currency=CURRENCY_CHF) ["SFR {value}"];
 MoneyAmount	= sequence_imm( value=AMOUNT, currency=CURRENCY_EUR) ["EUR {value}"];
 
+

@@ -603,13 +603,17 @@ public:
 			markupResults( *m_output, results, documentClass, content, segmenterInstance);
 		}
 		*m_output << std::endl;
+		if (g_errorhnd->hasError())
+		{
+			throw std::runtime_error("error printing results");
+		}
 	}
 
 	void printFormatOutput( std::ostream& out, const char* value, const SegmenterPositionMap& segmentposmap, const std::string& src)
 	{
 		strus::PatternResultFormatChunk chunk;
 		char const* vi = value;
-		while (strus::PatternResultFormatChunk::parseNext( chunk, vi))
+		while (strus::PatternResultFormatChunk::parseNext( chunk, vi, g_errorhnd))
 		{
 			if (chunk.value)
 			{

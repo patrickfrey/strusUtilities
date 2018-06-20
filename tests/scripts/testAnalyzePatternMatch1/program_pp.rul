@@ -1,0 +1,33 @@
+%MATCHER strict
+%FEEDER lexem WORD, lexem ARBIDX, lexem ROMIDX, lexem ARBIDX, lexem AMOUNT
+
+.Law_Reference	= any( WORD "AHVG", WORD "LAVS") ["AHVG"];
+.Law_Reference	= any( WORD "BGG", WORD "LTF") ["BGG"];
+.Law_Reference	= any( WORD "BV", WORD "Cst", WORD "Cost") ["BV"];
+.Law_Reference	= any( WORD "BVG", WORD "LPP") ["BVG"];
+.Law_Reference	= any( WORD "EMRK", WORD "CEDH", WORD "CEDU") ["EMRK"];
+.Law_Reference	= any( WORD "IVG", WORD "LAI") ["IVG"];
+.Law_Reference	= any( WORD "KVG", WORD "LAMal", WORD "LAMal") ["KVG"];
+.Law_Reference	= any( WORD "OR", WORD "CO") ["OR"];
+.Law_Reference	= any( WORD "SchKG", WORD "LP", WORD "LEF") ["SchKG"];
+.Law_Reference	= any( WORD "StGB", WORD "CP") ["StGB"];
+.Law_Reference	= any( WORD "StPO", WORD "CPP") ["StPO"];
+.Law_Reference	= any( WORD "SVG", WORD "LCR", WORD "LCStr") ["SVG"];
+.Law_Reference	= any( WORD "UVG", WORD "LAA", WORD "LAINF") ["UVG"];
+.Law_Reference	= any( WORD "ZGB", WORD "CC") ["ZGB"];
+.Law_Reference	= any( WORD "ZPO", WORD "CPC") ["ZPO"];
+.BGE		= any( WORD "BGE", WORD "ATF") ["BGE"];
+.ART		= any( WORD "ART");
+.ABS		= any( WORD "ABS", WORD "AL");
+.PG		= any( WORD "P", WORD "S");
+.CURRENCY_CHF	= any( WORD "SFR", WORD "FR");
+.CURRENCY_EUR	= any( WORD "EUR");
+
+BGE_Decision	= sequence_imm( tit=BGE, main=ARBIDX, book=ROMIDX, page=ARBIDX) ["{tit} {main} {book} {page} {page}"];
+BGE_DecisionPg	= sequence_imm( tit=BGE, main=ARBIDX, book=ROMIDX, page=ARBIDX, PG, fpage=ARBIDX) ["{tit} {main} {book} {page} {fpage}"];
+ArtReference	= sequence_imm( ART,idx=ARBIDX,ABS,subidx=ARBIDX,law=Law_Reference) ["ART {law} {idx} {subidx}"];
+ArtReference	= sequence_imm( ART,idx=ARBIDX,law=Law_Reference) ["ART {law} {idx}"];
+MoneyAmount	= sequence_imm( value=any( AMOUNT, ARBIDX), currency=CURRENCY_CHF) ["SFR {value}"];
+MoneyAmount	= sequence_imm( value=any( AMOUNT, ARBIDX), currency=CURRENCY_EUR) ["EUR {value}"];
+
+
