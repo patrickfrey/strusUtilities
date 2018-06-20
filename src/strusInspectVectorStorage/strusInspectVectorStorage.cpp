@@ -81,10 +81,10 @@ static strus::Index getFeatureIndex( const strus::VectorStorageClientInterface* 
 	return idx;
 }
 
-static void printResultVector( const std::vector<double>& vec)
+static void printResultVector( const std::vector<float>& vec)
 {
 	std::ostringstream out;
-	std::vector<double>::const_iterator vi = vec.begin(), ve = vec.end();
+	std::vector<float>::const_iterator vi = vec.begin(), ve = vec.end();
 	for (unsigned int vidx=0; vi != ve; ++vi,++vidx)
 	{
 		if (vidx) out << " ";
@@ -165,9 +165,9 @@ static void printResultFeaturesWithWeights( const strus::VectorStorageClientInte
 	}
 }
 
-static std::vector<double> parseNextVectorOperand( const strus::VectorStorageClientInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
+static std::vector<float> parseNextVectorOperand( const strus::VectorStorageClientInterface* vsmodel, std::size_t& argidx, const char** inspectarg, std::size_t inspectargsize)
 {
-	std::vector<double> rt;
+	std::vector<float> rt;
 	if (argidx >= inspectargsize)
 	{
 		throw std::runtime_error( _TXT("unexpected end of arguments"));
@@ -197,7 +197,7 @@ static std::vector<double> parseNextVectorOperand( const strus::VectorStorageCli
 	rt = vsmodel->featureVector( featidx);
 	if (sign == '-')
 	{
-		std::vector<double>::iterator vi = rt.begin(), ve = rt.end();
+		std::vector<float>::iterator vi = rt.begin(), ve = rt.end();
 		for (; vi != ve; ++vi)
 		{
 			*vi = -*vi;
@@ -236,11 +236,11 @@ static VectorOperator parseNextVectorOperator( const strus::VectorStorageClientI
 	return VectorPlus;
 }
 
-static std::vector<double> addVector( const std::vector<double>& arg1, const std::vector<double>& arg2)
+static std::vector<float> addVector( const std::vector<float>& arg1, const std::vector<float>& arg2)
 {
-	std::vector<double> rt;
-	std::vector<double>::const_iterator i1 = arg1.begin(), e1 = arg1.end();
-	std::vector<double>::const_iterator i2 = arg2.begin(), e2 = arg2.end();
+	std::vector<float> rt;
+	std::vector<float>::const_iterator i1 = arg1.begin(), e1 = arg1.end();
+	std::vector<float>::const_iterator i2 = arg2.begin(), e2 = arg2.end();
 	for (; i1 != e1 && i2 != e2; ++i1,++i2)
 	{
 		rt.push_back( *i1 + *i2);
@@ -248,11 +248,11 @@ static std::vector<double> addVector( const std::vector<double>& arg1, const std
 	return rt;
 }
 
-static std::vector<double> subVector( const std::vector<double>& arg1, const std::vector<double>& arg2)
+static std::vector<float> subVector( const std::vector<float>& arg1, const std::vector<float>& arg2)
 {
-	std::vector<double> rt;
-	std::vector<double>::const_iterator i1 = arg1.begin(), e1 = arg1.end();
-	std::vector<double>::const_iterator i2 = arg2.begin(), e2 = arg2.end();
+	std::vector<float> rt;
+	std::vector<float>::const_iterator i1 = arg1.begin(), e1 = arg1.end();
+	std::vector<float>::const_iterator i2 = arg2.begin(), e2 = arg2.end();
 	for (; i1 != e1 && i2 != e2; ++i1,++i2)
 	{
 		rt.push_back( *i1 - *i2);
@@ -284,14 +284,14 @@ public:
 		}
 	}
 
-	virtual std::vector<strus::VectorQueryResult> findSimilar( const std::vector<double>& vec, unsigned int maxNofResults) const
+	virtual std::vector<strus::VectorQueryResult> findSimilar( const std::vector<float>& vec, unsigned int maxNofResults) const
 	{
 		try
 		{
 			std::set<strus::VectorQueryResult> reslist;
 			for (strus::Index fidx=range_from; fidx<range_to; ++fidx)
 			{
-				std::vector<double> candidate_vec = vsmodel->featureVector( fidx);
+				std::vector<float> candidate_vec = vsmodel->featureVector( fidx);
 				if (candidate_vec.empty())
 				{
 					throw strus::runtime_error(_TXT("vector for feature %u not found"), (unsigned int)fidx);
@@ -307,7 +307,7 @@ public:
 		CATCH_ERROR_MAP_RETURN( _TXT("error in find similar: %s"), *g_errorBuffer, std::vector<strus::VectorQueryResult>());
 	}
 
-	virtual std::vector<strus::VectorQueryResult> findSimilarFromSelection( const std::vector<strus::Index>& candidates, const std::vector<double>& vec, unsigned int maxNofResults) const
+	virtual std::vector<strus::VectorQueryResult> findSimilarFromSelection( const std::vector<strus::Index>& candidates, const std::vector<float>& vec, unsigned int maxNofResults) const
 	{
 		try
 		{
@@ -317,7 +317,7 @@ public:
 			{
 				if (*ci >= range_from && *ci < range_to)
 				{
-					std::vector<double> candidate_vec = vsmodel->featureVector( *ci);
+					std::vector<float> candidate_vec = vsmodel->featureVector( *ci);
 					double sim = vsmodel->vectorSimilarity( vec, candidate_vec);
 					insertResultSet( reslist, maxNofResults, sim, *ci);
 				}
@@ -344,7 +344,7 @@ public:
 	FindSimProcess( const FindSimProcess& o)
 		:m_searcher(o.m_searcher),m_feats(o.m_feats){}
 
-	void run( const std::vector<double>& vec, unsigned int maxNofRanks)
+	void run( const std::vector<float>& vec, unsigned int maxNofRanks)
 	{
 		m_feats = m_searcher->findSimilar( vec, maxNofRanks);
 	}
@@ -363,11 +363,11 @@ static void inspectVectorOperations( const strus::VectorStorageClientInterface* 
 {
 	if (inspectargsize == 0) throw std::runtime_error( _TXT("too few arguments (at least one argument expected)"));
 	std::size_t argidx=0;
-	std::vector<double> res = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
+	std::vector<float> res = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
 	while (argidx < inspectargsize)
 	{
 		VectorOperator opr = parseNextVectorOperator( vsmodel, argidx, inspectarg, inspectargsize);
-		std::vector<double> arg = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
+		std::vector<float> arg = parseNextVectorOperand( vsmodel, argidx, inspectarg, inspectargsize);
 		switch (opr)
 		{
 			case VectorPlus:
@@ -514,7 +514,7 @@ static void inspectFeatureVector( const strus::VectorStorageClientInterface* vsm
 		strus::Index idx = getFeatureIndex( vsmodel, inspectarg[0]);
 		std::ostringstream out;
 		out << std::setprecision(6) << std::fixed;
-		std::vector<double> vec = vsmodel->featureVector( idx);
+		std::vector<float> vec = vsmodel->featureVector( idx);
 		printResultVector( vec);
 	}
 	else
@@ -522,7 +522,7 @@ static void inspectFeatureVector( const strus::VectorStorageClientInterface* vsm
 		strus::Index fi = 0, fe = vsmodel->nofFeatures();
 		for (; fi != fe; ++fi)
 		{
-			std::vector<double> vec = vsmodel->featureVector( fi);
+			std::vector<float> vec = vsmodel->featureVector( fi);
 			if (!vec.empty())
 			{
 				std::cout << fi << " ";
@@ -700,8 +700,8 @@ static void inspectFeatureSimilarity( const strus::VectorStorageClientInterface*
 	if (inspectargsize > 2) throw strus::runtime_error(_TXT("too many arguments (%u arguments expected)"), 2U);
 	strus::Index f1 = getFeatureIndex( vsmodel, inspectarg[0]);
 	strus::Index f2 = getFeatureIndex( vsmodel, inspectarg[1]);
-	std::vector<double> v1 = vsmodel->featureVector( f1);
-	std::vector<double> v2 = vsmodel->featureVector( f2);
+	std::vector<float> v1 = vsmodel->featureVector( f1);
+	std::vector<float> v2 = vsmodel->featureVector( f2);
 	std::ostringstream res;
 	res << std::setprecision(6) << std::fixed << vsmodel->vectorSimilarity( v1, v2) << std::endl;
 	std::cout << res.str();
