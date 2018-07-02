@@ -1,2 +1,6 @@
+# Output matches in standard way:
 StrusPatternMatcher  -m modstrus_analyzer_pattern -p $T/program.rul $T/input.xml 
+# Output matches with format strings:
 StrusPatternMatcher -P "{ordpos} {startseg}:{startpos} {endseg}:{endpos} {abspos}:{abslen} {name} {value}|{name}={value}|, " -m modstrus_analyzer_pattern -p $T/program.rul $T/input.xml 
+# Highlight matches:
+StrusPatternMatcher -H BGE_Decision -H BGE_DecisionPg -H ArtReference -H MoneyAmount -m modstrus_analyzer_pattern -p $T/program.rul $T/input.xml

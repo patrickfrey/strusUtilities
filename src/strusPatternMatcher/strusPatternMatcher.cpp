@@ -177,6 +177,7 @@ public:
 			const std::map<std::string,int>& markups_,
 			const std::string& resultMarker_,
 			const std::string& resultFormat_,
+			const std::pair<std::string,std::string>& resultMarkupTag_,
 			bool printTokens_)
 		:m_ptinst(ptinst_)
 		,m_crinst(crinst_)
@@ -187,6 +188,7 @@ public:
 		,m_documentClass(documentClass_)
 		,m_markups(markups_)
 		,m_resultMarker(resultMarker_)
+		,m_resultMarkupTag(resultMarkupTag_)
 		,m_fileprefix(fileprefix_)
 		,m_files(files_)
 		,m_formatmap()
@@ -259,6 +261,10 @@ public:
 	{
 		return m_resultMarker;
 	}
+	const std::pair<std::string,std::string>& resultMarkupTag() const
+	{
+		return m_resultMarkupTag;
+	}
 	const strus::TextProcessorInterface* textproc() const
 	{
 		return m_textproc;
@@ -280,6 +286,7 @@ private:
 	strus::local_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
 	std::map<std::string,int> m_markups;
 	std::string m_resultMarker;
+	std::pair<std::string,std::string> m_resultMarkupTag;
 	std::string m_fileprefix;
 	std::vector<std::string> m_files;
 	std::vector<std::string>::const_iterator m_fileitr;
@@ -600,7 +607,7 @@ public:
 		}
 		else
 		{
-			markupResults( *m_output, results, documentClass, content, segmenterInstance);
+			markupResults( *m_output, segmentposmap, results, documentClass, source, content, segmenterInstance);
 		}
 		*m_output << std::endl;
 		if (g_errorhnd->hasError())
@@ -609,7 +616,7 @@ public:
 		}
 	}
 
-	void printFormatOutput( std::ostream& out, const char* value, const SegmenterPositionMap& segmentposmap, const std::string& src)
+	void printFormatOutput( std::ostream& out, const char* value, const SegmenterPositionMap& segmentposmap, const std::string& src) const
 	{
 		strus::PatternResultFormatChunk chunk;
 		char const* vi = value;
@@ -653,9 +660,28 @@ public:
 		}
 	}
 
+	strus::analyzer::TokenMarkup getTokenMarkup( const char* name, const char* value, const SegmenterPositionMap& segmentposmap, const std::string& src) const
+	{
+		std::vector<strus::analyzer::TokenMarkup::Attribute> attr;
+		if (!m_globalContext->resultMarkupTag().first.empty())
+		{
+			name = m_globalContext->resultMarkupTag().first.c_str();
+		}
+		if (!m_globalContext->resultMarkupTag().second.empty() && value)
+		{
+			std::ostringstream out;
+			printFormatOutput( out, value, segmentposmap, src);
+			attr.push_back( strus::analyzer::TokenMarkup::Attribute( m_globalContext->resultMarkupTag().second, out.str()));
+		}
+		return strus::analyzer::TokenMarkup( name, attr);
+	}
+
 	void markupResults( std::ostream& out,
+				const SegmenterPositionMap& segmentposmap, 
 				const std::vector<strus::analyzer::PatternMatcherResult>& results,
-				const strus::analyzer::DocumentClass& documentClass, const std::string& src,
+				const strus::analyzer::DocumentClass& documentClass,
+				const std::string& src,
+				const std::string& origsrc,
 				const strus::SegmenterInstanceInterface* segmenterInstance)
 	{
 		strus::local_ptr<strus::TokenMarkupContextInterface> markupContext( m_globalContext->createTokenMarkupContext());
@@ -669,7 +695,7 @@ public:
 				if (mi != m_globalContext->markups().end())
 				{
 					markupContext->putMarkup(
-						ri->origpos(), ri->origend(), strus::analyzer::TokenMarkup( ri->name()), mi->second);
+						ri->origpos(), ri->origend(), getTokenMarkup( ri->name(), ri->value(), segmentposmap, src), mi->second);
 				}
 			}
 			std::vector<strus::analyzer::PatternMatcherResultItem>::const_iterator
@@ -681,11 +707,11 @@ public:
 				if (mi != m_globalContext->markups().end())
 				{
 					markupContext->putMarkup(
-						ei->origpos(), ei->origend(), strus::analyzer::TokenMarkup( ri->name()), mi->second);
+						ei->origpos(), ei->origend(), getTokenMarkup( ri->name(), ri->value(), segmentposmap, src), mi->second);
 				}
 			}
 		}
-		std::string content = markupContext->markupDocument( segmenterInstance, documentClass, src);
+		std::string content = markupContext->markupDocument( segmenterInstance, documentClass, origsrc);
 		out << content << "\n";
 	}
 
@@ -759,7 +785,7 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 	std::string programFileName = filearg;
 	std::string programDir;
 	int ec;
-	if (!strus::isRelativePath( programFileName))
+	if (!programFileName.empty() && !strus::isRelativePath( programFileName))
 	{
 		std::string filedir;
 		std::string filenam;
@@ -776,6 +802,32 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 		moduleLoader->addResourcePath( "./");
 	}
 	return programFileName;
+}
+
+static std::pair<std::string,std::string> parseResultMarkupTag( const std::string& source)
+{
+	char const* si = std::strchr( source.c_str(), ':');
+	if (si)
+	{
+		return std::pair<std::string,std::string>( std::string( source.c_str(), si - source.c_str()), si+1);
+	}
+	else
+	{
+		return std::pair<std::string,std::string>( source, "");
+	}
+}
+
+std::vector<std::string> split( const std::string& val, char splitchr)
+{
+	std::vector<std::string> rt;
+	char const* si = val.c_str();
+	char const* sn = std::strchr( si, splitchr);
+	for (; sn; sn = si=sn+1,sn=std::strchr( si, splitchr))
+	{
+		rt.push_back( strus::string_conv::trim( std::string( si, sn-si)));
+	}
+	rt.push_back( strus::string_conv::trim( si));
+	return rt;
 }
 
 int main( int argc, const char* argv[])
@@ -799,11 +851,11 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 25,
+				errorBuffer.get(), argc, argv, 26,
 				"h,help", "v,version", "license",
 				"G,debug:", "g,segmenter:", "x,ext:", "C,contenttype:", "F,filelist",
 				"e,expression:", "K,tokens", "p,program:",
-				"Z,marker:", "H,markup:",
+				"Z,marker:", "H,markup:", "Q,markuptag:",
 				"X,lexer:", "Y,matcher:", "P,format:",
 				"t,threads:", "f,fetch:", "o,output:", "O,outerr:",
 				"M,moduledir:", "m,module:", "r,rpc:", "R,resourcedir:", "T,trace:");
@@ -937,10 +989,14 @@ int main( int argc, const char* argv[])
 			std::cout << "-e|--expression <EXP>" << std::endl;
 			std::cout << "    " << _TXT("Define a selection expression <EXP> for the content to process.") << std::endl;
 			std::cout << "    " << _TXT("Process all content if nothing specified)") << std::endl;
-			std::cout << "-H|--markup <NAME>" << std::endl;
+			std::cout << "-H|--markup <NAME>{,<NAME>}" << std::endl;
 			std::cout << "    " << _TXT("Output the content with markups of the rules or variables with name <NAME>") << std::endl;
+			std::cout << "    " << _TXT("Rules defined first have lower priority and are ousted by later defnitions if") << std::endl;
+			std::cout << "    " << _TXT("covered completely.") << std::endl;
 			std::cout << "-Z|--marker <MRK>" << std::endl;
 			std::cout << "    " << _TXT("Define a character sequence inserted before every result declaration") << std::endl;
+			std::cout << "-Q|--markuptag <NAME>[:<ATTR>]" << std::endl;
+			std::cout << "    " << _TXT("Output the content with markups of the rules or variables with name <NAME>") << std::endl;
 			std::cout << "-X|--lexer <LX>" << std::endl;
 			std::cout << "    " << _TXT("Use pattern lexer named <LX>") << std::endl;
 			std::cout << "    " << _TXT("The default is 'std'") << std::endl;
@@ -976,6 +1032,7 @@ int main( int argc, const char* argv[])
 		std::string programfile;
 		bool printTokens = false;
 		std::map<std::string,int> markups;
+		std::pair<std::string,std::string> resultMarkupTag;
 		std::string resultmarker;
 		std::string resultFormat = STRUS_PATTERN_DEFAULT_RESULT_FORMAT;
 		unsigned int nofFilesFetch = 1;
@@ -1033,8 +1090,17 @@ int main( int argc, const char* argv[])
 			std::vector<std::string>::const_iterator li = list.begin(), le = list.end();
 			for (unsigned int lidx=1; li != le; ++li,++lidx)
 			{
-				markups.insert( std::pair<std::string, int>( *li, lidx));
+				std::vector<std::string> items = split( *li, ',');
+				std::vector<std::string>::const_iterator ii = items.begin(), ie = items.end();
+				for (; ii != ie; ++ii)
+				{
+					markups.insert( std::pair<std::string, int>( *ii, lidx));
+				}
 			}
+		}
+		if (opt( "markuptag"))
+		{
+			resultMarkupTag = parseResultMarkupTag( opt[ "markuptag"]);
 		}
 		if (opt( "marker"))
 		{
@@ -1155,7 +1221,11 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::cerr << "load program ..." << std::endl;
-		if (!strus::load_PatternMatcher_programfile( textproc, lxinst.get(), ptinst.get(), programfile, errorBuffer.get()))
+		if (programfile.empty())
+		{
+			throw std::runtime_error( _TXT("no program for pattern matching defined (option --program|-p)"));
+		}
+		else if (!strus::load_PatternMatcher_programfile( textproc, lxinst.get(), ptinst.get(), programfile, errorBuffer.get()))
 		{
 			throw std::runtime_error( _TXT("failed to load program"));
 		}
@@ -1203,7 +1273,7 @@ int main( int argc, const char* argv[])
 		GlobalContext globalContext(
 				ptinst.get(), lxinst.get(), textproc, segmentername,
 				expressions, fileprefix, inputfiles, nofFilesFetch, documentClass,
-				markups, resultmarker, resultFormat, printTokens);
+				markups, resultmarker, resultFormat, resultMarkupTag, printTokens);
 
 		std::cerr << "start matching ..." << std::endl;
 		if (nofThreads)

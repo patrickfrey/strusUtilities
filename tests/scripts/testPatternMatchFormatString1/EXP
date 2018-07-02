@@ -1,24 +1,89 @@
 input.xml:
 ArtReference [36..41, 284|1 .. 284|20]:ART ZGB 123 2
-BGE_Decision [70..74, 549|0 .. 549|15]:BGE 135 III 153 153
 BGE_DecisionPg [70..76, 549|0 .. 549|22]:BGE 135 III 153 154
 MoneyAmount [185..187, 839|335 .. 839|344]:SFR 2'600
 MoneyAmount [275..277, 839|811 .. 839|820]:SFR 2'019
 ArtReference [323..328, 1907|60 .. 1907|77]:ART ZGB 123 2
 ArtReference [371..374, 2149|132 .. 2149|143]:ART ZGB 122
-BGE_Decision [523..527, 3152|0 .. 3152|15]:BGE 135 III 153 153
+ArtReference [415..420, 2149|400 .. 2149|416]:ART ZGB 123 2
 BGE_DecisionPg [523..529, 3152|0 .. 3152|22]:BGE 135 III 153 155
 BGE_Decision [575..579, 3187|281 .. 3187|296]:BGE 129 III 577 577
 
 input.xml:
 36 284:1 284:20 285:19 ArtReference ART ZGB 123 2
-70 549:0 549:15 549:15 BGE_Decision BGE 135 III 153 153
 70 549:0 549:22 549:22 BGE_DecisionPg BGE 135 III 153 154
 185 839:335 839:344 1174:9 MoneyAmount SFR 2'600
 275 839:811 839:820 1650:9 MoneyAmount SFR 2'019
 323 1907:60 1907:77 1967:17 ArtReference ART ZGB 123 2
 371 2149:132 2149:143 2281:11 ArtReference ART ZGB 122
-523 3152:0 3152:15 3152:15 BGE_Decision BGE 135 III 153 153
+415 2149:400 2149:416 2549:16 ArtReference ART ZGB 123 2
 523 3152:0 3152:22 3152:22 BGE_DecisionPg BGE 135 III 153 155
 575 3187:281 3187:296 3468:15 BGE_Decision BGE 129 III 577 577
+
+input.xml:
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<doc>
+<head>
+<text>21. Extrait de l'arrêt de la IIe Cour de droit civil dans la cause dame X. contre X. (recours en matière civile)</text>
+<id>5A_25/2008 / 5A_34/2008</id>
+<date>14 novembre 2008</date>
+</head>
+<regeste>
+<text>
+<ArtReference>Art. 123 Abs. 2 ZGB</ArtReference>; Ausschluss der Teilung der Austrittsleistungen aus beruflicher Vorsorge. Verweigerung der Teilung der Austrittsleistungen auf Grund der wirtschaftlichen Verhältnisse der Ehegatten nach der Scheidung (E. 6). 
+</text>
+</regeste>
+
+<case>
+<title><BGE_DecisionPg>BGE 135 III 153 S. 154</BGE_DecisionPg></title>
+<text>
+<section id="A">X., né en 1932, et dame X., née en 1946, ont contracté mariage le 11 juillet 1984. Aucun enfant n'est issu de leur union.
+Par contrat du 18 juin 1984, ils ont adopté le régime de la séparation de biens.
+</section>
+<section id="B"> Statuant le 16 août 2006, la juge des districts d'Hérens et Conthey a prononcé leur divorce, a constaté que le régime 
+matrimonial était liquidé, a refusé le partage de la prévoyance professionnelle accumulée par l'épouse durant le mariage
+et a condamné X. à verser à celle-ci une contribution d'entretien, indexée, de <MoneyAmount>2'600 fr.</MoneyAmount> par mois jusqu'à ce que la 
+crédirentière soit mise au bénéfice d'une rente AVS.
+
+Sur appel du mari, la Cour civile II du Tribunal cantonal valaisan a réformé le jugement attaqué en ce sens qu'elle a 
+renvoyé ad separatum la liquidation des rapports patrimoniaux noués pendant le mariage, qu'elle a ordonné le partage
+par moitié des avoirs de prévoyance professionnelle accumulés par dame X. durant le mariage et réduit la contribution
+d'entretien à <MoneyAmount>2'019 fr.</MoneyAmount> par mois jusqu'à ce que l'épouse ait atteint l'âge légal de l'AVS.
+</section>
+<section id="B">Le Tribunal fédéral a partiellement admis le recours interjeté par l'épouse.
+</section>
+</text>
+</case>
+
+<considerations>
+<section id="6">
+<text>
+L'épouse prétend qu'il y avait lieu, en application de l'<ArtReference>art. 123 al. 2 CC</ArtReference>, de déroger au partage par moitié des avoirs de prévoyance professionnelle 
+qu'elle a accumulés durant le mariage.
+</text>
+</section>
+
+<section id="6.1">
+<text>Les prestations de sortie de la prévoyance professionnelle des époux doivent en principe être partagées entre eux par moitié 
+(<ArtReference>art. 122 CC</ArtReference>) Exceptionnellement, le juge peut refuser le partage, en tout ou en partie, lorsque celui-ci s'avère manifestement 
+inéquitable pour des motifs tenant à la liquidation du régime matrimonial ou à la situation économique des époux après le divorce 
+(<ArtReference>art 123 al. 2 CC</ArtReference>).
+Selon l'intention du législateur, la prévoyance professionnelle constituée pendant la durée du mariage doit profiter aux deux 
+conjoints de manière égale. Ainsi, lorsque l'un des deux se consacre au ménage et à l'éducation des enfants et renonce, totalement 
+ou partiellement, à exercer une activité lucrative, il a droit, en cas de divorce, à la moitié de la prévoyance que son conjoint 
+s'est constituée durant le mariage. Le partage des prestations de sortie a pour but de compenser sa perte de prévoyance et doit 
+lui permettre d'effectuer un rachat.
+</text>
+<ref><BGE_DecisionPg>BGE 135 III 153 S. 155</BGE_DecisionPg></ref>
+<text>
+auprès de sa propre institution de prévoyance. Il tend également à promouvoir son indépendance économique 
+après le divorce. Il s'ensuit que chaque époux a normalement un droit inconditionnel à la moitié des expectatives de prévoyance constituées 
+pendant le mariage (<BGE_Decision>ATF 129 III 577</BGE_Decision> consid. 4.2.1)
+</text>
+</section>
+</considerations>
+</doc>
+
+
+
 
