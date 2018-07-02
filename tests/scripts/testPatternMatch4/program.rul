@@ -22,4 +22,3 @@ Co_Z_B_C_D_D_E	= sequence_imm( _Z_B, _C_D_D, WORD "E" | 8 );
 Co_Z_B_C_C	= sequence_imm( _Z_B, _C_C );
 Co_Z_B		= sequence_imm( WORD "Z", WORD "B" );
 
-

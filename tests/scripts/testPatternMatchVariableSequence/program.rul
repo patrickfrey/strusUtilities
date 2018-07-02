@@ -1,0 +1,7 @@
+%MATCHER exclusive
+
+WORD ^1		:/\b\w+\b/;
+
+SEQ		= any( pref = WORD);
+SEQ		= sequence_imm( pref=SEQ, next=WORD )  ["{pref} {next}"];
+
