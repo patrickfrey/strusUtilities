@@ -22,7 +22,7 @@ The prerequisites are listen in 5 sections, a common section (first) and for
 each of these flags toggled to YES another section.
 
 ## Required packages
-	boost-all >= 1.53 (>= 1.57, if -DWITH_STRUS_PATTERN=YES)
+	boost-all >= 1.57 (>= 1.57, if -DWITH_STRUS_PATTERN=YES)
 	snappy-dev leveldb-dev libuv-dev
 
 ## Required packages with -DWITH_STRUS_PATTERN=YES
