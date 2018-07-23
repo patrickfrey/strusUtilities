@@ -222,9 +222,9 @@ public:
 		return m_selectexpr;
 	}
 
-	strus::TokenMarkupContextInterface* createTokenMarkupContext() const
+	strus::TokenMarkupContextInterface* createTokenMarkupContext( const strus::SegmenterInstanceInterface* segmenter) const
 	{
-		strus::TokenMarkupContextInterface* rt = m_tokenMarkup->createContext();
+		strus::TokenMarkupContextInterface* rt = m_tokenMarkup->createContext( segmenter);
 		if (!rt)
 		{
 			throw std::runtime_error( _TXT("failed to create token markup context"));
@@ -684,7 +684,7 @@ public:
 				const std::string& origsrc,
 				const strus::SegmenterInstanceInterface* segmenterInstance)
 	{
-		strus::local_ptr<strus::TokenMarkupContextInterface> markupContext( m_globalContext->createTokenMarkupContext());
+		strus::local_ptr<strus::TokenMarkupContextInterface> markupContext( m_globalContext->createTokenMarkupContext( segmenterInstance));
 
 		std::vector<strus::analyzer::PatternMatcherResult>::const_iterator
 			ri = results.begin(), re = results.end();
@@ -711,7 +711,7 @@ public:
 				}
 			}
 		}
-		std::string content = markupContext->markupDocument( segmenterInstance, documentClass, origsrc);
+		std::string content = markupContext->markupDocument( documentClass, origsrc);
 		out << content << "\n";
 	}
 
