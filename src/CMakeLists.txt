@@ -23,5 +23,6 @@ add_subdirectory( strusBuildVectorStorage )
 add_subdirectory( strusInspectVectorStorage )
 add_subdirectory( strusPatternMatcher )
 add_subdirectory( strusPatternSerialize )
+add_subdirectory( strusPosTagger )
 add_subdirectory( strusHelp )
 
