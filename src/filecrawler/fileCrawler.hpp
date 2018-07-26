@@ -10,7 +10,8 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/thread.hpp"
 #include "strus/index.hpp"
-#include "fileCrawlerInterface.hpp"
+#include "strus/errorBufferInterface.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include <vector>
 #include <string>
 #include <list>
@@ -25,7 +26,8 @@ public:
 	FileCrawler(
 			const std::string& path_,
 			std::size_t chunkSize_,
-			const std::string& extension_);
+			const std::string& extension_,
+			ErrorBufferInterface* errorhnd_);
 
 	virtual ~FileCrawler();
 
@@ -57,6 +59,7 @@ private:
 	void collectFilesToProcess( const std::string& dir);
 
 private:
+	ErrorBufferInterface* m_errorhnd;
 	std::size_t m_chunkSize;
 	std::string m_extension;
 

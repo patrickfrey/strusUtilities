@@ -24,10 +24,10 @@
 #include "strus/base/local_ptr.hpp"
 #include "strus/base/shared_ptr.hpp"
 #include "strus/base/thread.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include "private/errorUtils.hpp"
 #include "private/documentAnalyzer.hpp"
 #include "private/internationalization.hpp"
-#include "fileCrawlerInterface.hpp"
 #include <cmath>
 #include <limits>
 #include <iostream>

@@ -11,6 +11,8 @@
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/analyzer_prgload_std.hpp"
+#include "strus/lib/filecrawler.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/rpcClientInterface.hpp"
@@ -47,7 +49,6 @@
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
 #include "private/programLoader.hpp"
-#include "fileCrawler.hpp"
 #include "checkInsertProcessor.hpp"
 #include <iostream>
 #include <sstream>
@@ -429,11 +430,13 @@ int main( int argc_, const char* argv_[])
 		strus::DocumentAnalyzer analyzerMap( analyzerBuilder.get(), documentClass, segmenterName, programFileName, errorBuffer.get());
 
 		// Process input:
-		strus::FileCrawler fileCrawler( datapath, notificationInterval, fileext);
+		strus::local_ptr<strus::FileCrawlerInterface> fileCrawler( strus::createFileCrawlerInterface( datapath, notificationInterval, fileext, errorBuffer.get()));
+		if (!fileCrawler.get()) throw std::runtime_error( errorBuffer->fetchError());
+
 		if (nofThreads == 0)
 		{
 			strus::CheckInsertProcessor checker(
-				storage.get(), textproc, &analyzerMap, documentClass, &fileCrawler, logfile, errorBuffer.get());
+				storage.get(), textproc, &analyzerMap, documentClass, fileCrawler.get(), logfile, errorBuffer.get());
 			checker.run();
 		}
 		else
@@ -445,7 +448,7 @@ int main( int argc_, const char* argv_[])
 				processorList.push_back(
 					new strus::CheckInsertProcessor(
 						storage.get(), textproc, &analyzerMap, documentClass,
-						&fileCrawler, logfile, errorBuffer.get()));
+						fileCrawler.get(), logfile, errorBuffer.get()));
 			}
 			{
 				std::vector<strus::Reference<strus::thread> > threadGroup;

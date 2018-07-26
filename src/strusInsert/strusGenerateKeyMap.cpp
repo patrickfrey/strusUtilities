@@ -8,6 +8,8 @@
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
 #include "strus/lib/analyzer_prgload_std.hpp"
+#include "strus/lib/filecrawler.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
@@ -34,7 +36,6 @@
 #include "private/traceUtils.hpp"
 #include "private/documentAnalyzer.hpp"
 #include "private/programLoader.hpp"
-#include "fileCrawler.hpp"
 #include "keyMapGenProcessor.hpp"
 #include <iostream>
 #include <sstream>
@@ -333,13 +334,14 @@ int main( int argc_, const char* argv_[])
 
 		// [3] Start threads:
 		strus::KeyMapGenResultList resultList;
-		strus::FileCrawler fileCrawler( datapath, unitSize, fileext);
+		strus::local_ptr<strus::FileCrawlerInterface> fileCrawler( strus::createFileCrawlerInterface( datapath, unitSize, fileext, errorBuffer.get()));
+		if (!fileCrawler.get()) throw std::runtime_error( errorBuffer->fetchError());
 
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
 				textproc, &analyzerMap, documentClass,
-				&resultList, &fileCrawler, errorBuffer.get());
+				&resultList, fileCrawler.get(), errorBuffer.get());
 			processor.run();
 		}
 		else
@@ -350,7 +352,7 @@ int main( int argc_, const char* argv_[])
 				processorList.push_back(
 					new strus::KeyMapGenProcessor(
 						textproc, &analyzerMap, documentClass, 
-						&resultList, &fileCrawler, errorBuffer.get()));
+						&resultList, fileCrawler.get(), errorBuffer.get()));
 			}
 			{
 				std::vector<strus::Reference<strus::thread> > threadGroup;

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 
 add_subdirectory( utils )
+add_subdirectory( filecrawler )
 add_subdirectory( program )
 add_subdirectory( strusAlterMetaData )
 add_subdirectory( strusAnalyze )

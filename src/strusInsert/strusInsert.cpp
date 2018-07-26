@@ -11,6 +11,8 @@
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/analyzer_prgload_std.hpp"
+#include "strus/lib/filecrawler.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
@@ -47,7 +49,6 @@
 #include "private/traceUtils.hpp"
 #include "private/documentAnalyzer.hpp"
 #include "private/programLoader.hpp"
-#include "fileCrawler.hpp"
 #include "commitQueue.hpp"
 #include "insertProcessor.hpp"
 #include <iostream>
@@ -453,12 +454,13 @@ int main( int argc_, const char* argv_[])
 		strus::local_ptr<strus::CommitQueue>
 			commitQue( new strus::CommitQueue( storage.get(), verbose, errorBuffer.get()));
 
-		strus::FileCrawler fileCrawler( datapath, fetchSize, fileext);
+		strus::local_ptr<strus::FileCrawlerInterface> fileCrawler( strus::createFileCrawlerInterface( datapath, fetchSize, fileext, errorBuffer.get()));
+		if (!fileCrawler.get()) throw std::runtime_error( errorBuffer->fetchError());
 		if (nofThreads == 0)
 		{
 			strus::InsertProcessor inserter(
 				storage.get(), textproc, &analyzerMap, documentClass, commitQue.get(),
-				&fileCrawler, transactionSize, verbose, errorBuffer.get());
+				fileCrawler.get(), transactionSize, verbose, errorBuffer.get());
 			inserter.run();
 		}
 		else
@@ -470,7 +472,7 @@ int main( int argc_, const char* argv_[])
 				processorList.push_back(
 					new strus::InsertProcessor(
 						storage.get(), textproc, &analyzerMap, documentClass, commitQue.get(),
-						&fileCrawler, transactionSize, verbose, errorBuffer.get()));
+						fileCrawler.get(), transactionSize, verbose, errorBuffer.get()));
 			}
 			{
 				std::vector<strus::Reference<strus::thread> > threadGroup;

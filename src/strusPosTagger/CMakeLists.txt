@@ -37,7 +37,7 @@ link_directories(
 add_cppcheck( strusPosTagger ${source_files} )
 
 add_executable( strusPosTagger ${source_files} )
-target_link_libraries( strusPosTagger strusutilities_private_utils ${strusmodule_LIBRARIES} strus_postagger_std strus_markup_std strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES} )
+target_link_libraries( strusPosTagger strusutilities_private_utils ${strusmodule_LIBRARIES} strus_postagger_std strus_markup_std strus_filecrawler strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES} )
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )
