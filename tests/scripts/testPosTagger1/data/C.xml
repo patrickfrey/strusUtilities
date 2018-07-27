@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<doc>
+<docid>B</docid>
+<title>Software Architecture</title>
+<text>
+<h1>Architecture</h1>
+<p>
+Users often see things differently from programmers. People who use
+modern general purpose computers (as opposed to embedded systems,
+analog computers and supercomputers) usually see three layers
+of software performing a variety of tasks: platform, application, and
+user software.
+</p>
+</text>
+</doc>
