@@ -56,12 +56,13 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;	// error buffer
 static bool g_verbose = false;
 
 static void writePosTaggerInput(
+		const std::string& inputpath,
+		const std::string& outputFile,
 		strus::FileCrawlerInterface* crawler,
 		const strus::DocumentClassDetectorInterface* dclassdetector,
 		const strus::analyzer::DocumentClass& dclass,
 		const strus::PosTaggerInstanceInterface* postaggerinst,
-		const std::string& fileTagPrefix,
-		const std::string& outputFile)
+		const std::string& fileTagPrefix)
 {
 	std::ostream* out;
 	std::ofstream fout;
@@ -80,6 +81,7 @@ static void writePosTaggerInput(
 		std::vector<std::string>::const_iterator ai = ar.begin(), ae = ar.end();
 		for (; ai != ae; ++ai)
 		{
+			if (!strus::stringStartsWith( *ai, inputpath)) throw strus::runtime_error(_TXT("internal: input path '%s' does not have prefix '%s"), ai->c_str(), inputpath.c_str());
 			std::string content;
 			std::string posInputContent;
 			int ec = strus::readFile( *ai, content);
@@ -105,7 +107,7 @@ static void writePosTaggerInput(
 				if (!errormsg) errormsg = "output empty";
 				throw strus::runtime_error(_TXT("failed to create pos tagger input for file '%s': %s"), ai->c_str(), errormsg);
 			}
-			*out << fileTagPrefix << *ai << std::endl;
+			*out << fileTagPrefix << std::string( ai->c_str() + inputpath.size(), ai->size() - inputpath.size()) << std::endl;
 			*out << posInputContent << std::endl;
 		}
 	}
@@ -137,7 +139,7 @@ static strus::PosTaggerDataInterface::Element parseElement( const std::string& l
 	return strus::PosTaggerDataInterface::Element( type, value);
 }
 
-static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<std::string,int>& filemap, const std::string& fileTagPrefix, const std::string& posTagFile)
+static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<std::string,int>& filemap, const std::string& inputpath, const std::string& posTagFile, const std::string& fileTagPrefix)
 {
 	typedef std::map<const std::string,int>::value_type FileMapValue;
 	std::string filename;
@@ -155,7 +157,7 @@ static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<st
 		if (!ln) throw strus::runtime_error( _TXT("error reading POS tagging file '%s' line %d: %s"), posTagFile.c_str(), linecnt, ::strerror( inp.error()));
 		std::string line = strus::string_conv::trim( ln, std::strlen(ln));
 
-		if (line.size() >= fileTagPrefix.size() && 0==std::memcmp( line.c_str(), fileTagPrefix.c_str(), fileTagPrefix.size()))
+		if (strus::stringStartsWith( line, fileTagPrefix))
 		{
 			if (!elements.empty())
 			{
@@ -165,7 +167,7 @@ static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<st
 				if (g_verbose) std::cerr << strus::string_format( _TXT("load POS tagging %d elements for docno %d file '%s' line %d"), (int)elements.size(), docnocnt, filename.c_str(), linecnt) << std::endl;
 				elements.clear();
 			}
-			filename = std::string( line.c_str() + fileTagPrefix.size());
+			filename = strus::joinFilePath( inputpath, line.c_str() + fileTagPrefix.size());
 			FileMapValue filemapvalue( filename, ++docnocnt);
 			if (!filemap.insert( filemapvalue).second)
 			{
@@ -190,11 +192,11 @@ static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<st
 static void writePosTagging( 
 		const strus::PosTaggerDataInterface* data,
 		const std::map<std::string,int>& filemap,
+		const std::string& outputpath,
 		const strus::DocumentClassDetectorInterface* dclassdetector,
 		const strus::analyzer::DocumentClass& dclass,
 		const strus::PosTaggerInstanceInterface* postaggerinst,
-		strus::FileCrawlerInterface* crawler,
-		const std::string& outputpath)
+		strus::FileCrawlerInterface* crawler)
 {
 	std::vector<std::string> ar = crawler->fetch();
 	for (; !ar.empty(); ar = crawler->fetch())
@@ -276,9 +278,11 @@ public:
 			const strus::analyzer::DocumentClass& dclass_,
 			const strus::PosTaggerInstanceInterface* postaggerinst_,
 			const std::string& fileTagPrefix_,
+			const std::string& inputPath_,
 			const std::string& outputFile_)
-		:m_threadid(threadid_),m_crawler(crawler_),m_dclassdetector(dclassdetector_),m_dclass(dclass_),m_postaggerinst(postaggerinst_)
-		,m_fileTagPrefix(fileTagPrefix_),m_outputFile(outputFile_)
+		:m_threadid(threadid_),m_inputPath(inputPath_),m_outputFile(outputFile_),m_crawler(crawler_)
+		,m_dclassdetector(dclassdetector_),m_dclass(dclass_),m_postaggerinst(postaggerinst_)
+		,m_fileTagPrefix(fileTagPrefix_)
 	{
 		if (threadid_ >= 0)
 		{
@@ -290,7 +294,7 @@ public:
 	{
 		try
 		{
-			writePosTaggerInput( m_crawler, m_dclassdetector, m_dclass, m_postaggerinst, m_fileTagPrefix, m_outputFile);
+			writePosTaggerInput( m_inputPath, m_outputFile, m_crawler, m_dclassdetector, m_dclass, m_postaggerinst, m_fileTagPrefix);
 		}
 		catch (const std::bad_alloc& err)
 		{
@@ -308,12 +312,13 @@ public:
 
 private:
 	int m_threadid;
+	std::string m_inputPath;
+	std::string m_outputFile;
 	strus::FileCrawlerInterface* m_crawler;
 	const strus::DocumentClassDetectorInterface* m_dclassdetector;
 	strus::analyzer::DocumentClass m_dclass;
 	const strus::PosTaggerInstanceInterface* m_postaggerinst;
 	std::string m_fileTagPrefix;
-	std::string m_outputFile;
 };
 
 
@@ -340,7 +345,7 @@ public:
 	{
 		try
 		{
-			writePosTagging( m_data, *m_filemap, m_dclassdetector, m_dclass, m_postaggerinst, m_crawler, m_outputpath);
+			writePosTagging( m_data, *m_filemap, m_outputpath, m_dclassdetector, m_dclass, m_postaggerinst, m_crawler);
 		}
 		catch (const std::bad_alloc& err)
 		{
@@ -666,6 +671,9 @@ int main( int argc, const char* argv[])
 		std::string docpath = opt[0];
 		std::string posfile = opt[1];
 
+		int ec = strus::resolveUpdirReferences( docpath);
+		if (ec) throw strus::runtime_error( _TXT("failed to resolve updir references of path '%s': %s"), docpath.c_str(), ::strerror(ec));
+
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
@@ -806,7 +814,7 @@ int main( int argc, const char* argv[])
 					workers[ti].reset(
 						new PosInputWorker(
 							threadid, fileCrawler.get(), documentClassDetector.get(),
-							documentClass, postagger.get(), filenameprefix, posfile));
+							documentClass, postagger.get(), filenameprefix, docpath, posfile));
 				}
 				std::cerr << _TXT("Generate input for POS tagging ...") << std::endl;
 				break;
@@ -814,7 +822,7 @@ int main( int argc, const char* argv[])
 			case DoGenOutput:
 			{
 				std::cerr << _TXT("Loading POS tag file ...");
-				loadPosTaggingFile( posTagData.get(), posTagDocnoMap, filenameprefix, posfile);
+				loadPosTaggingFile( posTagData.get(), posTagDocnoMap, docpath, posfile, filenameprefix);
 				std::cerr << _TXT(" done") << std::endl;
 
 				int ti = 0, te = threads ? threads : 1;

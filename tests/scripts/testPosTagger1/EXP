@@ -1,10 +1,10 @@
-#FILE#/home/patrick/Projects/github/strusUtilities/tests/scripts/testPosTagger1/data/A.xml
+#FILE#A.xml
 Introduction
 
    The user interacts with application software on a typical desktop computer. The application software
    layer interfaces with the operating system.
 
-#FILE#/home/patrick/Projects/github/strusUtilities/tests/scripts/testPosTagger1/data/B.xml
+#FILE#B.xml
 History
 
 An algorithm for what would have been the first piece of
@@ -12,7 +12,7 @@ software was written by Ada Lovelace in the 19th century, for the
 planned Analytical Engine. However, neither the Analytical Engine
 nor any software for it were ever created.
 
-#FILE#/home/patrick/Projects/github/strusUtilities/tests/scripts/testPosTagger1/data/C.xml
+#FILE#C.xml
 Architecture
 
 Users often see things differently from programmers. People who use

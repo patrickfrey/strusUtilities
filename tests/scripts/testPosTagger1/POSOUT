@@ -1,4 +1,4 @@
-#FILE#/home/patrick/Projects/github/strusUtilities/tests/scripts/testPosTagger1/data/A.xml
+#FILE#A.xml
 TIT Introduction
 ART The
 NN user
@@ -21,7 +21,7 @@ NN operating
 NN system
 EOS .
 
-#FILE#/home/patrick/Projects/github/strusUtilities/tests/scripts/testPosTagger1/data/B.xml
+#FILE#B.xml
 TIT History
 PP An
 NN algorithm
@@ -63,7 +63,7 @@ PP ever
 VERB created
 EOS .
 
-#FILE#/home/patrick/Projects/github/strusUtilities/tests/scripts/testPosTagger1/data/C.xml
+#FILE#C.xml
 TIT Architecture
 
 NN Users
