@@ -22,7 +22,7 @@ case $OS in
 			brew link --force gcc48 || true
 		fi
 		brew upgrade cmake
-		brew upgrade boost
+		# -- brew upgrade boost
 		brew install gettext snappy leveldb || true
 
 		# make sure cmake finds the brew version of gettext
