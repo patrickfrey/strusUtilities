@@ -10,7 +10,7 @@
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/fileCrawlerInterface.hpp"
+#include "private/fileCrawlerInterface.hpp"
 #include "strus/constants.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/local_ptr.hpp"

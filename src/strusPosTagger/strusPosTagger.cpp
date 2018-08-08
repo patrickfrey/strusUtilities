@@ -34,7 +34,7 @@
 #include "strus/posTaggerInstanceInterface.hpp"
 #include "strus/posTaggerDataInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/fileCrawlerInterface.hpp"
+#include "private/fileCrawlerInterface.hpp"
 #include "strus/tokenizerFunctionInterface.hpp"
 #include "strus/tokenizerFunctionInstanceInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"

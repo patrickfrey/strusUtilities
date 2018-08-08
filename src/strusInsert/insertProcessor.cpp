@@ -15,7 +15,7 @@
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
-#include "strus/fileCrawlerInterface.hpp"
+#include "private/fileCrawlerInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/base/fileio.hpp"

@@ -12,7 +12,7 @@
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/lib/filecrawler.hpp"
-#include "strus/fileCrawlerInterface.hpp"
+#include "private/fileCrawlerInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/rpcClientInterface.hpp"
