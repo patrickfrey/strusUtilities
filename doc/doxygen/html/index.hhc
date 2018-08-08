@@ -17,41 +17,6 @@
     <LI><OBJECT type="text/sitemap"><param name="Name" value="Functions"><param name="Local" value="namespacemembers_func.html"><param name="ImageNumber" value="11"></OBJECT>
     </UL>
   </UL>
-<LI><OBJECT type="text/sitemap"><param name="Name" value="Classes"><param name="ImageNumber" value="1"></OBJECT>
-  <UL>
-  <LI><OBJECT type="text/sitemap"><param name="Name" value="Class List"><param name="ImageNumber" value="1"></OBJECT>
-    <UL>
-    <LI><OBJECT type="text/sitemap"><param name="Name" value="strus"><param name="ImageNumber" value="1"></OBJECT>
-      <UL>
-      <LI><OBJECT type="text/sitemap"><param name="Name" value="QueryDescriptors"><param name="ImageNumber" value="1"></OBJECT>
-        <UL>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="QueryDescriptors"><param name="Local" value="structstrus_1_1QueryDescriptors.html#af11e15cd157ecbe30223747800955116"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="QueryDescriptors"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a5f7ad41f9a5bdb621d0bb695a0179fb1"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="defaultFieldType"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a1dad45136bc009d88ae4dd1aec9aae47"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="defaultSelectionJoin"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a0c97ce668d0169aea15f49d2f7145e38"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="defaultSelectionTermPart"><param name="Local" value="structstrus_1_1QueryDescriptors.html#ad7a9eb7682f076ebbad2a262d38d8a0f"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="selectionFeatureSet"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a84aa4197c2a8f042fe094be0aedc21cd"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="weightingFeatureSet"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a8555a1374a20c8e2ef7e91509d04a5cf"><param name="ImageNumber" value="11"></OBJECT>
-        </UL>
-      <LI><OBJECT type="text/sitemap"><param name="Name" value="AnalyzerMapElement"><param name="ImageNumber" value="1"></OBJECT>
-        <UL>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="AnalyzerMapElement"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a37361cdd3b4beb857dd59095449d2f64"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="AnalyzerMapElement"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a6463b733d80472fa0d27ff0ec759d1f6"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="clear"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a8fedf559b8921f741ae066822fcc1a51"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="prgFilename"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="scheme"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea"><param name="ImageNumber" value="11"></OBJECT>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="segmenter"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6"><param name="ImageNumber" value="11"></OBJECT>
-        </UL>
-      </UL>
-    </UL>
-  <LI><OBJECT type="text/sitemap"><param name="Name" value="Class Index"><param name="Local" value="classes.html"><param name="ImageNumber" value="11"></OBJECT>
-  <LI><OBJECT type="text/sitemap"><param name="Name" value="Class Members"><param name="ImageNumber" value="1"></OBJECT>
-    <UL>
-    <LI><OBJECT type="text/sitemap"><param name="Name" value="All"><param name="Local" value="functions.html"><param name="ImageNumber" value="11"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Name" value="Functions"><param name="Local" value="functions_func.html"><param name="ImageNumber" value="11"></OBJECT>
-    <LI><OBJECT type="text/sitemap"><param name="Name" value="Variables"><param name="Local" value="functions_vars.html"><param name="ImageNumber" value="11"></OBJECT>
-    </UL>
-  </UL>
 <LI><OBJECT type="text/sitemap"><param name="Name" value="Files"><param name="ImageNumber" value="1"></OBJECT>
   <UL>
   <LI><OBJECT type="text/sitemap"><param name="Name" value="File List"><param name="ImageNumber" value="1"></OBJECT>
@@ -60,42 +25,12 @@
       <UL>
       <LI><OBJECT type="text/sitemap"><param name="Name" value="strus"><param name="ImageNumber" value="1"></OBJECT>
         <UL>
-        <LI><OBJECT type="text/sitemap"><param name="Name" value="programLoader.hpp"><param name="ImageNumber" value="1"></OBJECT>
+        <LI><OBJECT type="text/sitemap"><param name="Name" value="lib"><param name="ImageNumber" value="1"></OBJECT>
           <UL>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="QueryDescriptors"><param name="ImageNumber" value="1"></OBJECT>
+          <LI><OBJECT type="text/sitemap"><param name="Name" value="filecrawler.hpp"><param name="ImageNumber" value="1"></OBJECT>
             <UL>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="QueryDescriptors"><param name="Local" value="structstrus_1_1QueryDescriptors.html#af11e15cd157ecbe30223747800955116"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="QueryDescriptors"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a5f7ad41f9a5bdb621d0bb695a0179fb1"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="defaultFieldType"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a1dad45136bc009d88ae4dd1aec9aae47"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="defaultSelectionJoin"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a0c97ce668d0169aea15f49d2f7145e38"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="defaultSelectionTermPart"><param name="Local" value="structstrus_1_1QueryDescriptors.html#ad7a9eb7682f076ebbad2a262d38d8a0f"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="selectionFeatureSet"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a84aa4197c2a8f042fe094be0aedc21cd"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="weightingFeatureSet"><param name="Local" value="structstrus_1_1QueryDescriptors.html#a8555a1374a20c8e2ef7e91509d04a5cf"><param name="ImageNumber" value="11"></OBJECT>
+            <LI><OBJECT type="text/sitemap"><param name="Name" value="createFileCrawlerInterface"><param name="Local" value="filecrawler_8hpp.html#ad6f87d6f548555d8f565d9e5cec09d77"><param name="ImageNumber" value="11"></OBJECT>
             </UL>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="AnalyzerMapElement"><param name="ImageNumber" value="1"></OBJECT>
-            <UL>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="AnalyzerMapElement"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a37361cdd3b4beb857dd59095449d2f64"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="AnalyzerMapElement"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a6463b733d80472fa0d27ff0ec759d1f6"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="clear"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a8fedf559b8921f741ae066822fcc1a51"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="prgFilename"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#a79671ebb863c804524055303f2beddfb"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="scheme"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#aab65387bb4385579dabc6c1b84d168ea"><param name="ImageNumber" value="11"></OBJECT>
-            <LI><OBJECT type="text/sitemap"><param name="Name" value="segmenter"><param name="Local" value="structstrus_1_1AnalyzerMapElement.html#aa30302aa77f75d72081424cb2fac80f6"><param name="ImageNumber" value="11"></OBJECT>
-            </UL>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="isAnalyzerMapSource"><param name="Local" value="programLoader_8hpp.html#ae55f0e2ac388f36cd6c8619fcb781d24"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadAnalyzerMap"><param name="Local" value="programLoader_8hpp.html#a0a8daefcff986cdaf50262c9b0e354fb"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadDocumentAnalyzerProgram"><param name="Local" value="programLoader_8hpp.html#ab17736a5d8508d0003040da5f6cb6512"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadDocumentAttributeAssignments"><param name="Local" value="programLoader_8hpp.html#accebc70cecdda8195ce2630aeb9adddf"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadDocumentMetaDataAssignments"><param name="Local" value="programLoader_8hpp.html#a26b52d5233d28065fa06fa337f466e0e"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadDocumentUserRightsAssignments"><param name="Local" value="programLoader_8hpp.html#a2e4cb223c5e326d78ef241799196a80c"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadPatternMatcherProgramWithFeeder"><param name="Local" value="programLoader_8hpp.html#a6a78978ceade749384e816394471d23c"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadPatternMatcherProgramWithLexer"><param name="Local" value="programLoader_8hpp.html#a6bba25a8e57d7d066c08f69d325ffbf3"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadPhraseAnalyzer"><param name="Local" value="programLoader_8hpp.html#adcf0bda4743606823af4d67dff0a4f6f"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadQuery"><param name="Local" value="programLoader_8hpp.html#ab3ae7a430f337b1d2ac6a2aa098fb71f"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadQueryAnalyzerProgram"><param name="Local" value="programLoader_8hpp.html#a8792ff139b68a606cf703dc3121ee5b8"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadQueryEvalProgram"><param name="Local" value="programLoader_8hpp.html#a3bcc86bc935dfede4346a5811764f88a"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="loadVectorStorageVectors"><param name="Local" value="programLoader_8hpp.html#a0ecea8c05967b7837f4115388f715631"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="parseDocumentClass"><param name="Local" value="programLoader_8hpp.html#ab396cf48e1a280e8fe00cd20a2500a70"><param name="ImageNumber" value="11"></OBJECT>
-          <LI><OBJECT type="text/sitemap"><param name="Name" value="scanNextProgram"><param name="Local" value="programLoader_8hpp.html#a4176074a811b447a92cf49bcb9e71e4b"><param name="ImageNumber" value="11"></OBJECT>
           </UL>
         </UL>
       </UL>
