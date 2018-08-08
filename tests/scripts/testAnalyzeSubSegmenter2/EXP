@@ -1,0 +1,38 @@
+
+search index terms:
+1: stem 'this'
+2: stem 'is'
+3: stem 'a'
+4: stem 'test'
+5: stem 'with'
+6: stem 'embed'
+7: stem 'json'
+8: name 'john'
+9: name 'doe'
+10: name 'anna'
+11: name 'smith'
+12: name 'peter'
+13: name 'jones'
+14: note 'Note'
+15: note 'about'
+16: note 'Peter'
+17: start ''
+18: stem 'here'
+19: stem 'we'
+20: stem 'have'
+21: stem 'normal'
+22: stem 'text'
+23: stem 'this'
+24: stem 'text'
+25: stem 'is'
+26: stem 'taken'
+27: stem 'from'
+28: stem 'xml'
+
+forward index terms:
+
+metadata:
+
+attributes:
+title 'This is a test with embedded JSON'
+docid 'testdoc'

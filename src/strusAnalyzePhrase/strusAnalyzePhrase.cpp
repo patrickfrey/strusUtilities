@@ -7,10 +7,16 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
+#include "strus/rpcClientInterface.hpp"
+#include "strus/rpcClientMessagingInterface.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerInstanceInterface.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionModule.hpp"
@@ -18,46 +24,59 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
-#include "private/programOptions.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
-#include "strus/programLoader.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <cerrno>
+#include <cstdio>
 #include <memory>
 
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 11,
-				"h,help", "v,version", "license", "t,tokenizer:", "n,normalizer:",
-				"m,module:", "M,moduledir:", "q,quot:", "p,plain",
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 13,
+				"h,help", "v,version", "license", "G,debug:", "t,tokenizer:", "n,normalizer:",
+				"m,module:", "M,moduledir:", "q,quot:", "P,plain", "F,fileinput",
 				"R,resourcedir:", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -127,8 +146,9 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusAnalyze [options] <phrasepath>" << std::endl;
-			std::cout << "<phrasepath> = " << _TXT("path to phrase to analyze ('-' for stdin)") << std::endl;
+			std::cout << _TXT("usage:") << " strusAnalyze [options] <phrase>" << std::endl;
+			std::cout << "<phrase> =   " << _TXT("path to phrase to analyze") << std::endl;
+			std::cout << "             " << _TXT("file or '-' for stdin if option -F is specified)") << std::endl;
 			std::cout << "description: " << _TXT("tokenizes and normalizes a text segment") << std::endl;
 			std::cout << "             " << _TXT("and prints the result to stdout.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
@@ -138,6 +158,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -150,8 +172,10 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Use the normalizer <CALL> (default 'orig')") << std::endl;
 			std::cout << "-q|--quot <STR>" << std::endl;
 			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default \"\'\")") << std::endl;
-			std::cout << "-p|--plain" << std::endl;
-			std::cout << "    " << _TXT("Do not print position and define default quotes as empty") << std::endl;
+			std::cout << "-P|--plain" << std::endl;
+			std::cout << "    " << _TXT("Print results without quotes and without an end of line for each result") << std::endl;
+			std::cout << "-F|--fileinput" << std::endl;
+			std::cout << "    " << _TXT("Interpret phrase argument as a file name containing the input") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -169,7 +193,18 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		std::string resultQuot = "'";
 		bool resultPlain = false;
 		if (opt( "plain"))
@@ -181,7 +216,7 @@ int main( int argc, const char* argv[])
 		{
 			resultQuot = opt[ "quot"];
 		}
-		std::string docpath = opt[0];
+		std::string phrasestring = opt[0];
 		std::string tokenizer( "content");
 		if (opt( "tokenizer"))
 		{
@@ -204,10 +239,26 @@ int main( int argc, const char* argv[])
 			}
 		}
 
-		// Create root object for analyzer:
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
-			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
-		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+		// Create objects for analyzer:
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+
+		if (opt("rpc"))
+		{
+			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
+			if (!messaging.get()) throw std::runtime_error( _TXT("failed to create rpc client messaging"));
+			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
+			if (!rpcClient.get()) throw std::runtime_error( _TXT("failed to create rpc client"));
+			(void)messaging.release();
+			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc analyzer object builder"));
+		}
+		else
+		{
+			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
+		}
 
 		// Create proxy objects if tracing enabled:
 		{
@@ -219,58 +270,78 @@ int main( int argc, const char* argv[])
 				analyzerBuilder.reset( proxy);
 			}
 		}
-		// Create objects for analyzer:
-		std::auto_ptr<strus::QueryAnalyzerInterface>
-			analyzer( analyzerBuilder->createQueryAnalyzer());
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create analyzer"));
-		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
-
-		// Create phrase type (tokenizer and normalizer):
-		if (!loadPhraseAnalyzer( *analyzer, textproc, normalizer, tokenizer, errorBuffer.get()))
+		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("failed to load analyze phrase type"));
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
+
+		// Create objects for analyzer:
+		strus::local_ptr<strus::QueryAnalyzerInstanceInterface>
+			analyzer( analyzerBuilder->createQueryAnalyzer());
+		if (!analyzer.get()) throw std::runtime_error( _TXT("failed to create analyzer"));
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
+
+		std::string analyzerConfig = strus::string_format( "[Element]\nfeature = %s %s text", normalizer.c_str(), tokenizer.c_str());
+		// Create phrase type (tokenizer and normalizer):
+		if (!strus::load_QueryAnalyzer_program_std( analyzer.get(), textproc, analyzerConfig, errorBuffer.get()))
+		{
+			throw strus::runtime_error( _TXT("failed to load query analyzer: %s"), errorBuffer->fetchError());
 		}
 
 		// Load the phrase:
-		std::string phrase;
-		if (docpath == "-")
+		bool queryIsFile = opt("fileinput");
+		if (queryIsFile)
 		{
-			unsigned int ec = strus::readStdin( phrase);
-			if (ec) throw strus::runtime_error( _TXT( "error reading input from stdin (errno %u)"), ec);
-		}
-		else
-		{
-			unsigned int ec = strus::readFile( docpath, phrase);
-			if (ec) throw strus::runtime_error( _TXT( "error reading input file '%s' (errno %u)"), docpath.c_str(), ec);
-		}
-
-		// Analyze the phrase and print the result:
-		std::auto_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
-		if (!qryanactx.get()) throw strus::runtime_error(_TXT("failed to create query analyzer context"));
-	
-		qryanactx->putField( 1, "", phrase);
-		strus::analyzer::Query qry = qryanactx->analyze();
-		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("query analysis failed"));
-		std::vector<strus::analyzer::Term> terms;
-		std::vector<strus::analyzer::Query::Instruction>::const_iterator
-			ii = qry.instructions().begin(), ie = qry.instructions().end();
-		for (; ii != ie; ++ii)
-		{
-			if (ii->opCode() == strus::analyzer::Query::Instruction::PushSearchIndexTerm)
+			int ec;
+			std::string ps;
+			if (phrasestring == "-")
 			{
-				const strus::analyzer::Term& term = qry.searchIndexTerm( ii->idx());
-				if (!resultPlain)
+				ec = strus::readStdin( ps);
+				if (ec) throw strus::runtime_error( _TXT("failed to read query from stdin (errno %u)"), ec);
+			}
+			else
+			{
+				ec = strus::readFile( phrasestring, ps);
+				if (ec) throw strus::runtime_error(_TXT("failed to read query from file %s (errno %u)"), phrasestring.c_str(), ec);
+			}
+			phrasestring = ps;
+		}
+		// Analyze the phrase and print the result:
+		strus::local_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
+		if (!qryanactx.get()) throw std::runtime_error( _TXT("failed to create query analyzer context"));
+	
+		qryanactx->putField( 1, "", phrasestring);
+		strus::analyzer::QueryTermExpression qry = qryanactx->analyze();
+		if (errorBuffer->hasError()) throw std::runtime_error( _TXT("query analysis failed"));
+		std::vector<strus::analyzer::QueryTerm> terms;
+		std::vector<strus::analyzer::QueryTermExpression::Instruction>::const_iterator
+			ii = qry.instructions().begin(), ie = qry.instructions().end();
+		for (int iidx=0; ii != ie; ++ii,++iidx)
+		{
+			if (ii->opCode() == strus::analyzer::QueryTermExpression::Instruction::Term)
+			{
+				const strus::analyzer::QueryTerm& term = qry.term( ii->idx());
+				if (resultPlain)
 				{
-					std::cout << term.pos() << " ";
+					if (iidx) std::cout << " ";
+					std::cout << term.value();
 				}
-				std::cout << resultQuot << term.value() << resultQuot << std::endl;
+				else
+				{
+					std::cout << resultQuot << term.value() << resultQuot << std::endl;
+				}
 			}
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("error in analyze phrase"));
+			throw std::runtime_error( _TXT("error in analyze phrase"));
 		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

@@ -1,0 +1,10 @@
+[Attribute]
+#   title = text content /doc/title();
+
+[SearchIndex]
+    stem = lc:convdia(en):stem(en) word /doc/text//();
+
+[Aggregator]
+ #    doclen = count( stem);
+
+

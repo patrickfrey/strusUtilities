@@ -8,6 +8,7 @@
 #include "commitQueue.hpp"
 #include "private/internationalization.hpp"
 #include "strus/errorBufferInterface.hpp"
+#include "strus/base/thread.hpp"
 #include <cstdio>
 #include <stdexcept>
 
@@ -23,26 +24,26 @@ void CommitQueue::handleWaitingTransactions()
 			if (!transaction.get()) break;
 			if (!transaction->commit())
 			{
-				throw strus::runtime_error(_TXT("transaction commit failed"));
+				throw std::runtime_error( _TXT("transaction commit failed"));
 			}
 			Index totalNofDocuments = m_storage->nofDocumentsInserted();
 			Index nofDocsInserted = totalNofDocuments - m_nofDocuments;
 			if (m_verbose)
 			{
-				::printf( _TXT("inserted %u documents (total %u)\n"),
+				::fprintf( stderr, _TXT("inserted %u documents (total %u)\n"),
 						nofDocsInserted, totalNofDocuments);
-				::fflush(stdout);
+				::fflush( stderr);
 			}
 			else
 			{
-				::printf( _TXT("\rinserted %u documents (total %u)          "),
+				::fprintf( stderr, _TXT("\rinserted %u documents (total %u)          "),
 						nofDocsInserted, totalNofDocuments);
-				::fflush( stdout);
+				::fflush( stderr);
 			}
 		}
 		catch (const std::bad_alloc&)
 		{
-			m_errorhnd->report( _TXT("out of memory handling transaction in queue"));
+			m_errorhnd->report( ErrorCodeOutOfMem, _TXT("out of memory handling transaction in queue"));
 			::fprintf( stderr, _TXT("out of memory handling transaction in queue\n"));
 			::fflush( stderr);
 		}
@@ -51,17 +52,17 @@ void CommitQueue::handleWaitingTransactions()
 			const char* errmsg = m_errorhnd->fetchError();
 			if (errmsg)
 			{
-				m_errorhnd->report( _TXT("error handling transaction in queue: %s, %s"), err.what(), errmsg);
+				m_errorhnd->report( ErrorCodeRuntimeError, _TXT("error handling transaction in queue: %s, %s"), err.what(), errmsg);
 				::fprintf( stderr, _TXT("error handling transaction in queue: %s, %s\n"), err.what(), errmsg);
 				::fflush( stderr);
 			}
 			else
 			{
-				m_errorhnd->report( _TXT("error handling transaction in queue: %s"), err.what());
+				m_errorhnd->report( ErrorCodeRuntimeError, _TXT("error handling transaction in queue: %s"), err.what());
 				::fprintf( stderr, _TXT("error handling transaction in queue: %s\n"), err.what());
 				::fflush( stderr);
 			}
-			utils::ScopedLock lock( m_mutex_errors);
+			strus::scoped_lock lock( m_mutex_errors);
 			m_errors.push_back( m_errorhnd->fetchError());
 		}
 	}
@@ -70,7 +71,7 @@ void CommitQueue::handleWaitingTransactions()
 void CommitQueue::pushTransaction( StorageTransactionInterface* transaction)
 {
 	{
-		utils::ScopedLock lock( m_mutex_openTransactions);
+		strus::scoped_lock lock( m_mutex_openTransactions);
 		m_openTransactions.push( StorageTransactionReference( transaction));
 		++m_nofOpenTransactions;
 	}
@@ -79,7 +80,7 @@ void CommitQueue::pushTransaction( StorageTransactionInterface* transaction)
 
 Reference<StorageTransactionInterface> CommitQueue::getNextTransaction()
 {
-	utils::ScopedLock lock( m_mutex_openTransactions);
+	strus::scoped_lock lock( m_mutex_openTransactions);
 
 	if (m_nofOpenTransactions == 0) return Reference<StorageTransactionInterface>();
 	--m_nofOpenTransactions;

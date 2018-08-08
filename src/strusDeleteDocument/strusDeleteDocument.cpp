@@ -14,7 +14,6 @@
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/databaseInterface.hpp"
 #include "strus/databaseClientInterface.hpp"
@@ -27,18 +26,21 @@
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
-#include "private/programOptions.hpp"
-#include "private/utils.hpp"
+#include "strus/base/programOptions.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
-#include "private/version.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
@@ -48,14 +50,14 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -67,7 +69,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 static void deleteDocuments( strus::StorageClientInterface* storage, int nofargs, const char** argv)
 {
-	std::auto_ptr<strus::StorageTransactionInterface> transaction( storage->createTransaction());
+	strus::local_ptr<strus::StorageTransactionInterface> transaction( storage->createTransaction());
 	int ai=0, ae=nofargs;
 	for (; ai != ae; ++ai)
 	{
@@ -80,27 +82,36 @@ static void deleteDocuments( strus::StorageClientInterface* storage, int nofargs
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 8,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 9,
 				"h,help", "v,version", "license",
-				"m,module:", "M,moduledir:",
+				"G,debug:", "m,module:", "M,moduledir:",
 				"r,rpc:", "s,storage:", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -173,6 +184,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -203,7 +216,18 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		// Parse arguments:
 		std::string storagecfg;
 		if (opt("storage"))
@@ -211,34 +235,44 @@ int main( int argc, const char* argv[])
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
 			storagecfg = opt["storage"];
 		}
-		
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
+
 		// Create objects for storage document update:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error( _TXT("error creating rpc client messaging"));
+			if (!messaging.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error( _TXT("error creating rpc client"));
+			if (!rpcClient.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc client"));
 			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating rpc storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc storage object builder"));
 		}
 		else
 		{
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating storage object builder"));
 		}
-		std::auto_ptr<strus::StorageClientInterface>
+
+		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
+		if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
 
 		deleteDocuments( storage.get(), opt.nofargs(), opt.argv());
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("failed to delete documents"));
+			throw std::runtime_error( _TXT("failed to delete documents"));
+		}
+		storage->close();
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
 		std::cerr << strus::string_format( _TXT("done %u documents deleted"), (unsigned int)opt.nofargs()) << std::endl;
 		return 0;

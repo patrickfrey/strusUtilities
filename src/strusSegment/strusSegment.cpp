@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/reference.hpp"
 #include "strus/analyzer/documentClass.hpp"
 #include "strus/moduleLoaderInterface.hpp"
@@ -15,44 +16,33 @@
 #include "strus/segmenterInterface.hpp"
 #include "strus/segmenterInstanceInterface.hpp"
 #include "strus/segmenterContextInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "strus/analyzer/term.hpp"
+#include "strus/analyzer/segmenterOptions.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
-#include "private/programOptions.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <cerrno>
+#include <cstdio>
 #include <memory>
-
-struct TermOrder
-{
-	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
-	{
-		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
-		int cmp;
-		cmp = aa.type().compare( bb.type());
-		if (cmp != 0) return (cmp < 0);
-		cmp = aa.value().compare( bb.value());
-		if (cmp != 0) return (cmp < 0);
-		return false;
-	}
-};
 
 std::string escapeEndOfLine( const std::string& str)
 {
@@ -74,28 +64,62 @@ std::string escapeEndOfLine( const std::string& str)
 	return rt;
 }
 
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
+
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 13,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 15,
 				"h,help", "v,version", "license",
-				"s,segmenter:", "e,expression:",
+				"G,debug:", "g,segmenter:", "C,contenttype:", "e,expression:",
 				"m,module:", "M,moduledir:", "P,prefix:", "i,index",
 				"p,position", "q,quot:", "E,esceol", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -175,20 +199,25 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
-			std::cout << "-s|--segmenter <NAME>" << std::endl;
+			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
+			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of the document processed.") << std::endl;
 			std::cout << "-e|--expression <EXPR>" << std::endl;
-			std::cout << "    " << _TXT("Use the expression <EXPR> to select documents (default '//()')") << std::endl;
+			std::cout << "    " << _TXT("Use the expression <EXPR> to select document contents.") << std::endl;
+			std::cout << "    " << _TXT("Select all content if nothing specified)") << std::endl;
 			std::cout << "-i|--index" << std::endl;
 			std::cout << "    " << _TXT("Print the indices of the expressions matching as prefix with ':'") << std::endl;
 			std::cout << "-p|--position" << std::endl;
 			std::cout << "    " << _TXT("Print the positions of the expressions matching as prefix") << std::endl;
 			std::cout << "-q|--quot <STR>" << std::endl;
-			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default \"\'\")") << std::endl;
+			std::cout << "    " << _TXT("Use the string <STR> as quote for the result (default no quotes)") << std::endl;
 			std::cout << "-P|--prefix <STR>" << std::endl;
 			std::cout << "    " << _TXT("Use the string <STR> as prefix for the result") << std::endl;
 			std::cout << "-E|--esceol" << std::endl;
@@ -199,8 +228,8 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		// Parse arguments:
-		std::string docpath = opt[0];
 		std::string segmenterName;
+		std::string contenttype;
 		std::string resultPrefix;
 		std::string resultQuot;
 		bool printIndices = opt( "index");
@@ -218,6 +247,11 @@ int main( int argc, const char* argv[])
 		{
 			segmenterName = opt[ "segmenter"];
 		}
+		if (opt( "contenttype"))
+		{
+			contenttype = opt[ "contenttype"];
+		}
+		std::string docpath = getFileArg( opt[0], moduleLoader.get());
 
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -231,11 +265,27 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
 
 		// Create objects for segmenter:
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
-		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+		if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -246,14 +296,52 @@ int main( int argc, const char* argv[])
 			analyzerBuilder.reset( aproxy);
 		}
 
-		const strus::SegmenterInterface*
-			segmentertype = analyzerBuilder->getSegmenter( segmenterName);
-		if (!segmentertype) throw strus::runtime_error(_TXT("failed to get segmenter interface by name"));
-		std::auto_ptr<strus::SegmenterInstanceInterface>
-			segmenter( segmentertype->createInstance());
-		if (!segmenter.get()) throw strus::runtime_error(_TXT("failed to segmenter instance"));
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
+
+		// Load the document and get its properties:
+		strus::InputStream input( docpath);
+		strus::analyzer::DocumentClass documentClass;
+		if (!contenttype.empty())
+		{
+			documentClass = strus::parse_DocumentClass( contenttype, errorBuffer.get());
+			if (!documentClass.defined() && errorBuffer->hasError())
+			{
+				throw std::runtime_error( _TXT("failed to parse document class"));
+			}
+		}
+		if (!documentClass.defined())
+		{
+			char hdrbuf[ 4096];
+			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+			if (input.error())
+			{
+				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+			}
+			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
+			{
+				throw std::runtime_error( _TXT("failed to detect document class")); 
+			}
+		}
+		// Create the document segmenter either defined by the document class or by content or by the name specified:
+		const strus::SegmenterInterface* segmenterType;
+		strus::analyzer::SegmenterOptions segmenteropts;
+		if (segmenterName.empty())
+		{
+			segmenterType = textproc->getSegmenterByMimeType( documentClass.mimeType());
+			if (!segmenterType) throw strus::runtime_error(_TXT("failed to find document segmenter specified by MIME type '%s'"), documentClass.mimeType().c_str());
+			if (!documentClass.scheme().empty())
+			{
+				segmenteropts = textproc->getSegmenterOptions( documentClass.scheme());
+			}
+		}
+		else
+		{
+			segmenterType = textproc->getSegmenterByName( segmenterName);
+			if (!segmenterType) throw strus::runtime_error(_TXT("failed to find document segmenter specified by name '%s'"), segmenterName.c_str());
+		}
+		strus::local_ptr<strus::SegmenterInstanceInterface> segmenter( segmenterType->createInstance( segmenteropts));
+		if (!segmenter.get()) throw std::runtime_error( _TXT("failed to segmenter instance"));
 
 		// Load expressions:
 		if (opt("expression"))
@@ -267,25 +355,12 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
-			segmenter->defineSelectorExpression( 0, "//()");
+			segmenter->defineSelectorExpression( 0, "");
 		}
 
-		// Load the document and get its properties:
-		strus::InputStream input( docpath);
-		char hdrbuf[ 1024];
-		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
-		if (input.error())
-		{
-			throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
-		}
-		strus::analyzer::DocumentClass dclass;
-		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
-		{
-			throw strus::runtime_error(_TXT("failed to detect document class")); 
-		}
-		std::auto_ptr<strus::SegmenterContextInterface>
-			segmenterContext( segmenter->createContext( dclass));
-		if (!segmenterContext.get()) throw strus::runtime_error(_TXT("failed to segmenter context"));
+		// Create the segmenter
+		strus::local_ptr<strus::SegmenterContextInterface> segmenterContext( segmenter->createContext( documentClass));
+		if (!segmenterContext.get()) throw std::runtime_error( _TXT("failed to segmenter context"));
 
 		// Process the document:
 		enum {SegmenterBufSize=8192};
@@ -338,8 +413,13 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in segment document"));
+			throw std::runtime_error( _TXT("unhandled error in segment document"));
 		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

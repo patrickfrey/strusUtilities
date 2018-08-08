@@ -1,0 +1,14 @@
+StrusCreate -S $T/storage.conf
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc1.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc2.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc3.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc4.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc5.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc6.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc7.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc8.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc9.xml
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/doc10.xml
+StrusUpdateStorageCalcStatistics -s "path=storage" docnorm word "sqr( tf * log((N+1)/(df+1)))" "sqrt(_0)" 
+StrusInspect -s path=storage metadata docnorm
+

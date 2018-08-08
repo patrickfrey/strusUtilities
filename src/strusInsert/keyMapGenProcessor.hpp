@@ -10,13 +10,14 @@
 #include "strus/index.hpp"
 #include <vector>
 #include <string>
-#include "private/utils.hpp"
-#include "analyzerMap.hpp"
+#include "strus/base/thread.hpp"
+#include "strus/base/atomic.hpp"
+#include "private/documentAnalyzer.hpp"
 
 namespace strus {
 
 /// \brief Forward declaration
-class DocumentAnalyzerInterface;
+class DocumentAnalyzerInstanceInterface;
 /// \brief Forward declaration
 class TextProcessorInterface;
 /// \brief Forward declaration
@@ -53,7 +54,7 @@ public:
 	void printKeyOccurrenceList( std::ostream& out, std::size_t maxNofResults) const;
 
 private:
-	utils::Mutex m_mutex;
+	strus::mutex m_mutex;
 	std::vector<KeyOccurrenceList> m_keyOccurrenceListBuf;
 };
 
@@ -63,7 +64,8 @@ class KeyMapGenProcessor
 public:
 	KeyMapGenProcessor(
 			const TextProcessorInterface* textproc_,
-			const AnalyzerMap* analyzerMap_,
+			const strus::DocumentAnalyzer* analyzerMap_,
+			const analyzer::DocumentClass& defaultDocumentClass_,
 			KeyMapGenResultList* que_,
 			FileCrawlerInterface* crawler_,
 			ErrorBufferInterface* errorhnd_);
@@ -75,10 +77,11 @@ public:
 
 private:
 	const TextProcessorInterface* m_textproc;
-	const AnalyzerMap* m_analyzerMap;
+	const strus::DocumentAnalyzer* m_analyzerMap;
+	analyzer::DocumentClass m_defaultDocumentClass;
 	KeyMapGenResultList* m_que;
 	FileCrawlerInterface* m_crawler;
-	utils::AtomicBool m_terminated;
+	strus::AtomicFlag m_terminated;
 	ErrorBufferInterface* m_errorhnd;
 };
 

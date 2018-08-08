@@ -20,20 +20,23 @@
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
-#include "private/programOptions.hpp"
-#include "private/utils.hpp"
+#include "strus/base/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
+#include "strus/base/local_ptr.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
@@ -42,14 +45,14 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	std::string dbname;
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -144,7 +147,7 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 	for (si = skipSpaces( si, se); si != se; si = skipSpaces( si, se))
 	{
 		std::string cmd( parseIdentifier( si, se, _TXT("command name")));
-		if (strus::utils::caseInsensitiveEquals( cmd, "Alter"))
+		if (strus::caseInsensitiveEquals( cmd, "Alter"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("old element name")));
 			std::string newname( parseIdentifier( si, se, _TXT("new element name")));
@@ -152,27 +155,27 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 
 			rt.push_back( AlterMetaDataCommand::AlterElement( name, newname, type));
 		}
-		else if (strus::utils::caseInsensitiveEquals( cmd, "Add"))
+		else if (strus::caseInsensitiveEquals( cmd, "Add"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("element name")));
 			std::string type( parseIdentifier( si, se, _TXT("element type name")));
 
 			rt.push_back( AlterMetaDataCommand::AddElement( name, type));
 		}
-		else if (strus::utils::caseInsensitiveEquals( cmd, "Rename"))
+		else if (strus::caseInsensitiveEquals( cmd, "Rename"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("old element name")));
 			std::string newname( parseIdentifier( si, se, _TXT("new element name")));
 
 			rt.push_back( AlterMetaDataCommand::RenameElement( name, newname));
 		}
-		else if (strus::utils::caseInsensitiveEquals( cmd, "Delete"))
+		else if (strus::caseInsensitiveEquals( cmd, "Delete"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("element name")));
 
 			rt.push_back( AlterMetaDataCommand::DeleteElement( name));
 		}
-		else if (strus::utils::caseInsensitiveEquals( cmd, "Clear"))
+		else if (strus::caseInsensitiveEquals( cmd, "Clear"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("element name")));
 			
@@ -190,7 +193,7 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 		else
 		{
 			std::string str( si, si+30);
-			throw strus::runtime_error( _TXT( "semicolon expected as separator of commands at '..."), str.c_str());
+			throw strus::runtime_error( _TXT( "semicolon expected as separator of commands at '%s..."), str.c_str());
 		}
 	}
 	return rt;
@@ -200,26 +203,35 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 6,
-				"h,help", "v,version", "license", "m,module:", "M,moduledir:", "T,trace:");
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+			errorBuffer.get(), argc, argv, 7,
+			"h,help", "v,version", "license", "G,debug:", "m,module:", "M,moduledir:", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader(
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader(
 			strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("error creating module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("error creating module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -325,6 +337,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -350,13 +364,29 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
 
 		// Create objects for altering the meta data table:
-		std::auto_ptr<strus::StorageObjectBuilderInterface> builder;
-		std::auto_ptr<strus::StorageAlterMetaDataTableInterface> md;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> builder;
+		strus::local_ptr<strus::StorageAlterMetaDataTableInterface> md;
 
 		builder.reset( moduleLoader->createStorageObjectBuilder());
-		if (!builder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+		if (!builder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -368,7 +398,7 @@ int main( int argc, const char* argv[])
 		}
 
 		md.reset( strus::createAlterMetaDataTable( builder.get(), errorBuffer.get(), storagecfg));
-		if (!md.get()) throw strus::runtime_error(_TXT("failed to create storage alter metadata table structure"));
+		if (!md.get()) throw std::runtime_error( _TXT("failed to create storage alter metadata table structure"));
 
 		// Execute alter meta data table commands:
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();
@@ -394,12 +424,16 @@ int main( int argc, const char* argv[])
 			}
 		}
 		std::cerr << _TXT("updating meta data table changes...") << std::endl;
-		if (!md->commit()) throw strus::runtime_error(_TXT("alter meta data commit failed"));
+		if (!md->commit()) throw std::runtime_error( _TXT("alter meta data commit failed"));
 
 		std::cerr << _TXT("done") << std::endl;
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in alter meta data"));
+			throw std::runtime_error( _TXT("unhandled error in alter meta data"));
+		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
 		return 0;
 	}

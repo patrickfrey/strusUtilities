@@ -40,8 +40,6 @@ Testing/
 CPackConfig.cmake
 CPackSourceConfig.cmake
 *.cmake.user
-include/private/version.hpp
-src/utils/internationalization.cpp
 dist/obs/deploy_to_obs.sh
 dist/archlinux/PKGBUILD
 dist/obs/strusutilities.dsc
@@ -49,7 +47,12 @@ dist/obs/strusutilities-Debian_7.0.dsc
 dist/obs/strusutilities-xUbuntu_12.04.dsc
 dist/redhat/strusutilities.spec
 
+# Suggested build directories
+build
+build_clang
+
 # Compiled Programs
+tests/scripts/execTest
 src/strusCreate/strusCreate
 src/strusDestroy/strusDestroy
 src/strusAnalyze/strusAnalyze
@@ -65,6 +68,7 @@ src/strusCheckStorage/strusCheckStorage
 src/strusDumpStorage/strusDumpStorage
 src/strusInspect/strusInspect
 src/strusUpdateStorage/strusUpdateStorage
+src/strusUpdateStorageCalcStatistics/strusUpdateStorageCalcStatistics
 src/strusSegment/strusSegment
 src/strusHelp/strusHelp
 src/strusDeleteDocument/strusDeleteDocument
@@ -82,3 +86,7 @@ tests/scripts/exec
 examples/vector/eigenwords/model.vs
 examples/vector/eigenwords/classes.txt
 examples/vector/eigenwords/features.txt
+
+# deploy to obs tar:
+strusutilities-*.tar.gz
+

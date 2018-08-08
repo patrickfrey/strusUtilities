@@ -1,0 +1,67 @@
+#FILE#A.xml
+Introduction
+
+   The user interacts with application software on a typical desktop computer. The application software
+   layer interfaces with the operating system.
+
+#FILE#B.xml
+History
+
+An algorithm for what would have been the first piece of
+software was written by Ada Lovelace in the 19th century, for the
+planned Analytical Engine. However, neither the Analytical Engine
+nor any software for it were ever created.
+
+#FILE#C.xml
+Architecture
+
+Users often see things differently from programmers. People who use
+modern general purpose computers (as opposed to embedded systems,
+analog computers and supercomputers) usually see three layers
+of software performing a variety of tasks: platform, application, and
+user software.
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<doc>
+<docid>A</docid>
+<title>Software Introduction</title>
+<text>
+<h1>Introduction</h1>
+<p>
+   The <NN>user</NN> <VV>interacts</VV> with <NN>application</NN> <NN>software</NN> on a typical <NN>desktop computer</NN>. The <NN>application software</NN>
+   <NN>layer</NN> <VV>interfaces</VV> with the <NN>operating</NN> <NN>system</NN>.
+</p>
+</text>
+</doc>
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<doc>
+<docid>B</docid>
+<title>Software History</title>
+<text>
+<h1>History</h1>
+<p>
+An <NN>algorithm</NN> for what <VV>would</VV> <VV>have</VV> <VV>been</VV> <VV>the</VV> first <NN>piece</NN> of
+<NN>software</NN> <VV>was</VV> <VV>written</VV> by Ada Lovelace in the 19th century, for the
+planned Analytical Engine. However, neither the Analytical Engine
+nor any <NN>software</NN> for it <VV>were</VV> ever <VV>created</VV>.
+</p>
+</text>
+</doc>
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<doc>
+<docid>B</docid>
+<title>Software Architecture</title>
+<text>
+<h1>Architecture</h1>
+<p>
+<NN>Users</NN> often <VV>see</VV> <NN>things</NN> differently from <NN>programmers</NN>. <NN>People</NN> who <VV>use</VV>
+modern general purpose <NN>computers</NN> (as <VV>opposed</VV> to <NN>embedded systems</NN>,
+analog <NN>computers</NN> and <NN>supercomputers</NN>) usually see three <NN>layers</NN>
+of <NN>software</NN> <VV>performing</VV> a <NN>variety</NN> of <NN>tasks</NN>: <NN>platform</NN>, <NN>application</NN>, and
+<NN>user</NN> <NN>software</NN>.
+</p>
+</text>
+</doc>
+

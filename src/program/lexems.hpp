@@ -10,6 +10,8 @@
 #include "strus/metaDataRestrictionInterface.hpp"
 #include <string>
 
+#error DEPRECATED
+
 namespace strus {
 namespace parser {
 
@@ -32,6 +34,10 @@ static inline bool isOr( char ch)
 static inline bool isExp( char ch)
 {
 	return (ch == '^');
+}
+static inline bool isTilde( char ch)
+{
+	return (ch == '~');
 }
 static inline bool isMinus( char ch)
 {
@@ -139,7 +145,7 @@ static inline bool isSpace( char ch)
 }
 static inline bool isCompareOperator( const char* si)
 {
-	return si[0] == '<' || si[0] == '>' || (si[0] == '!' && si[1] == '=') || (si[0] == '=' && si[1] == '=');
+	return si[0] == '<' || si[0] == '>' || si[0] == '!' || si[0] == '=';
 }
 static inline void skipToEoln( char const*& src)
 {

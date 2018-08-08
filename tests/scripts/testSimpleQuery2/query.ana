@@ -1,0 +1,4 @@
+[Element]
+	stem = lc:convdia(en):stem(en) word word;
+	tist = lc:convdia(en):stem(en) word title;
+

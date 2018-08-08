@@ -20,15 +20,18 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "private/programOptions.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "strus/base/programOptions.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 
 
@@ -39,12 +42,12 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -55,24 +58,34 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 8,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 9,
 				"h,help", "v,version", "license",
-				"m,module:", "M,moduledir:",
+				"G,debug:", "m,module:", "M,moduledir:",
 				"s,storage:", "S,configfile:", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -177,6 +190,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -205,11 +220,27 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
 
 		// Create root object:
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
+		strus::local_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
-		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+		if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -226,18 +257,22 @@ int main( int argc, const char* argv[])
 		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorBuffer->fetchError());
 
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+		if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 
 		// Do the delete:
 		if (!dbi->destroyDatabase( databasecfg))
 		{
-			throw strus::runtime_error(_TXT("error destroying database"));
+			throw std::runtime_error( _TXT("error destroying database"));
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in destroy storage"));
+			throw std::runtime_error( _TXT("unhandled error in destroy storage"));
 		}
-		std::cerr << _TXT("database successfully destroyed.") << std::endl;
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

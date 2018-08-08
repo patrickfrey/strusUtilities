@@ -1,0 +1,6 @@
+[SearchIndex]
+    orig = orig word /categories();
+
+[Attribute]
+    title = text content /title();
+

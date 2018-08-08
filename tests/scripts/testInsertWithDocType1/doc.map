@@ -1,0 +1,4 @@
+program doc.ana analyze "application/xml";
+program doc.ana analyze "content=application/json";
+
+

@@ -1,0 +1,7 @@
+[SearchIndex]
+    stem = orig word /title();
+    stem = orig word /description();
+
+[Attribute]
+    title = text content /title();
+

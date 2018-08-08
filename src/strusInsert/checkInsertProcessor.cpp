@@ -10,7 +10,7 @@
 #include "strus/index.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/analyzer/documentClass.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/storageClientInterface.hpp"
@@ -21,15 +21,16 @@
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
-#include "private/utils.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/shared_ptr.hpp"
+#include "strus/base/thread.hpp"
+#include "private/fileCrawlerInterface.hpp"
 #include "private/errorUtils.hpp"
+#include "private/documentAnalyzer.hpp"
 #include "private/internationalization.hpp"
-#include "fileCrawlerInterface.hpp"
 #include <cmath>
 #include <limits>
-#include <boost/thread.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/interprocess/smart_ptr/unique_ptr.hpp>
+#include <iostream>
 #include <stdarg.h>
 
 using namespace strus;
@@ -37,7 +38,8 @@ using namespace strus;
 CheckInsertProcessor::CheckInsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
-		const AnalyzerMap* analyzerMap_,
+		const strus::DocumentAnalyzer* analyzerMap_,
+		const analyzer::DocumentClass& defaultDocumentClass_,
 		FileCrawlerInterface* crawler_,
 		const std::string& logfile_,
 		ErrorBufferInterface* errorhnd_)
@@ -45,6 +47,7 @@ CheckInsertProcessor::CheckInsertProcessor(
 	:m_storage(storage_)
 	,m_textproc(textproc_)
 	,m_analyzerMap(analyzerMap_)
+	,m_defaultDocumentClass(defaultDocumentClass_)
 	,m_crawler(crawler_)
 	,m_terminated(false)
 	,m_logfile(logfile_)
@@ -57,25 +60,8 @@ CheckInsertProcessor::~CheckInsertProcessor()
 
 void CheckInsertProcessor::sigStop()
 {
-	m_terminated = true;
+	m_terminated.set( true);
 }
-
-template<typename T>
-struct ShouldBeDefaultDeleter {
-	void operator()(T *p)
-	{
-		delete p;
-	}
-};
-
-template<typename T>
-class unique_ptr
-	:public boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >
-{
-public:
-	unique_ptr( T* p)
-		:boost::interprocess::unique_ptr<T,ShouldBeDefaultDeleter<T> >(p){}
-};
 
 void CheckInsertProcessor::run()
 {
@@ -83,81 +69,78 @@ void CheckInsertProcessor::run()
 	{
 		std::vector<std::string> files;
 		std::vector<std::string>::const_iterator fitr;
-	
-		boost::scoped_ptr<strus::MetaDataReaderInterface> metadata( 
-			m_storage->createMetaDataReader());
-		if (!metadata.get()) throw strus::runtime_error(_TXT("error creating meta data reader"));
+
+		strus::local_ptr<strus::MetaDataReaderInterface> metadata( m_storage->createMetaDataReader());
+		if (!metadata.get()) throw std::runtime_error( _TXT("error creating meta data reader"));
 	
 		// Evaluate the expected types of the meta data elements to make them comparable
 		std::vector<strus::NumericVariant::Type> metadatatype;
-		strus::Index mi=0, me=metadata->nofElements();
-		for (; mi != me; ++mi)
 		{
-			const char* tp = metadata->getType( mi);
-			if ((tp[0]|32) == 'i')
+			strus::Index mi=0, me=metadata->nofElements();
+			for (; mi != me; ++mi)
 			{
-				metadatatype.push_back( strus::NumericVariant::Int);
-			}
-			else if ((tp[0]|32) == 'u')
-			{
-				metadatatype.push_back( strus::NumericVariant::UInt);
-			}
-			else if ((tp[0]|32) == 'f')
-			{
-				metadatatype.push_back( strus::NumericVariant::Float);
-			}
-			else
-			{
-				metadatatype.push_back( strus::NumericVariant::Null);
+				const char* tp = metadata->getType( mi);
+				if ((tp[0]|32) == 'i')
+				{
+					metadatatype.push_back( strus::NumericVariant::Int);
+				}
+				else if ((tp[0]|32) == 'u')
+				{
+					metadatatype.push_back( strus::NumericVariant::UInt);
+				}
+				else if ((tp[0]|32) == 'f')
+				{
+					metadatatype.push_back( strus::NumericVariant::Float);
+				}
+				else
+				{
+					metadatatype.push_back( strus::NumericVariant::Null);
+				}
 			}
 		}
-	
 		unsigned int filesChecked = 0;
-		while (m_crawler->fetch( files))
+		while (!(files=m_crawler->fetch()).empty())
 		{
 			fitr = files.begin();
-			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
+			for (int fidx=0; !m_terminated.test() && fitr != files.end(); ++fitr,++fidx)
 			{
 				try
 				{
 					strus::InputStream input( *fitr);
-					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
-					if (m_analyzerMap->documentClass().mimeType().empty())
+					strus::local_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
+					strus::analyzer::DocumentClass dclass;
+					if (!m_defaultDocumentClass.defined())
 					{
 						// Read the input file to analyze and detect its document type:
-						char hdrbuf[ 1024];
+						char hdrbuf[ 4096];
 						std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
 						if (input.error())
 						{
 							std::cerr << string_format( _TXT( "failed to read document file '%s': %s"), fitr->c_str(), ::strerror( input.error())) << std::endl; 
 							continue;
 						}
-						strus::analyzer::DocumentClass dclass;
-						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
 						{
 							std::cerr << string_format( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 							continue;
 						}
-						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( dclass);
-						if (!analyzer)
-						{
-							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
-							continue;
-						}
+					}
+					else
+					{
+						dclass = m_defaultDocumentClass;
+					}
+					const strus::DocumentAnalyzerInstanceInterface* analyzer = m_analyzerMap->get( dclass);
+					if (analyzer)
+					{
 						analyzerContext.reset( analyzer->createContext( dclass));
 					}
 					else
 					{
-						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( m_analyzerMap->documentClass());
-						if (!analyzer)
-						{
-							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), m_analyzerMap->documentClass().mimeType().c_str(), m_analyzerMap->documentClass().scheme().c_str()) << std::endl; 
-							continue;
-						}
-						analyzerContext.reset( analyzer->createContext( m_analyzerMap->documentClass()));
+						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
+						continue;
 					}
-					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
-	
+					if (!analyzerContext.get()) throw std::runtime_error( _TXT("error creating analyzer context"));
+
 					// Analyze the document (with subdocuments) and check it:
 					enum {AnalyzerBufSize=8192};
 					char buf[ AnalyzerBufSize];
@@ -181,20 +164,20 @@ void CheckInsertProcessor::run()
 						strus::analyzer::Document doc;
 						while (analyzerContext->analyzeNext( doc))
 						{
-							std::vector<strus::analyzer::Attribute>::const_iterator
+							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								oi = doc.attributes().begin(),
 								oe = doc.attributes().end();
 							for (;oi != oe
 								&& oi->name() != strus::Constants::attribute_docid();
 								++oi){}
 							const char* docid = 0;
-							boost::scoped_ptr<strus::StorageDocumentInterface> storagedoc;
+							strus::local_ptr<strus::StorageDocumentInterface> storagedoc;
 							if (oi != oe)
 							{
 								storagedoc.reset(
 									m_storage->createDocumentChecker(
 										oi->value(), m_logfile));
-								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document checker"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document checker"));
 								docid = oi->value().c_str();
 								//... use the docid from the analyzer if defined there
 							}
@@ -203,7 +186,7 @@ void CheckInsertProcessor::run()
 								storagedoc.reset(
 									m_storage->createDocumentChecker(
 										*fitr, m_logfile));
-								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document checker"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document checker"));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();
@@ -217,7 +200,7 @@ void CheckInsertProcessor::run()
 							unsigned int maxpos = 0;
 		
 							// Define all search index term occurrencies:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								ti = doc.searchIndexTerms().begin(),
 								te = doc.searchIndexTerms().end();
 							for (; ti != te; ++ti)
@@ -239,7 +222,7 @@ void CheckInsertProcessor::run()
 							}
 			
 							// Define all forward index term occurrencies:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								fi = doc.forwardIndexTerms().begin(),
 								fe = doc.forwardIndexTerms().end();
 							for (; fi != fe; ++fi)
@@ -260,7 +243,7 @@ void CheckInsertProcessor::run()
 							}
 		
 							// Define all attributes extracted from the document analysis:
-							std::vector<strus::analyzer::Attribute>::const_iterator
+							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								ai = doc.attributes().begin(), ae = doc.attributes().end();
 							for (; ai != ae; ++ai)
 							{
@@ -268,7 +251,7 @@ void CheckInsertProcessor::run()
 							}
 	
 							// Define all metadata elements extracted from the document analysis:
-							std::vector<strus::analyzer::MetaData>::const_iterator
+							std::vector<strus::analyzer::DocumentMetaData>::const_iterator
 								mi = doc.metadata().begin(), me = doc.metadata().end();
 							for (; mi != me; ++mi)
 							{
@@ -283,8 +266,16 @@ void CheckInsertProcessor::run()
 									case strus::NumericVariant::Int:
 										if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
 										{
-											strus::NumericVariant av( (int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
-											storagedoc->setMetaData( mi->name(), av);
+											if (val < 0.0)
+											{
+												strus::NumericVariant av( (int64_t)(std::floor( val - std::numeric_limits<float>::epsilon())));
+												storagedoc->setMetaData( mi->name(), av);
+											}
+											else
+											{
+												strus::NumericVariant av( (int64_t)(std::floor( val + std::numeric_limits<float>::epsilon())));
+												storagedoc->setMetaData( mi->name(), av);
+											}
 										}
 										else
 										{
@@ -293,9 +284,9 @@ void CheckInsertProcessor::run()
 										break;
 									case strus::NumericVariant::UInt:
 										if (val - std::floor( val) < std::numeric_limits<float>::epsilon()
-										|| (val + std::numeric_limits<float>::epsilon()) < 0.0)
+										|| (val + std::numeric_limits<float>::epsilon()) > 0.0)
 										{
-											strus::NumericVariant av( (unsigned int)(std::floor( val) + std::numeric_limits<float>::epsilon()));
+											strus::NumericVariant av( (uint64_t)(std::floor( val + std::numeric_limits<float>::epsilon())));
 											storagedoc->setMetaData( mi->name(), av);
 										}
 										else
@@ -341,10 +332,6 @@ void CheckInsertProcessor::run()
 					filesChecked) << std::endl;
 		}
 	}
-	catch (const boost::thread_interrupted&)
-	{
-		std::cerr << _TXT("failed to complete check inserts: thread interrupted") << std::endl; 
-	}
 	catch (const std::bad_alloc& err)
 	{
 		std::cerr << _TXT("failed to complete check inserts: memory allocation error") << std::endl; 
@@ -352,6 +339,10 @@ void CheckInsertProcessor::run()
 	catch (const std::runtime_error& err)
 	{
 		std::cerr << string_format( _TXT( "failed to check documents: %s"), err.what()) << std::endl;
+	}
+	catch (...)
+	{
+		std::cerr << _TXT("failed to complete check inserts: unexpected exception") << std::endl; 
 	}
 	m_errorhnd->releaseContext();
 }

@@ -9,32 +9,34 @@
 #include "strus/constants.hpp"
 #include "strus/index.hpp"
 #include "strus/numericVariant.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
+#include "private/fileCrawlerInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/document.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
-#include "private/utils.hpp"
-#include "fileCrawlerInterface.hpp"
 #include "commitQueue.hpp"
 #include <memory>
+#include <iostream>
 #include <fstream>
-#include <boost/thread.hpp>
 
 using namespace strus;
 
 InsertProcessor::InsertProcessor(
 		StorageClientInterface* storage_,
 		const TextProcessorInterface* textproc_,
-		const AnalyzerMap* analyzerMap_,
+		const strus::DocumentAnalyzer* analyzerMap_,
+		const analyzer::DocumentClass& defaultDocumentClass_,
 		CommitQueue* commitque_,
 		FileCrawlerInterface* crawler_,
 		unsigned int transactionSize_,
@@ -43,6 +45,7 @@ InsertProcessor::InsertProcessor(
 	:m_storage(storage_)
 	,m_textproc(textproc_)
 	,m_analyzerMap(analyzerMap_)
+	,m_defaultDocumentClass(defaultDocumentClass_)
 	,m_commitque(commitque_)
 	,m_crawler(crawler_)
 	,m_transactionSize(transactionSize_)
@@ -57,7 +60,7 @@ InsertProcessor::~InsertProcessor()
 
 void InsertProcessor::sigStop()
 {
-	m_terminated = true;
+	m_terminated.set( true);
 }
 
 void InsertProcessor::run()
@@ -68,54 +71,48 @@ void InsertProcessor::run()
 		std::vector<std::string> files;
 		std::vector<std::string>::const_iterator fitr;
 	
-		std::auto_ptr<strus::StorageTransactionInterface>
+		strus::local_ptr<strus::StorageTransactionInterface>
 			transaction( m_storage->createTransaction());
-		if (!transaction.get()) throw strus::runtime_error(_TXT("error creating storage transaction"));
+		if (!transaction.get()) throw std::runtime_error( _TXT("error creating storage transaction"));
 
-		while (m_crawler->fetch( files))
+		while (!(files=m_crawler->fetch()).empty())
 		{
 			fitr = files.begin();
-			for (int fidx=0; !m_terminated && fitr != files.end(); ++fitr,++fidx)
+			for (int fidx=0; !m_terminated.test() && fitr != files.end(); ++fitr,++fidx)
 			{
 				try
 				{
 					strus::InputStream input( *fitr);
-					std::auto_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
-					if (m_analyzerMap->documentClass().mimeType().empty())
+					strus::local_ptr<strus::DocumentAnalyzerContextInterface> analyzerContext;
+					strus::analyzer::DocumentClass dclass;
+					if (!m_defaultDocumentClass.defined())
 					{
 						// Read the input file to analyze and detect its document type:
-						char hdrbuf[ 1024];
+						char hdrbuf[ 4096];
 						std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
 						if (input.error())
 						{
 							std::cerr << string_format( _TXT( "failed to read document file '%s': %s"), fitr->c_str(), ::strerror( input.error())) << std::endl; 
 							continue;
 						}
-						strus::analyzer::DocumentClass dclass;
-						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+						if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
 						{
 							std::cerr << string_format( _TXT( "failed to detect document class of file '%s'"), fitr->c_str()) << std::endl; 
 							continue;
 						}
-						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( dclass);
-						if (!analyzer)
-						{
-							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
-							continue;
-						}
-						analyzerContext.reset( analyzer->createContext( dclass));
 					}
 					else
 					{
-						const strus::DocumentAnalyzerInterface* analyzer = m_analyzerMap->get( m_analyzerMap->documentClass());
-						if (!analyzer)
-						{
-							std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), m_analyzerMap->documentClass().mimeType().c_str(), m_analyzerMap->documentClass().scheme().c_str()) << std::endl; 
-							continue;
-						}
-						analyzerContext.reset( analyzer->createContext( m_analyzerMap->documentClass()));
+						dclass = m_defaultDocumentClass;
 					}
-					if (!analyzerContext.get()) throw strus::runtime_error(_TXT("error creating analyzer context"));
+					const strus::DocumentAnalyzerInstanceInterface* analyzer = m_analyzerMap->get( dclass);
+					if (!analyzer)
+					{
+						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
+						continue;
+					}
+					analyzerContext.reset( analyzer->createContext( dclass));
+					if (!analyzerContext.get()) throw std::runtime_error( _TXT("error creating analyzer context"));
 
 					// Analyze the document (with subdocuments) and insert it:
 					enum {AnalyzerBufSize=8192};
@@ -137,28 +134,28 @@ void InsertProcessor::run()
 						analyzerContext->putInput( buf, readsize, eof);
 						// Analyze the document and print the result:
 						strus::analyzer::Document doc;
-						while (!m_terminated && analyzerContext->analyzeNext( doc))
+						while (!m_terminated.test() && analyzerContext->analyzeNext( doc))
 						{
 							// Create the storage transaction document with the correct docid:
-							std::vector<strus::analyzer::Attribute>::const_iterator
+							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								oi = doc.attributes().begin(),
 								oe = doc.attributes().end();
 							for (;oi != oe
 								&& oi->name() != strus::Constants::attribute_docid();
 								++oi){}
 							const char* docid = 0;
-							std::auto_ptr<strus::StorageDocumentInterface> storagedoc;
+							strus::local_ptr<strus::StorageDocumentInterface> storagedoc;
 							if (oi != oe)
 							{
 								storagedoc.reset( transaction->createDocument( oi->value()));
-								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document structure"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document structure"));
 								docid = oi->value().c_str();
 								//... use the docid from the analyzer if defined there
 							}
 							else
 							{
 								storagedoc.reset( transaction->createDocument( *fitr));
-								if (!storagedoc.get()) throw strus::runtime_error(_TXT("error creating document structure"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document structure"));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();
@@ -166,7 +163,7 @@ void InsertProcessor::run()
 							}
 							unsigned int maxpos = 0;
 							// Define all search index term occurrencies:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								ti = doc.searchIndexTerms().begin(),
 								te = doc.searchIndexTerms().end();
 							for (; ti != te; ++ti)
@@ -188,7 +185,7 @@ void InsertProcessor::run()
 							}
 		
 							// Define all forward index terms:
-							std::vector<strus::analyzer::Term>::const_iterator
+							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								fi = doc.forwardIndexTerms().begin(),
 								fe = doc.forwardIndexTerms().end();
 							for (; fi != fe; ++fi)
@@ -209,7 +206,7 @@ void InsertProcessor::run()
 							}
 		
 							// Define all attributes extracted from the document analysis:
-							std::vector<strus::analyzer::Attribute>::const_iterator
+							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								ai = doc.attributes().begin(), ae = doc.attributes().end();
 							for (; ai != ae; ++ai)
 							{
@@ -217,7 +214,7 @@ void InsertProcessor::run()
 							}
 	
 							// Define all metadata elements extracted from the document analysis:
-							std::vector<strus::analyzer::MetaData>::const_iterator
+							std::vector<strus::analyzer::DocumentMetaData>::const_iterator
 								mi = doc.metadata().begin(), me = doc.metadata().end();
 							for (; mi != me; ++mi)
 							{
@@ -234,14 +231,19 @@ void InsertProcessor::run()
 							storagedoc->done();
 							docCount++;
 
-							if (docCount == m_transactionSize && docCount && !m_terminated)
+							if (docCount == m_transactionSize && docCount && !m_terminated.test())
 							{
 								m_commitque->pushTransaction( transaction.get());
 								transaction.release();
 								transaction.reset( m_storage->createTransaction());
-								if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
+								if (!transaction.get()) throw std::runtime_error( _TXT("error recreating storage transaction"));
 								docCount = 0;
 							}
+						}
+						if (m_errorhnd->hasError())
+						{
+							const char* errmsg = m_errorhnd->fetchError();
+							throw strus::runtime_error( _TXT( "failed to process document '%s': %s"), fitr->c_str(), errmsg);
 						}
 					}
 					if (m_verbose)
@@ -253,7 +255,7 @@ void InsertProcessor::run()
 				{
 					std::cerr << string_format( _TXT( "failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
 					transaction.reset( m_storage->createTransaction());
-					if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
+					if (!transaction.get()) throw std::runtime_error( _TXT("error recreating storage transaction"));
 					docCount = 0;
 				}
 				catch (const std::runtime_error& err)
@@ -268,12 +270,12 @@ void InsertProcessor::run()
 						std::cerr << string_format( _TXT( "failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
 					}
 					transaction.reset( m_storage->createTransaction());
-					if (!transaction.get()) throw strus::runtime_error(_TXT("error recreating storage transaction"));
+					if (!transaction.get()) throw std::runtime_error( _TXT("error recreating storage transaction"));
 					docCount = 0;
 				}
 			}
 		}
-		if (!m_terminated && docCount)
+		if (!m_terminated.test() && docCount)
 		{
 			m_commitque->pushTransaction( transaction.get());
 			transaction.release();
@@ -296,9 +298,9 @@ void InsertProcessor::run()
 			std::cerr << string_format( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
 		}
 	}
-	catch (const boost::thread_interrupted&)
+	catch (...)
 	{
-		std::cerr << _TXT("failed to complete inserts: thread interrupted") << std::endl; 
+		std::cerr << _TXT("failed to complete inserts: uncaught exception in thread") << std::endl; 
 	}
 	m_errorhnd->releaseContext();
 }

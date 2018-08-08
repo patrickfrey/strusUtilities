@@ -10,6 +10,8 @@
 #ifndef _STRUS_UTILITIES_PROGRAM_ERROR_POSITION_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_ERROR_POSITION_INCLUDED
 
+#error DEPRECATED
+
 /// \brief strus toplevel namespace
 namespace strus {
 

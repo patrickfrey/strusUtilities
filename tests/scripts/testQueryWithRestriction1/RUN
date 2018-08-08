@@ -1,0 +1,7 @@
+StrusCreate -S $T/storage.conf
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "going"
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "sequence( on, holidays | 2) continent = 'Europe'"
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "continent = 'Europe' going"
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "continent = 'Europe','Africa' going"
+

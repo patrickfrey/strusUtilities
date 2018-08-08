@@ -1,0 +1,114 @@
+#FILE#A.xml
+TIT Introduction
+ART The
+NN user
+VERB interacts
+PP with
+NN application
+NN software
+PP on
+PP a
+ARV typical
+NN desktop computer
+EOS .
+ART The
+NN application software
+NN layer
+VERB interfaces
+PP with
+PP the
+NN operating
+NN system
+EOS .
+
+#FILE#B.xml
+TIT History
+PP An
+NN algorithm
+PP for
+PP what
+VERB would
+VERB have
+VERB been
+VERB the
+PP first
+NN piece
+PP of
+NN software
+VERB was
+VERB written
+PP by
+NNP Ada Lovelace
+PP in 
+PP the
+ADJ 19th century
+BRK ,
+APP for
+ART the
+ADJ planned
+NNP Analytical Engine
+EOS .
+ADV However
+BRK ,
+PP neither
+ART the
+NNP Analytical Engine
+PP nor
+PP any
+NN software
+PP for
+PP it
+VERB were
+PP ever
+VERB created
+EOS .
+
+#FILE#C.xml
+TIT Architecture
+
+NN Users
+PP often
+VERB see
+NN things
+ABV differently
+PP from
+NN programmers
+EOS .
+NN People
+PP who
+VERB use
+ADJ modern
+ADJ general purpose
+NN computers
+BRK (
+PP as 
+VERB opposed
+PP to
+NN embedded systems
+SEP ,
+ADJ analog
+NN computers
+PP and
+NN supercomputers
+BRK )
+ADV usually
+ADJ see
+ADJ three
+NN layers
+PP of
+NN software
+VERB performing
+PP a
+NN variety
+PP of
+NN tasks
+BRK :
+NN platform
+BRK ,
+NN application
+BRK ,
+PP and
+NN user
+NN software
+EOS .
+

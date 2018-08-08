@@ -7,8 +7,8 @@
  */
 #ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
-#include "private/utils.hpp"
-#include "analyzerMap.hpp"
+#include "strus/base/atomic.hpp"
+#include "private/documentAnalyzer.hpp"
 
 namespace strus {
 
@@ -17,7 +17,7 @@ class StorageClientInterface;
 /// \brief Forward declaration
 class TextProcessorInterface;
 /// \brief Forward declaration
-class DocumentAnalyzerInterface;
+class DocumentAnalyzerInstanceInterface;
 /// \brief Forward declaration
 class CommitQueue;
 /// \brief Forward declaration
@@ -32,7 +32,8 @@ public:
 	InsertProcessor(
 			StorageClientInterface* storage_,
 			const TextProcessorInterface* textproc_,
-			const AnalyzerMap* analyzerMap_,
+			const strus::DocumentAnalyzer* analyzerMap_,
+			const analyzer::DocumentClass& defaultDocumentClass_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
 			unsigned int transactionSize_,
@@ -47,12 +48,13 @@ public:
 private:
 	StorageClientInterface* m_storage;
 	const TextProcessorInterface* m_textproc;
-	const AnalyzerMap* m_analyzerMap;
+	const strus::DocumentAnalyzer* m_analyzerMap;
+	analyzer::DocumentClass m_defaultDocumentClass;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
 	unsigned int m_transactionSize;
 	bool m_verbose;
-	utils::AtomicBool m_terminated;
+	strus::AtomicFlag m_terminated;
 	ErrorBufferInterface* m_errorhnd;
 };
 

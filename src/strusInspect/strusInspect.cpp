@@ -34,18 +34,25 @@
 #include "strus/versionBase.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
+#include "strus/base/numstring.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/base/configParser.hpp"
-#include "private/programOptions.hpp"
-#include "private/version.hpp"
-#include "private/utils.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/programOptions.hpp"
+#include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
+#include <sstream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
+#include <limits>
 
+static int g_output_precision = 8;
 
 static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
 {
@@ -54,14 +61,14 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -73,16 +80,16 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 
 namespace strus
 {
-	typedef strus::utils::ScopedPtr<PostingIteratorInterface> PostingIteratorReference;
-	typedef strus::utils::ScopedPtr<DocumentTermIteratorInterface> DocumentTermIteratorReference;
-	typedef strus::utils::ScopedPtr<ForwardIteratorInterface> ForwardIteratorReference;
-	typedef strus::utils::ScopedPtr<MetaDataReaderInterface> MetaDataReaderReference;
+	typedef strus::Reference<PostingIteratorInterface> PostingIteratorReference;
+	typedef strus::Reference<DocumentTermIteratorInterface> DocumentTermIteratorReference;
+	typedef strus::Reference<ForwardIteratorInterface> ForwardIteratorReference;
+	typedef strus::Reference<MetaDataReaderInterface> MetaDataReaderReference;
 }
 
 static strus::Index stringToIndex( const char* value)
 {
 	std::ostringstream val;
-	return strus::utils::toint( std::string( value));
+	return strus::numstring_conv::toint( std::string( value), std::numeric_limits<strus::Index>::max());
 }
 static bool isIndex( char const* cc)
 {
@@ -90,15 +97,23 @@ static bool isIndex( char const* cc)
 	return (*cc == '\0');
 }
 
-static void inspectPositions( strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectPositions( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
-	if (size > 3) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 2) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 3) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 2) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
+
+	strus::Reference<strus::AttributeReaderInterface> areader;
+	strus::Index ehandle = -1;
+	if (!attribute.empty())
+	{
+		areader.reset( storage.createAttributeReader());
+		ehandle = areader->elementHandle( attribute.c_str());
+	}
 
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1]), 1));
-	if (!itr.get()) throw strus::runtime_error(_TXT("failed to create term posting iterator"));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 
 	if (size == 2)
 	{
@@ -107,9 +122,21 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		for (; docno <= maxDocno; ++docno)
 		{
 			docno = itr->skipDoc( docno);
-			if (!docno) break;
+			if (!docno)
+			{
+				if (printEmpty && ehandle <= 0) std::cout << docno << ':' << std::endl;
+				break;
+			}
 
-			std::cout << docno << ':';
+			if (ehandle > 0)
+			{
+				areader->skipDoc(docno);
+				std::cout << areader->getValue( ehandle) << ':';
+			}
+			else
+			{
+				std::cout << docno << ':';
+			}
 			strus::Index pos=0;
 			while (0!=(pos=itr->skipPos(pos+1)))
 			{
@@ -139,14 +166,14 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 }
 
 static void inspectDocumentIndexFeatureTypes( strus::StorageClientInterface& storage)
 {
-	std::auto_ptr<strus::ValueIteratorInterface> valItr( storage.createTermTypeIterator());
+	strus::local_ptr<strus::ValueIteratorInterface> valItr( storage.createTermTypeIterator());
 
 	// KLUDGE: This is bad, but the storage cannot tell us how far we should
 	// iterate, does it?
@@ -158,14 +185,22 @@ static void inspectDocumentIndexFeatureTypes( strus::StorageClientInterface& sto
 	}
 }
 
-static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
+
+	strus::Reference<strus::AttributeReaderInterface> areader;
+	strus::Index ehandle = -1;
+	if (!attribute.empty())
+	{
+		areader.reset( storage.createAttributeReader());
+		ehandle = areader->elementHandle( attribute.c_str());
+	}
 
 	strus::DocumentTermIteratorReference itr(
 		storage.createDocumentTermIterator( std::string(key[0])));
-	if (!itr.get()) throw strus::runtime_error(_TXT("failed to create document term iterator"));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create document term iterator"));
 
 	if (size == 1)
 	{
@@ -173,9 +208,23 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			if (!itr->skipDoc( docno)) continue;
+			if (!itr->skipDoc( docno))
+			{
+				if (printEmpty && ehandle <= 0)
+				{
+					std::cout << docno << ':' << std::endl;
+				}
+			}
+			if (ehandle > 0)
+			{
+				areader->skipDoc(docno);
+				std::cout << areader->getValue( ehandle) << ':' << std::endl;
+			}
+			else
+			{
+				std::cout << docno << ':' << std::endl;
+			}
 
-			std::cout << docno << ':' << std::endl;
 			strus::DocumentTermIteratorInterface::Term term;
 			while (itr->nextTerm( term))
 			{
@@ -203,27 +252,35 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 }
 
-static void inspectDocumentFrequency( strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectDocumentFrequency( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 2) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 2) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1]), 1));
-	if (!itr.get()) throw strus::runtime_error(_TXT("failed to create term posting iterator"));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 	std::cout << itr->documentFrequency() << std::endl;
 }
 
-static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage, strus::StorageClientInterface::DocumentStatisticsType stat, const char** key, int size)
+static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage, strus::StorageClientInterface::DocumentStatisticsType stat, const char** key, int size, const std::string& attribute)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
+
+	strus::Reference<strus::AttributeReaderInterface> areader;
+	strus::Index ehandle = -1;
+	if (!attribute.empty())
+	{
+		areader.reset( storage.createAttributeReader());
+		ehandle = areader->elementHandle( attribute.c_str());
+	}
 
 	if (size == 1)
 	{
@@ -231,7 +288,15 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			std::cout << docno << ' ' << storage.documentStatistics( docno, stat, key[0]) << std::endl;
+			if (ehandle > 0)
+			{
+				areader->skipDoc(docno);
+				std::cout << areader->getValue( ehandle) << ' ' << storage.documentStatistics( docno, stat, key[0]) << std::endl;
+			}
+			else
+			{
+				std::cout << docno << ' ' << storage.documentStatistics( docno, stat, key[0]) << std::endl;
+			}
 		}
 	}
 	else
@@ -245,20 +310,28 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 }
 
-static void inspectFeatureFrequency( strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectFeatureFrequency( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
-	if (size > 3) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 2) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 3) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 2) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
+
+	strus::Reference<strus::AttributeReaderInterface> areader;
+	strus::Index ehandle = -1;
+	if (!attribute.empty())
+	{
+		areader.reset( storage.createAttributeReader());
+		ehandle = areader->elementHandle( attribute.c_str());
+	}
 
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
 			std::string(key[0]), std::string(key[1]), 1));
-	if (!itr.get()) throw strus::runtime_error(_TXT("failed to create term posting iterator"));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 
 	if (size == 2)
 	{
@@ -266,9 +339,41 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			docno = itr->skipDoc( docno);
-			if (!docno) break;
-			std::cout << docno << ' ' << (*itr).frequency() << std::endl;
+			strus::Index next_docno = itr->skipDoc( docno);
+			if (docno != next_docno)
+			{
+				if (printEmpty && ehandle <= 0)
+				{
+					if (!next_docno)
+					{
+						for (; docno <= maxDocno; ++docno)
+						{
+							std::cout << docno << " 0" << std::endl;
+						}
+						break;
+					}
+					else
+					{
+						for (; docno < next_docno; ++docno)
+						{
+							std::cout << docno << " 0" << std::endl;
+						}
+					}
+				}
+				else
+				{
+					docno = next_docno;
+				}
+			}
+			if (ehandle > 0)
+			{
+				areader->skipDoc(docno);
+				std::cout << areader->getValue( ehandle) << ' ' << (*itr).frequency() << std::endl;
+			}
+			else
+			{
+				std::cout << docno << ' ' << (*itr).frequency() << std::endl;
+			}
 		}
 	}
 	else
@@ -289,31 +394,33 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 }
 
 static void inspectNofDocuments( const strus::StorageClientInterface& storage, const char**, int size)
 {
-	if (size > 0) throw strus::runtime_error( _TXT("too many arguments"));
+	if (size > 0) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
 	std::cout << storage.nofDocumentsInserted() << std::endl;
 }
 
 static void inspectMaxDocumentNumber( const strus::StorageClientInterface& storage, const char**, int size)
 {
-	if (size > 0) throw strus::runtime_error( _TXT("too many arguments"));
+	if (size > 0) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
 	std::cout << storage.maxDocumentNumber() << std::endl;
 }
 
-static void inspectDocAttribute( const strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectDocAttribute( const strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
-	std::auto_ptr<strus::AttributeReaderInterface>
+	strus::local_ptr<strus::AttributeReaderInterface>
 		attreader( storage.createAttributeReader());
-	if (!attreader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
+	if (!attreader.get()) throw std::runtime_error( _TXT("failed to create attribute reader"));
+
+	strus::Index ehandle = attribute.empty()?0:attreader->elementHandle( attribute.c_str());
 	strus::Index hnd = attreader->elementHandle( key[0]);
 	if (hnd == 0)
 	{
@@ -327,9 +434,16 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 		{
 			attreader->skipDoc( docno);
 			std::string value = attreader->getValue( hnd);
-			if (value.size())
+			if (printEmpty || value.size())
 			{
-				std::cout << docno << ' ' << value << std::endl;
+				if (ehandle > 0)
+				{
+					std::cout << attreader->getValue( ehandle) << ' ' << value << std::endl;
+				}
+				else
+				{
+					std::cout << docno << ' ' << value << std::endl;
+				}
 			}
 		}
 	}
@@ -347,20 +461,20 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 }
 
 static void inspectDocAttributeNames( const strus::StorageClientInterface& storage, const char** key, int size)
 {
-	if (size > 0) throw strus::runtime_error( _TXT("too many arguments"));
+	if (size > 0) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
 
-	std::auto_ptr<strus::AttributeReaderInterface>
+	strus::local_ptr<strus::AttributeReaderInterface>
 		attreader( storage.createAttributeReader());
-	if (!attreader.get()) throw strus::runtime_error(_TXT("failed to create attribute reader"));
+	if (!attreader.get()) throw std::runtime_error( _TXT("failed to create attribute reader"));
 
-	std::vector<std::string> alist = attreader->getAttributeNames();
+	std::vector<std::string> alist = attreader->getNames();
 	std::vector<std::string>::const_iterator ai = alist.begin(), ae = alist.end();
 
 	for (; ai != ae; ++ai)
@@ -369,13 +483,21 @@ static void inspectDocAttributeNames( const strus::StorageClientInterface& stora
 	}
 }
 
-static void inspectDocMetaData( const strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectDocMetaData( const strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
+
+	strus::Reference<strus::AttributeReaderInterface> areader;
+	strus::Index ehandle = -1;
+	if (!attribute.empty())
+	{
+		areader.reset( storage.createAttributeReader());
+		ehandle = areader->elementHandle( attribute.c_str());
+	}
 
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
-	if (!metadata.get()) throw strus::runtime_error(_TXT("failed to create meta data reader"));
+	if (!metadata.get()) throw std::runtime_error( _TXT("failed to create meta data reader"));
 	strus::Index hnd = metadata->elementHandle( key[0]);
 	if (hnd < 0)
 	{
@@ -388,10 +510,19 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 		for (; docno <= maxDocno; ++docno)
 		{
 			metadata->skipDoc( docno);
+
 			strus::NumericVariant value = metadata->getValue( hnd);
-			if (value.defined())
+			if (printEmpty || value.defined())
 			{
-				std::cout << docno << ' ' << value.tostring().c_str() << std::endl;
+				if (ehandle > 0)
+				{
+					areader->skipDoc(docno);
+					std::cout << areader->getValue( ehandle) << ' ' << value.tostring( g_output_precision).c_str() << std::endl;
+				}
+				else
+				{
+					std::cout << docno << ' ' << value.tostring( g_output_precision).c_str() << std::endl;
+				}
 			}
 		}
 	}
@@ -407,7 +538,7 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 			strus::NumericVariant value = metadata->getValue( hnd);
 			if (value.defined())
 			{
-				std::cout << value.tostring().c_str() << std::endl;
+				std::cout << value.tostring( g_output_precision).c_str() << std::endl;
 			}
 			else
 			{
@@ -416,17 +547,17 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 }
 
 static void inspectDocMetaTable( const strus::StorageClientInterface& storage, const char**, int size)
 {
-	if (size > 0) throw strus::runtime_error( _TXT("too many arguments"));
+	if (size > 0) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
 
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
-	if (!metadata.get()) throw strus::runtime_error(_TXT("failed to create meta data reader"));
+	if (!metadata.get()) throw std::runtime_error( _TXT("failed to create meta data reader"));
 
 	strus::Index ei = 0, ee = metadata->nofElements();
 	for (; ei != ee; ++ei)
@@ -436,13 +567,21 @@ static void inspectDocMetaTable( const strus::StorageClientInterface& storage, c
 	std::cout << std::endl;
 }
 
-static void inspectContent( strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectContent( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
+
+	strus::Reference<strus::AttributeReaderInterface> areader;
+	strus::Index ehandle = -1;
+	if (!attribute.empty())
+	{
+		areader.reset( storage.createAttributeReader());
+		ehandle = areader->elementHandle( attribute.c_str());
+	}
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	if (!viewer.get()) throw strus::runtime_error(_TXT("failed to create forward index iterator"));
+	if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator"));
 	if (size == 1)
 	{
 		strus::Index maxDocno = storage.maxDocumentNumber();
@@ -450,9 +589,17 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 		for (; docno <= maxDocno; ++docno)
 		{
 			viewer->skipDoc( docno);
-			if (0 != viewer->skipPos(0))
+			if (printEmpty || 0 != viewer->skipPos(0))
 			{
-				std::cout << docno << ":";
+				if (ehandle > 0)
+				{
+					areader->skipDoc(docno);
+					std::cout << areader->getValue( ehandle) << ": " << std::endl;
+				}
+				else
+				{
+					std::cout << docno << ":";
+				}
 				strus::Index pos=0;
 				while (0!=(pos=viewer->skipPos(pos+1)))
 				{
@@ -480,7 +627,7 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 }
@@ -550,11 +697,11 @@ static std::string mapCntrlToSpace( const std::string& tok)
 
 static void inspectForwardIndexStats( strus::StorageClientInterface& storage, const char** key, int size)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	if (!viewer.get()) throw strus::runtime_error(_TXT("failed to create forward index iterator"));
+	if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator"));
 	std::map<std::string,unsigned int> statmap;
 	if (size == 1)
 	{
@@ -576,7 +723,7 @@ static void inspectForwardIndexStats( strus::StorageClientInterface& storage, co
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 	std::map<std::string,unsigned int>::const_iterator si = statmap.begin(), se = statmap.end();
@@ -586,13 +733,13 @@ static void inspectForwardIndexStats( strus::StorageClientInterface& storage, co
 	}
 }
 
-static void inspectForwardIndexMap( strus::StorageClientInterface& storage, const char** key, int size)
+static void inspectForwardIndexMap( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-	if (!viewer.get()) throw strus::runtime_error(_TXT("failed to create forward index iterator"));
+	if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator"));
 	if (size == 1)
 	{
 		strus::Index maxDocno = storage.maxDocumentNumber();
@@ -604,7 +751,7 @@ static void inspectForwardIndexMap( strus::StorageClientInterface& storage, cons
 			while (0!=(pos=viewer->skipPos(pos+1)))
 			{
 				std::string value = viewer->fetch();
-				std::cout << docno << " " << mapCntrlToSpace(value) << std::endl;
+				std::cout << docno << ":" << pos << " " << mapCntrlToSpace(value) << std::endl;
 			}
 		}
 	}
@@ -620,20 +767,20 @@ static void inspectForwardIndexMap( strus::StorageClientInterface& storage, cons
 			while (0!=(pos=viewer->skipPos(pos+1)))
 			{
 				std::string value = viewer->fetch();
-				std::cout << mapCntrlToSpace(value) << std::endl;
+				std::cout << pos << " " << mapCntrlToSpace(value) << std::endl;
 			}
 		}
 		else
 		{
-			throw strus::runtime_error( _TXT("unknown document"));
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
 		}
 	}
 }
 
 static void inspectToken( strus::StorageClientInterface& storage, const char** key, int size)
 {
-	if (size > 2) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 2) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 2) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 2) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::Index docno = isIndex(key[1])
 			?stringToIndex( key[1])
@@ -642,7 +789,7 @@ static void inspectToken( strus::StorageClientInterface& storage, const char** k
 	if (docno)
 	{
 		strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
-		if (!viewer.get()) throw strus::runtime_error(_TXT("failed to create forward index iterator"));
+		if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator"));
 		viewer->skipDoc( docno);
 		strus::Index pos=0;
 		while (0!=(pos=viewer->skipPos(pos+1)))
@@ -652,21 +799,21 @@ static void inspectToken( strus::StorageClientInterface& storage, const char** k
 	}
 	else
 	{
-		throw strus::runtime_error( _TXT("unknown document"));
+		throw strus::runtime_error( "%s",  _TXT("unknown document"));
 	}
 }
 
 static void inspectDocno( strus::StorageClientInterface& storage, const char** key, int size)
 {
-	if (size > 1) throw strus::runtime_error( _TXT("too many arguments"));
-	if (size < 1) throw strus::runtime_error( _TXT("too few arguments"));
+	if (size > 1) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	std::cout << storage.documentNumber( key[0]) << std::endl;
 }
 
 static void inspectConfig( strus::StorageClientInterface& storage, const char**, int size)
 {
-	if (size > 0) throw strus::runtime_error( _TXT("too many arguments"));
+	if (size > 0) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
 
 	std::cout << storage.config() << std::endl;
 }
@@ -675,27 +822,37 @@ static void inspectConfig( strus::StorageClientInterface& storage, const char**,
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 8,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 11,
 				"h,help", "v,version","license",
-				"m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "T,trace:");
+				"G,debug:", "m,module:", "M,moduledir:",
+				"r,rpc:", "s,storage:", "T,trace:",
+				"A,attribute:", "E,empty");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help"))
 		{
 			printUsageAndExit = true;
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
@@ -819,6 +976,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -835,6 +994,10 @@ int main( int argc, const char* argv[])
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
+			std::cout << "-A|--attribute <NAME>" << std::endl;
+			std::cout << "    " << _TXT("Print attribute with name <NAME> for lists of results instead of docno") << std::endl;
+			std::cout << "-E|--empty" << std::endl;
+			std::cout << "    " << _TXT("Print non existing elements as empty value") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
@@ -844,6 +1007,13 @@ int main( int argc, const char* argv[])
 			if (opt("rpc")) throw strus::runtime_error(_TXT("specified mutual exclusive options %s and %s"), "--storage", "--rpc");
 			storagecfg = opt["storage"];
 		}
+		std::string attribute;
+		if (opt("attribute"))
+		{
+			attribute = opt["attribute"];
+		}
+		bool printEmpty = opt("empty");
+
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -856,25 +1026,41 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
 
 		// Create objects for inspecting storage:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error( _TXT("error creating rpc client messaging"));
+			if (!messaging.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error( _TXT("error creating rpc client"));
+			if (!rpcClient.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc client"));
 			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating rpc storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc storage object builder"));
 		}
 		else
 		{
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating storage object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
@@ -890,83 +1076,83 @@ int main( int argc, const char* argv[])
 		std::size_t inpectargsize = opt.nofargs() - 1;
 
 		// Do inspect what is requested:
-		std::auto_ptr<strus::StorageClientInterface>
+		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create storage client"));
+		if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
 
-		if (strus::utils::caseInsensitiveEquals( what, "pos"))
+		if (strus::caseInsensitiveEquals( what, "pos"))
 		{
-			inspectPositions( *storage, inpectarg, inpectargsize);
+			inspectPositions( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "ff"))
+		else if (strus::caseInsensitiveEquals( what, "ff"))
 		{
-			inspectFeatureFrequency( *storage, inpectarg, inpectargsize);
+			inspectFeatureFrequency( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "df"))
+		else if (strus::caseInsensitiveEquals( what, "df"))
 		{
-			inspectDocumentFrequency( *storage, inpectarg, inpectargsize);
+			inspectDocumentFrequency( *storage, inpectarg, inpectargsize, attribute);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "ttf"))
+		else if (strus::caseInsensitiveEquals( what, "ttf"))
 		{
-			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTermOccurrencies, inpectarg, inpectargsize);
+			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTermOccurrencies, inpectarg, inpectargsize, attribute);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "ttc"))
+		else if (strus::caseInsensitiveEquals( what, "ttc"))
 		{
-			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTerms, inpectarg, inpectargsize);
+			inspectDocumentTermTypeStats( *storage, strus::StorageClientInterface::StatNofTerms, inpectarg, inpectargsize, attribute);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "featuretypes"))
+		else if (strus::caseInsensitiveEquals( what, "featuretypes"))
 		{
 			inspectDocumentIndexFeatureTypes( *storage);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "indexterms"))
+		else if (strus::caseInsensitiveEquals( what, "indexterms"))
 		{
-			inspectDocumentIndexTerms( *storage, inpectarg, inpectargsize);
+			inspectDocumentIndexTerms( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "nofdocs"))
+		else if (strus::caseInsensitiveEquals( what, "nofdocs"))
 		{
 			inspectNofDocuments( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "maxdocno"))
+		else if (strus::caseInsensitiveEquals( what, "maxdocno"))
 		{
 			inspectMaxDocumentNumber( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "metadata"))
+		else if (strus::caseInsensitiveEquals( what, "metadata"))
 		{
-			inspectDocMetaData( *storage, inpectarg, inpectargsize);
+			inspectDocMetaData( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "metatable"))
+		else if (strus::caseInsensitiveEquals( what, "metatable"))
 		{
 			inspectDocMetaTable( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "attribute"))
+		else if (strus::caseInsensitiveEquals( what, "attribute"))
 		{
-			inspectDocAttribute( *storage, inpectarg, inpectargsize);
+			inspectDocAttribute( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "attrnames"))
+		else if (strus::caseInsensitiveEquals( what, "attrnames"))
 		{
 			inspectDocAttributeNames( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "content"))
+		else if (strus::caseInsensitiveEquals( what, "content"))
 		{
-			inspectContent( *storage, inpectarg, inpectargsize);
+			inspectContent( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "fwstats"))
+		else if (strus::caseInsensitiveEquals( what, "fwstats"))
 		{
 			inspectForwardIndexStats( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "fwmap"))
+		else if (strus::caseInsensitiveEquals( what, "fwmap"))
 		{
-			inspectForwardIndexMap( *storage, inpectarg, inpectargsize);
+			inspectForwardIndexMap( *storage, inpectarg, inpectargsize, attribute);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "docno"))
+		else if (strus::caseInsensitiveEquals( what, "docno"))
 		{
 			inspectDocno( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "token"))
+		else if (strus::caseInsensitiveEquals( what, "token"))
 		{
 			inspectToken( *storage, inpectarg, inpectargsize);
 		}
-		else if (strus::utils::caseInsensitiveEquals( what, "config"))
+		else if (strus::caseInsensitiveEquals( what, "config"))
 		{
 			inspectConfig( *storage, inpectarg, inpectargsize);
 		}
@@ -976,8 +1162,13 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in inspect storage"));
+			throw std::runtime_error( _TXT("unhandled error in inspect storage"));
 		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

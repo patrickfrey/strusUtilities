@@ -1,0 +1,5 @@
+[Element]
+	word = lc:convdia(en):stem(en) word word;
+	continent = dictmap("continents.txt"):lc content continent;
+
+

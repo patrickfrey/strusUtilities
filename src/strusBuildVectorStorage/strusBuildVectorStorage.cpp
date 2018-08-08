@@ -17,22 +17,24 @@
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/reference.hpp"
 #include "strus/constants.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
+#include "strus/base/programOptions.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 
 #undef STRUS_LOWLEVEL_DEBUG
@@ -43,7 +45,13 @@ static strus::ErrorBufferInterface* g_errorBuffer = 0;
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, DEFAULT_MAX_NOF_THREADS));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, DEFAULT_MAX_NOF_THREADS, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -51,32 +59,31 @@ int main( int argc, const char* argv[])
 	}
 	g_errorBuffer = errorBuffer.get();
 
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 9,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 10,
 				"h,help", "v,version", "license",
-				"m,module:", "M,moduledir:", "T,trace:",
+				"G,debug:", "m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "t,threads:" );
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
+
 		if (opt( "threads"))
 		{
 			unsigned int nofThreads = opt.asUint( "threads");
-			if (nofThreads >= DEFAULT_MAX_NOF_THREADS)
+			if (!errorBuffer->setMaxNofThreads( nofThreads+1))
 			{
-				errorBuffer.reset( strus::createErrorBuffer_standard( 0, nofThreads));
-				if (!errorBuffer.get())
-				{
-					std::cerr << _TXT("failed to create error buffer") << std::endl;
-					return -1;
-				}
-				g_errorBuffer = errorBuffer.get();
+				std::cerr << _TXT("failed to set threads of error buffer") << std::endl;
+				return -1;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -181,6 +188,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>.") << std::endl;
 			std::cout << "    " << _TXT("The module modstrus_storage_vector is implicitely defined") << std::endl;
@@ -200,7 +209,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << strus::string_format( _TXT("Specify the maximum number of threads to use as <N> (default %u)"), DEFAULT_MAX_NOF_THREADS) << std::endl;
 			if (g_errorBuffer->hasError())
 			{
-				throw strus::runtime_error( g_errorBuffer->fetchError());
+				throw strus::runtime_error( "%s", g_errorBuffer->fetchError());
 			}
 			return rt;
 		}
@@ -216,10 +225,22 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		// Create root object:
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
+		strus::local_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
-		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+		if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -229,6 +250,11 @@ int main( int argc, const char* argv[])
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
 		}
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
+
 		// Create objects:
 		std::string modelname;
 		if (!strus::extractStringFromConfigString( modelname, config, "storage", errorBuffer.get()))
@@ -238,12 +264,12 @@ int main( int argc, const char* argv[])
 		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
-		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
+		if (errorBuffer->hasError()) throw std::runtime_error( _TXT("cannot evaluate database"));
 
 		const strus::VectorStorageInterface* vsi = storageBuilder->getVectorStorage( modelname);
-		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector space model interface"));
+		if (!vsi) throw std::runtime_error( _TXT("failed to get vector space model interface"));
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+		if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 
 		if (!vsi->runBuild( commands, config, dbi))
 		{
@@ -251,7 +277,11 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in command"));
+			throw std::runtime_error( _TXT("unhandled error in command"));
+		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
 		std::cerr << _TXT("done.") << std::endl;
 		return 0;

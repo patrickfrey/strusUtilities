@@ -1,0 +1,7 @@
+asia	1
+africa	2
+north america	3
+south america	4
+antarctica	5
+europe	6
+australia	7

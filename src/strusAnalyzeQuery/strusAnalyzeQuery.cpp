@@ -9,37 +9,39 @@
 #include "strus/lib/error.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
-#include "strus/queryAnalyzerInterface.hpp"
+#include "strus/queryAnalyzerInstanceInterface.hpp"
 #include "strus/queryAnalyzerContextInterface.hpp"
 #include "strus/queryInterface.hpp"
 #include "strus/metaDataRestrictionInterface.hpp"
 #include "strus/segmenterInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/inputStream.hpp"
-#include "private/programOptions.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include <vector>
 #include <string>
 #include <map>
@@ -51,6 +53,8 @@
 #include <memory>
 #include <algorithm>
 #include <iomanip>
+#include <cerrno>
+#include <cstdio>
 #include <inttypes.h>
 
 static void print_number( char* buf, unsigned int bufsize, strus::GlobalCounter num)
@@ -132,7 +136,7 @@ public:
 		}
 		if (argc > m_stack.size())
 		{
-			throw strus::runtime_error( _TXT("illegal expression (more arguments than on stack)"));
+			throw strus::runtime_error( "%s",  _TXT("illegal expression (more arguments than on stack)"));
 		}
 		std::size_t stkidx = m_stack.size() - argc;
 		for (;stkidx < m_stack.size(); ++stkidx)
@@ -140,7 +144,7 @@ public:
 			int node = m_stack[ stkidx];
 			if (m_tree[ node].left >= 0)
 			{
-				throw strus::runtime_error( _TXT("corrupt tree data structure"));
+				throw strus::runtime_error( "%s",  _TXT("corrupt tree data structure"));
 			}
 			m_tree.push_back( m_tree[ node]);
 			if (stkidx+1 < m_stack.size())
@@ -158,7 +162,7 @@ public:
 		std::cerr << strus::string_format( _TXT("called attachVariable %s"), name_.c_str()) << std::endl;
 		printState( std::cerr);
 #endif
-		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of variable assignment without term or expression defined"));
+		if (m_stack.empty()) throw strus::runtime_error( "%s",  _TXT("illegal definition of variable assignment without term or expression defined"));
 		m_variables[ m_stack.back()] = name_;
 	}
 
@@ -168,13 +172,13 @@ public:
 		std::cerr << strus::string_format( _TXT("called defineFeature %s %.3f"), set_.c_str(), weight_) << std::endl;
 		printState( std::cerr);
 #endif
-		if (m_stack.empty()) throw strus::runtime_error( _TXT("illegal definition of feature without term or expression defined"));
+		if (m_stack.empty()) throw strus::runtime_error( "%s",  _TXT("illegal definition of feature without term or expression defined"));
 		m_features.push_back( Feature( set_, weight_, m_stack.back()));
 		m_stack.pop_back();
 	}
 
 	virtual void addMetaDataRestrictionCondition(
-			strus::MetaDataRestrictionInterface::CompareOperator opr, const std::string& name,
+			const strus::MetaDataRestrictionInterface::CompareOperator& opr, const std::string& name,
 			const strus::NumericVariant& operand, bool newGroup=true)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -241,7 +245,7 @@ public:
 		m_minRank = minRank_;
 	}
 
-	virtual void addUserName( const std::string& username_)
+	virtual void addAccess( const std::string& username_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
 		std::cerr << strus::string_format( _TXT( "called addUserName %s"), username_.c_str()) << std::endl;
@@ -256,7 +260,14 @@ public:
 #endif
 	}
 
-	virtual strus::QueryResult evaluate()
+	virtual void setDebugMode( bool debug)
+	{
+#ifdef STRUS_LOWLEVEL_DEBUG
+		std::cerr << strus::string_format( _TXT( "called setDebugMode %u"), debug) << std::endl;
+#endif
+	}
+
+	virtual strus::QueryResult evaluate() const
 	{
 		return strus::QueryResult();
 	}
@@ -270,7 +281,7 @@ public:
 	{
 		if (m_stack.size() > 0)
 		{
-			throw strus::runtime_error( _TXT("query definition not complete, stack not empty"));
+			throw strus::runtime_error( "%s",  _TXT("query definition not complete, stack not empty"));
 		}
 	}
 
@@ -389,7 +400,7 @@ private:
 			}
 			else
 			{
-				throw strus::runtime_error(_TXT("illegal node in query tree"));
+				throw std::runtime_error( _TXT("illegal node in query tree"));
 			}
 			treeidx = nod.left;
 		}
@@ -520,30 +531,63 @@ private:
 	bool m_evalset_defined;
 };
 
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 8,
-				"h,help", "v,version", "license", "m,module:", "r,rpc:",
-				"M,moduledir:", "R,resourcedir:", "T,trace:");
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 10,
+				"h,help", "v,version", "license", "G,debug:", "m,module:", "r,rpc:",
+				"M,moduledir:", "R,resourcedir:", "T,trace:", "F,fileinput");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
-			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options --moduledir and --rpc"));
+			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
 			std::vector<std::string> modirlist( opt.list("moduledir"));
 			std::vector<std::string>::const_iterator mi = modirlist.begin(), me = modirlist.end();
 			for (; mi != me; ++mi)
@@ -554,7 +598,7 @@ int main( int argc, const char* argv[])
 		}
 		if (opt("module"))
 		{
-			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options --module and --rpc"));
+			if (opt("rpc")) throw strus::runtime_error( "%s",  _TXT("specified mutual exclusive options --module and --rpc"));
 			std::vector<std::string> modlist( opt.list("module"));
 			std::vector<std::string>::const_iterator mi = modlist.begin(), me = modlist.end();
 			for (; mi != me; ++mi)
@@ -611,9 +655,10 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusAnalyzeQuery [options] <program> <queryfile>" << std::endl;
-			std::cout << "<program>   = " << _TXT("path of analyzer program") << std::endl;
-			std::cout << "<queryfile> = " << _TXT("path of query content to analyze ('-' for stdin)") << std::endl;
+			std::cout << _TXT("usage:") << " strusAnalyzeQuery [options] <program> <query>" << std::endl;
+			std::cout << "<program>  = " << _TXT("path of analyzer program") << std::endl;
+			std::cout << "<query>    = " << _TXT("query content to analyze") << std::endl;
+			std::cout << "             " << _TXT("file or '-' for stdin if option -F is specified)") << std::endl;
 			std::cout << _TXT("description: Analyzes a query and dumps the result to stdout.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
@@ -622,6 +667,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -630,15 +677,13 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
 			std::cout << "    " << _TXT("Execute the command on the RPC server specified by <ADDR>") << std::endl;
+			std::cout << "-F|--fileinput" << std::endl;
+			std::cout << "    " << _TXT("Interpret query argument as a file name containing the input") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
-		// Parse arguments:
-		std::string analyzerprg = opt[0];
-		std::string querypath = opt[1];
-
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -651,7 +696,18 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -664,40 +720,34 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		std::string resourcepath;
-		if (0!=strus::getParentPath( analyzerprg, resourcepath))
-		{
-			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
-		}
-		if (!resourcepath.empty())
-		{
-			moduleLoader->addResourcePath( resourcepath);
-		}
+		// Parse arguments:
+		std::string programFileName = getFileArg( opt[0], moduleLoader.get());
+		std::string querystring = opt[1];
 
 		// Create objects for analyzer:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
-		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw std::runtime_error( _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw std::runtime_error( _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc analyzer object builder"));
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc storage object builder"));
+			if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc storage object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+			if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 		}
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -711,61 +761,60 @@ int main( int argc, const char* argv[])
 			storageBuilder.reset( sproxy);
 		}
 
-		std::auto_ptr<strus::QueryAnalyzerInterface>
+		bool queryIsFile = opt("fileinput");
+		if (queryIsFile)
+		{
+			std::string qs;
+			if (querystring == "-")
+			{
+				int ec = strus::readStdin( qs);
+				if (ec) throw strus::runtime_error( _TXT("failed to read query from stdin (errno %u)"), ec);
+			}
+			else
+			{
+				int ec = strus::readFile( querystring, qs);
+				if (ec) throw strus::runtime_error(_TXT("failed to read query from file %s (errno %u)"), querystring.c_str(), ec);
+			}
+			querystring = qs;
+		}
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
+
+		strus::local_ptr<strus::QueryAnalyzerInstanceInterface>
 			analyzer( analyzerBuilder->createQueryAnalyzer());
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create query analyzer"));
+		if (!analyzer.get()) throw std::runtime_error( _TXT("failed to create query analyzer"));
 
 		// Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			strus::runtime_error( _TXT("failed to load analyzer program %s (errno %u)"), analyzerprg.c_str(), ec);
-		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
-		strus::QueryDescriptors querydescr;
-		if (!strus::loadQueryAnalyzerProgram( *analyzer, querydescr, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
-		{
-			throw strus::runtime_error( _TXT("failed to load query analyze program %s"), analyzerprg.c_str());
-		}
-		// Load the query source:
-		strus::InputStream input( querypath);
-		enum {AnalyzerBufSize=8192};
-		char buf[ AnalyzerBufSize];
-		bool eof = false;
-		std::string querysource;
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
 
-		while (!eof)
+		if (!strus::load_QueryAnalyzer_programfile_std( analyzer.get(), textproc, programFileName, errorBuffer.get()))
 		{
-			std::size_t readsize = input.read( buf, sizeof(buf));
-			if (readsize < sizeof(buf))
-			{
-				if (input.error())
-				{
-					throw strus::runtime_error( _TXT("failed to read query source file '%s': %s"), querypath.c_str(), ::strerror(input.error())); 
-				}
-				eof = true;
-			}
-			querysource.append( buf, readsize);
+			throw strus::runtime_error( _TXT("failed to load query analyzer: %s"), errorBuffer->fetchError());
 		}
 
 		// Load and print the query:
 		Query query;
 		const strus::QueryProcessorInterface* queryproc = storageBuilder->getQueryProcessor();
-		if (!queryproc) throw strus::runtime_error(_TXT("failed to get query processor"));
-		if (!strus::loadQuery( query, analyzer.get(), queryproc, querysource, querydescr, errorBuffer.get()))
+		if (!queryproc) throw std::runtime_error( _TXT("failed to get query processor"));
+		if (!strus::loadQuery( query, analyzer.get(), "select", "weight", queryproc, querystring, errorBuffer.get()))
 		{
-			throw strus::runtime_error( _TXT("failed to load query %s"), querypath.c_str());
+			throw strus::runtime_error( _TXT("failed to load query '%s'"), querystring.c_str());
 		}
 
 		query.check();
 		query.print( std::cout);
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("error in analyze query"));
+			throw std::runtime_error( _TXT("error in analyze query"));
 		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

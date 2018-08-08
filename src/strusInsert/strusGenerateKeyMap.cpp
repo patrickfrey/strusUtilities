@@ -7,68 +7,107 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
+#include "strus/lib/filecrawler.hpp"
+#include "private/fileCrawlerInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"
 #include "strus/reference.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
 #include "strus/segmenterInterface.hpp"
 #include "strus/errorBufferInterface.hpp"
+#include "strus/base/programOptions.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
 #include "strus/base/cmdLineOpt.hpp"
-#include "strus/programLoader.hpp"
+#include "strus/base/inputStream.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/thread.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/programOptions.hpp"
-#include "private/version.hpp"
-#include "private/utils.hpp"
+#include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
-#include "fileCrawler.hpp"
+#include "private/documentAnalyzer.hpp"
+#include "private/programLoader.hpp"
 #include "keyMapGenProcessor.hpp"
 #include <iostream>
 #include <sstream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <memory>
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
+
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
 
 int main( int argc_, const char* argv_[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc_, argv_, 13,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc_, argv_, 14,
 				"h,help",  "v,version", "license",
-				"t,threads:", "u,unit:",
+				"G,debug:", "t,threads:", "u,unit:",
 				"n,results:","m,module:", "x,extension:",
-				"s,segmenter:", "D,contenttype:", "M,moduledir:", "R,resourcedir:",
+				"s,segmenter:", "C,contenttype:", "M,moduledir:", "R,resourcedir:",
 				"T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 
-		unsigned int nofThreads = 0;
+		int nofThreads = 0;
 		if (opt("threads"))
 		{
 			nofThreads = opt.asUint( "threads");
 		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -150,6 +189,8 @@ int main( int argc_, const char* argv_[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -157,9 +198,9 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-s|--segmenter <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
-			std::cout << "-D|--contenttype <CT>" << std::endl;
-			std::cout << "    " << _TXT("forced definition of the document class of all documents inserted.") << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME>") << std::endl;
+			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of all documents processed.") << std::endl;
 			std::cout << "-x|--extension <EXT>" << std::endl;
 			std::cout << "    " << _TXT("Grab only the files with extension <EXT> (default all files)") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
@@ -186,7 +227,18 @@ int main( int argc_, const char* argv_[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		// [1] Build objects:
 		unsigned int unitSize = 1000;
 		if (opt( "unit"))
@@ -195,7 +247,7 @@ int main( int argc_, const char* argv_[])
 		}
 		unsigned int nofResults = opt.asUint( "results");
 		std::string fileext = "";
-		std::string segmentername;
+		std::string segmenterName;
 		std::string contenttype;
 
 		if (opt( "contenttype"))
@@ -204,7 +256,7 @@ int main( int argc_, const char* argv_[])
 		}
 		if (opt( "segmenter"))
 		{
-			segmentername = opt[ "segmenter"];
+			segmenterName = opt[ "segmenter"];
 		}
 		if (opt( "extension"))
 		{
@@ -214,9 +266,6 @@ int main( int argc_, const char* argv_[])
 				fileext = std::string(".") + fileext;
 			}
 		}
-		std::string analyzerprg = opt[0];
-		std::string datapath = opt[1];
-
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -228,85 +277,108 @@ int main( int argc_, const char* argv_[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		std::string resourcepath;
-		if (0!=strus::getParentPath( analyzerprg, resourcepath))
-		{
-			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
-		}
-		if (!resourcepath.empty())
-		{
-			moduleLoader->addResourcePath( resourcepath);
-		}
+		std::string programFileName = getFileArg( opt[0], moduleLoader.get());
+		std::string datapath = opt[1];
 
 		// Create root objects:
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface>
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface>
 			analyzerBuilder( moduleLoader->createAnalyzerObjectBuilder());
-		if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+		if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 
 		// Create proxy objects if tracing enabled:
-		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
-		for (; ti != te; ++ti)
 		{
-			strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
-			analyzerBuilder.release();
-			analyzerBuilder.reset( aproxy);
+			std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+			for (; ti != te; ++ti)
+			{
+				strus::AnalyzerObjectBuilderInterface* aproxy = (*ti)->createProxy( analyzerBuilder.get());
+				analyzerBuilder.release();
+				analyzerBuilder.reset( aproxy);
+			}
 		}
-		
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
+
 		// Create objects for keymap generation:
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
+
+		// Try to determine document class:
+		strus::analyzer::DocumentClass documentClass;
+		if (!contenttype.empty())
+		{
+			documentClass = strus::parse_DocumentClass( contenttype, errorBuffer.get());
+			if (!documentClass.defined() && errorBuffer->hasError())
+			{
+				throw std::runtime_error( _TXT("failed to parse document class"));
+			}
+		}
+		else if (strus::isFile( datapath))
+		{
+			strus::InputStream input( datapath);
+			char hdrbuf[ 4096];
+			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+			if (input.error())
+			{
+				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), datapath.c_str(), ::strerror(input.error())); 
+			}
+			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
+			{
+				throw strus::runtime_error( "%s",  _TXT("failed to detect document class")); 
+			}
+		}
 
 		// [2] Load analyzer program(s):
-		strus::analyzer::DocumentClass documentClass;
-		if (!contenttype.empty() && !strus::parseDocumentClass( documentClass, contenttype, errorBuffer.get()))
-		{
-			throw strus::runtime_error(_TXT("failed to parse document class"));
-		}
-		strus::AnalyzerMap analyzerMap( analyzerBuilder.get(), analyzerprg, documentClass, segmentername, errorBuffer.get());
-		std::cerr << analyzerMap.warnings();
-
-		strus::KeyMapGenResultList resultList;
-		strus::FileCrawler fileCrawler( datapath, unitSize, nofThreads*5+5, fileext);
+		strus::DocumentAnalyzer analyzerMap( analyzerBuilder.get(), documentClass, segmenterName, programFileName, errorBuffer.get());
 
 		// [3] Start threads:
-		std::auto_ptr<boost::thread> fileCrawlerThread(
-			new boost::thread( boost::bind( &strus::FileCrawler::run, &fileCrawler)));
+		strus::KeyMapGenResultList resultList;
+		strus::local_ptr<strus::FileCrawlerInterface> fileCrawler( strus::createFileCrawlerInterface( datapath, unitSize, fileext, errorBuffer.get()));
+		if (!fileCrawler.get()) throw std::runtime_error( errorBuffer->fetchError());
 
 		if (nofThreads == 0)
 		{
 			strus::KeyMapGenProcessor processor(
-				textproc, &analyzerMap, &resultList, &fileCrawler, errorBuffer.get());
+				textproc, &analyzerMap, documentClass,
+				&resultList, fileCrawler.get(), errorBuffer.get());
 			processor.run();
 		}
 		else
 		{
 			std::vector<strus::Reference<strus::KeyMapGenProcessor> > processorList;
-			for (unsigned int ti = 0; ti<nofThreads; ++ti)
+			for (int ti = 0; ti<nofThreads; ++ti)
 			{
 				processorList.push_back(
 					new strus::KeyMapGenProcessor(
-						textproc, &analyzerMap, &resultList, &fileCrawler, errorBuffer.get()));
+						textproc, &analyzerMap, documentClass, 
+						&resultList, fileCrawler.get(), errorBuffer.get()));
 			}
 			{
-				boost::thread_group tgroup;
-				for (unsigned int ti=0; ti<nofThreads; ++ti)
+				std::vector<strus::Reference<strus::thread> > threadGroup;
+				for (int ti=0; ti<nofThreads; ++ti)
 				{
-					tgroup.create_thread( boost::bind( &strus::KeyMapGenProcessor::run, processorList[ti].get()));
+					strus::KeyMapGenProcessor* tc = processorList[ ti].get();
+					strus::Reference<strus::thread> th( new strus::thread( &strus::KeyMapGenProcessor::run, tc));
+					threadGroup.push_back( th);
 				}
-				tgroup.join_all();
+				std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
+				for (; gi != ge; ++gi) (*gi)->join();
 			}
 		}
-		fileCrawlerThread->join();
-
 		// [3] Final merge:
 		std::cerr << std::endl << _TXT("merging results:") << std::endl;
 		resultList.printKeyOccurrenceList( std::cout, nofResults);
 		
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in generate key map"));
+			throw std::runtime_error( _TXT("unhandled error in generate key map"));
 		}
-		std::cerr << _TXT("done") << std::endl;
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

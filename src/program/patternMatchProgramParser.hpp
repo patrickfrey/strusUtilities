@@ -20,6 +20,8 @@
 #include <map>
 #include <set>
 
+#error DEPRECATED
+
 /// \brief strus toplevel namespace
 namespace strus {
 
@@ -54,6 +56,11 @@ public:
 	bool load( const std::string& source);
 	bool compile();
 	const std::vector<std::string>& warnings() const	{return m_warnings;}
+
+	bool hasMatcherRules() const
+	{
+		return m_patternNameSymbolTab.size() > 0;
+	}
 
 private:
 	struct SubExpressionInfo

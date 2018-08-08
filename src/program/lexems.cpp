@@ -14,6 +14,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#error DEPRECATED
+
 using namespace strus;
 using namespace strus::parser;
 
@@ -87,11 +89,11 @@ std::string parser::parse_STRING_noskip( char const*& src)
 	char eb = *src++;
 	while (*src != eb)
 	{
-		if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string"));
+		if (*src == '\0' || *src == '\n' || *src == '\r') throw std::runtime_error( _TXT("unterminated string"));
 		if (*src == '\\')
 		{
 			src++;
-			if (*src == '\0' || *src == '\n' || *src == '\r') throw strus::runtime_error(_TXT("unterminated string"));
+			if (*src == '\0' || *src == '\n' || *src == '\r') throw std::runtime_error( _TXT("unterminated string"));
 		}
 		rt.push_back( *src++);
 	}
@@ -131,7 +133,7 @@ unsigned int parser::parse_UNSIGNED( char const*& src)
 	while (isDigit( *src))
 	{
 		unsigned int vv = (rt * 10) + (*src - '0');
-		if (vv <= rt) throw strus::runtime_error(_TXT("index out of range"));
+		if (vv <= rt) throw std::runtime_error( _TXT("index out of range"));
 		rt = vv;
 		++src;
 	}
@@ -142,7 +144,7 @@ unsigned int parser::parse_UNSIGNED( char const*& src)
 unsigned int parser::parse_UNSIGNED1( char const*& src)
 {
 	unsigned int rt = parse_UNSIGNED( src);
-	if (rt == 0) throw strus::runtime_error(_TXT("positive unsigned integer expected"));
+	if (rt == 0) throw std::runtime_error( _TXT("positive unsigned integer expected"));
 	return rt;
 }
 
@@ -207,22 +209,22 @@ int parser::parse_INTEGER( char const*& src)
 {
 	int rt = 0;
 	int prev = 0;
-	if (!*src) throw strus::runtime_error(_TXT("integer expected"));
+	if (!*src) throw std::runtime_error( _TXT("integer expected"));
 	bool neg = false;
 	if (*src == '-')
 	{
 		++src;
 		neg = true;
 	}
-	if (!(*src >= '0' && *src <= '9')) throw strus::runtime_error(_TXT("integer expected"));
+	if (!(*src >= '0' && *src <= '9')) throw std::runtime_error( _TXT("integer expected"));
 
 	for (; *src >= '0' && *src <= '9'; ++src)
 	{
 		rt = (rt * 10) + (*src - '0');
-		if (prev > rt) throw strus::runtime_error(_TXT("integer number out of range"));
+		if (prev > rt) throw std::runtime_error( _TXT("integer number out of range"));
 		prev = rt;
 	}
-	if (isAlpha(*src)) throw strus::runtime_error(_TXT("integer expected"));
+	if (isAlpha(*src)) throw std::runtime_error( _TXT("integer expected"));
 
 	skipSpaces( src);
 	if (neg)
@@ -235,7 +237,7 @@ int parser::parse_INTEGER( char const*& src)
 	}
 }
 
-static int checkKeyword( std::string id, int nn, va_list argp)
+static int checkKeyword( const std::string& id, int nn, va_list argp)
 {
 	for (int ii=0; ii<nn; ++ii)
 	{
@@ -311,17 +313,18 @@ int parser::parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsig
 
 MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( const char*& si)
 {
+	MetaDataRestrictionInterface::CompareOperator rt;
 	if (si[0] == '<')
 	{
 		if (si[1] == '=')
 		{
 			si += 2;
-			return MetaDataRestrictionInterface::CompareLessEqual;
+			rt = MetaDataRestrictionInterface::CompareLessEqual;
 		}
 		else
 		{
 			si += 1;
-			return MetaDataRestrictionInterface::CompareLess;
+			rt = MetaDataRestrictionInterface::CompareLess;
 		}
 	}
 	else if (si[0] == '>')
@@ -329,12 +332,12 @@ MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( con
 		if (si[1] == '=')
 		{
 			si += 2;
-			return MetaDataRestrictionInterface::CompareGreaterEqual;
+			rt = MetaDataRestrictionInterface::CompareGreaterEqual;
 		}
 		else
 		{
 			si += 1;
-			return MetaDataRestrictionInterface::CompareGreater;
+			rt = MetaDataRestrictionInterface::CompareGreater;
 		}
 	}
 	else if (si[0] == '!')
@@ -342,7 +345,11 @@ MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( con
 		if (si[1] == '=')
 		{
 			si += 2;
-			return MetaDataRestrictionInterface::CompareNotEqual;
+			rt = MetaDataRestrictionInterface::CompareNotEqual;
+		}
+		else
+		{
+			throw std::runtime_error( _TXT( "unknown compare operator"));
 		}
 	}
 	else if (si[0] == '=')
@@ -350,9 +357,19 @@ MetaDataRestrictionInterface::CompareOperator parser::parse_CompareOperator( con
 		if (si[1] == '=')
 		{
 			si += 2;
-			return MetaDataRestrictionInterface::CompareEqual;
+			rt = MetaDataRestrictionInterface::CompareEqual;
+		}
+		else
+		{
+			si += 1;
+			rt = MetaDataRestrictionInterface::CompareEqual;
 		}
 	}
-	throw strus::runtime_error( _TXT( "unknown compare operator"));
+	else
+	{
+		throw std::runtime_error( _TXT( "unknown compare operator"));
+	}
+	skipSpaces( si);
+	return rt;
 }
 

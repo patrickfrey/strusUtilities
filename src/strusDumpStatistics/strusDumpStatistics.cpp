@@ -20,6 +20,8 @@
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
 #include "strus/statisticsIteratorInterface.hpp"
+#include "strus/statisticsProcessorInterface.hpp"
+#include "strus/statisticsViewerInterface.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
@@ -27,13 +29,13 @@
 #include "strus/versionBase.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/constants.hpp"
+#include "strus/base/programOptions.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/string_format.hpp"
-#include "private/version.hpp"
-#include "private/utils.hpp"
-#include "private/programOptions.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
@@ -52,14 +54,14 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
 	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
 
-	std::auto_ptr<strus::StorageObjectBuilderInterface>
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
 		storageBuilder( moduleLoader->createStorageObjectBuilder());
-	if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-	if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
-	if (!sti) throw strus::runtime_error(_TXT("failed to get storage interface"));
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	strus::printIndentMultilineString(
 				out, 12, dbi->getConfigDescription(
@@ -73,24 +75,34 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 7,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 10,
 				"h,help", "v,version", "license", 
-				"m,module:", "M,moduledir:",
-				"r,rpc:", "s,storage:", "T,trace:");
+				"G,debug:", "m,module:", "M,moduledir:", "r,rpc:",
+				"b,binary", "s,storage:", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			if (opt("rpc")) throw strus::runtime_error( _TXT("specified mutual exclusive options %s and %s"), "--moduledir", "--rpc");
@@ -178,6 +190,10 @@ int main( int argc, const char* argv[])
 				std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
 				printStorageConfigOptions( std::cout, moduleLoader.get(), (opt("storage")?opt["storage"]:""), errorBuffer.get());
 			}
+			std::cout << "-b|--binary" << std::endl;
+			std::cout << "    " << _TXT("Dump binary, not readable") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -197,6 +213,7 @@ int main( int argc, const char* argv[])
 			storagecfg = opt["storage"];
 		}
 		std::string outputfile( opt[0]);
+		bool dumpBinary = opt("binary");
 
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -210,25 +227,36 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		// Create objects for dump:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::StorageObjectBuilderInterface> storageBuilder;
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error( _TXT("error creating rpc client messaging"));
+			if (!messaging.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error( _TXT("error creating rpc client"));
+			if (!rpcClient.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc client"));
 			(void)messaging.release();
 			storageBuilder.reset( rpcClient->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating rpc storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating rpc storage object builder"));
 		}
 		else
 		{
 			storageBuilder.reset( moduleLoader->createStorageObjectBuilder());
-			if (!storageBuilder.get()) throw strus::runtime_error( _TXT("error creating storage object builder"));
+			if (!storageBuilder.get()) throw strus::runtime_error( "%s",  _TXT("error creating storage object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
@@ -239,37 +267,89 @@ int main( int argc, const char* argv[])
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
 		}
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
 
-		std::auto_ptr<strus::StorageClientInterface>
+		strus::local_ptr<strus::StorageClientInterface>
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
-		if (!storage.get()) throw strus::runtime_error(_TXT("could not create storage client"));
+		if (!storage.get()) throw std::runtime_error( _TXT("could not create storage client"));
 
-		std::auto_ptr<strus::StatisticsIteratorInterface>
-			statsqueue( storage->createInitStatisticsIterator());
+		strus::local_ptr<strus::StatisticsIteratorInterface> statsqueue( storage->createAllStatisticsIterator());
 		if (!statsqueue.get())
 		{
-			throw strus::runtime_error( _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
+			throw strus::runtime_error( "%s",  _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
 		}
-		const char* msg;
+		const void* msg;
 		std::size_t msgsize;
 		std::string output;
 
 		FILE* outfile = ::fopen( outputfile.c_str(), "ab");
 		if (!outfile) throw strus::runtime_error( _TXT( "error opening file '%s' for writing (errno %u)"), outputfile.c_str(), errno);
 
-		while (statsqueue->getNext( msg, msgsize))
+		if (dumpBinary)
 		{
-			std::size_t written = ::fwrite( msg, 1, msgsize, outfile);
-			if (written != msgsize)
+			std::cerr << "Dumping statistics in binary format ..." << std::endl;
+			while (statsqueue->getNext( msg, msgsize))
 			{
-				throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+				std::size_t written = ::fwrite( msg, 1, msgsize, outfile);
+				if (written != msgsize)
+				{
+					throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+				}
+			}
+		}
+		else
+		{
+			std::cerr << "Dumping statistics in text format [<increment> <type> <value>] ..." << std::endl;
+
+			const strus::StatisticsProcessorInterface* statsproc = storage->getStatisticsProcessor();
+			long nofDocuments = 0;
+			while (statsqueue->getNext( msg, msgsize))
+			{
+				char buf[ 4096];
+				strus::local_ptr<strus::StatisticsViewerInterface> viewer( statsproc->createViewer( msg, msgsize));
+				if (!viewer.get()) throw strus::runtime_error( _TXT( "failed to create statistics viewer for block"));
+
+				nofDocuments += viewer->nofDocumentsInsertedChange();
+				strus::TermStatisticsChange rec;
+				while (viewer->nextDfChange( rec))
+				{
+					std::size_t nn = std::snprintf( buf, sizeof(buf), "%d %s %s\n", rec.increment(), rec.type(), rec.value());
+					if (nn >= sizeof(buf))
+					{
+						buf[ sizeof(buf)-5] = '.';
+						buf[ sizeof(buf)-4] = '.';
+						buf[ sizeof(buf)-3] = '.';
+						buf[ sizeof(buf)-2] = '\n';
+						buf[ sizeof(buf)-1] = '\0';
+						nn = sizeof(buf);
+					}
+					std::size_t written = ::fwrite( buf, 1, nn, outfile);
+					if (written != nn)
+					{
+						throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+					}
+				}
+				std::size_t nn = std::snprintf( buf, sizeof(buf), "%ld\n", nofDocuments);
+				std::size_t written = ::fwrite( buf, 1, nn, outfile);
+				if (written != nn)
+				{
+					throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
+				}
 			}
 		}
 		::fclose( outfile);
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT( "unhandled error in dump statistics"));
+			throw std::runtime_error( _TXT( "unhandled error in dump statistics"));
 		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

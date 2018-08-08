@@ -1,0 +1,1 @@
+StrusAnalyze -C text/plain -g plain $T/doc.ana $T/input.txt

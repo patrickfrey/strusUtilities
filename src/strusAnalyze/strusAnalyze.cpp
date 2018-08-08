@@ -7,35 +7,40 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/lib/rpc_client.hpp"
+#include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
-#include "strus/documentAnalyzerInterface.hpp"
+#include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"
 #include "strus/segmenterInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/documentClass.hpp"
+#include "strus/analyzer/segmenterOptions.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/string_conv.hpp"
 #include "strus/base/inputStream.hpp"
-#include "private/programOptions.hpp"
-#include "private/utils.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/documentAnalyzer.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -45,15 +50,15 @@
 #include <string>
 #include <vector>
 #include <map>
-
-#undef STRUS_LOWLEVEL_DEBUG
+#include <cerrno>
+#include <cstdio>
+#include <algorithm>
 
 struct TermOrder
 {
-	bool operator()( const strus::analyzer::Term& aa, const strus::analyzer::Term& bb)
+	bool operator()( const strus::analyzer::DocumentTerm& aa, const strus::analyzer::DocumentTerm& bb)
 	{
 		if (aa.pos() != bb.pos()) return (aa.pos() < bb.pos());
-		if (aa.len() != bb.len()) return (aa.len() < bb.len());
 		int cmp;
 		cmp = aa.type().compare( bb.type());
 		if (cmp != 0) return (cmp < 0);
@@ -95,7 +100,7 @@ static DumpConfigElem getNextDumpConfigElem( char const*& di)
 			char eb = *di++;
 			char const* valstart = di;
 			for (; *di && *di != eb; ++di){}
-			value = strus::utils::unescape( std::string( valstart, di-valstart));
+			value = strus::string_conv::unescape( std::string( valstart, di-valstart));
 			if (*di) ++di;
 			skipSpace( di);
 		}
@@ -119,9 +124,9 @@ static DumpConfigElem getNextDumpConfigElem( char const*& di)
 }
 
 
-static void filterTerms( std::vector<strus::analyzer::Term>& termar, const DumpConfig& dumpConfig, const std::vector<strus::analyzer::Term>& inputtermar)
+static void filterTerms( std::vector<strus::analyzer::DocumentTerm>& termar, const DumpConfig& dumpConfig, const std::vector<strus::analyzer::DocumentTerm>& inputtermar)
 {
-	std::vector<strus::analyzer::Term>::const_iterator
+	std::vector<strus::analyzer::DocumentTerm>::const_iterator
 		ti = inputtermar.begin(), te = inputtermar.end();
 	for (; ti != te; ++ti)
 	{
@@ -134,34 +139,68 @@ static void filterTerms( std::vector<strus::analyzer::Term>& termar, const DumpC
 			}
 			else
 			{
-				termar.push_back( strus::analyzer::Term( ti->type(), dci->second, ti->pos(), ti->len()));
+				termar.push_back( strus::analyzer::DocumentTerm( ti->type(), dci->second, ti->pos()));
 			}
 		}
 	}
 }
 
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
+
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 10,
-				"h,help", "v,version", "license", "m,module:",
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 12,
+				"h,help", "v,version", "license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
-				"g,segmenter:", "D,dump:");
+				"g,segmenter:", "C,contenttype:", "D,dump:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface>
+
+		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -244,6 +283,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -256,7 +297,9 @@ int main( int argc, const char* argv[])
 			std::cout << "-R|--resourcedir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search resource files for analyzer first in <DIR>") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
-			std::cout << "    " << _TXT("Use the document segmenter with name <NAME> (default textwolf XML)") << std::endl;
+			std::cout << "    " << _TXT("Use the document segmenter with name <NAME>") << std::endl;
+			std::cout << "-C|--contenttype <CT>" << std::endl;
+			std::cout << "    " << _TXT("forced definition of the document class of the document analyzed.") << std::endl;
 			std::cout << "-D|--dump <DUMPCFG>" << std::endl;
 			std::cout << "    " << _TXT("Dump ouput according <DUMPCFG>.") << std::endl;
 			std::cout << "    " << _TXT("<DUMPCFG> is a comma separated list of types or type value assignments.") << std::endl;
@@ -266,17 +309,33 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		// Parse arguments:
-		std::string analyzerprg = opt[0];
-		std::string docpath = opt[1];
-		std::string segmentername;
+		std::string segmenterName;
+		std::string contenttype;
 		DumpConfig dumpConfig;
 		bool doDump = false;
 		if (opt( "segmenter"))
 		{
-			segmentername = opt[ "segmenter"];
+			segmenterName = opt[ "segmenter"];
+		}
+		if (opt( "contenttype"))
+		{
+			contenttype = opt[ "contenttype"];
+		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
 		}
 		if (opt( "dump"))
 		{
+			strus::local_ptr<strus::DebugTraceContextInterface> dbgtracectx( dbgtrace->createTraceContext( "dump"));
 			doDump = true;
 			std::string ds = opt[ "dump"];
 			char const* di = ds.c_str();
@@ -284,16 +343,17 @@ int main( int argc, const char* argv[])
 			{
 				DumpConfigElem dt( getNextDumpConfigElem( di));
 				dumpConfig.insert( dt);
-#ifdef STRUS_LOWLEVEL_DEBUG
-				if (dt.second.empty())
+				if (dbgtracectx.get())
 				{
-					std::cerr << strus::string_format( "got dump config [%s]", dt.first.c_str()) << std::endl;
+					if (dt.second.empty())
+					{
+						dbgtracectx->event( "dump", "config [%s]", dt.first.c_str());
+					}
+					else
+					{
+						dbgtracectx->event( "dump", "config [%s] = '%s'", dt.first.c_str(), dt.second.c_str());
+					}
 				}
-				else
-				{
-					std::cerr << strus::string_format( "got dump config [%s] = '%s'", dt.first.c_str(), dt.second.c_str()) << std::endl;
-				}
-#endif
 			}
 		}
 
@@ -309,7 +369,6 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -322,88 +381,90 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
-		std::string resourcepath;
-		if (0!=strus::getParentPath( analyzerprg, resourcepath))
+		std::string programFileName = getFileArg( opt[0], moduleLoader.get());
+		std::string docpath = opt[1];
+
+		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error( _TXT("failed to evaluate resource path"));
-		}
-		if (!resourcepath.empty())
-		{
-			moduleLoader->addResourcePath( resourcepath);
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 
 		// Create objects for analyzer:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
 
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw std::runtime_error( _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw std::runtime_error( _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc analyzer object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
-		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
-		for (; ti != te; ++ti)
 		{
-			strus::AnalyzerObjectBuilderInterface* proxy = (*ti)->createProxy( analyzerBuilder.get());
-			analyzerBuilder.release();
-			analyzerBuilder.reset( proxy);
-		}
-
-		const strus::SegmenterInterface* segmenter = analyzerBuilder->getSegmenter( segmentername);
-		if (!segmenter) throw strus::runtime_error(_TXT("failed to find specified document segmenter"));
-		std::auto_ptr<strus::DocumentAnalyzerInterface>
-			analyzer( analyzerBuilder->createDocumentAnalyzer( segmenter));
-		if (!analyzer.get()) throw strus::runtime_error(_TXT("failed to create document analyzer"));
-
-		// Load analyzer program:
-		unsigned int ec;
-		std::string analyzerProgramSource;
-		ec = strus::readFile( analyzerprg, analyzerProgramSource);
-		if (ec)
-		{
-			throw strus::runtime_error( _TXT("failed to load analyzer program %s (file system error %u)"), analyzerprg.c_str(), ec);
+			std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
+			for (; ti != te; ++ti)
+			{
+				strus::AnalyzerObjectBuilderInterface* proxy = (*ti)->createProxy( analyzerBuilder.get());
+				analyzerBuilder.release();
+				analyzerBuilder.reset( proxy);
+			}
 		}
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
-		if (!textproc) throw strus::runtime_error(_TXT("failed to get text processor"));
-		if (!strus::loadDocumentAnalyzerProgram( *analyzer, textproc, analyzerProgramSource, true/*allow includes*/, std::cerr, errorBuffer.get()))
-		{
-			throw strus::runtime_error( _TXT("failed to load analyzer program %s"), analyzerprg.c_str());
-		}
+		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
+
 		// Load the document and get its properties:
 		strus::InputStream input( docpath);
-		char hdrbuf[ 1024];
-		std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
-		if (input.error())
+		strus::analyzer::DocumentClass documentClass;
+		if (!contenttype.empty())
 		{
-			throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+			documentClass = strus::parse_DocumentClass( contenttype, errorBuffer.get());
+			if (!documentClass.defined() && errorBuffer->hasError())
+			{
+				throw std::runtime_error( _TXT("failed to parse document class"));
+			}
 		}
-		strus::analyzer::DocumentClass dclass;
-		if (!textproc->detectDocumentClass( dclass, hdrbuf, hdrsize))
+		// Detect document content type if not explicitely defined:
+		if (!documentClass.defined())
 		{
-			throw strus::runtime_error( _TXT("failed to detect document class")); 
+			char hdrbuf[ 4096];
+			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
+			if (input.error())
+			{
+				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), docpath.c_str(), ::strerror(input.error())); 
+			}
+			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
+			{
+				throw strus::runtime_error( "%s",  _TXT("failed to detect document class")); 
+			}
 		}
-		std::auto_ptr<strus::DocumentAnalyzerContextInterface>
-			analyzerContext( analyzer->createContext( dclass));
-		if (!analyzerContext.get()) throw strus::runtime_error(_TXT("failed to create document analyzer context"));
+		// Load analyzer program(s):
+		strus::DocumentAnalyzer analyzerMap( analyzerBuilder.get(), documentClass, segmenterName, programFileName, errorBuffer.get());
+
+		// Create the document analyzer context:
+		const strus::DocumentAnalyzerInstanceInterface* analyzer = analyzerMap.get( documentClass);
+		if (!analyzer)
+		{
+			throw strus::runtime_error( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), documentClass.mimeType().c_str(), documentClass.scheme().c_str()); 
+		}
+		strus::local_ptr<strus::DocumentAnalyzerContextInterface>
+			analyzerContext( analyzer->createContext( documentClass));
+		if (!analyzerContext.get()) throw std::runtime_error( _TXT("failed to create document analyzer context"));
 
 		// Process the document:
 		enum {AnalyzerBufSize=8192};
 		char buf[ AnalyzerBufSize];
 		bool eof = false;
-
 		while (!eof)
 		{
 			std::size_t readsize = input.read( buf, sizeof(buf));
@@ -423,8 +484,8 @@ int main( int argc, const char* argv[])
 			{
 				if (doDump)
 				{
-					std::vector<strus::analyzer::Term> termar;
-					std::vector<strus::analyzer::MetaData>::const_iterator
+					std::vector<strus::analyzer::DocumentTerm> termar;
+					std::vector<strus::analyzer::DocumentMetaData>::const_iterator
 						mi = doc.metadata().begin(), me = doc.metadata().end();
 					for (; mi != me; ++mi)
 					{
@@ -433,15 +494,15 @@ int main( int argc, const char* argv[])
 						{
 							if (dci->second.empty())
 							{
-								termar.push_back( strus::analyzer::Term( mi->name(), mi->value().tostring().c_str(), 0/*pos*/, 0/*len*/));
+								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), mi->value().tostring().c_str(), 0/*pos*/));
 							}
 							else
 							{
-								termar.push_back( strus::analyzer::Term( mi->name(), dci->second, 0/*pos*/, 0/*len*/));
+								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), dci->second, 0/*pos*/));
 							}
 						}
 					}
-					std::vector<strus::analyzer::Attribute>::const_iterator
+					std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 						ai = doc.attributes().begin(), ae = doc.attributes().end();
 					for (; ai != ae; ++ai)
 					{
@@ -450,11 +511,11 @@ int main( int argc, const char* argv[])
 						{
 							if (dci->second.empty())
 							{
-								termar.push_back( strus::analyzer::Term( ai->name(), ai->value(), 0/*pos*/, 0/*len*/));
+								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), ai->value(), 0/*pos*/));
 							}
 							else
 							{
-								termar.push_back( strus::analyzer::Term( ai->name(), dci->second, 0/*pos*/, 0/*len*/));
+								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), dci->second, 0/*pos*/));
 							}
 						}
 					}
@@ -463,7 +524,7 @@ int main( int argc, const char* argv[])
 
 					std::sort( termar.begin(), termar.end(), TermOrder());
 
-					std::vector<strus::analyzer::Term>::const_iterator
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
 						ti = termar.begin(), te = termar.end();
 					for (unsigned int tidx=0; ti != te; ++ti,++tidx)
 					{
@@ -477,25 +538,25 @@ int main( int argc, const char* argv[])
 					{
 						std::cout << "-- " << strus::string_format( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
 					}
-					std::vector<strus::analyzer::Term> itermar = doc.searchIndexTerms();
+					std::vector<strus::analyzer::DocumentTerm> itermar = doc.searchIndexTerms();
 					std::sort( itermar.begin(), itermar.end(), TermOrder());
 		
-					std::vector<strus::analyzer::Term>::const_iterator
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
 						ti = itermar.begin(), te = itermar.end();
 
 					std::cout << std::endl << _TXT("search index terms:") << std::endl;
 					for (; ti != te; ++ti)
 					{
-						std::cout << ti->pos() << ":" << ti->len()
+						std::cout << ti->pos() << ":"
 							  << " " << ti->type()
 							  << " '" << ti->value() << "'"
 							  << std::endl;
 					}
 
-					std::vector<strus::analyzer::Term> ftermar = doc.forwardIndexTerms();
+					std::vector<strus::analyzer::DocumentTerm> ftermar = doc.forwardIndexTerms();
 					std::sort( ftermar.begin(), ftermar.end(), TermOrder());
-		
-					std::vector<strus::analyzer::Term>::const_iterator
+
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
 						fi = ftermar.begin(), fe = ftermar.end();
 
 					std::cout << std::endl << _TXT("forward index terms:") << std::endl;
@@ -507,7 +568,7 @@ int main( int argc, const char* argv[])
 							  << std::endl;
 					}
 
-					std::vector<strus::analyzer::MetaData>::const_iterator
+					std::vector<strus::analyzer::DocumentMetaData>::const_iterator
 						mi = doc.metadata().begin(), me = doc.metadata().end();
 		
 					std::cout << std::endl << _TXT("metadata:") << std::endl;
@@ -518,7 +579,7 @@ int main( int argc, const char* argv[])
 							  << std::endl;
 					}
 
-					std::vector<strus::analyzer::Attribute>::const_iterator
+					std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 						ai = doc.attributes().begin(), ae = doc.attributes().end();
 
 					std::cout << std::endl << _TXT("attributes:") << std::endl;
@@ -533,8 +594,13 @@ int main( int argc, const char* argv[])
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("error in analyze document"));
+			throw std::runtime_error( _TXT("error in analyze document"));
 		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)

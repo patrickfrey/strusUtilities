@@ -1,0 +1,9 @@
+StrusCreate -S $T/storage.conf
+StrusInsert -S $T/storage.conf $T/doc.ana $T/data/
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "hardware:word"
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "software engineer:word"
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "software engineer"
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "software:title 'machine language instructions':word"
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "~hugaga:word software:word"
+StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "hugaga:word software:word"
+

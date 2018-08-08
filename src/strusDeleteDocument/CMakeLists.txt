@@ -1,16 +1,17 @@
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR )
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 
 # --------------------------------------
 # SOURCES AND INCLUDES
 # --------------------------------------
-set(source_files
+set( source_files
 	strusDeleteDocument.cpp
 )
 
 include_directories(
  	    "${Intl_INCLUDE_DIRS}"
-            "${Boost_INCLUDE_DIRS}"
-	    "${PROJECT_SOURCE_DIR}/include"
+            ${Boost_INCLUDE_DIRS}
+	    "${UTILS_INCLUDE_DIRS}"
+	    "${PROGRAM_INCLUDE_DIRS}"
 	    "${strusbase_INCLUDE_DIRS}"
 	    "${strus_INCLUDE_DIRS}"
 	    "${strusanalyzer_INCLUDE_DIRS}"
@@ -19,8 +20,9 @@ include_directories(
 	    "${strusrpc_INCLUDE_DIRS}"
 )
 link_directories( 
-	   "${PROJECT_SOURCE_DIR}/program" 
-	   "${PROJECT_SOURCE_DIR}/utils" 
+	   "${UTILS_LIBRARY_DIRS}" 
+	   "${PROGRAM_LIBRARY_DIRS}"
+	   ${Boost_LIBRARY_DIRS} 
 	   "${strusbase_LIBRARY_DIRS}"
 	   "${strus_LIBRARY_DIRS}"
 	   "${strusanalyzer_LIBRARY_DIRS}"
@@ -33,8 +35,10 @@ link_directories(
 # ------------------------------
 # PROGRAMS
 # ------------------------------
+add_cppcheck( strusDeleteDocument ${source_files} )
+
 add_executable( strusDeleteDocument ${source_files} )
-target_link_libraries( strusDeleteDocument strus_storage_objbuild strus_private_utils strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
+target_link_libraries( strusDeleteDocument strus_storage_objbuild strusutilities_private_utils strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )

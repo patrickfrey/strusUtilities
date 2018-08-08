@@ -1,0 +1,18 @@
+[Attribute]
+    title = text content /doc/title();
+    docid = text content /doc/docid();
+
+[MetaData]
+    pageweight = orig content /doc/pageweight();
+
+[SearchIndex]
+    start = empty content /doc/text;
+    word = lc:convdia(en):stem(en) word /doc/text();
+
+[ForwardIndex]
+    orig = orig split /doc/text();
+    orig = orig split /doc/title();
+
+[Aggregator]
+    doclen = count( word);
+

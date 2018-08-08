@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/storage_prgload_std.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/vectorStorageInterface.hpp"
@@ -18,32 +19,39 @@
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/reference.hpp"
 #include "strus/constants.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "private/programOptions.hpp"
-#include "private/utils.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
+#include "strus/base/programOptions.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/configParser.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
+#include "strus/base/local_ptr.hpp"
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 
-#undef STRUS_LOWLEVEL_DEBUG
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
@@ -51,19 +59,23 @@ int main( int argc, const char* argv[])
 	}
 	g_errorBuffer = errorBuffer.get();
 
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 10,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 11,
 				"h,help", "v,version", "license",
-				"m,module:", "M,moduledir:", "T,trace:",
+				"G,debug:", "m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:", "P,portable",
 				"f,file:" );
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 		if (opt( "help")) printUsageAndExit = true;
-		std::auto_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+
+		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
 		{
 			std::vector<std::string> modirlist( opt.list("moduledir"));
@@ -168,6 +180,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>.") << std::endl;
 			std::cout << "    " << _TXT("The module modstrus_storage_vector is implicitely defined") << std::endl;
@@ -204,6 +218,18 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		// Get arguments:
 		std::vector<std::string> inputfiles;
 		if (opt("file"))
@@ -211,9 +237,9 @@ int main( int argc, const char* argv[])
 			inputfiles = opt.list( "file");
 		}
 		// Create root object:
-		std::auto_ptr<strus::StorageObjectBuilderInterface>
+		strus::local_ptr<strus::StorageObjectBuilderInterface>
 			storageBuilder( moduleLoader->createStorageObjectBuilder());
-		if (!storageBuilder.get()) throw strus::runtime_error(_TXT("failed to create storage object builder"));
+		if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
 
 		// Create proxy objects if tracing enabled:
 		std::vector<TraceReference>::const_iterator ti = trace.begin(), te = trace.end();
@@ -223,6 +249,11 @@ int main( int argc, const char* argv[])
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
 		}
+		if (errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("error in initialization"));
+		}
+
 		// Create objects:
 		std::string storagename;
 		if (!strus::extractStringFromConfigString( storagename, config, "storage", errorBuffer.get()))
@@ -232,28 +263,32 @@ int main( int argc, const char* argv[])
 		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
-		if (errorBuffer->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"));
+		if (errorBuffer->hasError()) throw std::runtime_error( _TXT("cannot evaluate database"));
 
 		const strus::VectorStorageInterface* vsi = storageBuilder->getVectorStorage( storagename);
-		if (!vsi) throw strus::runtime_error(_TXT("failed to get vector storage interface"));
+		if (!vsi) throw std::runtime_error( _TXT("failed to get vector storage interface"));
 		const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
-		if (!dbi) throw strus::runtime_error(_TXT("failed to get database interface"));
+		if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 
-		if (!vsi->createStorage( config, dbi)) throw strus::runtime_error(_TXT("failed to create vector storage"));
-		std::auto_ptr<strus::VectorStorageClientInterface> storage( vsi->createClient( config, dbi));
-		if (!storage.get()) throw strus::runtime_error(_TXT("failed to create vector storage builder"));
+		if (!vsi->createStorage( config, dbi)) throw std::runtime_error( _TXT("failed to create vector storage"));
+		strus::local_ptr<strus::VectorStorageClientInterface> storage( vsi->createClient( config, dbi));
+		if (!storage.get()) throw std::runtime_error( _TXT("failed to create vector storage builder"));
 
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::loadVectorStorageVectors( storage.get(), *fi, portable, g_errorBuffer))
+			if (!strus::load_vectors( storage.get(), *fi, portable, g_errorBuffer))
 			{
-				throw strus::runtime_error(_TXT("failed to load input"));
+				throw std::runtime_error( _TXT("failed to load input"));
 			}
 		}
 		if (errorBuffer->hasError())
 		{
-			throw strus::runtime_error(_TXT("unhandled error in command"));
+			throw std::runtime_error( _TXT("unhandled error in command"));
+		}
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
 		std::cerr << _TXT("done.") << std::endl;
 		return 0;

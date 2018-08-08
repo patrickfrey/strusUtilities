@@ -1,0 +1,15 @@
+[Attribute]
+    title = text content /doc/title();
+    docid = text content /doc/docid();
+
+[Content]
+    "encoding=UTF-8; content=JSON;" /doc/embedded();
+
+[SearchIndex]
+    start = empty content /doc/text;
+    stem = lc:convdia(en):stem(en):lc word /doc/title();
+    stem = lc:convdia(en):stem(en):lc word /doc/text();
+    name = convdia(en):lc word /doc/embedded()/employees/firstName();
+    name = convdia(en):lc word /doc/embedded()//lastName();
+
+

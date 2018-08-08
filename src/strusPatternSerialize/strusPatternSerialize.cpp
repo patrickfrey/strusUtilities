@@ -10,6 +10,7 @@
 #include "strus/lib/error.hpp"
 #include "strus/lib/markup_std.hpp"
 #include "strus/lib/pattern_serialize.hpp"
+#include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/constants.hpp"
@@ -27,59 +28,89 @@
 #include "strus/patternLexerInterface.hpp"
 #include "strus/patternTermFeederInterface.hpp"
 #include "strus/patternTermFeederInstanceInterface.hpp"
-#include "strus/programLoader.hpp"
 #include "strus/versionModule.hpp"
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "private/version.hpp"
+#include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/documentClass.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/fileio.hpp"
 #include "strus/base/cmdLineOpt.hpp"
 #include "strus/base/string_format.hpp"
-#include "private/programOptions.hpp"
-#include "private/utils.hpp"
+#include "strus/base/local_ptr.hpp"
+#include "strus/base/programOptions.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/programLoader.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstring>
+#include <cerrno>
+#include <cstdio>
 #include <stdexcept>
 #include <memory>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
 
-#undef STRUS_LOWLEVEL_DEBUG
+static strus::ErrorBufferInterface* g_errorhnd = 0;
 
-static strus::ErrorBufferInterface* g_errorBuffer = 0;
-
+static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
+{
+	std::string programFileName = filearg;
+	std::string programDir;
+	int ec;
+	if (!strus::isRelativePath( programFileName))
+	{
+		std::string filedir;
+		std::string filenam;
+		ec = strus::getFileName( programFileName, filenam);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		ec = strus::getParentPath( programFileName, filedir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		programDir = filedir;
+		programFileName = filenam;
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	return programFileName;
+}
 
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
-	std::auto_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2));
+	strus::DebugTraceInterface* dbgtrace = strus::createDebugTrace_standard( 2);
+	if (!dbgtrace)
+	{
+		std::cerr << _TXT("failed to create debug trace") << std::endl;
+		return -1;
+	}
+	strus::local_ptr<strus::ErrorBufferInterface> errorBuffer( strus::createErrorBuffer_standard( 0, 2, dbgtrace/*passed with ownership*/));
 	if (!errorBuffer.get())
 	{
 		std::cerr << _TXT("failed to create error buffer") << std::endl;
 		return -1;
 	}
-	g_errorBuffer = errorBuffer.get();
+	g_errorhnd = errorBuffer.get();
 
-	strus::ProgramOptions opt;
-	bool printUsageAndExit = false;
 	try
 	{
-		opt = strus::ProgramOptions(
-				argc, argv, 10,
+		bool printUsageAndExit = false;
+		strus::ProgramOptions opt(
+				errorBuffer.get(), argc, argv, 11,
 				"h,help", "v,version", "license",
-				"o,output:", "F,feeder",
+				"G,debug:", "o,output:", "F,feeder",
 				"M,moduledir:", "m,module:", "r,rpc:",
 				"R,resourcedir:", "T,trace:");
+		if (errorBuffer->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to parse program arguments"));
+		}
 
 		if (opt( "help")) printUsageAndExit = true;
 		else if (!printUsageAndExit)
@@ -97,9 +128,9 @@ int main( int argc, const char* argv[])
 				rt = 2;
 			}
 		}
-		std::auto_ptr<strus::ModuleLoaderInterface>
+		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
-		if (!moduleLoader.get()) throw strus::runtime_error(_TXT("failed to create module loader"));
+		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 
 		if (opt("moduledir"))
 		{
@@ -128,7 +159,7 @@ int main( int argc, const char* argv[])
 #if STRUS_PATTERN_STD_ENABLED
 		if (!moduleLoader->loadModule( strus::Constants::standard_pattern_matcher_module()))
 		{
-			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_pattern_matcher_module() << "': " << g_errorBuffer->fetchError() << std::endl;
+			std::cerr << _TXT("failed to load module ") << "'" << strus::Constants::standard_pattern_matcher_module() << "': " << g_errorhnd->fetchError() << std::endl;
 		}
 #endif
 		if (opt("license"))
@@ -172,6 +203,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Print the program version and do nothing else") << std::endl;
 			std::cout << "--license" << std::endl;
 			std::cout << "    " << _TXT("Print 3rd party licences requiring reference") << std::endl;
+			std::cout << "-G|--debug <COMP>" << std::endl;
+			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "    " << _TXT("The module modstrus_analyzer_pattern is implicitely defined") << std::endl;
@@ -192,7 +225,6 @@ int main( int argc, const char* argv[])
 			return rt;
 		}
 		// Parse arguments:
-		std::string programfile = opt[ 0];
 		std::string outputfile;
 		bool use_feeder = opt( "feeder");
 		if (opt( "output"))
@@ -212,7 +244,18 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 		// Set paths for locating resources:
 		if (opt("resourcedir"))
 		{
@@ -225,25 +268,27 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
+		std::string programfile = getFileArg( opt[ 0], moduleLoader.get());
+
 		// Create objects for analyzer:
-		std::auto_ptr<strus::RpcClientMessagingInterface> messaging;
-		std::auto_ptr<strus::RpcClientInterface> rpcClient;
-		std::auto_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
+		strus::local_ptr<strus::RpcClientMessagingInterface> messaging;
+		strus::local_ptr<strus::RpcClientInterface> rpcClient;
+		strus::local_ptr<strus::AnalyzerObjectBuilderInterface> analyzerBuilder;
 
 		if (opt("rpc"))
 		{
 			messaging.reset( strus::createRpcClientMessaging( opt[ "rpc"], errorBuffer.get()));
-			if (!messaging.get()) throw strus::runtime_error(_TXT("failed to create rpc client messaging"));
+			if (!messaging.get()) throw std::runtime_error( _TXT("failed to create rpc client messaging"));
 			rpcClient.reset( strus::createRpcClient( messaging.get(), errorBuffer.get()));
-			if (!rpcClient.get()) throw strus::runtime_error(_TXT("failed to create rpc client"));
+			if (!rpcClient.get()) throw std::runtime_error( _TXT("failed to create rpc client"));
 			(void)messaging.release();
 			analyzerBuilder.reset( rpcClient->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create rpc analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create rpc analyzer object builder"));
 		}
 		else
 		{
 			analyzerBuilder.reset( moduleLoader->createAnalyzerObjectBuilder());
-			if (!analyzerBuilder.get()) throw strus::runtime_error(_TXT("failed to create analyzer object builder"));
+			if (!analyzerBuilder.get()) throw std::runtime_error( _TXT("failed to create analyzer object builder"));
 		}
 
 		// Create proxy objects if tracing enabled:
@@ -254,46 +299,51 @@ int main( int argc, const char* argv[])
 			analyzerBuilder.release();
 			analyzerBuilder.reset( proxy);
 		}
-		if (g_errorBuffer->hasError())
+		if (g_errorhnd->hasError())
 		{
-			throw strus::runtime_error(_TXT("error in initialization"));
+			throw std::runtime_error( _TXT("error in initialization"));
 		}
 		// Create objects:
 		strus::PatternSerializerType serializerType = use_feeder
 							? strus::PatternMatcherWithFeeder
 							: strus::PatternMatcherWithLexer;
-		std::auto_ptr<strus::PatternSerializer> serializer;
+		strus::local_ptr<strus::PatternSerializer> serializer;
 		if (outputfile.empty())
 		{
-			serializer.reset( strus::createPatternSerializerText( std::cout, serializerType, g_errorBuffer));
+			serializer.reset( strus::createPatternSerializerText( std::cout, serializerType, g_errorhnd));
 		}
 		else
 		{
-			serializer.reset( strus::createPatternSerializer( outputfile, serializerType, g_errorBuffer));
+			serializer.reset( strus::createPatternSerializer( outputfile, serializerType, g_errorhnd));
 		}
-		if (!serializer.get()) throw strus::runtime_error(_TXT("failed to create serializer"));
+		if (!serializer.get()) throw std::runtime_error( _TXT("failed to create serializer"));
+		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 
 		std::cerr << "serialize program ..." << std::endl;
-		std::string programsrc;
-		unsigned int ec = strus::readFile( programfile, programsrc);
-		if (ec) throw strus::runtime_error(_TXT("error (%u) reading rule file %s: %s"), ec, programfile.c_str(), ::strerror(ec));
-		std::vector<std::string> warnings;
-		bool result = (use_feeder)
-			? strus::loadPatternMatcherProgramWithFeeder( serializer->feeder(), serializer->matcher(), programsrc, g_errorBuffer, warnings)
-			: strus::loadPatternMatcherProgramWithLexer( serializer->lexer(), serializer->matcher(), programsrc, g_errorBuffer, warnings);
-		if (!result) throw strus::runtime_error(_TXT("failed to load program"));
-
-		std::vector<std::string>::const_iterator wi = warnings.begin(), we = warnings.end();
-		for (; wi != we; ++wi)
+		if (use_feeder)
 		{
-			std::cerr << "warning: " << *we << std::endl;
+			if (!strus::load_PatternMatcher_programfile( textproc, serializer->feeder(), serializer->matcher(), programfile, g_errorhnd))
+			{
+				throw std::runtime_error( _TXT("failed to load program to serialize"));
+			}
 		}
-		if (g_errorBuffer->hasError())
+		else
 		{
-			throw strus::runtime_error(_TXT("uncaught error in pattern serialize"));
+			if (!strus::load_PatternMatcher_programfile( textproc, serializer->lexer(), serializer->matcher(), programfile, g_errorhnd))
+			{
+				throw std::runtime_error( _TXT("failed to load program to serialize"));
+			}
+		}
+		if (g_errorhnd->hasError())
+		{
+			throw std::runtime_error( _TXT("uncaught error in pattern serialize"));
 		}
 		serializer->close();
-		std::cerr << _TXT("OK done") << std::endl;
+		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+		{
+			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
+		}
+		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
