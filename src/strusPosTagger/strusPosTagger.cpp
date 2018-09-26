@@ -410,12 +410,12 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 22,
+				errorBuffer.get(), argc, argv, 23,
 				"h,help", "v,version", "V,verbose",
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "x,extension:",
-				"e,expression:", "p,punctuation:", "d,delimiter:",
+				"e,contentexpr:", "E,emptyexpr:", "P,punctexpr:", "d,delimiter:",
 				"I,posinp", "t,threads:", "f,fetch:",
 				"P,prefix:", "y,entitytag:", "o,output:");
 		if (errorBuffer->hasError())
@@ -518,14 +518,19 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Action is collect POS input to the argument file <file>") << std::endl;
 			std::cout << "    " << _TXT("If not specified then the action is POS tagging") << std::endl;
 			std::cout << "    " << _TXT("with the tags read from the argument <file> (output of POS tagger)") << std::endl;
-			std::cout << "-e|--expression <XPATH>" << std::endl;
+			std::cout << "-e|--contentexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select content to process (many definitions allowed).") << std::endl;
-			std::cout << "-p|--punctuation <XPATH>" << std::endl;
+			std::cout << "-P|--punctexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select tags that issue a sentence delimiter as POS tagger input.") << std::endl;
 			std::cout << "    " << _TXT("Remark: Strus extends the syntax of syntax of XPath with a trailing '~'") << std::endl;
 			std::cout << "    " << _TXT("to denote the end of a tag selected.") << std::endl;
+			std::cout << "-E|--emptyexpr <XPATH>" << std::endl;
+			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
+			std::cout << "    " << _TXT("to select a tag issueing a space delimiter as POS tagger input.") << std::endl;
+			std::cout << "    " << _TXT("Similar to --punctuation but issuing a space ' ' instead of") << std::endl;
+			std::cout << "    " << _TXT("a delimiter declared with --delimiter.") << std::endl;
 			std::cout << "-d|--delimiter <DELIM>" << std::endl;
 			std::cout << "    " << _TXT("Use <DELIM> as end of sentence (punctuation) issued when a") << std::endl;
 			std::cout << "    " << _TXT("tag selecting punctuation matches (Default is LF '\\n').") << std::endl;
@@ -572,7 +577,8 @@ int main( int argc, const char* argv[])
 		std::string filenameprefix = "#FILE#";
 		std::vector<EntityTagDef> entitytags;
 		std::vector<std::string> contentExpression;
-		std::vector<std::string> punctuationExpression;
+		std::vector<std::string> punctExpression;
+		std::vector<std::string> emptyExpression;
 		std::string punctuationDelimiter = "\n";
 		enum {MaxNofThreads=1024};
 		int threads = opt( "threads") ? opt.asUint( "threads") : 0;
@@ -619,13 +625,17 @@ int main( int argc, const char* argv[])
 				entitytags.push_back( EntityTagDef( parseEntityTagDef( *di)));
 			}
 		}
-		if (opt( "expression"))
+		if (opt( "contentexpr"))
 		{
-			contentExpression = opt.list( "expression");
+			contentExpression = opt.list( "contentexpr");
 		}
-		if (opt( "punctuation"))
+		if (opt( "punctexpr"))
 		{
-			punctuationExpression = opt.list( "punctuation");
+			punctExpression = opt.list( "punctexpr");
+		}
+		if (opt( "emptyexpr"))
+		{
+			emptyExpression = opt.list( "emptyexpr");
 		}
 		if (opt( "delimiter"))
 		{
@@ -779,8 +789,11 @@ int main( int argc, const char* argv[])
 			std::vector<std::string>::const_iterator ei = contentExpression.begin(), ee = contentExpression.end();
 			for (; ei != ee; ++ei) postagger->addContentExpression( *ei);
 		}{
-			std::vector<std::string>::const_iterator ei = punctuationExpression.begin(), ee = punctuationExpression.end();
+			std::vector<std::string>::const_iterator ei = punctExpression.begin(), ee = punctExpression.end();
 			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, punctuationDelimiter);
+		}{
+			std::vector<std::string>::const_iterator ei = emptyExpression.begin(), ee = emptyExpression.end();
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, " ");
 		}
 
 		// Define the tokenizer:
