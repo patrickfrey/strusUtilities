@@ -415,7 +415,7 @@ int main( int argc, const char* argv[])
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "x,extension:",
-				"e,contentexpr:", "E,emptyexpr:", "P,punctexpr:", "d,delimiter:",
+				"e,contentexpr:", "E,emptyexpr:", "p,punctexpr:", "D,punctdelim:",
 				"I,posinp", "t,threads:", "f,fetch:",
 				"P,prefix:", "y,entitytag:", "o,output:");
 		if (errorBuffer->hasError())
@@ -521,7 +521,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-e|--contentexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select content to process (many definitions allowed).") << std::endl;
-			std::cout << "-P|--punctexpr <XPATH>" << std::endl;
+			std::cout << "-p|--punctexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select tags that issue a sentence delimiter as POS tagger input.") << std::endl;
 			std::cout << "    " << _TXT("Remark: Strus extends the syntax of syntax of XPath with a trailing '~'") << std::endl;
@@ -531,7 +531,7 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("to select a tag issueing a space delimiter as POS tagger input.") << std::endl;
 			std::cout << "    " << _TXT("Similar to --punctuation but issuing a space ' ' instead of") << std::endl;
 			std::cout << "    " << _TXT("a delimiter declared with --delimiter.") << std::endl;
-			std::cout << "-d|--delimiter <DELIM>" << std::endl;
+			std::cout << "-D|--punctdelim <DELIM>" << std::endl;
 			std::cout << "    " << _TXT("Use <DELIM> as end of sentence (punctuation) issued when a") << std::endl;
 			std::cout << "    " << _TXT("tag selecting punctuation matches (Default is LF '\\n').") << std::endl;
 			std::cout << "-P|--prefix <STR>" << std::endl;
@@ -579,7 +579,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string> contentExpression;
 		std::vector<std::string> punctExpression;
 		std::vector<std::string> emptyExpression;
-		std::string punctuationDelimiter = "\n";
+		std::string punctDelimiter = "\n";
 		enum {MaxNofThreads=1024};
 		int threads = opt( "threads") ? opt.asUint( "threads") : 0;
 		if (threads > MaxNofThreads) threads = MaxNofThreads;
@@ -637,9 +637,9 @@ int main( int argc, const char* argv[])
 		{
 			emptyExpression = opt.list( "emptyexpr");
 		}
-		if (opt( "delimiter"))
+		if (opt( "punctdelim"))
 		{
-			punctuationDelimiter = opt[ "punctuation"];
+			punctDelimiter = opt[ "punctdelim"];
 		}
 		// Enable debugging selected with option 'debug':
 		{
@@ -680,7 +680,10 @@ int main( int argc, const char* argv[])
 		}
 		std::string docpath = opt[0];
 		std::string posfile = opt[1];
-
+		if (g_errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("invalid arguments"));
+		}
 		int ec = strus::resolveUpdirReferences( docpath);
 		if (ec) throw strus::runtime_error( _TXT("failed to resolve updir references of path '%s': %s"), docpath.c_str(), ::strerror(ec));
 
@@ -790,7 +793,7 @@ int main( int argc, const char* argv[])
 			for (; ei != ee; ++ei) postagger->addContentExpression( *ei);
 		}{
 			std::vector<std::string>::const_iterator ei = punctExpression.begin(), ee = punctExpression.end();
-			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, punctuationDelimiter);
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, punctDelimiter);
 		}{
 			std::vector<std::string>::const_iterator ei = emptyExpression.begin(), ee = emptyExpression.end();
 			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, " ");
