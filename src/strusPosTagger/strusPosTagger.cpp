@@ -64,7 +64,7 @@ static void writePosTaggerInput(
 		const strus::PosTaggerInstanceInterface* postaggerinst,
 		const std::string& fileTagPrefix)
 {
-	std::ostream* out;
+	std::ostream* out = NULL;
 	std::ofstream fout;
 	std::vector<std::string> ar = crawler->fetch();
 	for (; !ar.empty(); ar = crawler->fetch())
