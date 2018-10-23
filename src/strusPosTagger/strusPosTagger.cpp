@@ -133,13 +133,25 @@ static bool isSpace( char ch)
 static strus::PosTaggerDataInterface::Element parseElement( const std::string& line)
 {
 	std::string type;
+	std::string nertype;
 	std::string value;
 	char const* si = line.c_str();
 	char const* se = si + line.size();
-	for (; *si && isAlphaNum(*si); ++si) type.push_back(*si);
-	for (; *si && isSpace(*si); ++si) {}
-	value = strus::string_conv::trim( si, se - si);
-	return strus::PosTaggerDataInterface::Element( type, value);
+	for (; si != se && isAlphaNum(*si); ++si) type.push_back(*si);
+	if (si==se || !isSpace(*si)) throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), line.c_str());
+	++si;
+	for (; si != se && isAlphaNum(*si); ++si) nertype.push_back(*si);
+	if (si == se)
+	{
+		return strus::PosTaggerDataInterface::Element( type, std::string());
+	}
+	else
+	{
+		if (!isSpace(*si)) throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), line.c_str());
+		++si;
+		value = strus::string_conv::trim( si, se - si);
+		return strus::PosTaggerDataInterface::Element( type, value);
+	}
 }
 
 static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<std::string,int>& filemap, const std::string& inputpath, const std::string& posTagFile, const std::string& fileTagPrefix)
@@ -504,7 +516,7 @@ int main( int argc, const char* argv[])
 		{
 			std::cout << _TXT("usage:") << " strusPosTagger [options] <docpath> <posfile>" << std::endl;
 			std::cout << "<docpath> = " << _TXT("path of input file/directory") << std::endl;
-			std::cout << "<posfile> = " << _TXT("path of input (POS output) or output (POS input)") << std::endl;
+			std::cout << "<posfile> = " << _TXT("path of input (POS output) or input (POS input)") << std::endl;
 			std::cout << "            " << _TXT("file depending of action ('-' for stdout/stdin)") << std::endl;
 			std::cout << _TXT("description: a) dumps POS tagger input if started with option -I.") << std::endl;
 			std::cout << _TXT("             b) output POS tagged files if started without option -I.") << std::endl;
