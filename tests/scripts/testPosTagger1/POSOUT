@@ -1,114 +1,114 @@
 #FILE#A.xml
-TIT Introduction
-ART The
-NN user
-VERB interacts
-PP with
-NN application
-NN software
-PP on
-PP a
-ARV typical
-NN desktop computer
-EOS .
-ART The
-NN application software
-NN layer
-VERB interfaces
-PP with
-PP the
-NN operating
-NN system
-EOS .
+ TIT Introduction
+ ART The
+NN NN user
+VV VERB interacts
+ PP with
+NN NN application
+_ _ software
+ PP on
+ PP a
+ ARV typical
+NN NN desktop computer
+EE! EOS .
+ ART The
+NN NN application software
+_ _ layer
+VV VERB interfaces
+ PP with
+ PP the
+NN NN operating
+_ _ system
+EE! EOS .
 
 #FILE#B.xml
-TIT History
-PP An
-NN algorithm
-PP for
-PP what
-VERB would
-VERB have
-VERB been
-VERB the
-PP first
-NN piece
-PP of
-NN software
-VERB was
-VERB written
-PP by
-NNP Ada Lovelace
-PP in 
-PP the
-ADJ 19th century
-BRK ,
-APP for
-ART the
-ADJ planned
-NNP Analytical Engine
-EOS .
-ADV However
-BRK ,
-PP neither
-ART the
-NNP Analytical Engine
-PP nor
-PP any
-NN software
-PP for
-PP it
-VERB were
-PP ever
-VERB created
-EOS .
+ TIT History
+ PP An
+NN NN algorithm
+ PP for
+ PP what
+VV VERB would
+VV VERB have
+VV VERB been
+ DT the
+ PP first
+NN NN piece
+ PP of
+NN NN software
+VV VERB was
+VV VERB written
+ PP by
+NN NNP Ada Lovelace
+ PP in 
+ PP the
+ ADJ 19th century
+ BRK ,
+ APP for
+ ART the
+ ADJ planned
+NN NNP Analytical Engine
+EE! EOS .
+ ADV However
+ BRK ,
+ PP neither
+ ART the
+NN NNP Analytical Engine
+ PP nor
+ PP any
+NN NN software
+ PP for
+ PP it
+VV VERB were
+ PP ever
+VV VERB created
+EE! EOS .
 
 #FILE#C.xml
-TIT Architecture
+ TIT Architecture
 
-NN Users
-PP often
-VERB see
-NN things
-ABV differently
-PP from
-NN programmers
-EOS .
-NN People
-PP who
-VERB use
-ADJ modern
-ADJ general purpose
-NN computers
-BRK (
-PP as 
-VERB opposed
-PP to
-NN embedded systems
-SEP ,
-ADJ analog
-NN computers
-PP and
-NN supercomputers
-BRK )
-ADV usually
-ADJ see
-ADJ three
-NN layers
-PP of
-NN software
-VERB performing
-PP a
-NN variety
-PP of
-NN tasks
-BRK :
-NN platform
-BRK ,
-NN application
-BRK ,
-PP and
-NN user
-NN software
-EOS .
+NN NN Users
+ PP often
+VV VERB see
+NN NN things
+ ABV differently
+ PP from
+NN NN programmers
+EE! EOS .
+NN NN People
+ PP who
+VV VERB use
+ ADJ modern
+ ADJ general purpose
+NN NN computers
+ BRK (
+ PP as 
+VV VERB opposed
+ PP to
+NN NN embedded systems
+ SEP ,
+ ADJ analog
+NN NN computers
+ PP and
+NN NN supercomputers
+ BRK )
+ ADV usually
+ ADJ see
+ ADJ three
+NN NN layers
+ PP of
+NN NN software
+VV VERB performing
+ PP a
+NN NN variety
+ PP of
+NN NN tasks
+ BRK :
+NN NN platform
+ BRK ,
+NN NN application
+ BRK ,
+ PP and
+NN NN user
+NN NN software
+EE! EOS .
 

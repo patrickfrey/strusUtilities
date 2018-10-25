@@ -45,6 +45,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <set>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -125,54 +126,81 @@ static bool isAlphaNum( char ch)
 	return ((ch|32) >= 'a' && (ch|32) <= 'z') || (ch >= '0' && ch <= '9') || ch == '_';
 }
 
+static bool isPosTagIdChar( char ch)
+{
+	static const char ar[] = ";:,.()\"\'$";
+	return (isAlphaNum( ch) || 0!=std::strchr( ar, ch));
+}
+
 static bool isSpace( char ch)
 {
 	return ch && (unsigned char)ch <= 32;
 }
 
-static strus::PosTaggerDataInterface::Element parseElement( const std::string& line)
+static strus::PosTaggerDataInterface::Element parseElement( const char* ln, std::size_t lnsize)
 {
-	std::string type;
-	std::string nertype;
+	typedef strus::PosTaggerDataInterface::Element Element;
+	Element::Type type = Element::Content;
+	std::string tag;
+	std::string nertag;
 	std::string value;
-	char const* si = line.c_str();
-	char const* se = si + line.size();
-	for (; si != se && isAlphaNum(*si); ++si) type.push_back(*si);
-	if (si==se || !isSpace(*si)) throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), line.c_str());
+	char const* si = ln;
+	char const* se = si + lnsize;
+	for (; si != se && isAlphaNum(*si); ++si)
+	{
+		tag.push_back(*si);
+	}
+	if (si != se && *si == '!')
+	{
+		++si;
+		type = Element::Marker;
+		if (tag == "_")
+		{
+			throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("syntax error; tag identifier '_' (bound to previous) not allowed in combination with '!': %s"), ln);
+		}
+	}
+	else if (tag == "_")
+	{
+		type = Element::BoundToPrevious;
+		tag.clear();
+	}
+	if (si==se || !isSpace(*si)) throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), ln);
 	++si;
-	for (; si != se && isAlphaNum(*si); ++si) nertype.push_back(*si);
+	for (int sn=0; sn<6 && si != se && isPosTagIdChar(*si); ++sn,++si)
+	{
+		nertag.push_back(*si);
+	}
 	if (si == se)
 	{
-		return strus::PosTaggerDataInterface::Element( type, std::string());
+		return Element( type, tag, std::string());
 	}
 	else
 	{
-		if (!isSpace(*si)) throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), line.c_str());
+		if (!isSpace(*si)) throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), ln);
 		++si;
 		value = strus::string_conv::trim( si, se - si);
-		return strus::PosTaggerDataInterface::Element( type, value);
+		return Element( type, tag, value);
 	}
 }
 
 static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<std::string,int>& filemap, const std::string& inputpath, const std::string& posTagFile, const std::string& fileTagPrefix)
 {
+	typedef strus::PosTaggerDataInterface::Element Element;
 	typedef std::map<const std::string,int>::value_type FileMapValue;
 	std::string filename;
 	int docnocnt = filemap.size();
 	strus::InputStream inp( posTagFile);
 	char linebuf[ 1<<14];
-	typedef strus::PosTaggerDataInterface::Element Element;
 	std::vector<Element> elements;
 	int linecnt = 0;
 
-	while (!inp.eof())
+	while (!inp.eof()) try
 	{
 		const char* ln = inp.readLine( linebuf, sizeof( linebuf), true/*failOnNoLine*/);
 		++linecnt;
 		if (!ln) throw strus::runtime_error( _TXT("error reading POS tagging file '%s' line %d: %s"), posTagFile.c_str(), linecnt, ::strerror( inp.error()));
-		std::string line = strus::string_conv::trim( ln, std::strlen(ln));
-
-		if (strus::stringStartsWith( line, fileTagPrefix))
+		std::size_t lnsize = std::strlen( ln);
+		if (lnsize > fileTagPrefix.size() && 0==std::memcmp( ln, fileTagPrefix.c_str(), fileTagPrefix.size()))
 		{
 			if (!elements.empty())
 			{
@@ -182,17 +210,21 @@ static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<st
 				if (g_verbose) std::cerr << strus::string_format( _TXT("load POS tagging %d elements for docno %d file '%s' line %d"), (int)elements.size(), docnocnt, filename.c_str(), linecnt) << std::endl;
 				elements.clear();
 			}
-			filename = strus::joinFilePath( inputpath, line.c_str() + fileTagPrefix.size());
+			filename = strus::joinFilePath( inputpath, ln + fileTagPrefix.size());
 			FileMapValue filemapvalue( filename, ++docnocnt);
 			if (!filemap.insert( filemapvalue).second)
 			{
 				throw strus::runtime_error( _TXT("duplicate definition of file '%s' in POS tagging file '%s' line %d"), filename.c_str(), posTagFile.c_str(), linecnt);
 			}
 		}
-		else if (!line.empty())
+		else if (*ln)
 		{
-			elements.push_back( parseElement( line));
+			elements.push_back( parseElement( ln, lnsize));
 		}
+	}
+	catch (const std::runtime_error& err)
+	{
+		throw strus::runtime_error( _TXT("error loading POS tagging file '%s': %s"), posTagFile.c_str(), err.what());
 	}
 	int err = inp.error();
 	if (err) throw strus::runtime_error(_TXT("error reading POS tag file '%s': %s"), posTagFile.c_str(), ::strerror( err));
@@ -425,16 +457,15 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 23,
+				errorBuffer.get(), argc, argv, 22,
 				"h,help", "v,version", "V,verbose",
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "x,extension:",
 				"e,contentexpr:", "E,emptyexpr:", "p,punctexpr:", "D,punctdelim:",
 				"I,posinp", "t,threads:", "f,fetch:",
-				"P,prefix:", "y,entitytag:", "o,output:");
+				"P,prefix:", "o,output:");
 		if (errorBuffer->hasError())
-			
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
 		}
@@ -553,9 +584,6 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Use the string <STR> as prefix for a file declaration line in") << std::endl;
 			std::cout << "    " << _TXT("the POS tagging input or output file.") << std::endl;
 			std::cout << "    " << _TXT("Default is '#FILE#'.") << std::endl;
-			std::cout << "-y|--entitytag <ENTITY>=<TAG>" << std::endl;
-			std::cout << "    " << _TXT("Map POS tagging entities to the tag <TAG>.") << std::endl;
-			std::cout << "    " << _TXT("Multiple definitions possible.") << std::endl;
 			std::cout << "-G|--debug <COMP>" << std::endl;
 			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
@@ -590,7 +618,6 @@ int main( int argc, const char* argv[])
 		std::string contenttype;
 		std::string fileext;
 		std::string filenameprefix = "#FILE#";
-		std::vector<EntityTagDef> entitytags;
 		std::vector<std::string> contentExpression;
 		std::vector<std::string> punctExpression;
 		std::vector<std::string> emptyExpression;
@@ -629,16 +656,6 @@ int main( int argc, const char* argv[])
 		if (opt( "prefix"))
 		{
 			filenameprefix = opt[ "prefix"];
-		}
-		if (opt("entitytag"))
-		{
-			if (action == DoGenInput) throw strus::runtime_error(_TXT("option -y|--entitytag makes no sense with option -I"));
-			std::vector<std::string> defs = opt.list( "entitytag");
-			std::vector<std::string>::const_iterator di = defs.begin(), de = defs.end();
-			for (; di != de; ++di)
-			{
-				entitytags.push_back( EntityTagDef( parseEntityTagDef( *di)));
-			}
 		}
 		if (opt( "contentexpr"))
 		{
@@ -823,11 +840,6 @@ int main( int argc, const char* argv[])
 		// Define the POS tagger data (not needed for input):
 		strus::local_ptr<strus::PosTaggerDataInterface> posTagData( textproc->createPosTaggerData( entityTokenizer.get()));
 		entityTokenizer.release();//... ownership passed to posTagData
-		std::vector<EntityTagDef>::const_iterator ei = entitytags.begin(), ee = entitytags.end();
-		for (; ei != ee; ++ei)
-		{
-			posTagData->defineTag( ei->first, ei->second);
-		}
 		std::map<std::string,int> posTagDocnoMap;
 
 		// Build the worker data:
