@@ -419,22 +419,6 @@ private:
 	std::string m_outputpath;
 };
 
-typedef std::pair<std::string,std::string> EntityTagDef;
-static EntityTagDef parseEntityTagDef( const std::string& def)
-{
-	char const* si = def.c_str();
-	int sidx = 0;
-	for (; *si && *si != '=' && *si != ':'; ++si,++sidx){}
-	if (*si)
-	{
-		return EntityTagDef( std::string( def.c_str(), sidx), std::string( si+1));
-	}
-	else
-	{
-		return EntityTagDef( def, def);
-	}
-
-}
 
 int main( int argc, const char* argv[])
 {
