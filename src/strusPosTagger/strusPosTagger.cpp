@@ -419,6 +419,16 @@ private:
 	std::string m_outputpath;
 };
 
+static void declareIgnoreToken( strus::PosTaggerDataInterface* taggerdata, const strus::TokenizerFunctionInstanceInterface* tokenizer, const std::string& value)
+{
+	std::vector<strus::analyzer::Token> tokens = tokenizer->tokenize( value.c_str(), value.size());
+	std::vector<strus::analyzer::Token>::const_iterator ti = tokens.begin(), te = tokens.end();
+	for (; ti != te; ++ti)
+	{
+		std::string ignoretok( value.c_str() + ti->origpos().ofs(), ti->origsize());
+		taggerdata->declareIgnoredToken( ignoretok);
+	}
+}
 
 int main( int argc, const char* argv[])
 {
@@ -441,12 +451,12 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 22,
+				errorBuffer.get(), argc, argv, 23,
 				"h,help", "v,version", "V,verbose",
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "x,extension:",
-				"e,contentexpr:", "E,emptyexpr:", "p,punctexpr:", "D,punctdelim:",
+				"e,contentexpr:", "E,spaceexpr:", "H,hyphexpr:", "p,punctexpr:", "D,punctdelim:",
 				"I,posinp", "t,threads:", "f,fetch:",
 				"P,prefix:", "o,output:");
 		if (errorBuffer->hasError())
@@ -556,14 +566,19 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("to select tags that issue a sentence delimiter as POS tagger input.") << std::endl;
 			std::cout << "    " << _TXT("Remark: Strus extends the syntax of syntax of XPath with a trailing '~'") << std::endl;
 			std::cout << "    " << _TXT("to denote the end of a tag selected.") << std::endl;
-			std::cout << "-E|--emptyexpr <XPATH>" << std::endl;
+			std::cout << "-H|--hyphexpr <XPATH>" << std::endl;
+			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
+			std::cout << "    " << _TXT("to select a tag issueing a hyphen delimiter as POS tagger input") << std::endl;
+			std::cout << "    " << _TXT("Similar to --punctuation but issuing a space ' - ' instead of") << std::endl;
+			std::cout << "    " << _TXT("a delimiter declared with --delimiter.") << std::endl;
+			std::cout << "-E|--spaceexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select a tag issueing a space delimiter as POS tagger input.") << std::endl;
 			std::cout << "    " << _TXT("Similar to --punctuation but issuing a space ' ' instead of") << std::endl;
 			std::cout << "    " << _TXT("a delimiter declared with --delimiter.") << std::endl;
 			std::cout << "-D|--punctdelim <DELIM>" << std::endl;
 			std::cout << "    " << _TXT("Use <DELIM> as end of sentence (punctuation) issued when a") << std::endl;
-			std::cout << "    " << _TXT("tag selecting punctuation matches (Default is LF '\\n').") << std::endl;
+			std::cout << "    " << _TXT("tag selecting punctuation matches (Default is ';\n').") << std::endl;
 			std::cout << "-P|--prefix <STR>" << std::endl;
 			std::cout << "    " << _TXT("Use the string <STR> as prefix for a file declaration line in") << std::endl;
 			std::cout << "    " << _TXT("the POS tagging input or output file.") << std::endl;
@@ -604,8 +619,11 @@ int main( int argc, const char* argv[])
 		std::string filenameprefix = "#FILE#";
 		std::vector<std::string> contentExpression;
 		std::vector<std::string> punctExpression;
-		std::vector<std::string> emptyExpression;
-		std::string punctDelimiter = "\n";
+		std::vector<std::string> spaceExpression;
+		std::vector<std::string> hyphExpression;
+		std::string punctDelimiter = "; ";
+		std::string spaceDelimiter = " ";
+		std::string hyphDelimiter = " - ";
 		enum {MaxNofThreads=1024};
 		int threads = opt( "threads") ? opt.asUint( "threads") : 0;
 		if (threads > MaxNofThreads) threads = MaxNofThreads;
@@ -649,9 +667,13 @@ int main( int argc, const char* argv[])
 		{
 			punctExpression = opt.list( "punctexpr");
 		}
-		if (opt( "emptyexpr"))
+		if (opt( "spaceexpr"))
 		{
-			emptyExpression = opt.list( "emptyexpr");
+			spaceExpression = opt.list( "spaceexpr");
+		}
+		if (opt( "hyphexpr"))
+		{
+			hyphExpression = opt.list( "hyphexpr");
 		}
 		if (opt( "punctdelim"))
 		{
@@ -811,8 +833,11 @@ int main( int argc, const char* argv[])
 			std::vector<std::string>::const_iterator ei = punctExpression.begin(), ee = punctExpression.end();
 			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, punctDelimiter);
 		}{
-			std::vector<std::string>::const_iterator ei = emptyExpression.begin(), ee = emptyExpression.end();
-			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, " ");
+			std::vector<std::string>::const_iterator ei = spaceExpression.begin(), ee = spaceExpression.end();
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, spaceDelimiter);
+		}{
+			std::vector<std::string>::const_iterator ei = hyphExpression.begin(), ee = hyphExpression.end();
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, hyphDelimiter);
 		}
 
 		// Define the tokenizer:
@@ -822,8 +847,15 @@ int main( int argc, const char* argv[])
 		if (!entityTokenizer.get()) throw std::runtime_error( _TXT( "failed to get tokenizer instance for 'langtoken'"));
 
 		// Define the POS tagger data (not needed for input):
+		const strus::TokenizerFunctionInstanceInterface* entityTokenizerPtr = entityTokenizer.get();
 		strus::local_ptr<strus::PosTaggerDataInterface> posTagData( textproc->createPosTaggerData( entityTokenizer.get()));
 		entityTokenizer.release();//... ownership passed to posTagData
+
+		// Define tokens to ignore if not present in document to tag (potentially added by input generator)
+		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, punctDelimiter);
+		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, spaceDelimiter);
+		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, hyphDelimiter);
+
 		std::map<std::string,int> posTagDocnoMap;
 
 		// Build the worker data:
