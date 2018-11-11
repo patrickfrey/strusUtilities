@@ -831,13 +831,13 @@ int main( int argc, const char* argv[])
 			for (; ei != ee; ++ei) postagger->addContentExpression( *ei);
 		}{
 			std::vector<std::string>::const_iterator ei = punctExpression.begin(), ee = punctExpression.end();
-			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, punctDelimiter);
-		}{
-			std::vector<std::string>::const_iterator ei = spaceExpression.begin(), ee = spaceExpression.end();
-			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, spaceDelimiter);
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, punctDelimiter, 3);
 		}{
 			std::vector<std::string>::const_iterator ei = hyphExpression.begin(), ee = hyphExpression.end();
-			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, hyphDelimiter);
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, hyphDelimiter, 2);
+		}{
+			std::vector<std::string>::const_iterator ei = spaceExpression.begin(), ee = spaceExpression.end();
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, spaceDelimiter, 1);
 		}
 
 		// Define the tokenizer:
