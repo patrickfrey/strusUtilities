@@ -1,9 +1,9 @@
-##A.xml
-#system
+#FILE#A.xml
+##system
 Introduction; The user interacts with application software on a typical desktop computer. The application software layer interfaces with the operating system. ; The user influences the behaviour of the ; system; with input. ; 
-##B.xml
+#FILE#B.xml
 History; An algorithm for what would have been the first piece of software was written by Ada Lovelace in the 19th century, for the planned Analytical Engine. However, neither the Analytical Engine nor any software for it were ever created. ; 
-##C.xml
+#FILE#C.xml
 Architecture; Users often see things differently from programmers. People who use modern general purpose computers (as opposed to embedded systems, analog computers and supercomputers) usually see three layers of software performing a variety of tasks: platform, application, and user software. ; 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <doc>
