@@ -716,7 +716,7 @@ int main( int argc, const char* argv[])
 		if (opt( "entityprefix"))
 		{
 			if (action != DoGenInput) throw strus::runtime_error(_TXT("option -Y|--entityprefix makes no sense with option -I"));
-			filenamePrefix = opt[ "entityprefix"];
+			entityPrefix = opt[ "entityprefix"];
 		}
 		if (opt( "contentexpr"))
 		{
