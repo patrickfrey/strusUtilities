@@ -1,5 +1,5 @@
 #FILE#A.xml
-Introduction; The user interacts with application software on a typical desktop computer. The application software layer interfaces with the operating system. ; 
+Introduction; The user interacts with application software on a typical desktop computer. The application software layer interfaces with the operating system. ; The user influences the behaviour of the system with input. ; 
 #FILE#B.xml
 History; An algorithm for what would have been the first piece of software was written by Ada Lovelace in the 19th century, for the planned Analytical Engine. However, neither the Analytical Engine nor any software for it were ever created. ; 
 #FILE#C.xml
@@ -13,6 +13,9 @@ Architecture; Users often see things differently from programmers. People who us
 <p>
    The <NN>user</NN> <VV>interacts</VV> with <NN>application software</NN> on a typical <NN>desktop computer</NN><EE/>. The <NN>application software
    layer</NN> <VV>interfaces</VV> with the <NN>operating system</NN><EE/>.
+</p>
+<p>
+   The <NN>user</NN> <VV>influences</VV> the <NN>behaviour</NN> of the <NN>system</NN> with <NN>input</NN><EE/>.
 </p>
 </text>
 </doc>

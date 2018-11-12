@@ -20,6 +20,17 @@ VV VERB interfaces
 NN NN operating
 _ _ system
 EE! EOS .
+ DT The
+NN NN user
+VV VERB influences
+ DT the
+NN NN behaviour
+ PP of
+ DT the
+NN NN system
+ PP with
+NN NN input
+EE! EOS .
 
 #FILE#B.xml
  TIT History
@@ -111,4 +122,3 @@ NN NN application
 NN NN user
 NN NN software
 EE! EOS .
-
