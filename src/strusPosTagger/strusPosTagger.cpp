@@ -64,7 +64,7 @@ static std::vector<std::string> extractReferencedEntities(
 		const strus::analyzer::DocumentClass& documentclass,
 		const std::string& content)
 {
-	std::vector<std::string> rt;
+	std::set<std::string> eset;
 	int id = 0;
 	strus::SegmenterPosition pos;
 	const char* segment = 0;
@@ -80,10 +80,10 @@ static std::vector<std::string> extractReferencedEntities(
 	{
 		if (segmentsize)
 		{
-			rt.push_back( std::string( segment, segmentsize));
+			eset.insert( std::string( segment, segmentsize));
 		}
 	}
-	return rt;
+	return std::vector<std::string>( eset.begin(), eset.end());
 }
 
 static void writePosTaggerInput(
