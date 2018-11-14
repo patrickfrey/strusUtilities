@@ -134,12 +134,6 @@ static void writePosTaggerInput(
 					entities = extractReferencedEntities( entitySegmenter, dclass, content);
 				}
 			}
-			if (posInputContent.empty())
-			{
-				const char* errormsg = g_errorBuffer->fetchError();
-				if (!errormsg) errormsg = "output empty";
-				throw strus::runtime_error(_TXT("failed to create pos tagger input for file '%s': %s"), ai->c_str(), errormsg);
-			}
 			if (!out)
 			{
 				if (outputFile == "-")
