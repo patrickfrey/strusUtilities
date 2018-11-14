@@ -1,124 +1,125 @@
 #FILE#A.xml
- TIT Introduction
- ART The
-NN NN user
-VV VERB interacts
- PP with
-NN NN application
-_ _ software
- PP on
- PP a
- ARV typical
-NN NN desktop computer
-EE! EOS .
- ART The
-NN NN application software
-_ _ layer
-VV VERB interfaces
- PP with
- PP the
-NN NN operating
-_ _ system
-EE! EOS .
- DT The
-NN NN user
-VV VERB influences
- DT the
-NN NN behaviour
- PP of
- DT the
-NN NN system
- PP with
-NN NN input
-EE! EOS .
+ Introduction
+ The
+NN user
+VV interacts
+ with
+NN application
+_ software
+ on
+ a
+ typical
+NN desktop computer
+EE! .
+ The
+NN application software
+_ layer
+VV interfaces
+ with
+ the
+NN operating
+_ system
+EE! .
+ The
+NN user
+VV influences
+ the
+NN behaviour
+ of
+ the
+NN system
+ with
+NN input
+EE! .
 
 #FILE#B.xml
- TIT History
- PP An
-NN NN algorithm
- PP for
- PP what
-VV VERB would
-VV VERB have
-VV VERB been
- DT the
- PP first
-NN NN piece
- PP of
-NN NN software
-VV VERB was
-VV VERB written
- PP by
-NN NNP Ada Lovelace
- PP in 
- PP the
- ADJ 19th century
- BRK ,
- APP for
- ART the
- ADJ planned
-NN NNP Analytical Engine
-EE! EOS .
- ADV However
- BRK ,
- PP neither
- ART the
-NN NNP Analytical Engine
- PP nor
- PP any
-NN NN software
- PP for
- PP it
-VV VERB were
- PP ever
-VV VERB created
-EE! EOS .
+ History
+ An
+NN algorithm
+ for
+ what
+VV would
+VV have
+VV been
+ the
+ first
+NN piece
+ of
+NN software
+VV was
+VV written
+ by
+NN Ada Lovelace
+ in 
+ the
+ 19th century
+ ,
+ for
+ the
+ planned
+NN Analytical Engine
+EE! .
+ However
+ ,
+ neither
+ the
+NN Analytical Engine
+ nor
+ any
+NN software
+ for
+ it
+VV were
+ ever
+VV created
+EE! .
 
 #FILE#C.xml
- TIT Architecture
+ Architecture
 
-NN NN Users
- PP often
-VV VERB see
-NN NN things
- ABV differently
- PP from
-NN NN programmers
-EE! EOS .
-NN NN People
- PP who
-VV VERB use
- ADJ modern
- ADJ general purpose
-NN NN computers
- BRK (
- PP as 
-VV VERB opposed
- PP to
-NN NN embedded systems
- SEP ,
- ADJ analog
-NN NN computers
- PP and
-NN NN supercomputers
- BRK )
- ADV usually
- ADJ see
- ADJ three
-NN NN layers
- PP of
-NN NN software
-VV VERB performing
- PP a
-NN NN variety
- PP of
-NN NN tasks
- BRK :
-NN NN platform
- BRK ,
-NN NN application
- BRK ,
- PP and
-NN NN user
-NN NN software
-EE! EOS .
+NN Users
+ often
+VV see
+NN things
+ differently
+ from
+NN programmers
+EE! .
+NN People
+ who
+VV use
+ modern
+ general purpose
+NN computers
+ (
+ as 
+VV opposed
+ to
+NN embedded systems
+ ,
+ analog
+NN computers
+ and
+NN supercomputers
+ )
+ usually
+ see
+ three
+NN layers
+ of
+NN software
+VV performing
+ a
+NN variety
+ of
+NN tasks
+ :
+NN platform
+ ,
+NN application
+ ,
+ and
+NN user
+NN software
+EE! .
+

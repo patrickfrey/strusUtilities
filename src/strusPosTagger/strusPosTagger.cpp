@@ -166,12 +166,6 @@ static bool isAlphaNum( char ch)
 	return ((ch|32) >= 'a' && (ch|32) <= 'z') || (ch >= '0' && ch <= '9') || ch == '_';
 }
 
-static bool isPosTagIdChar( char ch)
-{
-	static const char ar[] = ";:,.()\"\'$";
-	return (isAlphaNum( ch) || 0!=std::strchr( ar, ch));
-}
-
 static bool isSpace( char ch)
 {
 	return ch && (unsigned char)ch <= 32;
@@ -182,7 +176,6 @@ static strus::PosTaggerDataInterface::Element parseElement( const char* ln, std:
 	typedef strus::PosTaggerDataInterface::Element Element;
 	Element::Type type = Element::Content;
 	std::string tag;
-	std::string nertag;
 	std::string value;
 	char const* si = ln;
 	char const* se = si + lnsize;
@@ -203,12 +196,6 @@ static strus::PosTaggerDataInterface::Element parseElement( const char* ln, std:
 	{
 		type = Element::BoundToPrevious;
 		tag.clear();
-	}
-	if (si==se || !isSpace(*si)) throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), ln);
-	++si;
-	for (int sn=0; sn<6 && si != se && isPosTagIdChar(*si); ++sn,++si)
-	{
-		nertag.push_back(*si);
 	}
 	if (si == se)
 	{
