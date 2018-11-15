@@ -166,9 +166,11 @@ static bool isAlphaNum( char ch)
 	return ((ch|32) >= 'a' && (ch|32) <= 'z') || (ch >= '0' && ch <= '9') || ch == '_';
 }
 
-static bool isSpace( char ch)
+static std::string fetchLineToken( char const*& si, const char* se)
 {
-	return ch && (unsigned char)ch <= 32;
+	const char* start = si;
+	while (si != se && *si != '\t') ++si;
+	return strus::string_conv::trim( start, si - start);
 }
 
 static strus::PosTaggerDataInterface::Element parseElement( const char* ln, std::size_t lnsize)
@@ -177,6 +179,7 @@ static strus::PosTaggerDataInterface::Element parseElement( const char* ln, std:
 	Element::Type type = Element::Content;
 	std::string tag;
 	std::string value;
+	std::string ref;
 	char const* si = ln;
 	char const* se = si + lnsize;
 	for (; si != se && isAlphaNum(*si); ++si)
@@ -197,17 +200,22 @@ static strus::PosTaggerDataInterface::Element parseElement( const char* ln, std:
 		type = Element::BoundToPrevious;
 		tag.clear();
 	}
-	if (si == se)
+	if (si != se && *si == '\t')
 	{
-		return Element( type, tag, std::string());
-	}
-	else
-	{
-		if (!isSpace(*si)) throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), ln);
 		++si;
-		value = strus::string_conv::trim( si, se - si);
-		return Element( type, tag, value);
+		value = fetchLineToken( si, se);
+
+		if (si != se && *si == '\t')
+		{
+			++si;
+			ref = fetchLineToken( si, se);
+		}
 	}
+	if (si != se)
+	{
+		throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), ln);
+	}
+	return Element( type, tag, value, ref);
 }
 
 static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<std::string,int>& filemap, const std::string& inputpath, const std::string& posTagFile, const std::string& fileTagPrefix)
@@ -483,13 +491,13 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 25,
+				errorBuffer.get(), argc, argv, 24,
 				"h,help", "v,version", "V,verbose",
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "x,extension:",
 				"e,contentexpr:", "X,entityexpr:", "E,spaceexpr:", "p,punctexpr:", "D,punctdelim:",
-				"I,posinp", "Z,seginp", "t,threads:", "f,fetch:",
+				"I,posinp", "t,threads:", "f,fetch:",
 				"P,prefix:", "Y,entityprefix:", "o,output:");
 		if (errorBuffer->hasError())
 		{
@@ -757,14 +765,26 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
+		int ec = 0;
 		std::string docpath = opt[0];
+		std::string docdir;
 		std::string posfile = opt[1];
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("invalid arguments"));
 		}
-		int ec = strus::resolveUpdirReferences( docpath);
+		ec = strus::resolveUpdirReferences( docpath);
 		if (ec) throw strus::runtime_error( _TXT("failed to resolve updir references of path '%s': %s"), docpath.c_str(), ::strerror(ec));
+
+		if (strus::isFile( docpath))
+		{
+			ec = strus::getParentPath( docpath, docdir);
+			if (ec) throw strus::runtime_error( _TXT("failed to get parent path of '%s': %s"), docpath.c_str(), ::strerror(ec));
+		}
+		else
+		{
+			docdir = docpath;
+		}
 
 		if (errorBuffer->hasError())
 		{
@@ -927,7 +947,7 @@ int main( int argc, const char* argv[])
 						new PosInputWorker(
 							threadid, fileCrawler.get(), documentClassDetector.get(),
 							documentClass, postagger.get(), entitySegmenterInst.get(),
-							entityPrefix, filenamePrefix, docpath, posfile));
+							entityPrefix, filenamePrefix, docdir, posfile));
 				}
 				std::cerr << _TXT("Generate input for POS tagging ...") << std::endl;
 				break;
@@ -935,7 +955,7 @@ int main( int argc, const char* argv[])
 			case DoGenOutput:
 			{
 				std::cerr << _TXT("Loading POS tag file ...");
-				loadPosTaggingFile( posTagData.get(), posTagDocnoMap, docpath, posfile, filenamePrefix);
+				loadPosTaggingFile( posTagData.get(), posTagDocnoMap, docdir, posfile, filenamePrefix);
 				std::cerr << _TXT(" done") << std::endl;
 
 				int ti = 0, te = threads ? threads : 1;

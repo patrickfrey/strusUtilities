@@ -1,125 +1,125 @@
 #FILE#A.xml
- Introduction
- The
-NN user
-VV interacts
- with
-NN application
-_ software
- on
- a
- typical
-NN desktop computer
-EE! .
- The
-NN application software
-_ layer
-VV interfaces
- with
- the
-NN operating
-_ system
-EE! .
- The
-NN user
-VV influences
- the
-NN behaviour
- of
- the
-NN system
- with
-NN input
-EE! .
+	Introduction
+	The
+NN	user
+VV	interacts
+	with
+NN	application
+_	software
+	on
+	a
+	typical
+NN	desktop computer
+EE!	.
+	The
+NN	application software
+_	layer
+VV	interfaces
+	with
+	the
+NN	operating
+_	system
+EE!	.
+	The
+NN	user
+VV	influences
+	the
+NN	behaviour
+	of
+	the
+NN	system
+	with
+NN	input
+EE!	.
 
 #FILE#B.xml
- History
- An
-NN algorithm
- for
- what
-VV would
-VV have
-VV been
- the
- first
-NN piece
- of
-NN software
-VV was
-VV written
- by
-NN Ada Lovelace
- in 
- the
- 19th century
- ,
- for
- the
- planned
-NN Analytical Engine
-EE! .
- However
- ,
- neither
- the
-NN Analytical Engine
- nor
- any
-NN software
- for
- it
-VV were
- ever
-VV created
-EE! .
+	History
+	An
+NN	algorithm
+	for
+	what
+VV	would
+VV	have
+VV	been
+	the
+	first
+NN	piece
+	of
+NN	software
+VV	was
+VV	written
+	by
+NN	Ada Lovelace
+	in
+	the
+	19th century
+	,
+	for
+	the
+	planned
+NN	Analytical Engine
+EE!	.
+	However
+	,
+	neither
+	the
+NN	Analytical Engine
+	nor
+	any
+NN	software
+	for
+	it
+VV	were
+	ever
+VV	created
+EE!	.
 
 #FILE#C.xml
- Architecture
+	Architecture
 
-NN Users
- often
-VV see
-NN things
- differently
- from
-NN programmers
-EE! .
-NN People
- who
-VV use
- modern
- general purpose
-NN computers
- (
- as 
-VV opposed
- to
-NN embedded systems
- ,
- analog
-NN computers
- and
-NN supercomputers
- )
- usually
- see
- three
-NN layers
- of
-NN software
-VV performing
- a
-NN variety
- of
-NN tasks
- :
-NN platform
- ,
-NN application
- ,
- and
-NN user
-NN software
-EE! .
+NN	Users
+	often
+VV	see
+NN	things
+	differently
+	from
+NN	programmers
+EE!	.
+NN	People
+	who
+VV	use
+	modern
+	general purpose
+NN	computers
+	(
+	as
+VV	opposed
+	to
+NN	embedded systems
+	,
+	analog
+NN	computers
+	and
+NN	supercomputers
+	)
+	usually
+	see
+	three
+NN	layers
+	of
+NN	software
+VV	performing
+	a
+NN	variety
+	of
+NN	tasks
+	:
+NN	platform
+	,
+NN	application
+	,
+	and
+NN	user
+NN	software
+EE!	.
 
