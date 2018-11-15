@@ -483,13 +483,13 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 24,
+				errorBuffer.get(), argc, argv, 25,
 				"h,help", "v,version", "V,verbose",
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "x,extension:",
 				"e,contentexpr:", "X,entityexpr:", "E,spaceexpr:", "p,punctexpr:", "D,punctdelim:",
-				"I,posinp", "t,threads:", "f,fetch:",
+				"I,posinp", "Z,seginp", "t,threads:", "f,fetch:",
 				"P,prefix:", "Y,entityprefix:", "o,output:");
 		if (errorBuffer->hasError())
 		{

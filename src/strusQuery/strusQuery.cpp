@@ -95,7 +95,17 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 	std::string programFileName = filearg;
 	std::string programDir;
 	int ec;
-	if (!strus::isRelativePath( programFileName))
+
+	if (strus::isRelativePath( programFileName))
+	{
+		moduleLoader->addResourcePath( "./");
+	}
+	else if (strus::isAbsolutePath( programFileName))
+	{
+		ec = strus::getParentPath( programFileName, programDir);
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
 	{
 		std::string filedir;
 		std::string filenam;
@@ -429,7 +439,7 @@ int main( int argc_, const char* argv_[])
 		}
 		// Load query evaluation program:
 		std::string qevalProgramSource;
-		std::string queryprgpath = (strus::isRelativePath( queryprg)) ? textproc->getResourceFilePath( queryprg) : queryprg;
+		std::string queryprgpath = strus::isExplicitPath( queryprg) ? queryprg : textproc->getResourceFilePath( queryprg);
 
 		int ec = strus::readFile( queryprgpath, qevalProgramSource);
 		if (ec) throw strus::runtime_error(_TXT("failed to load query eval program %s (errno %u)"), queryprg.c_str(), ec);
