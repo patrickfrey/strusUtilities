@@ -327,12 +327,12 @@ static void writePosTagging(
 			}
 			else
 			{
-				outputfilename = strus::joinFilePath( outputpath, *ai + ".pos");
-				std::string outputdir;
-				ec = strus::getParentPath( outputfilename, outputdir);
-				if (ec) throw strus::runtime_error(_TXT("failed to get parent directory of '%s': %s"), outputfilename.c_str(), ::strerror(ec));
-				ec = strus::mkdirp( outputdir);
-				if (ec) throw strus::runtime_error(_TXT("failed to create output file path for '%s': %s"), outputdir.c_str(), ::strerror(ec));
+				ec = strus::getFileName( *ai, outputfilename, true);
+				if (ec) throw strus::runtime_error(_TXT("failed to get output file name for '%s': %s"), ai->c_str(), ::strerror(ec));
+				outputfilename = strus::joinFilePath( outputpath, outputfilename);
+				if (outputfilename.empty()) throw std::bad_alloc();
+				ec = strus::mkdirp( outputpath);
+				if (ec) throw strus::runtime_error(_TXT("failed to create output file path for '%s': %s"), outputpath.c_str(), ::strerror(ec));
 			}
 			ec = strus::writeFile( outputfilename, output);
 			if (ec) throw strus::runtime_error(_TXT("failed to write POS tagged output file '%s': %s"), outputfilename.c_str(), ::strerror(ec));
