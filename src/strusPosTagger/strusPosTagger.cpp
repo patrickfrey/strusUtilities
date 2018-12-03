@@ -927,6 +927,7 @@ int main( int argc, const char* argv[])
 
 		// Define tokens to ignore if not present in document to tag (potentially added by input generator)
 		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, punctDelimiter);
+		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, ".");
 		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, spaceDelimiter);
 
 		std::map<std::string,int> posTagDocnoMap;
