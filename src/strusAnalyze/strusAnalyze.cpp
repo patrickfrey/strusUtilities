@@ -53,6 +53,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <algorithm>
+#include <limits>
 
 struct TermOrder
 {
@@ -79,10 +80,23 @@ static void skipIdent( char const*& di)
 	for (; *di && (((unsigned char)(*di|32) >= 'a' && (unsigned char)(*di|32) <= 'z') || *di == '_'); ++di){}
 }
 
-typedef std::map<std::string,std::string> DumpConfig;
-typedef std::pair<std::string,std::string> DumpConfigElem;
+struct DumpConfigItem
+{
+	std::string value;
+	int priority;
 
-static DumpConfigElem getNextDumpConfigElem( char const*& di)
+	DumpConfigItem()
+		:value(),priority(std::numeric_limits<int>::min()){}
+	DumpConfigItem( const std::string& value_, int priority_)
+		:value(value_),priority(priority_){}
+	DumpConfigItem( const DumpConfigItem& o)
+		:value(o.value),priority(o.priority){}
+};
+
+typedef std::map<std::string,DumpConfigItem> DumpConfig;
+typedef std::pair<std::string,DumpConfigItem> DumpConfigElem;
+
+static DumpConfigElem getNextDumpConfigElem( char const*& di, int priority_)
 {
 	skipSpace( di);
 	char const* de = di;
@@ -120,7 +134,7 @@ static DumpConfigElem getNextDumpConfigElem( char const*& di)
 	{
 		throw strus::runtime_error(_TXT("illegal token in dump configuration string at '%s'"), di);
 	}
-	return DumpConfigElem( type, value);
+	return DumpConfigElem( type, DumpConfigItem( value, priority_));
 }
 
 
@@ -133,15 +147,50 @@ static void filterTerms( std::vector<strus::analyzer::DocumentTerm>& termar, con
 		DumpConfig::const_iterator dci = dumpConfig.find( ti->type());
 		if (dci != dumpConfig.end())
 		{
-			if (dci->second.empty())
+			if (dci->second.value.empty())
 			{
 				termar.push_back( *ti);
 			}
 			else
 			{
-				termar.push_back( strus::analyzer::DocumentTerm( ti->type(), dci->second, ti->pos()));
+				termar.push_back( strus::analyzer::DocumentTerm( ti->type(), dci->second.value, ti->pos()));
 			}
 		}
+	}
+}
+
+static void filterTermsUniquePosition( std::vector<strus::analyzer::DocumentTerm>& termar, const DumpConfig& dumpConfig, const std::vector<strus::analyzer::DocumentTerm>& inputtermar)
+{
+	strus::analyzer::DocumentTerm bestTerm;
+	int bestPriority = std::numeric_limits<int>::min();
+
+	std::vector<strus::analyzer::DocumentTerm>::const_iterator
+		ti = inputtermar.begin(), te = inputtermar.end();
+	for (; ti != te; ++ti)
+	{
+		if (bestTerm.defined() && ti->pos() > bestTerm.pos())
+		{
+			termar.push_back( bestTerm);
+			bestTerm.clear();
+			bestPriority = std::numeric_limits<int>::min();
+		}
+		DumpConfig::const_iterator dci = dumpConfig.find( ti->type());
+		if (dci != dumpConfig.end() && bestPriority < dci->second.priority)
+		{
+			bestPriority = dci->second.priority;
+			if (dci->second.value.empty())
+			{
+				bestTerm = *ti;
+			}
+			else
+			{
+				bestTerm = strus::analyzer::DocumentTerm( ti->type(), dci->second.value, ti->pos());
+			}
+		}
+	}
+	if (bestTerm.defined())
+	{
+		termar.push_back( bestTerm);
 	}
 }
 
@@ -194,10 +243,10 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 12,
+				errorBuffer.get(), argc, argv, 13,
 				"h,help", "v,version", "license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
-				"g,segmenter:", "C,contenttype:", "D,dump:");
+				"g,segmenter:", "C,contenttype:", "D,dump:", "U,unique");
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
@@ -312,6 +361,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("A type in <DUMPCFG> specifies the type to dump.") << std::endl;
 			std::cout << "    " << _TXT("A value an optional replacement of the term value.") << std::endl;
 			std::cout << "    " << _TXT("This kind of output is suitable for content analysis.") << std::endl;
+			std::cout << "-U|--unique" << std::endl;
+			std::cout << "    " << _TXT("Ouput dump (Option -D|--dump) only one element per ordinal position.") << std::endl;
+			std::cout << "    " << _TXT("Order of priorization specified in dump configuration.") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
@@ -319,6 +371,7 @@ int main( int argc, const char* argv[])
 		std::string contenttype;
 		DumpConfig dumpConfig;
 		bool doDump = false;
+		bool uniqueDump = false;
 		if (opt( "segmenter"))
 		{
 			segmenterName = opt[ "segmenter"];
@@ -345,24 +398,29 @@ int main( int argc, const char* argv[])
 			doDump = true;
 			std::string ds = opt[ "dump"];
 			char const* di = ds.c_str();
-			while (skipSpace( di))
+			int priority = -1;
+			for (; skipSpace( di); priority--)
 			{
-				DumpConfigElem dt( getNextDumpConfigElem( di));
+				DumpConfigElem dt( getNextDumpConfigElem( di, priority));
 				dumpConfig.insert( dt);
 				if (dbgtracectx.get())
 				{
-					if (dt.second.empty())
+					if (dt.second.value.empty())
 					{
 						dbgtracectx->event( "dump", "config [%s]", dt.first.c_str());
 					}
 					else
 					{
-						dbgtracectx->event( "dump", "config [%s] = '%s'", dt.first.c_str(), dt.second.c_str());
+						dbgtracectx->event( "dump", "config [%s] = '%s'", dt.first.c_str(), dt.second.value.c_str());
 					}
 				}
 			}
+			uniqueDump = opt("unique");
 		}
-
+		else if (opt("unique"))
+		{
+			throw strus::runtime_error(_TXT("option --unique makes only sense with option --dump"));
+		}
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -498,13 +556,13 @@ int main( int argc, const char* argv[])
 						DumpConfig::const_iterator dci = dumpConfig.find( mi->name());
 						if (dci != dumpConfig.end())
 						{
-							if (dci->second.empty())
+							if (dci->second.value.empty())
 							{
 								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), mi->value().tostring().c_str(), 0/*pos*/));
 							}
 							else
 							{
-								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), dci->second, 0/*pos*/));
+								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), dci->second.value, 0/*pos*/));
 							}
 						}
 					}
@@ -515,19 +573,26 @@ int main( int argc, const char* argv[])
 						DumpConfig::const_iterator dci = dumpConfig.find( ai->name());
 						if (dci != dumpConfig.end())
 						{
-							if (dci->second.empty())
+							if (dci->second.value.empty())
 							{
 								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), ai->value(), 0/*pos*/));
 							}
 							else
 							{
-								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), dci->second, 0/*pos*/));
+								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), dci->second.value, 0/*pos*/));
 							}
 						}
 					}
-					filterTerms( termar, dumpConfig, doc.searchIndexTerms());
-					filterTerms( termar, dumpConfig, doc.forwardIndexTerms());
-
+					if (uniqueDump)
+					{
+						filterTermsUniquePosition( termar, dumpConfig, doc.searchIndexTerms());
+						filterTermsUniquePosition( termar, dumpConfig, doc.forwardIndexTerms());
+					}
+					else
+					{
+						filterTerms( termar, dumpConfig, doc.forwardIndexTerms());
+						filterTerms( termar, dumpConfig, doc.searchIndexTerms());
+					}
 					std::sort( termar.begin(), termar.end(), TermOrder());
 
 					std::vector<strus::analyzer::DocumentTerm>::const_iterator
