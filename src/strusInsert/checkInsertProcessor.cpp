@@ -197,7 +197,7 @@ void CheckInsertProcessor::run()
 							storagedoc->setAttribute(
 								strus::Constants::attribute_docid(), *fitr);
 					
-							unsigned int maxpos = 0;
+							int maxpos = 0;
 		
 							// Define all search index term occurrencies:
 							std::vector<strus::analyzer::DocumentTerm>::const_iterator
@@ -205,7 +205,7 @@ void CheckInsertProcessor::run()
 								te = doc.searchIndexTerms().end();
 							for (; ti != te; ++ti)
 							{
-								if (ti->pos() > Constants::storage_max_position_info())
+								if (ti->pos() > (int)Constants::storage_max_position_info())
 								{
 									// Cut positions away that are out of range.
 									//	Issue a warning later:
@@ -220,14 +220,14 @@ void CheckInsertProcessor::run()
 										ti->type(), ti->value(), ti->pos());
 								}
 							}
-			
+
 							// Define all forward index term occurrencies:
 							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								fi = doc.forwardIndexTerms().begin(),
 								fe = doc.forwardIndexTerms().end();
 							for (; fi != fe; ++fi)
 							{
-								if (fi->pos() > Constants::storage_max_position_info())
+								if (fi->pos() > (int)Constants::storage_max_position_info())
 								{
 									// Cut positions away that are out of range. Issue a warning later:
 									if (fi->pos() > maxpos)
@@ -241,7 +241,7 @@ void CheckInsertProcessor::run()
 										fi->type(), fi->value(), fi->pos());
 								}
 							}
-		
+
 							// Define all attributes extracted from the document analysis:
 							std::vector<strus::analyzer::DocumentAttribute>::const_iterator
 								ai = doc.attributes().begin(), ae = doc.attributes().end();
@@ -301,7 +301,7 @@ void CheckInsertProcessor::run()
 								}
 							}
 							// Issue warning for documents cut because they are too big to insert:
-							if (maxpos > Constants::storage_max_position_info())
+							if (maxpos > (int)Constants::storage_max_position_info())
 							{
 								std::cerr << string_format( _TXT( "token positions of document '%s' are out or range (document too big, %u token positions assigned)"), docid, maxpos) << std::endl;
 							}

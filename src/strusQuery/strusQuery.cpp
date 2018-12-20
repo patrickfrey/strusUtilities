@@ -139,6 +139,8 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		bool printUsageAndExit = false;
+		bool withDebugInfo = false;
+
 		strus::ProgramOptions opt(
 				errorBuffer.get(), argc_, argv_, 18,
 				"h,help", "v,version", "license",
@@ -150,6 +152,23 @@ int main( int argc_, const char* argv_[])
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
 		}
 		if (opt( "help")) printUsageAndExit = true;
+
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (*gi == "weighting")
+				{
+					withDebugInfo = true;
+				}
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
@@ -285,24 +304,7 @@ int main( int argc_, const char* argv_[])
 		std::size_t firstRank = 0;
 		std::string storagecfg;
 		bool queryIsFile = opt("fileinput");
-		bool withDebugInfo = false;
 
-		// Enable debugging selected with option 'debug':
-		{
-			std::vector<std::string> dbglist = opt.list( "debug");
-			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
-			for (; gi != ge; ++gi)
-			{
-				if (*gi == "weighting")
-				{
-					withDebugInfo = true;
-				}
-				if (!dbgtrace->enable( *gi))
-				{
-					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
-				}
-			}
-		}
 		if (opt("user"))
 		{
 			username = opt[ "user"];
@@ -544,16 +546,17 @@ int main( int argc_, const char* argv_[])
 		{
 			throw strus::runtime_error(_TXT("unhandled error in command line query: %s"), errorBuffer->fetchError());
 		}
+		std::cerr << _TXT("done.") << std::endl;
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{
 			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
-		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
 	{
 		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
+		return -2;
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -570,6 +573,10 @@ int main( int argc_, const char* argv_[])
 	catch (const std::exception& e)
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
+	}
+	if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+	{
+		std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 	}
 	return -1;
 }
