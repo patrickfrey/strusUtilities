@@ -97,14 +97,9 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 	int ec;
 
 	if (strus::isExplicitPath( programFileName))
-	{}
-	else if (strus::isRelativePath( programFileName))
-	{
-		moduleLoader->addResourcePath( "./");
-	}
-	else if (strus::isAbsolutePath( programFileName))
 	{
 		ec = strus::getParentPath( programFileName, programDir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from explicit path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
 		moduleLoader->addResourcePath( programDir);
 	}
 	else
