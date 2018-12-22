@@ -63,7 +63,9 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 	std::string programDir;
 	int ec;
 
-	if (strus::isRelativePath( programFileName))
+	if (strus::isExplicitPath( programFileName))
+	{}
+	else if (strus::isRelativePath( programFileName))
 	{
 		moduleLoader->addResourcePath( "./");
 	}
