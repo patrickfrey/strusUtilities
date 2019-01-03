@@ -174,15 +174,16 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 static void inspectDocumentIndexFeatureTypes( strus::StorageClientInterface& storage)
 {
 	strus::local_ptr<strus::ValueIteratorInterface> valItr( storage.createTermTypeIterator());
-
-	// KLUDGE: This is bad, but the storage cannot tell us how far we should
-	// iterate, does it?
-	enum { MAX_NOF_FEATURES = 100 };
-	
-	std::vector<std::string> termTypes = valItr->fetchValues( MAX_NOF_FEATURES);
-	for (std::vector<std::string>::const_iterator it = termTypes.begin(); it != termTypes.end(); it++) {
-		std::cout << *it << std::endl;
+	if (!valItr.get()) throw std::runtime_error(_TXT("failed to create term type iterator"));
+	std::vector<std::string> termTypes;
+	do
+	{
+		termTypes = valItr->fetchValues( 10);
+		for (std::vector<std::string>::const_iterator it = termTypes.begin(); it != termTypes.end(); it++) {
+			std::cout << *it << std::endl;
+		}
 	}
+	while (!termTypes.empty());
 }
 
 static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)

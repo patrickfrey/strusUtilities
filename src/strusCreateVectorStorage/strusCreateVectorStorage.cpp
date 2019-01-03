@@ -63,9 +63,9 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 11,
+				errorBuffer.get(), argc, argv, 12,
 				"h,help", "v,version", "license",
-				"G,debug:", "m,module:", "M,moduledir:", "T,trace:",
+				"G,debug:", "m,module:", "M,moduledir:", "T,trace:", "F,separator:",
 				"s,config:", "S,configfile:", "P,portable",
 				"f,file:" );
 		if (errorBuffer->hasError())
@@ -158,6 +158,8 @@ int main( int argc, const char* argv[])
 		std::string config;
 		int nof_config = 0;
 		bool portable = opt("portable");
+		char typeFeatureSeparator = strus::Constants::standard_word2vec_type_feature_separator();
+
 		if (opt("configfile"))
 		{
 			nof_config += 1;
@@ -217,6 +219,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Known formats are word2vec binary or text format.") << std::endl;
 			std::cout << "    " << _TXT("All files are added, if there are many input files specified.") << std::endl;
 			std::cout << "    " << _TXT("No input files lead to an empty storage.") << std::endl;
+			std::cout << "-F|--seperator <SEP>" << std::endl;
+			std::cout << "    " << _TXT("Spearator of type and feature in a word2vec term identifier") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Default is '%c'"), strus::Constants::standard_word2vec_type_feature_separator()) << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -250,6 +255,12 @@ int main( int argc, const char* argv[])
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
 		}
+		if (opt("separator"))
+		{
+			std::string vv = opt["separator"];
+			if (vv.size() != 1) throw std::runtime_error(_TXT("single ASCII character expected as type/feature separator"));
+			typeFeatureSeparator = vv[0];
+		}
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
@@ -278,7 +289,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::load_vectors( storage.get(), *fi, portable, g_errorBuffer))
+			if (!strus::load_vectors( storage.get(), *fi, portable, typeFeatureSeparator, g_errorBuffer))
 			{
 				throw std::runtime_error( _TXT("failed to load input"));
 			}
