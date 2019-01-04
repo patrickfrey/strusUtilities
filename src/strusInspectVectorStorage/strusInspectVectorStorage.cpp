@@ -54,6 +54,7 @@
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 static float g_minSimilarity = 0.85;
+static bool g_withRealSimilarityMeasure = false;
 
 static double getTimeStamp()
 {
@@ -206,7 +207,7 @@ public:
 
 	void run( const strus::WordVector& vec, unsigned int maxNofRanks)
 	{
-		m_feats = m_searcher->findSimilar( vec, maxNofRanks, g_minSimilarity);
+		m_feats = m_searcher->findSimilar( vec, maxNofRanks, g_minSimilarity, g_withRealSimilarityMeasure);
 	}
 
 	const std::vector<strus::VectorQueryResult>& results() const
@@ -245,7 +246,7 @@ static void inspectSimVector( const strus::VectorStorageClientInterface* storage
 	printResultVector( vec);
 }
 
-static void inspectSimFeatSearch( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration, bool withWeights, bool withRealSimilarityMeasure)
+static void inspectSimFeatSearch( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration, bool withWeights)
 {
 	if (inspectargsize < 1) throw std::runtime_error( _TXT("too few arguments (at least one argument expected)"));
 	std::string restype = inspectarg[ 0];
@@ -256,7 +257,7 @@ static void inspectSimFeatSearch( const strus::VectorStorageClientInterface* sto
 	{
 		double startTime = 0.0;
 		strus::Reference<strus::VectorStorageSearchInterface> searcher;
-		searcher.reset( storage->createSearcher( restype, 0, 1, withRealSimilarityMeasure));
+		searcher.reset( storage->createSearcher( restype, 0, 1));
 		if (!searcher.get())
 		{
 			throw std::runtime_error("failed to create vector searcher");
@@ -265,7 +266,7 @@ static void inspectSimFeatSearch( const strus::VectorStorageClientInterface* sto
 		{
 			startTime = getTimeStamp();
 		}
-		results = searcher->findSimilar( vec, maxNofRanks, g_minSimilarity);
+		results = searcher->findSimilar( vec, maxNofRanks, g_minSimilarity, g_withRealSimilarityMeasure);
 		if (doMeasureDuration)
 		{
 			double endTime = getTimeStamp();
@@ -283,7 +284,7 @@ static void inspectSimFeatSearch( const strus::VectorStorageClientInterface* sto
 			for (; ti != te; ++ti)
 			{
 				strus::Reference<strus::VectorStorageSearchInterface> searcher;
-				searcher.reset( storage->createSearcher( restype, ti, te, withRealSimilarityMeasure));
+				searcher.reset( storage->createSearcher( restype, ti, te));
 				if (!searcher.get())
 				{
 					throw std::runtime_error("failed to create vector searcher");
@@ -687,7 +688,7 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-		bool realmeasure( opt("realmeasure"));
+		g_withRealSimilarityMeasure = opt("realmeasure");
 		if (opt("minsim"))
 		{
 			g_minSimilarity = opt.asDouble("minsim");
@@ -779,11 +780,11 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::caseInsensitiveEquals( what, "opfeat"))
 		{
-			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/, realmeasure);
+			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/);
 		}
 		else if (strus::caseInsensitiveEquals( what, "opfeatw"))
 		{
-			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/, realmeasure);
+			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/);
 		}
 		else if (strus::caseInsensitiveEquals( what, "config"))
 		{
