@@ -339,21 +339,21 @@ static void inspectSimFeatSearch( const strus::VectorStorageClientInterface* sto
 	}
 }
 
-// Inspect strus::VectorStorageClientInterface::getTypes()
+// Inspect strus::VectorStorageClientInterface::types()
 static void inspectTypes( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize > 0) throw std::runtime_error( _TXT("too many arguments (no arguments expected)"));
-	printArray( storage->getTypes());
+	printArray( storage->types());
 }
 
-// Inspect strus::VectorStorageClientInterface::getFeatureTypes()
+// Inspect strus::VectorStorageClientInterface::featureTypes()
 static void inspectFeatureTypes( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize)
 {
 	if (inspectargsize > 1) throw std::runtime_error( _TXT("too many arguments (only feature name as argument expected)"));
 	if (inspectargsize < 1) throw std::runtime_error( _TXT("too few arguments (feature name as first argument expected)"));
 	std::string featstr = inspectarg[0];
 
-	printArray( storage->getFeatureTypes( featstr));
+	printArray( storage->featureTypes( featstr));
 }
 
 // Inspect some feature values starting with a lower bound specified:
@@ -434,7 +434,7 @@ static void inspectNofVectors( const strus::VectorStorageClientInterface* storag
 	}
 	else
 	{
-		std::vector<std::string> types = storage->getTypes();
+		std::vector<std::string> types = storage->types();
 		std::vector<std::string>::const_iterator ti = types.begin(), te = types.end();
 		for (; ti != te; ++ti)
 		{
