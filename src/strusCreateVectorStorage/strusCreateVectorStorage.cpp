@@ -63,10 +63,10 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 12,
+				errorBuffer.get(), argc, argv, 13,
 				"h,help", "v,version", "license",
 				"G,debug:", "m,module:", "M,moduledir:", "T,trace:", "F,separator:",
-				"s,config:", "S,configfile:", "P,portable",
+				"s,config:", "S,configfile:", "P,portable", "c,commit:",
 				"f,file:" );
 		if (errorBuffer->hasError())
 		{
@@ -157,6 +157,11 @@ int main( int argc, const char* argv[])
 		}
 		std::string config;
 		int nof_config = 0;
+		int transactionSize = 10000;
+		if (opt("commit"))
+		{
+			transactionSize = opt.asUint( "commit"); 
+		}
 		bool portable = opt("portable");
 		char typeFeatureSeparator = strus::Constants::standard_word2vec_type_feature_separator();
 
@@ -211,6 +216,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-P|--portable" << std::endl;
 			std::cout << "    " << _TXT("Tell the loader that the vector values are stored in a portable way (hton)") << std::endl;
+			std::cout << "-c|--commit <N>" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of vectors inserted before auto-commit (default 10000)") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -289,7 +296,7 @@ int main( int argc, const char* argv[])
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::load_vectors( storage.get(), *fi, portable, typeFeatureSeparator, g_errorBuffer))
+			if (!strus::load_vectors( storage.get(), *fi, portable, typeFeatureSeparator, transactionSize, g_errorBuffer))
 			{
 				throw std::runtime_error( _TXT("failed to load input"));
 			}
