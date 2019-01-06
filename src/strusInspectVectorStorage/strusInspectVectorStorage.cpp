@@ -629,10 +629,10 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"opvec\" <feat type> <feat value> { '+'/'-' <feat type> <feat value> }" << std::endl;
 			std::cout << "               = " << _TXT("Return the vector resulting from an addition of") << std::endl;
 			std::cout << "                 " << _TXT("vectors in the storage.") << std::endl;
-			std::cout << "            \"opfeat\" <feat type> <feat value> { '+'/'-' <feat type> <feat value> }" << std::endl;
+			std::cout << "            \"opfeat\" <result type> <feat type> <feat value> { '+'/'-' <feat type> <feat value> }" << std::endl;
 			std::cout << "               = " << _TXT("Return the most similar features to a result of an") << std::endl;
 			std::cout << "                 " << _TXT("addition of vectors in the storage.") << std::endl;
-			std::cout << "            \"opfeatw\"" << std::endl;
+			std::cout << "            \"opfeatw\" <result type> <feat type> <feat value> { '+'/'-' <feat type> <feat value> }" << std::endl;
 			std::cout << "               = " << _TXT("Same as 'opfeat' but also returning the weights.") << std::endl;
 			std::cout << "            \"config\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the configuration the vector storage.") << std::endl;
