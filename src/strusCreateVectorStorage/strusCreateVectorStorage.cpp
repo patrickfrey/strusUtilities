@@ -301,6 +301,10 @@ int main( int argc, const char* argv[])
 				throw std::runtime_error( _TXT("failed to load input"));
 			}
 		}
+		// Close of the storage including compaction of the database:
+		storage->close();
+
+		// Check for errors:
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("unhandled error in command"));

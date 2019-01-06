@@ -490,8 +490,10 @@ int main( int argc_, const char* argv_[])
 				for (; gi != ge; ++gi) (*gi)->join();
 			}
 		}
+		// Close of the storage including compaction of the database:
 		storage->close();
 
+		// Check for errors:
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("unhandled error in insert storage"));
