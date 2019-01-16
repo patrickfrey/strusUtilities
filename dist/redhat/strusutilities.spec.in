@@ -350,11 +350,12 @@ make test
 %{_bindir}/strusAnalyzePhrase
 %{_bindir}/strusHelp
 %{_bindir}/strusCreateVectorStorage
-%{_bindir}/strusBuildVectorStorage
 %{_bindir}/strusInspectVectorStorage
 %{_bindir}/strusPatternMatcher
 %{_bindir}/strusPatternSerialize
 %{_bindir}/strusUpdateStorageCalcStatistics
+%{_bindir}/strusPosTagger
+%{_bindir}/strusTagMarkup
 
 %files devel
 %defattr( -, root, root )
