@@ -671,12 +671,12 @@ public:
 		{
 			if (m_globalContext->docid_selectexpr().empty())
 			{
-				std::string docid = getDocidFromDocument( content, documentClass);
-				processDocumentContent( segmenterInstance, documentClass, docid, content);
+				processDocumentContent( segmenterInstance, documentClass, resultid, content);
 			}
 			else
 			{
-				processDocumentContent( segmenterInstance, documentClass, resultid, content);
+				std::string docid = getDocidFromDocument( content, documentClass);
+				processDocumentContent( segmenterInstance, documentClass, docid, content);
 			}
 		}
 	}
