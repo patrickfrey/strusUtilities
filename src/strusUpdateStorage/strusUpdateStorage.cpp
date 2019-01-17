@@ -116,7 +116,7 @@ int main( int argc, const char* argv[])
 				"G,debug:", "m,module:", "M,moduledir:", "L,logerror:",
 				"r,rpc:", "s,storage:", "c,commit:",
 				"a,attribute:", "x,mapattribute:",
-				"m,metadata:","u,useraccess", "T,trace:");
+				"d,metadata:","u,useraccess", "T,trace:");
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
@@ -238,7 +238,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-a|--attribute <NAME>" << std::endl;
 			std::cout << "    " << _TXT("The update batch is a list of attributes assignments") << std::endl;
 			std::cout << "    " << _TXT("The name of the updated attribute is <NAME>.") << std::endl;
-			std::cout << "-m|--metadata <NAME>" << std::endl;
+			std::cout << "-d|--metadata <NAME>" << std::endl;
 			std::cout << "    " << _TXT("The update batch is a list of meta data assignments.") << std::endl;
 			std::cout << "    " << _TXT("The name of the updated meta data element is <NAME>.") << std::endl;
 			std::cout << "-u|--useraccess" << std::endl;
