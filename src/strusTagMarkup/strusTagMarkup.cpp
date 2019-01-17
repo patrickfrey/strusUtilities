@@ -76,7 +76,7 @@ public:
 		for (; *pi == '0'; ++pi,++fmt0){}
 		if (fmt0)
 		{
-			m_formatstring = strus::string_format( "%s%%0%dd", prefix.c_str(), fmt0);
+			m_formatstring = strus::string_format( "%s%%0%dd", prefix.c_str(), fmt0 + (int)std::strlen(pi));
 		}
 		else
 		{
@@ -144,7 +144,7 @@ static void writeTagMarkup(
 					if (!errormsg) errormsg = "unsupported content type";
 					throw strus::runtime_error(_TXT("failed to detect document class of file '%s': %s"), ai->c_str(), errormsg);
 				}
-				if (documentClass.mimeType() != "application/json")
+				if (documentClass.mimeType() != "application/xml")
 				{
 					throw strus::runtime_error(_TXT("failed to process document of type '%s', tag markup not implemented for this document type"), documentClass.mimeType().c_str());
 				}
@@ -162,7 +162,7 @@ static void writeTagMarkup(
 				outputFile.append( ext);
 				ec = strus::writeFile( outputFile, output);
 			}
-			if (outputPath == inputPath)
+			else if (outputPath == inputPath)
 			{
 				ec = strus::writeFile( *ai, output);
 			}
@@ -211,7 +211,7 @@ public:
 		,m_threadid(threadid_),m_inputPath(inputPath_),m_outputPath(outputPath_),m_crawler(crawler_)
 		,m_dclassdetector(dclassdetector_),m_textproc(textproc_),m_documentClass(documentClass_),m_markups(markups_)
 	{
-		if (m_documentClass.defined() && m_documentClass.mimeType() != "application/json")
+		if (m_documentClass.defined() && m_documentClass.mimeType() != "application/xml")
 		{
 			throw strus::runtime_error(_TXT("failed to process document of type '%s', tag markup not implemented for this document type"), m_documentClass.mimeType().c_str());
 		}
@@ -277,8 +277,7 @@ int main( int argc, const char* argv[])
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"C,contenttype:", "x,extension:",
 				"e,expression:", "a,attribute:", "k,markup:", "P,parameter:",
-				"t,threads:", "f,fetch:",
-				"o,output:");
+				"t,threads:", "f,fetch:");
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
@@ -366,11 +365,11 @@ int main( int argc, const char* argv[])
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			if (opt.nofargs() < 2)
+			if (opt.nofargs() < 1)
 			{
 				std::cerr << _TXT("error too few arguments") << std::endl;
 				printUsageAndExit = true;
-				rt = 2;
+				rt = 1;
 			}
 		}
 		if (printUsageAndExit)
@@ -431,9 +430,6 @@ int main( int argc, const char* argv[])
 			std::cout << "-f|--fetch <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as number of files fetched in each iteration") << std::endl;
 			std::cout << "    " << _TXT("Default is 100") << std::endl;
-			std::cout << "-o|--output <PATH>" << std::endl;
-			std::cout << "    " << _TXT("Write output files to subdirectories of") << std::endl;
-			std::cout << "    " << _TXT("<PATH> or to stdout if '-' is specified") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
@@ -448,7 +444,6 @@ int main( int argc, const char* argv[])
 		if (threads > MaxNofThreads) threads = MaxNofThreads;
 		int fetchSize = opt( "fetch") ? opt.asUint( "fetch") : 100;
 		if (!fetchSize) fetchSize = 1;
-		std::string outputpath;
 
 		if (opt( "contenttype"))
 		{
@@ -474,12 +469,6 @@ int main( int argc, const char* argv[])
 		if (opt( "parameter"))
 		{
 			parameter = opt[ "parameter"];
-		}
-		if (opt( "output"))
-		{
-			outputpath = opt[ "output"];
-			int ec = strus::resolveUpdirReferences( outputpath);
-			if (ec) throw strus::runtime_error( _TXT("failed to resolve updir references of path '%s': %s"), outputpath.c_str(), ::strerror(ec));
 		}
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
@@ -508,8 +497,16 @@ int main( int argc, const char* argv[])
 		int ec = 0;
 		std::string docpath = opt[0];
 		std::string docdir;
-		std::string posfile = opt[1];
-
+		std::string outputpath;
+		if (opt.nofargs() > 1)
+		{
+			outputpath = opt[1];
+			if (!outputpath.empty() && outputpath != "-")
+			{
+				ec = strus::resolveUpdirReferences( outputpath);
+				if (ec) throw strus::runtime_error( _TXT("failed to resolve updir references of path '%s': %s"), outputpath.c_str(), ::strerror(ec));
+			}
+		}
 		if (g_errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("invalid arguments"));
