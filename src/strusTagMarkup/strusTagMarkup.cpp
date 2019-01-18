@@ -67,12 +67,12 @@ public:
 		:m_attributename(attributename_),m_formatstring(),m_current(0),m_incr(1)
 	{
 		std::string prefix;
-		char const* pi = parameter.c_str();
-		for (; *pi && !isDigit(*pi); ++pi)
-		{
-			prefix.push_back( *pi);
-		}
+		char const* pi = parameter.c_str() + parameter.size();
+		for (; pi != parameter.c_str() && *(pi-1) && isDigit(*(pi-1)); --pi){}
+
+		prefix.append( parameter.c_str(), pi-parameter.c_str());
 		int fmt0 = 0;
+
 		for (; *pi == '0'; ++pi,++fmt0){}
 		if (fmt0)
 		{
