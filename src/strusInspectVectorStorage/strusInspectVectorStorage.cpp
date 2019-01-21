@@ -11,7 +11,6 @@
 #include "strus/storageObjectBuilderInterface.hpp"
 #include "strus/vectorStorageInterface.hpp"
 #include "strus/vectorStorageClientInterface.hpp"
-#include "strus/vectorStorageSearchInterface.hpp"
 #include "strus/vectorStorageDumpInterface.hpp"
 #include "strus/valueIteratorInterface.hpp"
 #include "strus/databaseInterface.hpp"
@@ -37,7 +36,6 @@
 #include "strus/base/string_conv.hpp"
 #include "strus/base/numstring.hpp"
 #include "strus/base/local_ptr.hpp"
-#include "strus/base/thread.hpp"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -196,30 +194,6 @@ static strus::WordVector subVector( const strus::WordVector& arg1, const strus::
 	return rt;
 }
 
-
-class FindSimProcess
-{
-public:
-	explicit FindSimProcess( const strus::Reference<strus::VectorStorageSearchInterface>& searcher_)
-		:m_searcher( searcher_){}
-	FindSimProcess( const FindSimProcess& o)
-		:m_searcher(o.m_searcher),m_feats(o.m_feats){}
-
-	void run( const strus::WordVector& vec, unsigned int maxNofRanks)
-	{
-		m_feats = m_searcher->findSimilar( vec, maxNofRanks, g_minSimilarity, g_withRealSimilarityMeasure);
-	}
-
-	const std::vector<strus::VectorQueryResult>& results() const
-	{
-		return m_feats;
-	}
-
-private:
-	strus::Reference<strus::VectorStorageSearchInterface> m_searcher;
-	std::vector<strus::VectorQueryResult> m_feats;
-};
-
 static strus::WordVector parseVectorOperation( const strus::VectorStorageClientInterface* storage, std::size_t argidx, const char** inspectarg, std::size_t inspectargsize)
 {
 	strus::WordVector res = parseNextVectorOperand( storage, argidx, inspectarg, inspectargsize);
@@ -246,79 +220,26 @@ static void inspectSimVector( const strus::VectorStorageClientInterface* storage
 	printResultVector( vec);
 }
 
-static void inspectSimFeatSearch( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize, unsigned int maxNofRanks, unsigned int nofThreads, bool doMeasureDuration, bool withWeights)
+static void inspectSimFeatSearch( strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize, unsigned int maxNofRanks, bool doMeasureDuration, bool withWeights)
 {
 	if (inspectargsize < 1) throw std::runtime_error( _TXT("too few arguments (at least one argument expected)"));
 	std::string restype = inspectarg[ 0];
 	strus::WordVector vec = parseVectorOperation( storage, 1, inspectarg, inspectargsize);
 	std::vector<strus::VectorQueryResult> results;
 
-	if (nofThreads == 0)
-	{
-		double startTime = 0.0;
-		strus::Reference<strus::VectorStorageSearchInterface> searcher;
-		searcher.reset( storage->createSearcher( restype, 0, 1));
-		if (!searcher.get())
-		{
-			throw std::runtime_error("failed to create vector searcher");
-		}
-		if (doMeasureDuration)
-		{
-			startTime = getTimeStamp();
-		}
-		results = searcher->findSimilar( vec, maxNofRanks, g_minSimilarity, g_withRealSimilarityMeasure);
-		if (doMeasureDuration)
-		{
-			double endTime = getTimeStamp();
-			double duration = endTime - startTime;
-			std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
-		}
-	}
-	else
-	{
-		double startTime = 0.0;
-		
-		std::vector<FindSimProcess> procar;
-		{
-			unsigned int ti = 0, te = nofThreads;
-			for (; ti != te; ++ti)
-			{
-				strus::Reference<strus::VectorStorageSearchInterface> searcher;
-				searcher.reset( storage->createSearcher( restype, ti, te));
-				if (!searcher.get())
-				{
-					throw std::runtime_error("failed to create vector searcher");
-				}
-				procar.push_back( FindSimProcess( searcher));
-			}
-		}
-		if (doMeasureDuration)
-		{
-			startTime = getTimeStamp();
-		}
-		std::vector<strus::Reference<strus::thread> > threadGroup;
-		int ti = 0, te = procar.size();
-		for (ti=0; ti<te; ++ti)
-		{
-			strus::Reference<strus::thread> th( new strus::thread( &FindSimProcess::run, &procar[ti], vec, maxNofRanks));
-			threadGroup.push_back( th);
-		}
-		std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
-		for (; gi != ge; ++gi) (*gi)->join();
+	storage->prepareSearch( restype);
 
-		std::vector<FindSimProcess>::const_iterator pi = procar.begin(), pe = procar.end();
-		for (; pi != pe; ++pi)
-		{
-			results.insert( results.end(), pi->results().begin(), pi->results().end());
-		}
-		std::sort( results.begin(), results.end());
-		results.resize( std::min( maxNofRanks, (unsigned int)results.size()));
-		if (doMeasureDuration)
-		{
-			double endTime = getTimeStamp();
-			double duration = endTime - startTime;
-			std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
-		}
+	double startTime = 0.0;
+	if (doMeasureDuration)
+	{
+		startTime = getTimeStamp();
+	}
+	results = storage->findSimilar( restype, vec, maxNofRanks, g_minSimilarity, g_withRealSimilarityMeasure);
+	if (doMeasureDuration)
+	{
+		double endTime = getTimeStamp();
+		double duration = endTime - startTime;
+		std::cerr << strus::string_format( _TXT("operation duration: %.4f seconds"), duration) << std::endl;
 	}
 	if (withWeights)
 	{
@@ -486,11 +407,11 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 14,
+				errorBuffer.get(), argc, argv, 13,
 				"h,help", "v,version", "license",
 				"G,debug:", "m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:",
-				"t,threads:", "D,time", "N,nofranks:", "Z,minsim:",
+				"D,time", "N,nofranks:", "Z,minsim:",
 				"X,realmeasure");
 		if (errorBuffer->hasError())
 		{
@@ -664,9 +585,6 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			std::cout << "-D|--time" << std::endl;
 			std::cout << "    " << _TXT("Do measure duration of operation (only for search)") << std::endl;
-			std::cout << "-t|--threads <N>" << std::endl;
-			std::cout << "    " << _TXT("Set <N> as number of threads to use (only for search)") << std::endl;
-			std::cout << "    " << _TXT("Default is no multithreading (N=0)") << std::endl;
 			std::cout << "-N|--nofranks <N>" << std::endl;
 			std::cout << "    " << _TXT("Limit the number of results to for searches to <N> (default 20)") << std::endl;
 			std::cout << "-Z|--minsim <SIM>" << std::endl;
@@ -728,11 +646,6 @@ int main( int argc, const char* argv[])
 		{
 			maxNofRanks = opt.asUint("nofranks");
 		}
-		unsigned int nofThreads = 0;	//... default use no multithreading
-		if (opt("threads"))
-		{
-			nofThreads = opt.asUint("threads");
-		}
 		std::string dbname;
 		(void)strus::extractStringFromConfigString( dbname, config, "database", errorBuffer.get());
 		if (errorBuffer->hasError()) throw std::runtime_error( _TXT("cannot evaluate database"));
@@ -780,11 +693,11 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::caseInsensitiveEquals( what, "opfeat"))
 		{
-			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, nofThreads, doMeasureDuration, false/*with weights*/);
+			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, doMeasureDuration, false/*with weights*/);
 		}
 		else if (strus::caseInsensitiveEquals( what, "opfeatw"))
 		{
-			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, nofThreads, doMeasureDuration, true/*with weights*/);
+			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, doMeasureDuration, true/*with weights*/);
 		}
 		else if (strus::caseInsensitiveEquals( what, "config"))
 		{
