@@ -65,6 +65,7 @@
 #define STRUS_PATTERN_DEFAULT_RESULT_FORMAT  "{name} [{ordpos}..{ordend}, {startseg}\\|{startpos} .. {endseg}\\|{endpos}]:{value}| {name} [{ordpos}..{ordend}, {startseg}\\|{startpos} .. {endseg}\\|{endpos}] '{value}'|"
 
 static strus::ErrorBufferInterface* g_errorhnd = 0;
+static bool g_printResultHeaderAlways = true;
 
 static std::string trimString( const char* li, const char* le)
 {
@@ -688,7 +689,6 @@ public:
 		strus::local_ptr<strus::PatternLexerContextInterface> crctx( m_globalContext->PatternLexerInstance()->createContext());
 		if (!segmenter.get() || !crctx.get() || !mt.get()) throw std::runtime_error(g_errorhnd->fetchError());
 
-		*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
 		if (DBG) DBG->open( "input", resultid);
 
 		segmenter->putInput( content.c_str(), content.size(), true);
@@ -700,6 +700,12 @@ public:
 		std::string source;
 		unsigned int ordposOffset = 0;
 		strus::SegmenterPosition prev_segmentpos = (strus::SegmenterPosition)std::numeric_limits<std::size_t>::max();
+		bool headerPrinted = false;
+		if (g_printResultHeaderAlways)
+		{
+			*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
+			headerPrinted = true;
+		}
 
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
@@ -725,6 +731,11 @@ public:
 					ti->setOrdpos( ti->ordpos() + ordposOffset);
 					if (m_globalContext->printTokens())
 					{
+						if (!headerPrinted)
+						{
+							*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
+							headerPrinted = true;
+						}
 						*m_output << lexemOutputString( segmentpos, segment, *ti) << std::endl;
 					}
 					if (DBG)
@@ -751,13 +762,21 @@ public:
 		std::vector<strus::analyzer::PatternMatcherResult> results = mt->fetchResults();
 		if (m_globalContext->markups().empty())
 		{
+			if (!headerPrinted && !results.empty())
+			{
+				*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
+				headerPrinted = true;
+			}
 			printResults( *m_output, segmentposmap, results, source);
 		}
 		else
 		{
 			markupResults( *m_output, segmentposmap, results, documentClass, source, content, segmenterInstance);
 		}
-		*m_output << std::endl;
+		if (!results.empty())
+		{
+			*m_output << std::endl;
+		}
 		if (g_errorhnd->hasError())
 		{
 			throw std::runtime_error("error printing results");
@@ -1004,11 +1023,11 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 27,
+				errorBuffer.get(), argc, argv, 28,
 				"h,help", "v,version", "license",
 				"G,debug:", "g,segmenter:", "x,ext:", "C,contenttype:", "F,filelist",
 				"e,expression:", "d,docid:", "K,tokens", "p,program:",
-				"Z,marker:", "H,markup:", "Q,markuptag:",
+				"Z,marker:", "H,markup:", "Q,markuptag:", "E,elimempty",
 				"X,lexer:", "Y,matcher:", "P,format:",
 				"t,threads:", "f,fetch:", "o,output:", "O,outerr:",
 				"M,moduledir:", "m,module:", "r,rpc:", "R,resourcedir:", "T,trace:");
@@ -1183,6 +1202,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Write output to file <FILE> (thread id is inserted before '.' with threads)") << std::endl;
 			std::cout << "-O|--outerr <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Write errors to file <FILE> (thread id is inserted before '.' with threads)") << std::endl;
+			std::cout << "-E|--elimempty" << std::endl;
+			std::cout << "    " << _TXT("Eliminate empty results (only result id or file name) from output") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
@@ -1253,6 +1274,10 @@ int main( int argc, const char* argv[])
 		if (opt( "tokens"))
 		{
 			printTokens = true;
+		}
+		if (opt( "elimempty"))
+		{
+			g_printResultHeaderAlways = false;
 		}
 		if (opt( "matcher"))
 		{
