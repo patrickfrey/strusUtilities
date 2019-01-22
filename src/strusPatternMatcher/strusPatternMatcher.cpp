@@ -701,6 +701,7 @@ public:
 		unsigned int ordposOffset = 0;
 		strus::SegmenterPosition prev_segmentpos = (strus::SegmenterPosition)std::numeric_limits<std::size_t>::max();
 		bool headerPrinted = false;
+		bool outputPrinted = false;
 		if (g_printResultHeaderAlways)
 		{
 			*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
@@ -737,6 +738,7 @@ public:
 							headerPrinted = true;
 						}
 						*m_output << lexemOutputString( segmentpos, segment, *ti) << std::endl;
+						outputPrinted = true;
 					}
 					if (DBG)
 					{
@@ -762,6 +764,7 @@ public:
 		std::vector<strus::analyzer::PatternMatcherResult> results = mt->fetchResults();
 		if (m_globalContext->markups().empty())
 		{
+			outputPrinted |= !results.empty();
 			if (!headerPrinted && !results.empty())
 			{
 				*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
@@ -773,7 +776,7 @@ public:
 		{
 			markupResults( *m_output, segmentposmap, results, documentClass, source, content, segmenterInstance);
 		}
-		if (!results.empty())
+		if (outputPrinted)
 		{
 			*m_output << std::endl;
 		}
