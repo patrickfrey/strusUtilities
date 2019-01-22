@@ -120,7 +120,6 @@ static strus::WordVector parseNextVectorOperand( const strus::VectorStorageClien
 			if (++argidx == inspectargsize) throw std::runtime_error( _TXT( "unexpected end of arguments"));
 			feat = inspectarg[ argidx];
 		}
-		++argidx;
 	}
 	else
 	{
@@ -128,6 +127,8 @@ static strus::WordVector parseNextVectorOperand( const strus::VectorStorageClien
 		if (++argidx == inspectargsize) throw std::runtime_error( _TXT( "unexpected end of arguments"));
 		feat = inspectarg[ argidx];
 	}
+	++argidx;
+
 	rt = storage->featureVector( type, feat);
 	if (sign == '-')
 	{
