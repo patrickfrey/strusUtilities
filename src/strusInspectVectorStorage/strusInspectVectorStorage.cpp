@@ -130,6 +130,10 @@ static strus::WordVector parseNextVectorOperand( const strus::VectorStorageClien
 	++argidx;
 
 	rt = storage->featureVector( type, feat);
+	if (rt.empty())
+	{
+		throw strus::runtime_error( _TXT( "vector of feature %s '%s' not found"), type.c_str(), feat.c_str());
+	}
 	if (sign == '-')
 	{
 		strus::WordVector::iterator vi = rt.begin(), ve = rt.end();
