@@ -350,11 +350,12 @@ make test
 %{_bindir}/strusAnalyzePhrase
 %{_bindir}/strusHelp
 %{_bindir}/strusCreateVectorStorage
-%{_bindir}/strusBuildVectorStorage
 %{_bindir}/strusInspectVectorStorage
 %{_bindir}/strusPatternMatcher
 %{_bindir}/strusPatternSerialize
 %{_bindir}/strusUpdateStorageCalcStatistics
+%{_bindir}/strusPosTagger
+%{_bindir}/strusTagMarkup
 
 %files devel
 %defattr( -, root, root )
@@ -362,7 +363,19 @@ make test
 %{_includedir}/strus/*.hpp
 
 %changelog
+* Thu Jan 24 2019 Patrick Frey <patrickpfrey@yahoo.com> 0.17.0-0.1
+- implement interface changes in analyzer pattern matcher interface
+- implement interface changes in strus vector storage interface
+- reorganized travis build, define build options solely by includes without using excludes
+- implement strusPosTagger program
+- fix weird behaviour when resolving paths of input files in the programs
+- separate filecrawler, put it into an own library.
+- pattern matcher: use format strings for output
+- swiched to program loader implemented in strus analyzer
+
 * Fri May 11 2018 Patrick Frey <patrickpfrey@yahoo.com> 0.16.0-0.1
+- change handling of gettext to avoid warning: return a const char*
+- make use of debug trace interface in strus base: enable with program option -G | --debug
 
 * Thu Mar 15 2018 Patrick Frey <patrickpfrey@yahoo.com> 0.15.7-0.1
 - added make target cppcheck for static code analysis

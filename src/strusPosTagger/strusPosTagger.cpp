@@ -34,6 +34,9 @@
 #include "strus/posTaggerInstanceInterface.hpp"
 #include "strus/posTaggerDataInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
+#include "strus/segmenterInterface.hpp"
+#include "strus/segmenterInstanceInterface.hpp"
+#include "strus/segmenterContextInterface.hpp"
 #include "private/fileCrawlerInterface.hpp"
 #include "strus/tokenizerFunctionInterface.hpp"
 #include "strus/tokenizerFunctionInstanceInterface.hpp"
@@ -45,6 +48,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <set>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -55,6 +59,33 @@
 static strus::ErrorBufferInterface* g_errorBuffer = 0;	// error buffer
 static bool g_verbose = false;
 
+static std::vector<std::string> extractReferencedEntities(
+		const strus::SegmenterInstanceInterface* entitySegmenter,
+		const strus::analyzer::DocumentClass& documentclass,
+		const std::string& content)
+{
+	std::set<std::string> eset;
+	int id = 0;
+	strus::SegmenterPosition pos;
+	const char* segment = 0;
+	std::size_t segmentsize = 0;
+	strus::local_ptr<strus::SegmenterContextInterface> eseg( entitySegmenter->createContext( documentclass));
+
+	if (!eseg.get())
+	{
+		throw strus::runtime_error( _TXT("failed to create segmenter context for extracting entities: %s"), g_errorBuffer->fetchError());
+	}
+	eseg->putInput( content.c_str(), content.size(), true/*eof*/);
+	while (eseg->getNext( id, pos, segment, segmentsize))
+	{
+		if (segmentsize)
+		{
+			eset.insert( std::string( segment, segmentsize));
+		}
+	}
+	return std::vector<std::string>( eset.begin(), eset.end());
+}
+
 static void writePosTaggerInput(
 		const std::string& inputpath,
 		const std::string& outputFile,
@@ -62,19 +93,12 @@ static void writePosTaggerInput(
 		const strus::DocumentClassDetectorInterface* dclassdetector,
 		const strus::analyzer::DocumentClass& dclass,
 		const strus::PosTaggerInstanceInterface* postaggerinst,
+		const strus::SegmenterInstanceInterface* entitySegmenter,
+		const std::string& entityPrefix,
 		const std::string& fileTagPrefix)
 {
-	std::ostream* out;
+	std::ostream* out = NULL;
 	std::ofstream fout;
-	if (outputFile == "-")
-	{
-		out = &std::cout;
-	}
-	else
-	{
-		fout.open( outputFile.c_str(), std::ofstream::out);
-		out = &fout;
-	}
 	std::vector<std::string> ar = crawler->fetch();
 	for (; !ar.empty(); ar = crawler->fetch())
 	{
@@ -84,6 +108,7 @@ static void writePosTaggerInput(
 			if (!strus::stringStartsWith( *ai, inputpath)) throw strus::runtime_error(_TXT("internal: input path '%s' does not have prefix '%s"), ai->c_str(), inputpath.c_str());
 			std::string content;
 			std::string posInputContent;
+			std::vector<std::string> entities;
 			int ec = strus::readFile( *ai, content);
 			if (ec) throw strus::runtime_error(_TXT("failed to read input file '%s': %s"), ai->c_str(), ::strerror(ec));
 			strus::analyzer::DocumentClass documentclass;
@@ -96,18 +121,37 @@ static void writePosTaggerInput(
 					throw strus::runtime_error(_TXT("failed to detect document class of file '%s': %s"), ai->c_str(), errormsg);
 				}
 				posInputContent = postaggerinst->getPosTaggerInput( documentclass, content);
+				if (entitySegmenter)
+				{
+					entities = extractReferencedEntities( entitySegmenter, documentclass, content);
+				}
 			}
 			else
 			{
 				posInputContent = postaggerinst->getPosTaggerInput( dclass, content);
+				if (entitySegmenter)
+				{
+					entities = extractReferencedEntities( entitySegmenter, dclass, content);
+				}
 			}
-			if (posInputContent.empty())
+			if (!out)
 			{
-				const char* errormsg = g_errorBuffer->fetchError();
-				if (!errormsg) errormsg = "output empty";
-				throw strus::runtime_error(_TXT("failed to create pos tagger input for file '%s': %s"), ai->c_str(), errormsg);
+				if (outputFile == "-")
+				{
+					out = &std::cout;
+				}
+				else
+				{
+					fout.open( outputFile.c_str(), std::ofstream::out);
+					out = &fout;
+				}
 			}
 			*out << fileTagPrefix << std::string( ai->c_str() + inputpath.size(), ai->size() - inputpath.size()) << std::endl;
+			std::vector<std::string>::const_iterator ei = entities.begin(), ee = entities.end();
+			for (; ei != ee; ++ei)
+			{
+				*out << entityPrefix << *ei << std::endl;
+			}
 			*out << posInputContent << std::endl;
 		}
 	}
@@ -122,42 +166,76 @@ static bool isAlphaNum( char ch)
 	return ((ch|32) >= 'a' && (ch|32) <= 'z') || (ch >= '0' && ch <= '9') || ch == '_';
 }
 
-static bool isSpace( char ch)
+static std::string fetchLineToken( char const*& si, const char* se)
 {
-	return ch && (unsigned char)ch <= 32;
+	const char* start = si;
+	while (si != se && *si != '\t') ++si;
+	return strus::string_conv::trim( start, si - start);
 }
 
-static strus::PosTaggerDataInterface::Element parseElement( const std::string& line)
+static strus::PosTaggerDataInterface::Element parseElement( const char* ln, std::size_t lnsize)
 {
-	std::string type;
+	typedef strus::PosTaggerDataInterface::Element Element;
+	Element::Type type = Element::Content;
+	std::string tag;
 	std::string value;
-	char const* si = line.c_str();
-	char const* se = si + line.size();
-	for (; *si && isAlphaNum(*si); ++si) type.push_back(*si);
-	for (; *si && isSpace(*si); ++si) {}
-	value = strus::string_conv::trim( si, se - si);
-	return strus::PosTaggerDataInterface::Element( type, value);
+	std::string ref;
+	char const* si = ln;
+	char const* se = si + lnsize;
+	for (; si != se && isAlphaNum(*si); ++si)
+	{
+		tag.push_back(*si);
+	}
+	if (si != se && *si == '!')
+	{
+		++si;
+		type = Element::Marker;
+		if (tag == "_")
+		{
+			throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("syntax error; tag identifier '_' (bound to previous) not allowed in combination with '!': %s"), ln);
+		}
+	}
+	else if (tag == "_")
+	{
+		type = Element::BoundToPrevious;
+		tag.clear();
+	}
+	if (si != se && *si == '\t')
+	{
+		++si;
+		value = fetchLineToken( si, se);
+
+		if (si != se && *si == '\t')
+		{
+			++si;
+			ref = fetchLineToken( si, se);
+		}
+	}
+	if (si != se)
+	{
+		throw strus::runtime_error_ec( strus::ErrorCodeSyntax, _TXT("invalid line in pos tagger file: %s"), ln);
+	}
+	return Element( type, tag, value, ref);
 }
 
 static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<std::string,int>& filemap, const std::string& inputpath, const std::string& posTagFile, const std::string& fileTagPrefix)
 {
+	typedef strus::PosTaggerDataInterface::Element Element;
 	typedef std::map<const std::string,int>::value_type FileMapValue;
 	std::string filename;
 	int docnocnt = filemap.size();
 	strus::InputStream inp( posTagFile);
 	char linebuf[ 1<<14];
-	typedef strus::PosTaggerDataInterface::Element Element;
 	std::vector<Element> elements;
 	int linecnt = 0;
 
-	while (!inp.eof())
+	while (!inp.eof()) try
 	{
 		const char* ln = inp.readLine( linebuf, sizeof( linebuf), true/*failOnNoLine*/);
 		++linecnt;
 		if (!ln) throw strus::runtime_error( _TXT("error reading POS tagging file '%s' line %d: %s"), posTagFile.c_str(), linecnt, ::strerror( inp.error()));
-		std::string line = strus::string_conv::trim( ln, std::strlen(ln));
-
-		if (strus::stringStartsWith( line, fileTagPrefix))
+		std::size_t lnsize = std::strlen( ln);
+		if (lnsize > fileTagPrefix.size() && 0==std::memcmp( ln, fileTagPrefix.c_str(), fileTagPrefix.size()))
 		{
 			if (!elements.empty())
 			{
@@ -167,17 +245,21 @@ static void loadPosTaggingFile( strus::PosTaggerDataInterface* data, std::map<st
 				if (g_verbose) std::cerr << strus::string_format( _TXT("load POS tagging %d elements for docno %d file '%s' line %d"), (int)elements.size(), docnocnt, filename.c_str(), linecnt) << std::endl;
 				elements.clear();
 			}
-			filename = strus::joinFilePath( inputpath, line.c_str() + fileTagPrefix.size());
+			filename = strus::joinFilePath( inputpath, ln + fileTagPrefix.size());
 			FileMapValue filemapvalue( filename, ++docnocnt);
 			if (!filemap.insert( filemapvalue).second)
 			{
 				throw strus::runtime_error( _TXT("duplicate definition of file '%s' in POS tagging file '%s' line %d"), filename.c_str(), posTagFile.c_str(), linecnt);
 			}
 		}
-		else if (!line.empty())
+		else if (*ln)
 		{
-			elements.push_back( parseElement( line));
+			elements.push_back( parseElement( ln, lnsize));
 		}
+	}
+	catch (const std::runtime_error& err)
+	{
+		throw strus::runtime_error( _TXT("error loading POS tagging file '%s': %s"), posTagFile.c_str(), err.what());
 	}
 	int err = inp.error();
 	if (err) throw strus::runtime_error(_TXT("error reading POS tag file '%s': %s"), posTagFile.c_str(), ::strerror( err));
@@ -245,12 +327,12 @@ static void writePosTagging(
 			}
 			else
 			{
-				outputfilename = strus::joinFilePath( outputpath, *ai + ".pos");
-				std::string outputdir;
-				ec = strus::getParentPath( outputfilename, outputdir);
-				if (ec) throw strus::runtime_error(_TXT("failed to get parent directory of '%s': %s"), outputfilename.c_str(), ::strerror(ec));
-				ec = strus::mkdirp( outputdir);
-				if (ec) throw strus::runtime_error(_TXT("failed to create output file path for '%s': %s"), outputdir.c_str(), ::strerror(ec));
+				ec = strus::getFileName( *ai, outputfilename, true);
+				if (ec) throw strus::runtime_error(_TXT("failed to get output file name for '%s': %s"), ai->c_str(), ::strerror(ec));
+				outputfilename = strus::joinFilePath( outputpath, outputfilename);
+				if (outputfilename.empty()) throw std::bad_alloc();
+				ec = strus::mkdirp( outputpath);
+				if (ec) throw strus::runtime_error(_TXT("failed to create output file path for '%s': %s"), outputpath.c_str(), ::strerror(ec));
 			}
 			ec = strus::writeFile( outputfilename, output);
 			if (ec) throw strus::runtime_error(_TXT("failed to write POS tagged output file '%s': %s"), outputfilename.c_str(), ::strerror(ec));
@@ -277,11 +359,14 @@ public:
 			const strus::DocumentClassDetectorInterface* dclassdetector_,
 			const strus::analyzer::DocumentClass& dclass_,
 			const strus::PosTaggerInstanceInterface* postaggerinst_,
+			const strus::SegmenterInstanceInterface* entitySegmenter_,
+			const std::string& entityPrefix_,
 			const std::string& fileTagPrefix_,
 			const std::string& inputPath_,
 			const std::string& outputFile_)
 		:m_threadid(threadid_),m_inputPath(inputPath_),m_outputFile(outputFile_),m_crawler(crawler_)
 		,m_dclassdetector(dclassdetector_),m_dclass(dclass_),m_postaggerinst(postaggerinst_)
+		,m_entitySegmenter(entitySegmenter_),m_entityPrefix(entityPrefix_)
 		,m_fileTagPrefix(fileTagPrefix_)
 	{
 		if (threadid_ >= 0)
@@ -294,7 +379,7 @@ public:
 	{
 		try
 		{
-			writePosTaggerInput( m_inputPath, m_outputFile, m_crawler, m_dclassdetector, m_dclass, m_postaggerinst, m_fileTagPrefix);
+			writePosTaggerInput( m_inputPath, m_outputFile, m_crawler, m_dclassdetector, m_dclass, m_postaggerinst, m_entitySegmenter, m_entityPrefix, m_fileTagPrefix);
 		}
 		catch (const std::bad_alloc& err)
 		{
@@ -318,6 +403,8 @@ private:
 	const strus::DocumentClassDetectorInterface* m_dclassdetector;
 	strus::analyzer::DocumentClass m_dclass;
 	const strus::PosTaggerInstanceInterface* m_postaggerinst;
+	const strus::SegmenterInstanceInterface* m_entitySegmenter;
+	std::string m_entityPrefix;
 	std::string m_fileTagPrefix;
 };
 
@@ -372,21 +459,15 @@ private:
 	std::string m_outputpath;
 };
 
-typedef std::pair<std::string,std::string> EntityTagDef;
-static EntityTagDef parseEntityTagDef( const std::string& def)
+static void declareIgnoreToken( strus::PosTaggerDataInterface* taggerdata, const strus::TokenizerFunctionInstanceInterface* tokenizer, const std::string& value)
 {
-	char const* si = def.c_str();
-	int sidx = 0;
-	for (; *si && *si != '=' && *si != ':'; ++si,++sidx){}
-	if (*si)
+	std::vector<strus::analyzer::Token> tokens = tokenizer->tokenize( value.c_str(), value.size());
+	std::vector<strus::analyzer::Token>::const_iterator ti = tokens.begin(), te = tokens.end();
+	for (; ti != te; ++ti)
 	{
-		return EntityTagDef( std::string( def.c_str(), sidx), std::string( si+1));
+		std::string ignoretok( value.c_str() + ti->origpos().ofs(), ti->origsize());
+		taggerdata->declareIgnoredToken( ignoretok);
 	}
-	else
-	{
-		return EntityTagDef( def, def);
-	}
-
 }
 
 int main( int argc, const char* argv[])
@@ -410,20 +491,32 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 22,
+				errorBuffer.get(), argc, argv, 24,
 				"h,help", "v,version", "V,verbose",
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "x,extension:",
-				"e,expression:", "p,punctuation:", "d,delimiter:",
+				"e,contentexpr:", "X,entityexpr:", "E,spaceexpr:", "p,punctexpr:", "D,punctdelim:",
 				"I,posinp", "t,threads:", "f,fetch:",
-				"P,prefix:", "y,entitytag:", "o,output:");
+				"P,prefix:", "Y,entityprefix:", "o,output:");
 		if (errorBuffer->hasError())
-			
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
 		}
 		if (opt( "help")) printUsageAndExit = true;
+
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 
 		strus::local_ptr<strus::ModuleLoaderInterface>
 				moduleLoader( strus::createModuleLoader( errorBuffer.get()));
@@ -501,7 +594,7 @@ int main( int argc, const char* argv[])
 		{
 			std::cout << _TXT("usage:") << " strusPosTagger [options] <docpath> <posfile>" << std::endl;
 			std::cout << "<docpath> = " << _TXT("path of input file/directory") << std::endl;
-			std::cout << "<posfile> = " << _TXT("path of input (POS output) or output (POS input)") << std::endl;
+			std::cout << "<posfile> = " << _TXT("path of input (POS output) or input (POS input)") << std::endl;
 			std::cout << "            " << _TXT("file depending of action ('-' for stdout/stdin)") << std::endl;
 			std::cout << _TXT("description: a) dumps POS tagger input if started with option -I.") << std::endl;
 			std::cout << _TXT("             b) output POS tagged files if started without option -I.") << std::endl;
@@ -518,24 +611,34 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Action is collect POS input to the argument file <file>") << std::endl;
 			std::cout << "    " << _TXT("If not specified then the action is POS tagging") << std::endl;
 			std::cout << "    " << _TXT("with the tags read from the argument <file> (output of POS tagger)") << std::endl;
-			std::cout << "-e|--expression <XPATH>" << std::endl;
+			std::cout << "-e|--contentexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select content to process (many definitions allowed).") << std::endl;
-			std::cout << "-p|--punctuation <XPATH>" << std::endl;
+			std::cout << "-p|--punctexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select tags that issue a sentence delimiter as POS tagger input.") << std::endl;
 			std::cout << "    " << _TXT("Remark: Strus extends the syntax of syntax of XPath with a trailing '~'") << std::endl;
 			std::cout << "    " << _TXT("to denote the end of a tag selected.") << std::endl;
-			std::cout << "-d|--delimiter <DELIM>" << std::endl;
+			std::cout << "-E|--spaceexpr <XPATH>" << std::endl;
+			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
+			std::cout << "    " << _TXT("to select a tag issueing a space delimiter as POS tagger input.") << std::endl;
+			std::cout << "    " << _TXT("Similar to --punctuation but issuing a space ' ' instead of") << std::endl;
+			std::cout << "    " << _TXT("a delimiter declared with --delimiter.") << std::endl;
+			std::cout << "-X|--entityexpr <XPATH>" << std::endl;
+			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
+			std::cout << "    " << _TXT("to select entities to be printed at start of POS tagger input") << std::endl;
+			std::cout << "    " << _TXT("generated (option -I).") << std::endl;
+			std::cout << "-D|--punctdelim <DELIM>" << std::endl;
 			std::cout << "    " << _TXT("Use <DELIM> as end of sentence (punctuation) issued when a") << std::endl;
-			std::cout << "    " << _TXT("tag selecting punctuation matches (Default is LF '\\n').") << std::endl;
+			std::cout << "    " << _TXT("tag selecting punctuation matches (Default is ';\n').") << std::endl;
 			std::cout << "-P|--prefix <STR>" << std::endl;
 			std::cout << "    " << _TXT("Use the string <STR> as prefix for a file declaration line in") << std::endl;
 			std::cout << "    " << _TXT("the POS tagging input or output file.") << std::endl;
 			std::cout << "    " << _TXT("Default is '#FILE#'.") << std::endl;
-			std::cout << "-y|--entitytag <ENTITY>=<TAG>" << std::endl;
-			std::cout << "    " << _TXT("Map POS tagging entities to the tag <TAG>.") << std::endl;
-			std::cout << "    " << _TXT("Multiple definitions possible.") << std::endl;
+			std::cout << "-Y|--entityprefix <STR>" << std::endl;
+			std::cout << "    " << _TXT("Use the string <STR> as prefix entities if they are selected to") << std::endl;
+			std::cout << "    " << _TXT("be printed as generated POS tagger input at the start of the") << std::endl;
+			std::cout << "    " << _TXT("document. (Option -I) Default is '#'.") << std::endl;
 			std::cout << "-G|--debug <COMP>" << std::endl;
 			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
@@ -569,11 +672,14 @@ int main( int argc, const char* argv[])
 		std::string segmenterName;
 		std::string contenttype;
 		std::string fileext;
-		std::string filenameprefix = "#FILE#";
-		std::vector<EntityTagDef> entitytags;
+		std::string filenamePrefix = "#FILE#";
+		std::string entityPrefix = "#";
 		std::vector<std::string> contentExpression;
-		std::vector<std::string> punctuationExpression;
-		std::string punctuationDelimiter = "\n";
+		std::vector<std::string> punctExpression;
+		std::vector<std::string> spaceExpression;
+		std::vector<std::string> entityExpression;
+		std::string punctDelimiter = "; ";
+		std::string spaceDelimiter = " ";
 		enum {MaxNofThreads=1024};
 		int threads = opt( "threads") ? opt.asUint( "threads") : 0;
 		if (threads > MaxNofThreads) threads = MaxNofThreads;
@@ -607,41 +713,33 @@ int main( int argc, const char* argv[])
 		}
 		if (opt( "prefix"))
 		{
-			filenameprefix = opt[ "prefix"];
+			filenamePrefix = opt[ "prefix"];
 		}
-		if (opt("entitytag"))
+		if (opt( "entityprefix"))
 		{
-			if (action == DoGenInput) throw strus::runtime_error(_TXT("option -y|--entitytag makes no sense with option -I"));
-			std::vector<std::string> defs = opt.list( "entitytag");
-			std::vector<std::string>::const_iterator di = defs.begin(), de = defs.end();
-			for (; di != de; ++di)
-			{
-				entitytags.push_back( EntityTagDef( parseEntityTagDef( *di)));
-			}
+			if (action != DoGenInput) throw strus::runtime_error(_TXT("option -Y|--entityprefix makes no sense with option -I"));
+			entityPrefix = opt[ "entityprefix"];
 		}
-		if (opt( "expression"))
+		if (opt( "contentexpr"))
 		{
-			contentExpression = opt.list( "expression");
+			contentExpression = opt.list( "contentexpr");
 		}
-		if (opt( "punctuation"))
+		if (opt( "punctexpr"))
 		{
-			punctuationExpression = opt.list( "punctuation");
+			punctExpression = opt.list( "punctexpr");
 		}
-		if (opt( "delimiter"))
+		if (opt( "spaceexpr"))
 		{
-			punctuationDelimiter = opt[ "punctuation"];
+			spaceExpression = opt.list( "spaceexpr");
 		}
-		// Enable debugging selected with option 'debug':
+		if (opt( "entityexpr"))
 		{
-			std::vector<std::string> dbglist = opt.list( "debug");
-			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
-			for (; gi != ge; ++gi)
-			{
-				if (!dbgtrace->enable( *gi))
-				{
-					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
-				}
-			}
+			if (action != DoGenInput) throw strus::runtime_error(_TXT("option -X|--entityexpr makes no sense with option -I"));
+			entityExpression = opt.list( "entityexpr");
+		}
+		if (opt( "punctdelim"))
+		{
+			punctDelimiter = opt[ "punctdelim"];
 		}
 
 		// Declare trace proxy objects:
@@ -668,11 +766,26 @@ int main( int argc, const char* argv[])
 				moduleLoader->addResourcePath( *pi);
 			}
 		}
+		int ec = 0;
 		std::string docpath = opt[0];
+		std::string docdir;
 		std::string posfile = opt[1];
-
-		int ec = strus::resolveUpdirReferences( docpath);
+		if (g_errorBuffer->hasError())
+		{
+			throw std::runtime_error( _TXT("invalid arguments"));
+		}
+		ec = strus::resolveUpdirReferences( docpath);
 		if (ec) throw strus::runtime_error( _TXT("failed to resolve updir references of path '%s': %s"), docpath.c_str(), ::strerror(ec));
+
+		if (strus::isFile( docpath))
+		{
+			ec = strus::getParentPath( docpath, docdir);
+			if (ec) throw strus::runtime_error( _TXT("failed to get parent path of '%s': %s"), docpath.c_str(), ::strerror(ec));
+		}
+		else
+		{
+			docdir = docpath;
+		}
 
 		if (errorBuffer->hasError())
 		{
@@ -731,6 +844,7 @@ int main( int argc, const char* argv[])
 		if (!documentClassDetector.get()) throw std::runtime_error( errorBuffer->fetchError());
 		const strus::SegmenterInterface* segmenter = NULL;
 		strus::analyzer::SegmenterOptions segmenterOpts;
+		strus::local_ptr<strus::SegmenterInstanceInterface> entitySegmenterInst;
 
 		if (segmenterName.empty())
 		{
@@ -774,13 +888,31 @@ int main( int argc, const char* argv[])
 		strus::local_ptr<strus::PosTaggerInstanceInterface> postagger( postaggertype->createInstance( segmenter, segmenterOpts));
 		if (!postagger.get()) throw std::runtime_error( _TXT("failed to create POS tagger instance"));
 
+		// Define entity expression segmenter if selector expressions for entities are defined:
+		if (!entityExpression.empty())
+		{
+			entitySegmenterInst.reset( segmenter->createInstance( segmenterOpts));
+			if (!entitySegmenterInst.get())
+			{
+				throw strus::runtime_error( _TXT("failed to create segmenter instance for extracting entities: %s"), g_errorBuffer->fetchError());
+			}
+			std::vector<std::string>::const_iterator ei = entityExpression.begin(), ee = entityExpression.end();
+			for (int eidx=1; ei != ee; ++ei,++eidx)
+			{
+				entitySegmenterInst->defineSelectorExpression( eidx, *ei);
+			}
+		}
+
 		// Define content and punctuation for POS tagger input:
 		{
 			std::vector<std::string>::const_iterator ei = contentExpression.begin(), ee = contentExpression.end();
 			for (; ei != ee; ++ei) postagger->addContentExpression( *ei);
 		}{
-			std::vector<std::string>::const_iterator ei = punctuationExpression.begin(), ee = punctuationExpression.end();
-			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, punctuationDelimiter);
+			std::vector<std::string>::const_iterator ei = punctExpression.begin(), ee = punctExpression.end();
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, punctDelimiter, 3);
+		}{
+			std::vector<std::string>::const_iterator ei = spaceExpression.begin(), ee = spaceExpression.end();
+			for (; ei != ee; ++ei) postagger->addPosTaggerInputPunctuation( *ei, spaceDelimiter, 1);
 		}
 
 		// Define the tokenizer:
@@ -790,13 +922,15 @@ int main( int argc, const char* argv[])
 		if (!entityTokenizer.get()) throw std::runtime_error( _TXT( "failed to get tokenizer instance for 'langtoken'"));
 
 		// Define the POS tagger data (not needed for input):
+		const strus::TokenizerFunctionInstanceInterface* entityTokenizerPtr = entityTokenizer.get();
 		strus::local_ptr<strus::PosTaggerDataInterface> posTagData( textproc->createPosTaggerData( entityTokenizer.get()));
 		entityTokenizer.release();//... ownership passed to posTagData
-		std::vector<EntityTagDef>::const_iterator ei = entitytags.begin(), ee = entitytags.end();
-		for (; ei != ee; ++ei)
-		{
-			posTagData->defineTag( ei->first, ei->second);
-		}
+
+		// Define tokens to ignore if not present in document to tag (potentially added by input generator)
+		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, punctDelimiter);
+		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, ".");
+		declareIgnoreToken( posTagData.get(), entityTokenizerPtr, spaceDelimiter);
+
 		std::map<std::string,int> posTagDocnoMap;
 
 		// Build the worker data:
@@ -814,7 +948,8 @@ int main( int argc, const char* argv[])
 					workers[ti].reset(
 						new PosInputWorker(
 							threadid, fileCrawler.get(), documentClassDetector.get(),
-							documentClass, postagger.get(), filenameprefix, docpath, posfile));
+							documentClass, postagger.get(), entitySegmenterInst.get(),
+							entityPrefix, filenamePrefix, docdir, posfile));
 				}
 				std::cerr << _TXT("Generate input for POS tagging ...") << std::endl;
 				break;
@@ -822,7 +957,7 @@ int main( int argc, const char* argv[])
 			case DoGenOutput:
 			{
 				std::cerr << _TXT("Loading POS tag file ...");
-				loadPosTaggingFile( posTagData.get(), posTagDocnoMap, docpath, posfile, filenameprefix);
+				loadPosTaggingFile( posTagData.get(), posTagDocnoMap, docdir, posfile, filenamePrefix);
 				std::cerr << _TXT(" done") << std::endl;
 
 				int ti = 0, te = threads ? threads : 1;
@@ -866,16 +1001,17 @@ int main( int argc, const char* argv[])
 		{
 			throw std::runtime_error( _TXT("error in POS tagger"));
 		}
+		std::cerr << _TXT("done.") << std::endl;
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{
 			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
-		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
 	{
 		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
+		return -2;
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -892,6 +1028,10 @@ int main( int argc, const char* argv[])
 	catch (const std::exception& e)
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
+	}
+	if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+	{
+		std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 	}
 	return -1;
 }

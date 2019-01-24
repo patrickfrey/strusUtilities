@@ -1,114 +1,125 @@
 #FILE#A.xml
-TIT Introduction
-ART The
-NN user
-VERB interacts
-PP with
-NN application
-NN software
-PP on
-PP a
-ARV typical
-NN desktop computer
-EOS .
-ART The
-NN application software
-NN layer
-VERB interfaces
-PP with
-PP the
-NN operating
-NN system
-EOS .
+	Introduction
+	The
+NN	user
+VV	interacts
+	with
+NN	<A&B> application
+_	software
+	on
+	a
+	typical
+NN	desktop computer
+EE!	.
+	The
+NN	application software
+_	layer
+VV	interfaces
+	with
+	the
+NN	operating
+_	system
+EE!	.
+	The
+NN	user
+VV	influences
+	the
+NN	behaviour
+	of
+	the
+NN	system
+	with
+NN	input
+EE!	.
 
 #FILE#B.xml
-TIT History
-PP An
-NN algorithm
-PP for
-PP what
-VERB would
-VERB have
-VERB been
-VERB the
-PP first
-NN piece
-PP of
-NN software
-VERB was
-VERB written
-PP by
-NNP Ada Lovelace
-PP in 
-PP the
-ADJ 19th century
-BRK ,
-APP for
-ART the
-ADJ planned
-NNP Analytical Engine
-EOS .
-ADV However
-BRK ,
-PP neither
-ART the
-NNP Analytical Engine
-PP nor
-PP any
-NN software
-PP for
-PP it
-VERB were
-PP ever
-VERB created
-EOS .
+	History
+	An
+NN	algorithm
+	for
+	what
+VV	would
+VV	have
+VV	been
+	the
+	first
+NN	piece
+	of
+NN	software
+VV	was
+VV	written
+	by
+NN	Ada Lovelace
+	in
+	the
+	19th century
+	,
+	for
+	the
+	planned
+NN	Analytical Engine
+EE!	.
+	However
+	,
+	neither
+	the
+NN	Analytical Engine
+	nor
+	any
+NN	software
+	for
+	it
+VV	were
+	ever
+VV	created
+EE!	.
 
 #FILE#C.xml
-TIT Architecture
+	Architecture
 
-NN Users
-PP often
-VERB see
-NN things
-ABV differently
-PP from
-NN programmers
-EOS .
-NN People
-PP who
-VERB use
-ADJ modern
-ADJ general purpose
-NN computers
-BRK (
-PP as 
-VERB opposed
-PP to
-NN embedded systems
-SEP ,
-ADJ analog
-NN computers
-PP and
-NN supercomputers
-BRK )
-ADV usually
-ADJ see
-ADJ three
-NN layers
-PP of
-NN software
-VERB performing
-PP a
-NN variety
-PP of
-NN tasks
-BRK :
-NN platform
-BRK ,
-NN application
-BRK ,
-PP and
-NN user
-NN software
-EOS .
+NN	Users
+	often
+VV	see
+NN	things
+	differently
+	from
+NN	programmers
+EE!	.
+NN	People
+	who
+VV	use
+	modern
+	general purpose
+NN	computers
+	(
+	as
+VV	opposed
+	to
+NN	embedded systems
+	,
+	analog
+NN	computers
+	and
+NN	supercomputers
+	)
+	usually
+	see
+	three
+NN	layers
+	of
+NN	software
+VV	performing
+	a
+NN	variety
+	of
+NN	tasks
+	:
+NN	platform
+	,
+NN	application
+	,
+	and
+NN	user
+NN	software
+EE!	.
 

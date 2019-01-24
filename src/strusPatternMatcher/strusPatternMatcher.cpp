@@ -13,6 +13,7 @@
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/lib/pattern_resultformat.hpp"
+#include "strus/lib/segmenter_cjson.hpp"
 #include "strus/constants.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
@@ -64,6 +65,7 @@
 #define STRUS_PATTERN_DEFAULT_RESULT_FORMAT  "{name} [{ordpos}..{ordend}, {startseg}\\|{startpos} .. {endseg}\\|{endpos}]:{value}| {name} [{ordpos}..{ordend}, {startseg}\\|{startpos} .. {endseg}\\|{endpos}] '{value}'|"
 
 static strus::ErrorBufferInterface* g_errorhnd = 0;
+static bool g_printResultHeaderAlways = true;
 
 static std::string trimString( const char* li, const char* le)
 {
@@ -170,6 +172,7 @@ public:
 			const strus::TextProcessorInterface* textproc_,
 			const std::string& segmenterName_,
 			const std::vector<std::string>& selectexpr_,
+			const std::string& docid_selectexpr_,
 			const std::string& fileprefix_,
 			const std::vector<std::string>& files_,
 			unsigned int nofFilesPerFetch_,
@@ -178,12 +181,14 @@ public:
 			const std::string& resultMarker_,
 			const std::string& resultFormat_,
 			const std::pair<std::string,std::string>& resultMarkupTag_,
-			bool printTokens_)
+			bool printTokens_,
+			bool fileContainsMultipleDocuments_)
 		:m_ptinst(ptinst_)
 		,m_crinst(crinst_)
 		,m_textproc(textproc_)
 		,m_segmenterName(segmenterName_)
 		,m_selectexpr(selectexpr_)
+		,m_docid_selectexpr(docid_selectexpr_)
 		,m_nofFilesPerFetch(nofFilesPerFetch_)
 		,m_documentClass(documentClass_)
 		,m_markups(markups_)
@@ -193,6 +198,7 @@ public:
 		,m_files(files_)
 		,m_formatmap()
 		,m_printTokens(printTokens_)
+		,m_fileContainsMultipleDocuments(fileContainsMultipleDocuments_)
 	{
 		m_fileitr = m_files.begin();
 		if (!resultFormat_.empty())
@@ -222,6 +228,11 @@ public:
 		return m_selectexpr;
 	}
 
+	const std::string& docid_selectexpr() const
+	{
+		return m_docid_selectexpr;
+	}
+
 	strus::TokenMarkupContextInterface* createTokenMarkupContext( const strus::SegmenterInstanceInterface* segmenter) const
 	{
 		strus::TokenMarkupContextInterface* rt = m_tokenMarkup->createContext( segmenter);
@@ -236,6 +247,7 @@ public:
 	const strus::PatternLexerInstanceInterface* PatternLexerInstance() const	{return m_crinst;}
 
 	bool printTokens() const							{return m_printTokens;}
+	bool fileContainsMultipleDocuments() const					{return m_fileContainsMultipleDocuments;}
 
 	std::vector<std::string> fetchFiles()
 	{
@@ -281,6 +293,7 @@ private:
 	const strus::TextProcessorInterface* m_textproc;
 	std::string m_segmenterName;
 	std::vector<std::string> m_selectexpr;
+	std::string m_docid_selectexpr;
 	unsigned int m_nofFilesPerFetch;
 	strus::analyzer::DocumentClass m_documentClass;
 	strus::local_ptr<strus::TokenMarkupInstanceInterface> m_tokenMarkup;
@@ -292,6 +305,7 @@ private:
 	std::vector<std::string>::const_iterator m_fileitr;
 	strus::Reference<strus::PatternResultFormatMap> m_formatmap;
 	bool m_printTokens;
+	bool m_fileContainsMultipleDocuments;
 };
 
 class ThreadContext
@@ -304,8 +318,10 @@ public:
 		,m_debugTrace(o.m_debugTrace)
 		,m_objbuilder(o.m_objbuilder)
 		,m_defaultSegmenter(o.m_defaultSegmenter)
-		,m_defaultSegmenterInstance(o.m_defaultSegmenterInstance)
-		,m_segmentermap(o.m_segmentermap)
+		,m_defaultDocidSegmenterInstance(o.m_defaultDocidSegmenterInstance)
+		,m_defaultProcessSegmenterInstance(o.m_defaultProcessSegmenterInstance)
+		,m_docidSegmenterMap(o.m_docidSegmenterMap)
+		,m_processSegmenterMap(o.m_processSegmenterMap)
 		,m_threadid(o.m_threadid)
 		,m_outputfile(o.m_outputfile)
 		,m_outputfilestream(o.m_outputfilestream)
@@ -345,8 +361,10 @@ public:
 		,m_debugTrace(g_errorhnd->debugTrace())
 		,m_objbuilder(objbuilder_)
 		,m_defaultSegmenter(0)
-		,m_defaultSegmenterInstance()
-		,m_segmentermap()
+		,m_defaultDocidSegmenterInstance()
+		,m_defaultProcessSegmenterInstance()
+		,m_docidSegmenterMap()
+		,m_processSegmenterMap()
 		,m_threadid(threadid_)
 		,m_outputfile()
 		,m_outputfilestream()
@@ -362,12 +380,19 @@ public:
 			{
 				throw strus::runtime_error(_TXT("failed to get default segmenter by name: %s"), g_errorhnd->fetchError());
 			}
-			m_defaultSegmenterInstance.reset( m_defaultSegmenter->createInstance());
-			if (!m_defaultSegmenterInstance.get())
+			m_defaultProcessSegmenterInstance.reset( m_defaultSegmenter->createInstance());
+			if (!m_defaultProcessSegmenterInstance.get())
 			{
 				throw strus::runtime_error(_TXT("failed to create default segmenter instace: %s"), g_errorhnd->fetchError());
 			}
-			initSegmenterInstance( m_defaultSegmenterInstance.get());
+			initProcessSegmenterInstance( m_defaultProcessSegmenterInstance.get());
+
+			m_defaultDocidSegmenterInstance.reset( m_defaultSegmenter->createInstance());
+			if (!m_defaultDocidSegmenterInstance.get())
+			{
+				throw strus::runtime_error(_TXT("failed to create default segmenter instace: %s"), g_errorhnd->fetchError());
+			}
+			initDocidSegmenterInstance( m_defaultDocidSegmenterInstance.get());
 		}
 		if (outputfile_.empty())
 		{
@@ -405,12 +430,20 @@ public:
 		}
 	}
 
-	void initSegmenterInstance( strus::SegmenterInstanceInterface* intrf) const
+	void initProcessSegmenterInstance( strus::SegmenterInstanceInterface* intrf) const
 	{
 		std::vector<std::string>::const_iterator ei = m_globalContext->selectexpr().begin(), ee = m_globalContext->selectexpr().end();
 		for (int eidx=1; ei != ee; ++ei,++eidx)
 		{
 			intrf->defineSelectorExpression( eidx, *ei);
+		}
+	}
+
+	void initDocidSegmenterInstance( strus::SegmenterInstanceInterface* intrf) const
+	{
+		if (!m_globalContext->docid_selectexpr().empty())
+		{
+			intrf->defineSelectorExpression( 1, m_globalContext->docid_selectexpr());
 		}
 	}
 
@@ -433,16 +466,17 @@ public:
 		}
 	}
 
-	const strus::SegmenterInstanceInterface* getSegmenterInstance( const std::string& content, const strus::analyzer::DocumentClass& documentClass)
+	const strus::SegmenterInstanceInterface* getProcessSegmenterInstance( const std::string& content, const strus::analyzer::DocumentClass& documentClass)
 	{
 		if (m_defaultSegmenter)
 		{
-			return m_defaultSegmenterInstance.get();
+			return m_defaultProcessSegmenterInstance.get();
 		}
 		else
 		{
-			SegmenterMap::const_iterator si = m_segmentermap.find( documentClass.mimeType());
-			if (si == m_segmentermap.end())
+			
+			SegmenterMap::const_iterator si = m_processSegmenterMap.find( documentClass.mimeType());
+			if (si == m_processSegmenterMap.end())
 			{
 				const strus::SegmenterInterface* segmenter = m_globalContext->textproc()->getSegmenterByMimeType( documentClass.mimeType());
 				if (!segmenter)
@@ -459,14 +493,82 @@ public:
 				{
 					throw strus::runtime_error(_TXT("failed to create segmenter instance for mime type '%s'"), documentClass.mimeType().c_str());
 				}
-				m_segmentermap[ documentClass.mimeType()] = segmenterinstref;
-				initSegmenterInstance( segmenterinstref.get());
+				m_processSegmenterMap[ documentClass.mimeType()] = segmenterinstref;
+				initProcessSegmenterInstance( segmenterinstref.get());
 				return segmenterinstref.get();
 			}
 			else
 			{
 				return si->second.get();
 			}
+		}
+	}
+
+	const strus::SegmenterInstanceInterface* getDocidSegmenterInstance( const std::string& content, const strus::analyzer::DocumentClass& documentClass)
+	{
+		if (m_defaultSegmenter)
+		{
+			return m_defaultDocidSegmenterInstance.get();
+		}
+		else
+		{
+			
+			SegmenterMap::const_iterator si = m_docidSegmenterMap.find( documentClass.mimeType());
+			if (si == m_docidSegmenterMap.end())
+			{
+				const strus::SegmenterInterface* segmenter = m_globalContext->textproc()->getSegmenterByMimeType( documentClass.mimeType());
+				if (!segmenter)
+				{
+					throw strus::runtime_error(_TXT("no segmenter defined for mime type '%s'"), documentClass.mimeType().c_str());
+				}
+				strus::analyzer::SegmenterOptions segmenteropts;
+				if (!documentClass.scheme().empty())
+				{
+					segmenteropts = m_globalContext->textproc()->getSegmenterOptions( documentClass.scheme());
+				}
+				strus::Reference<strus::SegmenterInstanceInterface> segmenterinstref( segmenter->createInstance( segmenteropts));
+				if (!segmenterinstref.get())
+				{
+					throw strus::runtime_error(_TXT("failed to create segmenter instance for mime type '%s'"), documentClass.mimeType().c_str());
+				}
+				m_docidSegmenterMap[ documentClass.mimeType()] = segmenterinstref;
+				initDocidSegmenterInstance( segmenterinstref.get());
+				return segmenterinstref.get();
+			}
+			else
+			{
+				return si->second.get();
+			}
+		}
+	}
+
+	std::string getDocidFromDocument( const std::string& content, const strus::analyzer::DocumentClass& documentClass)
+	{
+		const strus::SegmenterInstanceInterface* segmenterInstance = getDocidSegmenterInstance( content, documentClass);
+		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
+		if (!segmenter.get()) throw std::runtime_error(g_errorhnd->fetchError());
+			
+		segmenter->putInput( content.c_str(), content.size(), true);
+		int id;
+		strus::SegmenterPosition segmentpos;
+		const char* segment;
+		std::size_t segmentsize;
+		if (segmenter->getNext( id, segmentpos, segment, segmentsize))
+		{
+			std::string rt = std::string( segment, segmentsize);
+			if (segmenter->getNext( id, segmentpos, segment, segmentsize))
+			{
+				throw strus::runtime_error(_TXT("duplicate definition of docid in document"));
+			}
+			return rt;
+		}
+		else if (g_errorhnd->hasError())
+		{
+			throw strus::runtime_error(_TXT("failed to get docid from document: %s"), g_errorhnd->fetchError());
+		}
+		else
+		{
+			throw strus::runtime_error(_TXT("no docid found in document"));
 		}
 	}
 
@@ -505,7 +607,7 @@ public:
 				(int)lx.ordpos(), (unsigned int)(segmentpos+lx.origpos().ofs()), lx.id(), lexemname?lexemname:"?", content.c_str());
 	}
 
-	void processDocument( const std::string& filename)
+	void processDocumentFile( const std::string& filename)
 	{
 		std::string content;
 
@@ -522,12 +624,8 @@ public:
 		{
 			throw strus::runtime_error(_TXT("error (%u) reading document %s: %s"), ec, filename.c_str(), ::strerror(ec));
 		}
-		strus::local_ptr<strus::PatternMatcherContextInterface> mt( m_globalContext->PatternMatcherInstance()->createContext());
-		strus::local_ptr<strus::PatternLexerContextInterface> crctx( m_globalContext->PatternLexerInstance()->createContext());
-		if (!crctx.get() || !mt.get()) throw std::runtime_error(g_errorhnd->fetchError());
 		strus::analyzer::DocumentClass documentClass = getDocumentClass( content);
-		const strus::SegmenterInstanceInterface* segmenterInstance = getSegmenterInstance( content, documentClass);
-		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
+		const strus::SegmenterInstanceInterface* segmenterInstance = getProcessSegmenterInstance( content, documentClass);
 
 		const char* resultid;
 		if (strus::stringStartsWith( filename, m_globalContext->fileprefix()))
@@ -540,7 +638,57 @@ public:
 		{
 			resultid = filename.c_str();
 		}
-		*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
+		if (m_globalContext->fileContainsMultipleDocuments())
+		{
+			if (documentClass.mimeType() == "application/json")
+			{
+				std::vector<std::string> contentlist = strus::splitJsonDocumentList( documentClass.encoding(), content, g_errorhnd);
+				if (g_errorhnd->hasError())
+				{
+					throw strus::runtime_error(_TXT("error splitting documents for %s: %s"), documentClass.mimeType().c_str(), g_errorhnd->fetchError());
+				}
+				std::vector<std::string>::const_iterator ci = contentlist.begin(), ce = contentlist.end();
+				int cidx = 1;
+				for (; ci != ce; ++ci,++cidx)
+				{
+					std::string subdocid;
+					if (m_globalContext->docid_selectexpr().empty())
+					{
+						subdocid = strus::string_format( "%s:%d", resultid, cidx);
+					}
+					else
+					{
+						subdocid = getDocidFromDocument( *ci, documentClass);
+					}
+					processDocumentContent( segmenterInstance, documentClass, subdocid, *ci);
+				}
+			}
+			else
+			{
+				throw strus::runtime_error(_TXT("multiple documents in one file not implemented for %s"), documentClass.mimeType().c_str());
+			}
+		}
+		else
+		{
+			if (m_globalContext->docid_selectexpr().empty())
+			{
+				processDocumentContent( segmenterInstance, documentClass, resultid, content);
+			}
+			else
+			{
+				std::string docid = getDocidFromDocument( content, documentClass);
+				processDocumentContent( segmenterInstance, documentClass, docid, content);
+			}
+		}
+	}
+
+	void processDocumentContent( const strus::SegmenterInstanceInterface* segmenterInstance, const strus::analyzer::DocumentClass& documentClass, const std::string& resultid, const std::string& content)
+	{
+		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
+		strus::local_ptr<strus::PatternMatcherContextInterface> mt( m_globalContext->PatternMatcherInstance()->createContext());
+		strus::local_ptr<strus::PatternLexerContextInterface> crctx( m_globalContext->PatternLexerInstance()->createContext());
+		if (!segmenter.get() || !crctx.get() || !mt.get()) throw std::runtime_error(g_errorhnd->fetchError());
+
 		if (DBG) DBG->open( "input", resultid);
 
 		segmenter->putInput( content.c_str(), content.size(), true);
@@ -552,6 +700,13 @@ public:
 		std::string source;
 		unsigned int ordposOffset = 0;
 		strus::SegmenterPosition prev_segmentpos = (strus::SegmenterPosition)std::numeric_limits<std::size_t>::max();
+		bool headerPrinted = false;
+		bool outputPrinted = false;
+		if (g_printResultHeaderAlways)
+		{
+			*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
+			headerPrinted = true;
+		}
 
 		while (segmenter->getNext( id, segmentpos, segment, segmentsize))
 		{
@@ -577,7 +732,13 @@ public:
 					ti->setOrdpos( ti->ordpos() + ordposOffset);
 					if (m_globalContext->printTokens())
 					{
+						if (!headerPrinted)
+						{
+							*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
+							headerPrinted = true;
+						}
 						*m_output << lexemOutputString( segmentpos, segment, *ti) << std::endl;
+						outputPrinted = true;
 					}
 					if (DBG)
 					{
@@ -603,13 +764,22 @@ public:
 		std::vector<strus::analyzer::PatternMatcherResult> results = mt->fetchResults();
 		if (m_globalContext->markups().empty())
 		{
+			outputPrinted |= !results.empty();
+			if (!headerPrinted && !results.empty())
+			{
+				*m_output << m_globalContext->resultMarker() << resultid << ":" << std::endl;
+				headerPrinted = true;
+			}
 			printResults( *m_output, segmentposmap, results, source);
 		}
 		else
 		{
 			markupResults( *m_output, segmentposmap, results, documentClass, source, content, segmenterInstance);
 		}
-		*m_output << std::endl;
+		if (outputPrinted)
+		{
+			*m_output << std::endl;
+		}
 		if (g_errorhnd->hasError())
 		{
 			throw std::runtime_error("error printing results");
@@ -729,7 +899,7 @@ public:
 				*m_outerr << strus::string_format( _TXT("thread %u processing file '%s'"), m_threadid, fi->c_str()) << std::endl;
 				try
 				{
-					processDocument( *fi);
+					processDocumentFile( *fi);
 					if (g_errorhnd->hasError())
 					{
 						*m_outerr << strus::string_format( _TXT("error thread %u file '%s': %s"), m_threadid, fi->c_str(), g_errorhnd->fetchError()) << std::endl;
@@ -768,9 +938,11 @@ private:
 	strus::DebugTraceContextInterface* DBG;
 	const strus::AnalyzerObjectBuilderInterface* m_objbuilder;
 	const strus::SegmenterInterface* m_defaultSegmenter;
-	strus::Reference<strus::SegmenterInstanceInterface> m_defaultSegmenterInstance;
+	strus::Reference<strus::SegmenterInstanceInterface> m_defaultDocidSegmenterInstance;
+	strus::Reference<strus::SegmenterInstanceInterface> m_defaultProcessSegmenterInstance;
 	typedef std::map<std::string,strus::Reference<strus::SegmenterInstanceInterface> > SegmenterMap;
-	SegmenterMap m_segmentermap;
+	SegmenterMap m_docidSegmenterMap;
+	SegmenterMap m_processSegmenterMap;
 	unsigned int m_threadid;
 	std::string m_outputfile;
 	strus::shared_ptr<std::ofstream> m_outputfilestream;
@@ -785,7 +957,14 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 	std::string programFileName = filearg;
 	std::string programDir;
 	int ec;
-	if (!programFileName.empty() && !strus::isRelativePath( programFileName))
+
+	if (strus::isExplicitPath( programFileName))
+	{
+		ec = strus::getParentPath( programFileName, programDir);
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from explicit path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		moduleLoader->addResourcePath( programDir);
+	}
+	else
 	{
 		std::string filedir;
 		std::string filenam;
@@ -796,10 +975,6 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 		programDir = filedir;
 		programFileName = filenam;
 		moduleLoader->addResourcePath( programDir);
-	}
-	else
-	{
-		moduleLoader->addResourcePath( "./");
 	}
 	return programFileName;
 }
@@ -851,11 +1026,11 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 26,
+				errorBuffer.get(), argc, argv, 28,
 				"h,help", "v,version", "license",
 				"G,debug:", "g,segmenter:", "x,ext:", "C,contenttype:", "F,filelist",
-				"e,expression:", "K,tokens", "p,program:",
-				"Z,marker:", "H,markup:", "Q,markuptag:",
+				"e,expression:", "d,docid:", "K,tokens", "p,program:",
+				"Z,marker:", "H,markup:", "Q,markuptag:", "E,elimempty",
 				"X,lexer:", "Y,matcher:", "P,format:",
 				"t,threads:", "f,fetch:", "o,output:", "O,outerr:",
 				"M,moduledir:", "m,module:", "r,rpc:", "R,resourcedir:", "T,trace:");
@@ -880,6 +1055,20 @@ int main( int argc, const char* argv[])
 				rt = 2;
 			}
 		}
+
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
+
 		unsigned int nofThreads = 0;
 		if (opt("threads"))
 		{
@@ -984,11 +1173,15 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Do only process files with extension <FILEEXT>") << std::endl;
 			std::cout << "-C|--contenttype <CT>" << std::endl;
 			std::cout << "    " << _TXT("forced definition of the document class of all documents processed.") << std::endl;
+			std::cout << "    " << _TXT("(JSONL for list of JSON documents in one file.") << std::endl;
 			std::cout << "-F|--filelist" << std::endl;
 			std::cout << "    " << _TXT("inputpath is a file containing the list of files to process.") << std::endl;
 			std::cout << "-e|--expression <EXP>" << std::endl;
 			std::cout << "    " << _TXT("Define a selection expression <EXP> for the content to process.") << std::endl;
 			std::cout << "    " << _TXT("Process all content if nothing specified)") << std::endl;
+			std::cout << "-d|--docid <EXP>" << std::endl;
+			std::cout << "    " << _TXT("Define a selection expression <EXP> for item to use as docid.") << std::endl;
+			std::cout << "    " << _TXT("By default the filename is taken as docid.") << std::endl;
 			std::cout << "-H|--markup <NAME>{,<NAME>}" << std::endl;
 			std::cout << "    " << _TXT("Output the content with markups of the rules or variables with name <NAME>") << std::endl;
 			std::cout << "    " << _TXT("Rules defined first have lower priority and are ousted by later defnitions if") << std::endl;
@@ -1012,6 +1205,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Write output to file <FILE> (thread id is inserted before '.' with threads)") << std::endl;
 			std::cout << "-O|--outerr <FILE>" << std::endl;
 			std::cout << "    " << _TXT("Write errors to file <FILE> (thread id is inserted before '.' with threads)") << std::endl;
+			std::cout << "-E|--elimempty" << std::endl;
+			std::cout << "    " << _TXT("Eliminate empty results (only result id or file name) from output") << std::endl;
 			std::cout << "-g|--segmenter <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use the document segmenter with name <NAME>") << std::endl;
 			std::cout << "-r|--rpc <ADDR>" << std::endl;
@@ -1027,6 +1222,7 @@ int main( int argc, const char* argv[])
 		std::string fileext;
 		std::string contenttype;
 		std::vector<std::string> expressions;
+		std::string docidexpr;
 		std::string matcher( strus::Constants::standard_pattern_matcher());
 		std::string lexer( strus::Constants::standard_pattern_matcher());
 		std::string programfile;
@@ -1039,6 +1235,7 @@ int main( int argc, const char* argv[])
 		std::string outputfile;
 		std::string outerrfile;
 		bool inputIsAListOfFiles = false;
+		bool fileContainsMultipleDocuments = false;
 
 		if (opt( "segmenter"))
 		{
@@ -1055,6 +1252,11 @@ int main( int argc, const char* argv[])
 		if (opt( "contenttype"))
 		{
 			contenttype = opt[ "contenttype"];
+			if (strus::caseInsensitiveEquals( contenttype, "jsonl"))
+			{
+				fileContainsMultipleDocuments = true;
+				contenttype = "application/json";
+			}
 		}
 		if (opt("filelist"))
 		{
@@ -1068,9 +1270,17 @@ int main( int argc, const char* argv[])
 		{
 			expressions = opt.list( "expression");
 		}
+		if (opt( "docid"))
+		{
+			docidexpr = opt[ "docid"];
+		}
 		if (opt( "tokens"))
 		{
 			printTokens = true;
+		}
+		if (opt( "elimempty"))
+		{
+			g_printResultHeaderAlways = false;
 		}
 		if (opt( "matcher"))
 		{
@@ -1133,18 +1343,6 @@ int main( int argc, const char* argv[])
 			for (; ti != te; ++ti)
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
-			}
-		}
-		// Enable debugging selected with option 'debug':
-		{
-			std::vector<std::string> dbglist = opt.list( "debug");
-			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
-			for (; gi != ge; ++gi)
-			{
-				if (!dbgtrace->enable( *gi))
-				{
-					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
-				}
 			}
 		}
 		if (errorBuffer->hasError())
@@ -1272,8 +1470,8 @@ int main( int argc, const char* argv[])
 		}
 		GlobalContext globalContext(
 				ptinst.get(), lxinst.get(), textproc, segmentername,
-				expressions, fileprefix, inputfiles, nofFilesFetch, documentClass,
-				markups, resultmarker, resultFormat, resultMarkupTag, printTokens);
+				expressions, docidexpr, fileprefix, inputfiles, nofFilesFetch, documentClass,
+				markups, resultmarker, resultFormat, resultMarkupTag, printTokens, fileContainsMultipleDocuments);
 
 		std::cerr << "start matching ..." << std::endl;
 		if (nofThreads)
@@ -1307,16 +1505,17 @@ int main( int argc, const char* argv[])
 		{
 			throw std::runtime_error( _TXT("uncaught error in pattern matcher"));
 		}
+		std::cerr << _TXT("done.") << std::endl;
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{
 			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
-		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
 	{
 		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
+		return -2;
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -1333,6 +1532,10 @@ int main( int argc, const char* argv[])
 	catch (const std::exception& e)
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
+	}
+	if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+	{
+		std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 	}
 	return -1;
 }

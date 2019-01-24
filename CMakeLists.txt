@@ -6,7 +6,7 @@ include(cmake/install_prefix.cmake)
 # Project globals:
 project( StrusUtilities )
 set( STRUS_MAJOR_VERSION 0 )
-set( STRUS_MINOR_VERSION 16 )
+set( STRUS_MINOR_VERSION 17 )
 set( STRUS_PATCH_VERSION 0 )
 set( STRUS_VERSION ${STRUS_MAJOR_VERSION}.${STRUS_MINOR_VERSION}.${STRUS_PATCH_VERSION} )
 
@@ -18,7 +18,13 @@ include( cmake/dist.cmake )
 include( cmake/LinuxDistribution.cmake )
 include( cmake/build_rules.cmake )
 include( cmake/boost.cmake)
+if(NOT STRUS_ALL)
 include( cmake/find_strus_package.cmake )
+endif()
+IF (WITH_STRUS_PATTERN STREQUAL "YES")
+include( cmake/find_tre.cmake )
+include( cmake/find_hyperscan.cmake )
+ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 include( cmake/link_rules.cmake )
 include( cmake/intl.cmake )
 include( cmake/libdl.cmake )
@@ -79,6 +85,15 @@ set( PROGRAM_INCLUDE_DIRS          "${CMAKE_CURRENT_BINARY_DIR}/include"  "${PRO
 set( PROGRAM_LIBRARY_DIRS          "${CMAKE_CURRENT_BINARY_DIR}/src/program" )
 set( UTILS_INCLUDE_DIRS                 "${CMAKE_CURRENT_BINARY_DIR}/include"  "${PROJECT_SOURCE_DIR}/include" )
 set( UTILS_LIBRARY_DIRS                 "${CMAKE_CURRENT_BINARY_DIR}/src/utils" )
+
+if(NOT STRUS_ALL)
+if (WITH_STRUS_PATTERN STREQUAL "YES")
+	if( DEFINED HYPERSCAN_PKGCONFIG )
+		file( COPY  "${HYPERSCAN_PKGCONFIG}"  DESTINATION  ${CMAKE_BINARY_DIR}/ )
+		# ... PF:HACK For hyperscan as submodule with out of source build
+	endif( DEFINED HYPERSCAN_PKGCONFIG )
+endif(WITH_STRUS_PATTERN STREQUAL "YES")
+endif()
 
 # Subdirectories:
 add_subdirectory( src )

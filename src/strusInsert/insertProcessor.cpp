@@ -161,14 +161,14 @@ void InsertProcessor::run()
 								docid = fitr->c_str();
 								//... define file path as hardcoded docid attribute
 							}
-							unsigned int maxpos = 0;
+							int maxpos = 0;
 							// Define all search index term occurrencies:
 							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								ti = doc.searchIndexTerms().begin(),
 								te = doc.searchIndexTerms().end();
 							for (; ti != te; ++ti)
 							{
-								if (ti->pos() > Constants::storage_max_position_info())
+								if (ti->pos() > (int)Constants::storage_max_position_info())
 								{
 									// Cut positions away that are out of range.
 									//	Issue a warning later:
@@ -190,7 +190,7 @@ void InsertProcessor::run()
 								fe = doc.forwardIndexTerms().end();
 							for (; fi != fe; ++fi)
 							{
-								if (fi->pos() > Constants::storage_max_position_info())
+								if (fi->pos() > (int)Constants::storage_max_position_info())
 								{
 									// Cut positions away that are out of range. Issue a warning later:
 									if (fi->pos() > maxpos)
@@ -222,7 +222,7 @@ void InsertProcessor::run()
 								storagedoc->setMetaData( mi->name(), val);
 							}
 							// Issue warning for documents cut because they are too big to insert:
-							if (maxpos > Constants::storage_max_position_info())
+							if (maxpos > (int)Constants::storage_max_position_info())
 							{
 								std::cerr << string_format( _TXT( "token positions of document '%s' are out or range (document too big, %u token positions assigned)"), docid, maxpos) << std::endl;
 							}

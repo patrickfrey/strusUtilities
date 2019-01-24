@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR )
 # SOURCES AND INCLUDES
 # --------------------------------------
 set( source_files
-	strusAnalyze.cpp
+	strusTagMarkup.cpp
 )
 
 include_directories(
@@ -34,20 +34,20 @@ link_directories(
 # ------------------------------
 # PROGRAMS
 # ------------------------------
-add_cppcheck( strusAnalyze ${source_files} )
+add_cppcheck( strusTagMarkup ${source_files} )
 
-add_executable( strusAnalyze ${source_files} )
-target_link_libraries( strusAnalyze  strusutilities_private_utils  ${strusmodule_LIBRARIES} strus_analyzer_prgload_std strus_base strus_error strus_module strus_filecrawler strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES})
+add_executable( strusTagMarkup ${source_files} )
+target_link_libraries( strusTagMarkup strusutilities_private_utils ${strusmodule_LIBRARIES} strus_markup_document_tags strus_filecrawler strus_base strus_error strus_module strus_rpc_client strus_rpc_client_socket ${Intl_LIBRARIES} )
 
 # FreeBSD needs kernel data access library for libuv (-libkvm)
 find_library( LIBKVM_LIBRARIES kvm )
 if(LIBKVM_LIBRARIES)
-	target_link_libraries( strusAnalyze ${LIBKVM_LIBRARIES} )
+	target_link_libraries( strusTagMarkup ${LIBKVM_LIBRARIES} )
 endif()
 
 # ------------------------------
 # INSTALLATION
 # ------------------------------
-install( TARGETS strusAnalyze
+install( TARGETS strusTagMarkup
 	   RUNTIME DESTINATION bin )
 

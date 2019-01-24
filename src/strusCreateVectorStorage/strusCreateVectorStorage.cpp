@@ -63,16 +63,29 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 11,
+				errorBuffer.get(), argc, argv, 13,
 				"h,help", "v,version", "license",
-				"G,debug:", "m,module:", "M,moduledir:", "T,trace:",
-				"s,config:", "S,configfile:", "P,portable",
+				"G,debug:", "m,module:", "M,moduledir:", "T,trace:", "F,separator:",
+				"s,config:", "S,configfile:", "P,portable", "c,commit:",
 				"f,file:" );
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
 		}
 		if (opt( "help")) printUsageAndExit = true;
+
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
 
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
@@ -144,7 +157,14 @@ int main( int argc, const char* argv[])
 		}
 		std::string config;
 		int nof_config = 0;
+		int transactionSize = 10000;
+		if (opt("commit"))
+		{
+			transactionSize = opt.asUint( "commit"); 
+		}
 		bool portable = opt("portable");
+		char typeFeatureSeparator = strus::Constants::standard_word2vec_type_feature_separator();
+
 		if (opt("configfile"))
 		{
 			nof_config += 1;
@@ -196,6 +216,8 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-P|--portable" << std::endl;
 			std::cout << "    " << _TXT("Tell the loader that the vector values are stored in a portable way (hton)") << std::endl;
+			std::cout << "-c|--commit <N>" << std::endl;
+			std::cout << "    " << _TXT("Set <N> as number of vectors inserted before auto-commit (default 10000)") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
@@ -204,6 +226,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Known formats are word2vec binary or text format.") << std::endl;
 			std::cout << "    " << _TXT("All files are added, if there are many input files specified.") << std::endl;
 			std::cout << "    " << _TXT("No input files lead to an empty storage.") << std::endl;
+			std::cout << "-F|--seperator <SEP>" << std::endl;
+			std::cout << "    " << _TXT("Spearator of type and feature in a word2vec term identifier") << std::endl;
+			std::cout << "    " << strus::string_format( _TXT("Default is '%c'"), strus::Constants::standard_word2vec_type_feature_separator()) << std::endl;
 			return rt;
 		}
 		// Declare trace proxy objects:
@@ -216,18 +241,6 @@ int main( int argc, const char* argv[])
 			for (; ti != te; ++ti)
 			{
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
-			}
-		}
-		// Enable debugging selected with option 'debug':
-		{
-			std::vector<std::string> dbglist = opt.list( "debug");
-			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
-			for (; gi != ge; ++gi)
-			{
-				if (!dbgtrace->enable( *gi))
-				{
-					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
-				}
 			}
 		}
 		// Get arguments:
@@ -248,6 +261,12 @@ int main( int argc, const char* argv[])
 			strus::StorageObjectBuilderInterface* sproxy = (*ti)->createProxy( storageBuilder.get());
 			storageBuilder.release();
 			storageBuilder.reset( sproxy);
+		}
+		if (opt("separator"))
+		{
+			std::string vv = opt["separator"];
+			if (vv.size() != 1) throw std::runtime_error(_TXT("single ASCII character expected as type/feature separator"));
+			typeFeatureSeparator = vv[0];
 		}
 		if (errorBuffer->hasError())
 		{
@@ -277,25 +296,30 @@ int main( int argc, const char* argv[])
 		std::vector<std::string>::const_iterator fi = inputfiles.begin(), fe = inputfiles.end();
 		for (; fi != fe; ++fi)
 		{
-			if (!strus::load_vectors( storage.get(), *fi, portable, g_errorBuffer))
+			if (!strus::load_vectors( storage.get(), *fi, portable, typeFeatureSeparator, transactionSize, g_errorBuffer))
 			{
 				throw std::runtime_error( _TXT("failed to load input"));
 			}
 		}
+		// Close of the storage including compaction of the database:
+		storage->close();
+
+		// Check for errors:
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("unhandled error in command"));
 		}
+		std::cerr << _TXT("done.") << std::endl;
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{
 			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
-		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
 	{
 		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
+		return -2;
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -312,6 +336,10 @@ int main( int argc, const char* argv[])
 	catch (const std::exception& e)
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
+	}
+	if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+	{
+		std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 	}
 	return -1;
 }

@@ -1,15 +1,31 @@
 language: cpp
-os:
-- linux
-- osx
-dist: trusty
-compiler:
-- clang
-- gcc
 matrix:
-  exclude:
-  - os: osx
-    compiler: gcc
+  include:
+# Fri Jan 11: PHP7 is currently disabled for OSX, because of linking problems: No clue how to get -lcrypto installed. Installing openssl does not solve the problem
+    - os: osx
+      compiler: clang
+      env: STRUS_WITH_VECTOR=NO STRUS_WITH_PATTERN=NO
+    - os: linux
+      dist: trusty
+      compiler: clang
+      env: STRUS_WITH_VECTOR=NO STRUS_WITH_PATTERN=NO
+    - os: linux
+      dist: trusty
+      compiler: gcc
+      env: STRUS_WITH_VECTOR=NO STRUS_WITH_PATTERN=NO
+# Thu Jan 19: strusVector is currently disabled for OSX, we still have building problems with armadillo there:
+    - os: osx
+      compiler: clang
+      env: STRUS_WITH_VECTOR=NO STRUS_WITH_PATTERN=YES
+    - os: linux
+      dist: trusty
+      compiler: clang
+      env: STRUS_WITH_VECTOR=YES STRUS_WITH_PATTERN=YES
+    - os: linux
+      dist: trusty
+      compiler: gcc
+      env: STRUS_WITH_VECTOR=YES STRUS_WITH_PATTERN=YES
+
 sudo: required
 branches:
   only:
@@ -19,3 +35,4 @@ before_install:
 - dist/travis/before_script.sh
 script:
 - dist/travis/script.sh
+

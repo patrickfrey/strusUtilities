@@ -1,26 +1,10 @@
 #FILE#A.xml
-Introduction
-
-   The user interacts with application software on a typical desktop computer. The application software
-   layer interfaces with the operating system.
-
+##system
+Introduction; The user interacts with <A&B> application software on a typical desktop computer. The application software layer interfaces with the operating system. ; The user influences the behaviour of the system with input. ; 
 #FILE#B.xml
-History
-
-An algorithm for what would have been the first piece of
-software was written by Ada Lovelace in the 19th century, for the
-planned Analytical Engine. However, neither the Analytical Engine
-nor any software for it were ever created.
-
+History; An algorithm for what would have been the first piece of software was written by Ada Lovelace in the 19th century, for the planned Analytical Engine. However, neither the Analytical Engine nor any software for it were ever created. ; 
 #FILE#C.xml
-Architecture
-
-Users often see things differently from programmers. People who use
-modern general purpose computers (as opposed to embedded systems,
-analog computers and supercomputers) usually see three layers
-of software performing a variety of tasks: platform, application, and
-user software.
-
+Architecture; Users often see things differently from programmers. People who use modern general purpose computers (as opposed to embedded systems, analog computers and supercomputers) usually see three layers of software performing a variety of tasks: platform, application, and user software. ; 
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <doc>
 <docid>A</docid>
@@ -28,8 +12,11 @@ user software.
 <text>
 <h1>Introduction</h1>
 <p>
-   The <NN>user</NN> <VV>interacts</VV> with <NN>application</NN> <NN>software</NN> on a typical <NN>desktop computer</NN>. The <NN>application software</NN>
-   <NN>layer</NN> <VV>interfaces</VV> with the <NN>operating</NN> <NN>system</NN>.
+   The <NN>user</NN> <VV>interacts</VV> with <NN>&lt;A&amp;B&gt; application software</NN> on a typical <NN>desktop computer</NN><EE/>. The <NN>application software
+   layer</NN> <VV>interfaces</VV> with the <NN>operating system</NN><EE/>.
+</p>
+<p>
+   The <NN>user</NN> <VV>influences</VV> the <NN>behaviour</NN> of the <lnk><NN>system</NN></lnk> with <NN>input</NN><EE/>.
 </p>
 </text>
 </doc>
@@ -41,10 +28,10 @@ user software.
 <text>
 <h1>History</h1>
 <p>
-An <NN>algorithm</NN> for what <VV>would</VV> <VV>have</VV> <VV>been</VV> <VV>the</VV> first <NN>piece</NN> of
-<NN>software</NN> <VV>was</VV> <VV>written</VV> by Ada Lovelace in the 19th century, for the
-planned Analytical Engine. However, neither the Analytical Engine
-nor any <NN>software</NN> for it <VV>were</VV> ever <VV>created</VV>.
+An <NN>algorithm</NN> for what <VV>would</VV> <VV>have</VV> <VV>been</VV> the first <NN>piece</NN> of
+<NN>software</NN> <VV>was</VV> <VV>written</VV> by <NN>Ada Lovelace</NN> in the 19th century, for the
+planned <NN>Analytical Engine</NN><EE/>. However, neither the <NN>Analytical Engine</NN>
+nor any <NN>software</NN> for it <VV>were</VV> ever <VV>created</VV><EE/>.
 </p>
 </text>
 </doc>
@@ -56,11 +43,11 @@ nor any <NN>software</NN> for it <VV>were</VV> ever <VV>created</VV>.
 <text>
 <h1>Architecture</h1>
 <p>
-<NN>Users</NN> often <VV>see</VV> <NN>things</NN> differently from <NN>programmers</NN>. <NN>People</NN> who <VV>use</VV>
+<NN>Users</NN> often <VV>see</VV> <NN>things</NN> differently from <NN>programmers</NN><EE/>. <NN>People</NN> who <VV>use</VV>
 modern general purpose <NN>computers</NN> (as <VV>opposed</VV> to <NN>embedded systems</NN>,
 analog <NN>computers</NN> and <NN>supercomputers</NN>) usually see three <NN>layers</NN>
 of <NN>software</NN> <VV>performing</VV> a <NN>variety</NN> of <NN>tasks</NN>: <NN>platform</NN>, <NN>application</NN>, and
-<NN>user</NN> <NN>software</NN>.
+<NN>user</NN> <NN>software</NN><EE/>.
 </p>
 </text>
 </doc>

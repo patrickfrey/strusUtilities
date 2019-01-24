@@ -174,15 +174,16 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 static void inspectDocumentIndexFeatureTypes( strus::StorageClientInterface& storage)
 {
 	strus::local_ptr<strus::ValueIteratorInterface> valItr( storage.createTermTypeIterator());
-
-	// KLUDGE: This is bad, but the storage cannot tell us how far we should
-	// iterate, does it?
-	enum { MAX_NOF_FEATURES = 100 };
-	
-	std::vector<std::string> termTypes = valItr->fetchValues( MAX_NOF_FEATURES);
-	for (std::vector<std::string>::const_iterator it = termTypes.begin(); it != termTypes.end(); it++) {
-		std::cout << *it << std::endl;
+	if (!valItr.get()) throw std::runtime_error(_TXT("failed to create term type iterator"));
+	std::vector<std::string> termTypes;
+	do
+	{
+		termTypes = valItr->fetchValues( 10);
+		for (std::vector<std::string>::const_iterator it = termTypes.begin(); it != termTypes.end(); it++) {
+			std::cout << *it << std::endl;
+		}
 	}
+	while (!termTypes.empty());
 }
 
 static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
@@ -851,6 +852,20 @@ int main( int argc, const char* argv[])
 		{
 			printUsageAndExit = true;
 		}
+
+		// Enable debugging selected with option 'debug':
+		{
+			std::vector<std::string> dbglist = opt.list( "debug");
+			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
+			for (; gi != ge; ++gi)
+			{
+				if (!dbgtrace->enable( *gi))
+				{
+					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
+				}
+			}
+		}
+
 		strus::local_ptr<strus::ModuleLoaderInterface> moduleLoader( strus::createModuleLoader( errorBuffer.get()));
 		if (!moduleLoader.get()) throw std::runtime_error( _TXT("failed to create module loader"));
 		if (opt("moduledir"))
@@ -1026,18 +1041,6 @@ int main( int argc, const char* argv[])
 				trace.push_back( new strus::TraceProxy( moduleLoader.get(), *ti, errorBuffer.get()));
 			}
 		}
-		// Enable debugging selected with option 'debug':
-		{
-			std::vector<std::string> dbglist = opt.list( "debug");
-			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
-			for (; gi != ge; ++gi)
-			{
-				if (!dbgtrace->enable( *gi))
-				{
-					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
-				}
-			}
-		}
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
@@ -1164,16 +1167,17 @@ int main( int argc, const char* argv[])
 		{
 			throw std::runtime_error( _TXT("unhandled error in inspect storage"));
 		}
+		std::cerr << _TXT("done.") << std::endl;
 		if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
 		{
 			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
-		std::cerr << _TXT("done.") << std::endl;
 		return 0;
 	}
 	catch (const std::bad_alloc&)
 	{
 		std::cerr << _TXT("ERROR ") << _TXT("out of memory") << std::endl;
+		return -2;
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -1190,6 +1194,10 @@ int main( int argc, const char* argv[])
 	catch (const std::exception& e)
 	{
 		std::cerr << _TXT("EXCEPTION ") << e.what() << std::endl;
+	}
+	if (!dumpDebugTrace( dbgtrace, NULL/*filename ~ NULL = stderr*/))
+	{
+		std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 	}
 	return -1;
 }
