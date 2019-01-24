@@ -1,3 +1,14 @@
+strusutilities (0.17.0-1) unstable; urgency=low
+  * implement interface changes in analyzer pattern matcher interface
+  * implement interface changes in strus vector storage interface
+  * reorganized travis build, define build options solely by includes without using excludes
+  * implement strusPosTagger program
+  * fix weird behaviour when resolving paths of input files in the programs
+  * separate filecrawler, put it into an own library.
+  * pattern matcher: use format strings for output
+  * swiched to program loader implemented in strus analyzer
+ -- Patrick Frey <patrickpfrey@yahoo.com>  Thu, 24 Jan 2019 07:30:00 +0100
+
 strusutilities (0.16.0-1) unstable; urgency=low
   * change handling of gettext to avoid warning: return a const char*
   * make use of debug trace interface in strus base: enable with program option -G | --debug
