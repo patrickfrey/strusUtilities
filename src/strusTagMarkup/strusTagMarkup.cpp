@@ -35,10 +35,13 @@
 #include "strus/reference.hpp"
 #include "strus/documentClassDetectorInterface.hpp"
 #include "strus/textProcessorInterface.hpp"
+#include "strus/normalizerFunctionInterface.hpp"
+#include "strus/normalizerFunctionInstanceInterface.hpp"
 #include "private/fileCrawlerInterface.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"
+#include "private/parseFunctionDef.hpp"
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -59,12 +62,17 @@ static bool isDigit( char ch)
 	return ch >= '0' && ch <=  '9';
 }
 
-class TagAttributeMarkupCount:
-	public strus::TagAttributeMarkupInterface
+struct CountFormat
 {
-public:
-	explicit TagAttributeMarkupCount( const std::string& attributename_, const std::string& parameter, int instanceidx, int nofinstances)
-		:m_attributename(attributename_),m_formatstring(),m_current(0),m_incr(1)
+	std::string format;
+	int start;
+
+	CountFormat()
+		:format(),start(0){}
+	CountFormat( const CountFormat& o)
+		:format(o.format),start(o.start){}
+	explicit CountFormat( const std::string& parameter)
+		:format(),start(0)
 	{
 		std::string prefix;
 		char const* pi = parameter.c_str() + parameter.size();
@@ -76,16 +84,58 @@ public:
 		for (; *pi == '0'; ++pi,++fmt0){}
 		if (fmt0)
 		{
-			m_formatstring = strus::string_format( "%s%%0%dd", prefix.c_str(), fmt0 + (int)std::strlen(pi));
+			format = strus::string_format( "%s%%0%dd", prefix.c_str(), fmt0 + (int)std::strlen(pi));
 		}
 		else
 		{
-			m_formatstring = strus::string_format( "%s%%d", prefix.c_str());
+			format = strus::string_format( "%s%%d", prefix.c_str());
 		}
 		if (*pi)
 		{
-			m_current = strus::numstring_conv::touint( pi, std::strlen(pi), std::numeric_limits<int>::max());
+			start = strus::numstring_conv::touint( pi, std::strlen(pi), std::numeric_limits<int>::max());
 		}
+	}
+};
+
+static std::string startString( const std::string& val, char delim)
+{
+	const char* term = std::strchr( val.c_str(), delim);
+	if (!term) return std::string();
+	return std::string( val.c_str(), term - val.c_str());
+}
+
+static std::string followString( const std::string& val, char delim)
+{
+	const char* term = std::strchr( val.c_str(), delim);
+	return term ? std::string(term+1) : std::string();
+}
+
+struct MapFormat
+	:public CountFormat
+{
+	std::vector<strus::utils::FunctionDef> normalizers;
+
+	MapFormat()
+		:normalizers(){}
+	MapFormat( const MapFormat& o)
+		:CountFormat(o),normalizers(o.normalizers){}
+	explicit MapFormat( const std::string& parameter)
+		:CountFormat(startString(parameter,':')),normalizers(strus::utils::parseFunctionDefs( followString( parameter,':'), g_errorBuffer))
+	{}
+};
+
+
+class TagAttributeMarkupCount:
+	public strus::TagAttributeMarkupInterface
+{
+public:
+	explicit TagAttributeMarkupCount( const std::string& attributename_, const std::string& parameter, int instanceidx, int nofinstances)
+		:m_attributename(attributename_),m_formatstring(),m_current(0),m_incr(1)
+	{
+		CountFormat param( parameter);
+		m_formatstring = param.format;
+		m_current = param.start;
+
 		if (nofinstances)
 		{
 			m_incr = nofinstances;
@@ -105,6 +155,71 @@ private:
 	std::string m_formatstring;
 	mutable int m_current;
 	int m_incr;
+};
+
+class TagAttributeMarkupMap:
+	public strus::TagAttributeMarkupInterface
+{
+public:
+	explicit TagAttributeMarkupMap( const strus::TextProcessorInterface* textproc, const std::string& attributename_, const std::string& parameter, int instanceidx, int nofinstances)
+		:m_attributename(attributename_),m_formatstring(),m_map(),m_current(0)
+	{
+		MapFormat param( parameter);
+		m_formatstring = param.format;
+		m_current = param.start;
+		std::vector<strus::utils::FunctionDef>::const_iterator ni = param.normalizers.begin(), ne = param.normalizers.end();
+		for (; ni != ne; ++ni)
+		{
+			const strus::NormalizerFunctionInterface* normalizerType = textproc->getNormalizer( ni->first);
+			if (!normalizerType) throw strus::runtime_error(_TXT("undefined normalizer '%s'"), ni->first.c_str());
+			strus::Reference<strus::NormalizerFunctionInstanceInterface> normalizer( normalizerType->createInstance( ni->second, textproc));
+			if (!normalizer.get()) throw strus::runtime_error(_TXT("failed to create normalizer '%s': %s"), ni->first.c_str(), g_errorBuffer->fetchError());
+			m_normalizers.push_back( normalizer);
+		}
+	}
+	virtual ~TagAttributeMarkupMap(){}
+
+	virtual strus::analyzer::DocumentAttribute synthesizeAttribute( const std::string& tagname, const std::vector<strus::analyzer::DocumentAttribute>& attributes) const
+	{
+		std::string content( tagname);
+		std::vector<strus::analyzer::DocumentAttribute>::const_iterator ai = attributes.begin(), ae = attributes.end();
+		for (; ai != ae; ++ai)
+		{
+			if (ai->name() != m_attributename)
+			{
+				content.push_back( ' ');
+				content.append( ai->name());
+				content.push_back( '=');
+				std::string val = ai->value();
+				std::vector<strus::Reference<strus::NormalizerFunctionInstanceInterface> >::const_iterator ni = m_normalizers.begin(), ne = m_normalizers.end();
+				for (; ni != ne; ++ni)
+				{
+					val = (*ni)->normalize( val.c_str(), val.size());
+				}
+				content.append( val);
+			}
+		}
+		int idx;
+		std::map<std::string,int>::const_iterator mi = m_map.find( content);
+		if (mi == m_map.end())
+		{
+			idx = m_current++;
+			m_map[ content] = idx;
+		}
+		else
+		{
+			idx = mi->second;
+		}
+		strus::analyzer::DocumentAttribute rt( m_attributename, strus::string_format( m_formatstring.c_str(), idx));
+		return rt;
+	}
+
+private:
+	std::string m_attributename;
+	std::string m_formatstring;
+	std::vector<strus::Reference<strus::NormalizerFunctionInstanceInterface> > m_normalizers;
+	mutable std::map<std::string,int> m_map;
+	mutable int m_current;
 };
 
 
@@ -374,7 +489,7 @@ int main( int argc, const char* argv[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusPosTagger [options] <docpath> [<outpath>]" << std::endl;
+			std::cout << _TXT("usage:") << " strusTagMarkup [options] <docpath> [<outpath>]" << std::endl;
 			std::cout << "<docpath> = " << _TXT("path of input file/directory") << std::endl;
 			std::cout << "<outpath> = " << _TXT("path of output") << std::endl;
 			std::cout << "            " << _TXT("if equal to \"-\", then the outputs are written to stdout") << std::endl;
@@ -594,7 +709,11 @@ int main( int argc, const char* argv[])
 			strus::Reference<strus::TagAttributeMarkupInterface> hnd;
 			if (strus::caseInsensitiveEquals( markup, "count"))
 			{
-				hnd.reset( new TagAttributeMarkupCount( attribute, parameter, 0, 0));
+				hnd.reset( new TagAttributeMarkupCount( attribute, parameter, instanceIdx, nofInstances));
+			}
+			else if (strus::caseInsensitiveEquals( markup, "map"))
+			{
+				hnd.reset( new TagAttributeMarkupMap( textproc, attribute, parameter, instanceIdx, nofInstances));
 			}
 			else
 			{

@@ -7,6 +7,7 @@ set( source_files
 	${CMAKE_CURRENT_BINARY_DIR}/internationalization.cpp
 	traceUtils.cpp
 	documentAnalyzer.cpp
+	parseFunctionDef.cpp
 )
 
 include_directories(
