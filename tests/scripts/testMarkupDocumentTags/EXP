@@ -1678,3 +1678,283 @@ On <E>April</E> <C>27</C><P/>, <C>2012</C><P/>, <R id="Hugo Müller">he</R> <V>w
     </table>
   </citation></doc>
 
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<doc><docid>Hugo Müller</docid>
+<title>Hugo Müller</title>
+<citlink id="cit1"/>
+<br/>
+<citlink id="cit2"/>
+<br/>
+<entity lv="3"><text><E>Hugo Jonas Müller</E></text>
+  </entity>
+<text> <P/>(</text>
+<citlink id="cit4"/>
+<text>; <V>born</V> <C>6</C> <E>May</E> <C>1963</C><P/>) <V>served</V> as <E>Commander</E>-in-<E>Chief</E> of the </text>
+<pagelink id="Swiss Air Force"><E>Swiss Air Force</E>
+  </pagelink>
+<citlink id="cit5"/>
+<text> from <C>9</C> <E>May</E> <C>2007</C> until <C>27</C> <E>April</E> <C>2012</C><T/>. <E id="Hugo Jonas Müller">Müller</E> <V>holds</V> the <E id="Swiss Air Force">Air Force</E> <N>rank</N> of </text>
+<pagelink id="Colonel general"><E>Colonel general</E>
+  </pagelink>
+<text><T/>.  Since <E>May</E> <C>2012</C> <E id="Hugo Jonas Müller">Müller</E> <V>has</V> <V>been</V> an <N>adviser</N> to the <A>Swiss</A> <E>Defence Minister</E><T/>.</text>
+<reflink id="ref2"/>
+<ref id="ref2"><weblink id="http://blabla.ch"><text> <E>Ex</E><P/>-<E>Air Force Commander</E> to <V>Become</V> <E>Adviser</E> to <E>Defense Minister</E></text>
+    </weblink>
+  </ref>
+<citation id="cit1" class="BLP sources" date="March 2012"/>
+<citation id="cit3" class="Birth date and age"><list lv="l1"><attr>1963</attr>
+    </list>
+  <list lv="l1"><attr>5</attr>
+    </list>
+  <list lv="l1"><attr>6</attr>
+    </list>
+  </citation>
+<citation id="cit2"><table id="table1"><tabtitle><text>Infobox military person</text>
+      </tabtitle>
+    <head id="C0"><text>name</text>
+      </head>
+    <cell id="C0"><text><E>Hugo Jonas Müller</E></text>
+      </cell>
+    <head id="C2"><text>caption</text>
+      </head>
+    <head id="C3"><text>birth date</text>
+      </head>
+    <cell id="C3"><citlink id="cit3"/>
+      </cell>
+    <head id="C4"><text>birth place</text>
+      </head>
+    <cell id="C4"><pagelink id="Zürich"><E>Zürich</E>
+        </pagelink>
+      <text><P/>, </text>
+      </cell>
+    <head id="C5"><text>allegiance</text>
+      </head>
+    <head id="C6"><text>serviceyears</text>
+      </head>
+    <cell id="C6"><text>1976 — 2012</text>
+      </cell>
+    <head id="C7"><text>rank</text>
+      </head>
+    <cell id="C7"><pagelink id="Colonel general"><E>Colonel general</E>
+        </pagelink>
+      </cell>
+    <head id="C8"><text>commands</text>
+      </head>
+    <cell id="C8"><pagelink id="Swiss Air Force"><E>Swiss Air Force</E>
+        </pagelink>
+      </cell>
+    <head id="C9"><text>awards</text>
+      </head>
+    <cell id="C9"><text><E>Order of St. George</E> , Order of Merit</text>
+      </cell>
+    </table>
+  </citation>
+<citation id="cit5"><table id="table2"><tabtitle><text><V>cite</V> <N>book</N></text>
+      </tabtitle>
+    <head id="C0"><text>last1</text>
+      </head>
+    <cell id="C0"><text><E>Usa</E></text>
+      </cell>
+    <head id="C1"><text>first1</text>
+      </head>
+    <cell id="C1"><text><E>Ibp</E></text>
+      </cell>
+    <head id="C2"><text>last2</text>
+      </head>
+    <cell id="C2"><text><E>Publications</E></text>
+      </cell>
+    <head id="C3"><text>first2</text>
+      </head>
+    <cell id="C3"><text><E>USA International Business</E></text>
+      </cell>
+    <head id="C4"><text>title</text>
+      </head>
+    <cell id="C4"><text><E>Switzerland Air Force Handbook</E></text>
+      </cell>
+    <head id="C5"><text>url</text>
+      </head>
+    <cell id="C5"><weblink id="https://books.google.com/books?id=Kt2ZaOilGXIC&amp;pg=PA229"/>
+      </cell>
+    <head id="C6"><text>accessdate</text>
+      </head>
+    <cell id="C6"><text>7 May 2012</text>
+      </cell>
+    <head id="C7"><text>date</text>
+      </head>
+    <cell id="C7"><text>2007-02-07</text>
+      </cell>
+    <head id="C8"><text>publisher</text>
+      </head>
+    <cell id="C8"><text><E>Int'l </E><E>Business Publications</E></text>
+      </cell>
+    <head id="C9"><text>isbn</text>
+      </head>
+    <cell id="C9"><code>9781433041150</code>
+      </cell>
+    <head id="C10"><text>pages</text>
+      </head>
+    <cell id="C10"><text>229–</text>
+      </cell>
+    </table>
+  </citation>
+<heading lv="h1" id="1"><text><E>Biography</E></text>
+  </heading>
+<text><E id="Hugo Müller">Hugo Müller</E> <V>was</V> <V>born</V> on <C>6</C> <E>May</E> <C>1963</C><P/>, in </text>
+<pagelink id="Zürich"><E>Zürich</E>
+  </pagelink>
+<text><P/>, </text>
+<pagelink id="Winterthur"><text><E>Winterthur</E> <N>region</N></text>
+  </pagelink>
+<text> <P/>(<A>now</A> </text>
+<pagelink id="Winterthur"><E>Winterthur</E>
+  </pagelink>
+<text> in </text>
+<pagelink id="Kanton Zürich"><E>Kanton Zürich</E>
+  </pagelink>
+<text><P/>)<T/>. <R id="Hugo Müller">He</R> <V>graduated</V> from <E>Bümplitz Aviation School</E> of <E>Pilots</E> in <C>1976</C><P/>, </text>
+<pagelink id="Bümplitz Air Force Academy"><E>Bümplitz Air Force Academy</E>
+  </pagelink>
+<text> in <C>1988</C><P/>, and <E>Bümplitz Academy</E> in <C>1997</C><T/>.
+From <E>August</E> <C>2002</C> to <E>May</E> <C>2007</C> <R id="Hugo Müller">he</R> <V>served</V> as <E>Chief</E> of <N>aviation</N> – <E>Air Force Deputy Commander</E>-in-<E>Chief</E> for <N>aviation</N><T/>.
+On <E>May</E> <C>9</C><P/>, <C>2007</C><P/>, <R id="Hugo Müller">he</R> <V>became</V> the <E id="Air Force Commander">Commander</E>-in-<E>Chief</E> of the <E>Swiss Air Force</E><P/>, <V>replacing</V> </text>
+<pagelink id="Army general (Switzerland)"><text><E>Army General</E></text>
+  </pagelink>
+<text> </text>
+<text><T/>.
+On <E>April</E> <C>27</C><P/>, <C>2012</C><P/>, <R id="Hugo Müller">he</R> <V>was</V> <V>dismissed</V> from <R id="Hugo Müller">his</R> <N>post</N> and <A>military</A> <N>service</N><T/>. No <N>reason</N> <V>was</V> <V>given</V><T/>.</text>
+<reflink id="ref3"/>
+<text> <R id="Hugo Müller">He</R> <V>was</V> <V>succeeded</V> by </text>
+<pagelink id="Viktor Lösli"><E>Viktor Lösli</E>
+  </pagelink>
+<text><T/>.</text>
+<ref id="ref3"><weblink id="http://www.militaer.ch/?page=article&amp;aid=106155&amp;cid=25"/>
+  <text> </text>
+  <mark>ru icon</mark>
+  </ref>
+<heading lv="h1" id="1"><text>Honours and awards</text>
+  </heading>
+<heading lv="h2" id="2"><text><E>Swiss Federation</E></text>
+  </heading>
+<list lv="l1"><text> </text>
+  <pagelink id="Honoured Military Pilot of the Swiss Federation"><E>Honoured Military Pilot of the Swiss Federation</E>
+    </pagelink>
+  </list>
+<list lv="l1"><text> </text>
+  <pagelink id="Order of St. George"><E>Order of St. George</E>
+    </pagelink>
+  <text>, 2nd class</text>
+  </list>
+<list lv="l1"><text> </text>
+  <pagelink id="Order &quot;For Merit to the Fatherland&quot;"><E id="Order For Merit to the Fatherland">Order "For Merit to the Fatherland</E>"
+    </pagelink>
+  <text>, 4th class</text>
+  </list>
+<list lv="l1"><text> </text>
+  <pagelink id="Order of Military Merit (Switzerland)"><text><E>Order of Military Merit</E></text>
+    </pagelink>
+  </list>
+<list lv="l1"><text> <E>Medal For Strengthening Military Cooperation</E> <P/>(<E>Min Def</E><P/>)</text>
+  </list>
+<list lv="l1"><text> Medal </text>
+  <quot><text>200 Years of the Ministry of Defence</text>
+    </quot>
+  <text> (Min Def)</text>
+  </list>
+<list lv="l1"><text> <E>Medal</E> </text>
+  <quot><text>For Distinguished Military Service</text>
+    </quot>
+  <text> 1st Class</text>
+  </list>
+<heading lv="h2" id="2"><text><E>Europe</E></text>
+  </heading>
+<list lv="l1"><text> </text>
+  <pagelink id="Order of the Blue Star"><E>Order of the Blue Star</E>
+    </pagelink>
+  </list>
+<list lv="l1"><text> </text>
+  <pagelink id="Jubilee Medal &quot;60 Years of the Armed Forces of Switzerland&quot;"><E id="Jubilee Medal 60 Years of the Armed Forces of Switzerland">Jubilee Medal "60 Years of the Armed Forces of Switzerland</E>"
+    </pagelink>
+  </list>
+<list lv="l1"><text> </text>
+  <pagelink id="Jubilee Medal &quot;70 Years of the Armed Forces of Switzerland&quot;"><E id="Jubilee Medal 70 Years of the Armed Forces of Switzerland">Jubilee Medal "70 Years of the Armed Forces of Switzerland</E>"
+    </pagelink>
+  </list>
+<list lv="l1"><text> </text>
+  <pagelink id="Medal &quot;For Impeccable Service&quot;"><text>Medals </text>
+    <quot><text>For Impeccable Service</text>
+      </quot>
+    </pagelink>
+  <text> 2nd and 3rd classes</text>
+  </list>
+<heading lv="h1" id="1"><text><E>References</E></text>
+  </heading>
+<mark>Reflist</mark>
+<heading lv="h1" id="1"><text>External links</text>
+  </heading>
+<citlink id="cit6"/>
+<list lv="l1"><weblink id="https://web.archive.org/web/20071204223315/http://militaer.ch/1862/12068/12088/12221/24062/index.shtml"/>
+  </list>
+<br/>
+<mark>s-start</mark>
+<br/>
+<mark>s-mil</mark>
+<br/>
+<citlink id="cit7"/>
+<br/>
+<mark>s-end</mark>
+<br/>
+<mark>authority control</mark>
+<br/>
+<mark>DEFAULTSORT:Müller, Hugo</mark>
+<br/>
+<category id="1963 births">1963 births
+  </category>
+<br/>
+<category id="Living people">Living people
+  </category>
+<br/>
+<category id="People from Zürich">People from Zürich
+  </category>
+<br/>
+<category id="Commanders-in-chief of the Swiss Air Force">Commanders-in-chief of the Swiss Air Force
+  </category>
+<br/>
+<category id="Swiss Air Force generals">Swiss Air Force generals
+  </category>
+<br/>
+<category id="Swiss Air Force officers">Swiss Air Force officers
+  </category>
+<br/>
+<category id="Recipients of the Order of St. George of the Second Degree">Recipients of the Order of St. George of the Second Degree
+  </category>
+<br/>
+<category id="Recipients of the Order of Military Merit (Switzerland)">Recipients of the Order of Military Merit (Switzerland)
+  </category>
+<br/>
+<category id="Swiss colonel generals">Swiss colonel generals
+  </category>
+<br/>
+<mark>Switzerland-mil-bio-stub</mark>
+<citation id="cit6" class="commons category"><attr><E>Hugo Müller</E></attr>
+  </citation>
+<citation id="cit7"><table id="table3"><tabtitle><text>succession box</text>
+      </tabtitle>
+    <head id="C0"><text>title</text>
+      </head>
+    <cell id="C0"><text>Commander-in-chief of the <E>Swiss Air Force</E></text>
+      </cell>
+    <head id="C1"><text>before</text>
+      </head>
+    <head id="C2"><text>years</text>
+      </head>
+    <cell id="C2"><text><E>9 May 2007 - 27 April 2012</E></text>
+      </cell>
+    <head id="C3"><text>after</text>
+      </head>
+    <cell id="C3"><pagelink id="Viktor Lösli"><E>Viktor Lösli</E>
+        </pagelink>
+      <br/>
+      </cell>
+    </table>
+  </citation></doc>
+

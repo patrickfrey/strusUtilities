@@ -4,3 +4,4 @@ StrusTagMarkup -x xml -e '//heading' -a bla $T/input1/ -
 StrusTagMarkup -x xml -e '//heading' -a bla -P 1 $T/input1/ -
 StrusTagMarkup -x xml -e '//heading' -P "9612-00077" $T/input1/ -
 StrusTagMarkup -x xml --markup map -e '//heading' -P "1:uc" $T/input1/ -
+StrusTagMarkup -x xml --markup map -e '//heading' -P "1:uc" $T/input2/ -
