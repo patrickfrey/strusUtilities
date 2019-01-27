@@ -87,6 +87,7 @@ static std::vector<EntityDef> extractReferencedEntities(
 	while (eseg->getNext( eid, pos, segment, segmentsize))
 	{
 		EntityIdType etype = (EntityIdType)(eid % NofEntityIdTypes);
+		std::string estr = strus::string_conv::trim( segment, segmentsize);
 		switch (etype)
 		{
 			case EntityIdGroup:
@@ -98,18 +99,20 @@ static std::vector<EntityDef> extractReferencedEntities(
 				}
 			break;
 			case EntityIdId:
-				if (!id.empty())
+				if (estr.empty()) continue;
+				if (!id.empty() && id != estr)
 				{
 					throw strus::runtime_error( _TXT("failed to extract entities: duplicate definition"));
 				}
-				id.append( segment, segmentsize);
+				id = estr;
 			break;
 			case EntityIdValue:
-				if (!value.empty())
+				if (estr.empty()) continue;
+				if (!value.empty() && value != estr)
 				{
 					throw strus::runtime_error( _TXT("failed to extract entities: duplicate definition"));
 				}
-				value.append( segment, segmentsize);
+				value = estr;
 			break;
 		}
 	}
