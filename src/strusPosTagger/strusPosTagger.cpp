@@ -49,6 +49,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <utility>
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
@@ -59,13 +60,19 @@
 static strus::ErrorBufferInterface* g_errorBuffer = 0;	// error buffer
 static bool g_verbose = false;
 
-static std::vector<std::string> extractReferencedEntities(
+enum EntityIdType {EntityIdGroup=1,EntityIdId=2,EntityIdValue=3};
+enum {NofEntityIdTypes=4};
+
+typedef std::pair<std::string,std::string> EntityDef;
+
+static std::vector<EntityDef> extractReferencedEntities(
 		const strus::SegmenterInstanceInterface* entitySegmenter,
 		const strus::analyzer::DocumentClass& documentclass,
 		const std::string& content)
 {
-	std::set<std::string> eset;
-	int id = 0;
+	std::string id;
+	std::string value;
+	std::set<EntityDef> eset;
 	strus::SegmenterPosition pos;
 	const char* segment = 0;
 	std::size_t segmentsize = 0;
@@ -76,15 +83,84 @@ static std::vector<std::string> extractReferencedEntities(
 		throw strus::runtime_error( _TXT("failed to create segmenter context for extracting entities: %s"), g_errorBuffer->fetchError());
 	}
 	eseg->putInput( content.c_str(), content.size(), true/*eof*/);
-	while (eseg->getNext( id, pos, segment, segmentsize))
+	int eid;
+	while (eseg->getNext( eid, pos, segment, segmentsize))
 	{
-		if (segmentsize)
+		EntityIdType etype = (EntityIdType)(eid % NofEntityIdTypes);
+		switch (etype)
 		{
-			eset.insert( std::string( segment, segmentsize));
+			case EntityIdGroup:
+				if (!id.empty() || !value.empty())
+				{
+					eset.insert( EntityDef( id, value));
+					id.clear();
+					value.clear();
+				}
+			break;
+			case EntityIdId:
+				if (!id.empty())
+				{
+					throw strus::runtime_error( _TXT("failed to extract entities: duplicate definition"));
+				}
+				id.append( segment, segmentsize);
+			break;
+			case EntityIdValue:
+				if (!value.empty())
+				{
+					throw strus::runtime_error( _TXT("failed to extract entities: duplicate definition"));
+				}
+				value.append( segment, segmentsize);
+			break;
 		}
 	}
-	return std::vector<std::string>( eset.begin(), eset.end());
+	if (!id.empty() || !value.empty())
+	{
+		eset.insert( EntityDef( id, value));
+	}
+	return std::vector<EntityDef>( eset.begin(), eset.end());
 }
+
+/// \brief Parse a pair of select expressions separated by ':' or a single select expression (second element of return value empty)
+static std::pair<std::string,std::string> parseExpressionPair( const std::string& val)
+{
+	std::pair<std::string,std::string> rt;
+	char const* valueExpressionStart = 0;
+	char const* vi = val.c_str();
+	const char* ve = vi + val.size();
+	for (; vi != ve; ++vi)
+	{
+		if (*vi == '\"' || *vi == '\'')
+		{
+			char eb = *vi++;
+			for (; vi != ve && *vi != eb; ++vi)
+			{
+				if (*vi == '\\')
+				{
+					++vi;
+					if (vi == ve) throw std::runtime_error(_TXT("unexpected end of string in select expression"));
+				}
+			}
+			if (vi == ve) throw std::runtime_error(_TXT("unexpected end of string in select expression"));
+		}
+		else if (*vi == ':')
+		{
+			if (valueExpressionStart) throw std::runtime_error(_TXT("more than 3 elements (separated by ':' in entity expression declaration"));
+			rt.first.append( val.c_str(), vi - val.c_str());
+			if (rt.first.empty()) throw std::runtime_error(_TXT("empty string for select expression (first element) is not allowed"));
+			valueExpressionStart = vi +1;
+		}
+	}
+	if (valueExpressionStart)
+	{
+		rt.second.append( valueExpressionStart, vi-valueExpressionStart);
+	}
+	else
+	{
+		rt.first.append( val);
+	}
+	return rt;
+}
+
 
 static void writePosTaggerInput(
 		const std::string& inputpath,
@@ -108,7 +184,7 @@ static void writePosTaggerInput(
 			if (!strus::stringStartsWith( *ai, inputpath)) throw strus::runtime_error(_TXT("internal: input path '%s' does not have prefix '%s"), ai->c_str(), inputpath.c_str());
 			std::string content;
 			std::string posInputContent;
-			std::vector<std::string> entities;
+			std::vector<EntityDef> entities;
 			int ec = strus::readFile( *ai, content);
 			if (ec) throw strus::runtime_error(_TXT("failed to read input file '%s': %s"), ai->c_str(), ::strerror(ec));
 			strus::analyzer::DocumentClass documentclass;
@@ -147,10 +223,17 @@ static void writePosTaggerInput(
 				}
 			}
 			*out << fileTagPrefix << std::string( ai->c_str() + inputpath.size(), ai->size() - inputpath.size()) << std::endl;
-			std::vector<std::string>::const_iterator ei = entities.begin(), ee = entities.end();
+			std::vector<EntityDef>::const_iterator ei = entities.begin(), ee = entities.end();
 			for (; ei != ee; ++ei)
 			{
-				*out << entityPrefix << *ei << std::endl;
+				if (ei->second.empty())
+				{
+					*out << entityPrefix << ei->first << std::endl;
+				}
+				else
+				{
+					*out << entityPrefix << ei->first << entityPrefix << ei->second << std::endl;
+				}
 			}
 			*out << posInputContent << std::endl;
 		}
@@ -619,26 +702,37 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("to select tags that issue a sentence delimiter as POS tagger input.") << std::endl;
 			std::cout << "    " << _TXT("Remark: Strus extends the syntax of syntax of XPath with a trailing '~'") << std::endl;
 			std::cout << "    " << _TXT("to denote the end of a tag selected.") << std::endl;
+			std::cout << "    " << _TXT("This option is available if -I|--posinp) is specified.") << std::endl;
 			std::cout << "-E|--spaceexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select a tag issueing a space delimiter as POS tagger input.") << std::endl;
 			std::cout << "    " << _TXT("Similar to --punctuation but issuing a space ' ' instead of") << std::endl;
 			std::cout << "    " << _TXT("a delimiter declared with --delimiter.") << std::endl;
-			std::cout << "-X|--entityexpr <XPATH>" << std::endl;
-			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
-			std::cout << "    " << _TXT("to select entities to be printed at start of POS tagger input") << std::endl;
-			std::cout << "    " << _TXT("generated (option -I).") << std::endl;
+			std::cout << "    " << _TXT("This option is available if -I|--posinp) is specified.") << std::endl;
+			std::cout << "-X|--entityexpr <EXPR>" << std::endl;
+			std::cout << "    " << _TXT("<EXPR> is an expression (abbreviated syntax of XPath) or a pair") << std::endl;
+			std::cout << "    " << _TXT("of expressions separated by ':' that select entities to be printed") << std::endl;
+			std::cout << "    " << _TXT("at the start of the POS tagger input.") << std::endl;
+			std::cout << "    " << _TXT("See description of option -Y|--entityprefix for a description of the") << std::endl;
+			std::cout << "    " << _TXT("output (POS tagger input) if this option and option -I|--posinp") << std::endl;
+			std::cout << "    " << _TXT("is specified.") << std::endl;
+			std::cout << "-Y|--entityprefix <PREFIX>" << std::endl;
+			std::cout << "    " << _TXT("Use the string <PREFIX> as prefix entities if they are selected to") << std::endl;
+			std::cout << "    " << _TXT("be printed as generated POS tagger input at the start of the") << std::endl;
+			std::cout << "    " << _TXT("document. (Option -I) Default is '##'.") << std::endl;
+			std::cout << "    " << _TXT("Such an entity declaration line has the form <PREFIX> entity-id <PREFIX> value,") << std::endl;
+			std::cout << "    " << _TXT("if the declaration or the entity with the option -X|--entityexpr defines") << std::endl;
+			std::cout << "    " << _TXT("a pair or expressions separated by ':' or the form <PREFIX> entity-id, if the") << std::endl;
+			std::cout << "    " << _TXT("argument of option -X|--entityexpr is a single expression.") << std::endl;
+			std::cout << "    " << _TXT("This option is available if -I|--posinp) is specified.") << std::endl;
 			std::cout << "-D|--punctdelim <DELIM>" << std::endl;
 			std::cout << "    " << _TXT("Use <DELIM> as end of sentence (punctuation) issued when a") << std::endl;
 			std::cout << "    " << _TXT("tag selecting punctuation matches (Default is ';\n').") << std::endl;
+			std::cout << "    " << _TXT("This option is available if -I|--posinp) is specified.") << std::endl;
 			std::cout << "-P|--prefix <STR>" << std::endl;
 			std::cout << "    " << _TXT("Use the string <STR> as prefix for a file declaration line in") << std::endl;
 			std::cout << "    " << _TXT("the POS tagging input or output file.") << std::endl;
 			std::cout << "    " << _TXT("Default is '#FILE#'.") << std::endl;
-			std::cout << "-Y|--entityprefix <STR>" << std::endl;
-			std::cout << "    " << _TXT("Use the string <STR> as prefix entities if they are selected to") << std::endl;
-			std::cout << "    " << _TXT("be printed as generated POS tagger input at the start of the") << std::endl;
-			std::cout << "    " << _TXT("document. (Option -I) Default is '#'.") << std::endl;
 			std::cout << "-G|--debug <COMP>" << std::endl;
 			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
@@ -673,11 +767,11 @@ int main( int argc, const char* argv[])
 		std::string contenttype;
 		std::string fileext;
 		std::string filenamePrefix = "#FILE#";
-		std::string entityPrefix = "#";
+		std::string entityPrefix = "##";
 		std::vector<std::string> contentExpression;
 		std::vector<std::string> punctExpression;
 		std::vector<std::string> spaceExpression;
-		std::vector<std::string> entityExpression;
+		std::vector<std::pair<std::string,std::string> > entityExpression;
 		std::string punctDelimiter = "; ";
 		std::string spaceDelimiter = " ";
 		enum {MaxNofThreads=1024};
@@ -735,7 +829,12 @@ int main( int argc, const char* argv[])
 		if (opt( "entityexpr"))
 		{
 			if (action != DoGenInput) throw strus::runtime_error(_TXT("option -X|--entityexpr makes no sense with option -I"));
-			entityExpression = opt.list( "entityexpr");
+			std::vector<std::string> elist = opt.list( "entityexpr");
+			std::vector<std::string>::const_iterator ei = elist.begin(), ee = elist.end();
+			for (; ei != ee; ++ei)
+			{
+				entityExpression.push_back( parseExpressionPair( *ei));
+			}
 		}
 		if (opt( "punctdelim"))
 		{
@@ -896,10 +995,27 @@ int main( int argc, const char* argv[])
 			{
 				throw strus::runtime_error( _TXT("failed to create segmenter instance for extracting entities: %s"), g_errorBuffer->fetchError());
 			}
-			std::vector<std::string>::const_iterator ei = entityExpression.begin(), ee = entityExpression.end();
-			for (int eidx=1; ei != ee; ++ei,++eidx)
+			std::vector<std::pair<std::string,std::string> >::const_iterator ei = entityExpression.begin(), ee = entityExpression.end();
+			for (int eidx=0; ei != ee; ++ei,eidx+=NofEntityIdTypes)
 			{
-				entitySegmenterInst->defineSelectorExpression( eidx, *ei);
+				if (ei->second.empty())
+				{
+					entitySegmenterInst->defineSelectorExpression( eidx+EntityIdGroup, ei->first);
+				}
+				else
+				{
+					std::size_t commonAncestorSize = 0;
+					while (ei->first.size() > commonAncestorSize && ei->second.size() > commonAncestorSize && ei->first[commonAncestorSize] == ei->second[commonAncestorSize])
+					{
+						++commonAncestorSize;
+					}
+					if (commonAncestorSize)
+					{
+						entitySegmenterInst->defineSelectorExpression( eidx+EntityIdGroup, std::string( ei->first.c_str(), commonAncestorSize));
+					}
+					entitySegmenterInst->defineSelectorExpression( eidx+EntityIdValue, ei->second);
+				}
+				entitySegmenterInst->defineSelectorExpression( eidx+EntityIdId, ei->first);
 			}
 		}
 

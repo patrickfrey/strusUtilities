@@ -1,2 +1,2 @@
-StrusPosTagger -x ".xml" -I -X '//lnk()' -Y '##' -e '//p/lnk()' -e '//p()' -e '//h1()' -p '//p~' -p '//h1~' $T/data/ -
-StrusPosTagger -x ".xml" -e "//p()" -e '//p/lnk()' -e "//h1()" -p "//p~" -p "//h1~" -o "-" $T/data/ $T/POSOUT
+StrusPosTagger -x ".xml" -I -X '//lnk()' -X '//ent@id://ent()' -Y '##' -e '//p/lnk()' -e '//p/ent()' -e '//p()' -e '//h1()' -p '//p~' -p '//h1~' $T/data/ -
+StrusPosTagger -x ".xml" -e "//p()" -e '//p/lnk()' -e '//p/ent()' -e "//h1()" -p "//p~" -p "//h1~" -o "-" $T/data/ $T/POSOUT
