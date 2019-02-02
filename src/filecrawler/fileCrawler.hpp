@@ -28,6 +28,11 @@ public:
 			std::size_t chunkSize_,
 			const std::string& extension_,
 			ErrorBufferInterface* errorhnd_);
+	FileCrawler(
+			const std::vector<std::string>& path_,
+			std::size_t chunkSize_,
+			const std::string& extension_,
+			ErrorBufferInterface* errorhnd_);
 
 	virtual ~FileCrawler();
 

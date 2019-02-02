@@ -36,6 +36,36 @@ FileCrawler::FileCrawler(
 	}
 }
 
+FileCrawler::FileCrawler(
+		const std::vector<std::string>& path_,
+		std::size_t chunkSize_,
+		const std::string& extension_,
+		ErrorBufferInterface* errorhnd_)
+
+	:m_errorhnd(errorhnd_)
+	,m_chunkSize(chunkSize_)
+	,m_extension(extension_)
+	,m_chunkque()
+{
+	m_chunkque.push_back( Chunk());
+	std::vector<std::string>::const_iterator pi = path_.begin(), pe = path_.end();
+	for (; pi != pe; ++pi)
+	{
+		if (strus::isDir( *pi))
+		{
+			collectFilesToProcess( *pi);
+		}
+		else
+		{
+			if (m_chunkque.back().files.size() >= m_chunkSize)
+			{
+				m_chunkque.push_back( Chunk());
+			}
+			m_chunkque.back().files.push_back( *pi);
+		}
+	}
+}
+
 FileCrawler::~FileCrawler()
 {
 }

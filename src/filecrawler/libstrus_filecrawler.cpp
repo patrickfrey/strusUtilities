@@ -31,3 +31,17 @@ DLL_PUBLIC FileCrawlerInterface* strus::createFileCrawlerInterface( const std::s
 	CATCH_ERROR_MAP_RETURN( _TXT("cannot create file crawler: %s"), *errorhnd, 0);
 }
 
+DLL_PUBLIC FileCrawlerInterface* strus::createFileCrawlerInterface( const std::vector<std::string>& path, int chunkSize, const std::string& extension, ErrorBufferInterface* errorhnd)
+{
+	try
+	{
+		if (!g_intl_initialized)
+		{
+			strus::initMessageTextDomain();
+			g_intl_initialized = true;
+		}
+		return new FileCrawler( path, chunkSize, extension, errorhnd);
+	}
+	CATCH_ERROR_MAP_RETURN( _TXT("cannot create file crawler: %s"), *errorhnd, 0);
+}
+

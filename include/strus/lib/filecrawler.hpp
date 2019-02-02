@@ -30,6 +30,14 @@ class FileCrawlerInterface;
 /// \return the file crawler interface (with ownership)
 FileCrawlerInterface* createFileCrawlerInterface( const std::string& path, int chunkSize, const std::string& extension, ErrorBufferInterface* errorhnd);
 
+/// \brief Create an interface for loading files in chunks for multithreaded processing with an array of paths as argument
+/// \param[in] path path where to load files from
+/// \param[in] chunkSize maximum number of files per chunk loaded
+/// \param[in] extension extension of the files to load, empty if no restriction on the extension given
+/// \param[in] errorhnd error buffer interface for exceptions thrown
+/// \return the file crawler interface (with ownership)
+FileCrawlerInterface* createFileCrawlerInterface( const std::vector<std::string>& path, int chunkSize, const std::string& extension, ErrorBufferInterface* errorhnd);
+
 }//namespace
 #endif
 

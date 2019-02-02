@@ -224,12 +224,6 @@ int main( int argc_, const char* argv_[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() > 2)
-			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 1;
-			}
 			if (opt.nofargs() < 2)
 			{
 				std::cerr << _TXT("too few arguments") << std::endl;
@@ -258,9 +252,9 @@ int main( int argc_, const char* argv_[])
 		}
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusInsert [options] <program> <docpath>" << std::endl;
+			std::cout << _TXT("usage:") << " strusInsert [options] <program> <docpath> {<docpath>}" << std::endl;
 			std::cout << "<program> = " << _TXT("path of analyzer program or analyzer map program") << std::endl;
-			std::cout << "<docpath> = " << _TXT("path of document or directory to insert") << std::endl;
+			std::cout << "<docpath> = " << _TXT("path(s) of documents or directories to insert") << std::endl;
 			std::cout << _TXT("description: Insert a document or a set of documents into a storage.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
@@ -375,8 +369,12 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		std::string programFileName = getFileArg( opt[0], moduleLoader.get());
-		std::string datapath = opt[1];
-
+		std::vector<std::string> datapath;
+		int di = 1, de = opt.nofargs();
+		for (; di < de; ++di)
+		{
+			datapath.push_back( opt[di]);
+		}
 		if (errorBuffer->hasError())
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
@@ -437,14 +435,14 @@ int main( int argc_, const char* argv_[])
 				throw std::runtime_error( _TXT("failed to parse document class"));
 			}
 		}
-		else if (strus::isFile( datapath))
+		else if (!datapath.empty() && strus::isFile( datapath[0]))
 		{
-			strus::InputStream input( datapath);
+			strus::InputStream input( datapath[0]);
 			char hdrbuf[ 4096];
 			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
 			if (input.error())
 			{
-				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), datapath.c_str(), ::strerror(input.error())); 
+				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), datapath[0].c_str(), ::strerror(input.error())); 
 			}
 			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
 			{
