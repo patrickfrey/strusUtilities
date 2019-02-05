@@ -93,7 +93,7 @@ static std::vector<EntityDef> extractReferencedEntities(
 			case EntityIdGroup:
 				if (!id.empty() || !value.empty())
 				{
-					eset.insert( EntityDef( id, value));
+					eset.insert( EntityDef( strus::string_conv::trim(id), strus::string_conv::trim(value)));
 					id.clear();
 					value.clear();
 				}
@@ -108,17 +108,13 @@ static std::vector<EntityDef> extractReferencedEntities(
 			break;
 			case EntityIdValue:
 				if (estr.empty()) continue;
-				if (!value.empty() && value != estr)
-				{
-					throw strus::runtime_error( _TXT("failed to extract entities: duplicate definition"));
-				}
-				value = estr;
+				value.append( estr);
 			break;
 		}
 	}
 	if (!id.empty() || !value.empty())
 	{
-		eset.insert( EntityDef( id, value));
+		eset.insert( EntityDef( strus::string_conv::trim(id), strus::string_conv::trim(value)));
 	}
 	return std::vector<EntityDef>( eset.begin(), eset.end());
 }
