@@ -87,18 +87,19 @@ static std::vector<EntityDef> extractReferencedEntities(
 	while (eseg->getNext( eid, pos, segment, segmentsize))
 	{
 		EntityIdType etype = (EntityIdType)(eid % NofEntityIdTypes);
-		std::string estr = strus::string_conv::trim( segment, segmentsize);
+		std::string estr = std::string( segment, segmentsize);
 		switch (etype)
 		{
 			case EntityIdGroup:
 				if (!id.empty() || !value.empty())
 				{
-					eset.insert( EntityDef( strus::string_conv::trim(id), strus::string_conv::trim(value)));
+					eset.insert( EntityDef( id, strus::string_conv::trim(value)));
 					id.clear();
 					value.clear();
 				}
 			break;
 			case EntityIdId:
+				estr = strus::string_conv::trim( estr);
 				if (estr.empty()) continue;
 				if (!id.empty() && id != estr)
 				{
@@ -114,7 +115,7 @@ static std::vector<EntityDef> extractReferencedEntities(
 	}
 	if (!id.empty() || !value.empty())
 	{
-		eset.insert( EntityDef( strus::string_conv::trim(id), strus::string_conv::trim(value)));
+		eset.insert( EntityDef( id, strus::string_conv::trim(value)));
 	}
 	return std::vector<EntityDef>( eset.begin(), eset.end());
 }
