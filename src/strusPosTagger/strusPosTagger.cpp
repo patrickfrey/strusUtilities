@@ -65,6 +65,29 @@ enum {NofEntityIdTypes=4};
 
 typedef std::pair<std::string,std::string> EntityDef;
 
+static std::string normalizeSpaces( const std::string& src)
+{
+	std::string rt;
+	char const* si = src.c_str();
+	for (; *si; ++si)
+	{
+		if ((unsigned char)*si <= 32)
+		{
+			if (rt.empty() || rt[ rt.size()-1] == ' ')
+			{}
+			else
+			{
+				rt.push_back( ' ');
+			}
+		}
+		else
+		{
+			rt.push_back( *si);
+		}
+	}
+	return rt;
+}
+
 static std::vector<EntityDef> extractReferencedEntities(
 		const strus::SegmenterInstanceInterface* entitySegmenter,
 		const strus::analyzer::DocumentClass& documentclass,
@@ -93,7 +116,7 @@ static std::vector<EntityDef> extractReferencedEntities(
 			case EntityIdGroup:
 				if (!id.empty() || !value.empty())
 				{
-					eset.insert( EntityDef( id, strus::string_conv::trim(value)));
+					eset.insert( EntityDef( id, normalizeSpaces(value)));
 					id.clear();
 					value.clear();
 				}
@@ -115,7 +138,7 @@ static std::vector<EntityDef> extractReferencedEntities(
 	}
 	if (!id.empty() || !value.empty())
 	{
-		eset.insert( EntityDef( id, strus::string_conv::trim(value)));
+		eset.insert( EntityDef( id, normalizeSpaces(value)));
 	}
 	return std::vector<EntityDef>( eset.begin(), eset.end());
 }
