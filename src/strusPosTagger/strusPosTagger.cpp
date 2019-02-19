@@ -242,6 +242,8 @@ static void writePosTaggerInput(
 				else
 				{
 					fout.open( outputFile.c_str(), std::ofstream::out);
+					if(fout.fail()) throw strus::runtime_error( _TXT("failed to open output file '%s': %s"), outputFile.c_str(), ::strerror(errno));
+					if(!fout.is_open()) throw strus::runtime_error( _TXT("could not open output file '%s': %s"), outputFile.c_str(), ::strerror(errno));
 					out = &fout;
 				}
 			}
