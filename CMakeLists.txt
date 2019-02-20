@@ -112,3 +112,4 @@ if(NOT STRUS_ALL)
 include( cmake/standard_targets.cmake )
 endif()
 
+
