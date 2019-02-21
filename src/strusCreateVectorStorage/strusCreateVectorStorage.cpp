@@ -42,6 +42,39 @@
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
 
+static void printVectorStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
+{
+	std::string configstr( config);
+	std::string dbname;
+	std::string storagename;
+	(void)strus::extractStringFromConfigString( dbname, configstr, "database", errorhnd);
+	if (!strus::extractStringFromConfigString( storagename, configstr, "storage", errorhnd))
+	{
+		storagename = strus::Constants::standard_vector_storage();
+		if (errorhnd->hasError()) throw strus::runtime_error("failed get vector space storage type from configuration");
+	}
+	if (errorhnd->hasError()) throw strus::runtime_error(_TXT("cannot evaluate database: %s"), errorhnd->fetchError());
+
+	strus::local_ptr<strus::StorageObjectBuilderInterface>
+		storageBuilder( moduleLoader->createStorageObjectBuilder());
+	if (!storageBuilder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
+
+	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
+	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
+	const strus::VectorStorageInterface* sti = storageBuilder->getVectorStorage( storagename);
+	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
+
+	std::string storageInfo = strus::string_format(  "storage=<type of storage (optional, default '%s')>", strus::Constants::standard_vector_storage());
+	strus::printIndentMultilineString(
+				out, 12, storageInfo.c_str(), errorhnd);
+	strus::printIndentMultilineString(
+				out, 12, dbi->getConfigDescription(
+					strus::DatabaseInterface::CmdCreate), errorhnd);
+	strus::printIndentMultilineString(
+				out, 12, sti->getConfigDescription(
+					strus::VectorStorageInterface::CmdCreate), errorhnd);
+}
+
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -210,7 +243,7 @@ int main( int argc, const char* argv[])
 			std::cout << "-s|--config <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector storage configuration string as <CONFIG>") << std::endl;
 			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
-			std::cout << "    " << _TXT("Select the vector storage type with the parameter 'storage'.") << std::endl;
+			printVectorStorageConfigOptions( std::cout, moduleLoader.get(), config, errorBuffer.get());
 			std::cout << "-S|--configfile <FILENAME>" << std::endl;
 			std::cout << "    " << _TXT("Define the vector storage configuration file as <FILENAME>") << std::endl;
 			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
