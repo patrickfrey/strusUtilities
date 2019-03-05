@@ -51,7 +51,8 @@
 
 
 static strus::ErrorBufferInterface* g_errorBuffer = 0;
-static float g_minSimilarity = 0.85;
+static double g_minSimilarity = 0.85;
+static double g_speedRecallFactor = 0.9;
 static bool g_withRealSimilarityMeasure = false;
 
 static void printVectorStorageConfigOptions( std::ostream& out, const strus::ModuleLoaderInterface* moduleLoader, const std::string& config, strus::ErrorBufferInterface* errorhnd)
@@ -272,7 +273,7 @@ static void inspectSimFeatSearch( strus::VectorStorageClientInterface* storage, 
 	{
 		startTime = getTimeStamp();
 	}
-	results = storage->findSimilar( restype, vec, maxNofRanks, g_minSimilarity, g_withRealSimilarityMeasure);
+	results = storage->findSimilar( restype, vec, maxNofRanks, g_minSimilarity, g_speedRecallFactor, g_withRealSimilarityMeasure);
 	if (doMeasureDuration)
 	{
 		double endTime = getTimeStamp();
