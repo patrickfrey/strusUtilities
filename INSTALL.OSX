@@ -26,7 +26,7 @@ brew install gettext
 brew link --force gettext
 echo 'export PATH="/usr/local/opt/gettext/bin:$PATH"' >> ~/.bash_profile
 
-# 4) If support for pattern matching is build (-DWITH_STRUS_PATTERN=YES), build and install hyperscan (tag v4.7.0) from source.
+# 4) If support for pattern matching is build (-DWITH_STRUS_PATTERN=YES), build and install hyperscan (tag v4.7.0, build with shared libs) from source.
 
 # 5) Build dependent strus packages
 # See installation of projects strusBase,strusAnalyzer,strusPattern (-DWITH_STRUS_PATTERN=YES), strusVector (-DWITH_STRUS_VECTOR=YES),strusRpc,strusTrace,strusModule
