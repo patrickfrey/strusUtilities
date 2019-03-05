@@ -446,12 +446,12 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 13,
+				errorBuffer.get(), argc, argv, 14,
 				"h,help", "v,version", "license",
 				"G,debug:", "m,module:", "M,moduledir:", "T,trace:",
 				"s,config:", "S,configfile:",
-				"D,time", "N,nofranks:", "Z,minsim:",
-				"X,realmeasure");
+				"D,time", "N,nofranks:",
+				"Z,minsim:", "Y,recall", "X,realmeasure");
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
@@ -627,6 +627,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Do measure duration of operation (only for search)") << std::endl;
 			std::cout << "-N|--nofranks <N>" << std::endl;
 			std::cout << "    " << _TXT("Limit the number of results to for searches to <N> (default 20)") << std::endl;
+			std::cout << "-Y|--recall <RC>" << std::endl;
+			std::cout << "    " << _TXT("Factor used for prunning candidates when comparing LSH samples") << std::endl;
+			std::cout << "    " << _TXT("(default 0.9)") << std::endl;
 			std::cout << "-Z|--minsim <SIM>" << std::endl;
 			std::cout << "    " << _TXT("Minimum similarity for vector search") << std::endl;
 			std::cout << "-X|--realmeasure" << std::endl;
@@ -653,6 +656,14 @@ int main( int argc, const char* argv[])
 			if (g_minSimilarity < 0.0 || g_minSimilarity >= 1.0)
 			{
 				throw strus::runtime_error( _TXT("value of option %s out of range"), "--minsim|-Z");
+			}
+		}
+		if (opt("recall"))
+		{
+			g_speedRecallFactor = opt.asDouble("recall");
+			if (g_speedRecallFactor < 0.0)
+			{
+				throw strus::runtime_error( _TXT("value of option %s out of range"), "--recall|-Z");
 			}
 		}
 		if (errorBuffer->hasError())
