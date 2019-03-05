@@ -36,6 +36,7 @@
 #include "strus/versionRpc.hpp"
 #include "strus/versionTrace.hpp"
 #include "strus/versionBase.hpp"
+#include "strus/constants.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/base/programOptions.hpp"
 #include "strus/base/cmdLineOpt.hpp"
@@ -383,7 +384,7 @@ int main( int argc, const char* argv[])
 			std::string cfgvalue;
 			if (!strus::extractStringFromConfigString( cfgvalue, configstr, "statsproc", errorBuffer.get()))
 			{
-				*ci = "statsproc=default;" + *ci;
+				*ci = strus::string_format("statsproc=%s;", strus::Constants::standard_statistics_processor()) + *ci;
 			}
 			strus::local_ptr<strus::StorageClientInterface>
 				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), *ci));
