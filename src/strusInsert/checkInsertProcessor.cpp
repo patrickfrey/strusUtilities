@@ -24,11 +24,11 @@
 #include "strus/base/local_ptr.hpp"
 #include "strus/base/shared_ptr.hpp"
 #include "strus/base/thread.hpp"
+#include "strus/base/math.hpp"
 #include "private/fileCrawlerInterface.hpp"
 #include "private/errorUtils.hpp"
 #include "private/documentAnalyzer.hpp"
 #include "private/internationalization.hpp"
-#include <cmath>
 #include <limits>
 #include <iostream>
 #include <stdarg.h>
@@ -264,16 +264,16 @@ void CheckInsertProcessor::run()
 								else switch (metadatatype[midx])
 								{
 									case strus::NumericVariant::Int:
-										if (val - std::floor( val) < std::numeric_limits<float>::epsilon())
+										if (val - strus::Math::floor( val) < std::numeric_limits<float>::epsilon())
 										{
 											if (val < 0.0)
 											{
-												strus::NumericVariant av( (int64_t)(std::floor( val - std::numeric_limits<float>::epsilon())));
+												strus::NumericVariant av( (int64_t)(strus::Math::floor( val - std::numeric_limits<float>::epsilon())));
 												storagedoc->setMetaData( mi->name(), av);
 											}
 											else
 											{
-												strus::NumericVariant av( (int64_t)(std::floor( val + std::numeric_limits<float>::epsilon())));
+												strus::NumericVariant av( (int64_t)(strus::Math::floor( val + std::numeric_limits<float>::epsilon())));
 												storagedoc->setMetaData( mi->name(), av);
 											}
 										}
@@ -283,10 +283,10 @@ void CheckInsertProcessor::run()
 										}
 										break;
 									case strus::NumericVariant::UInt:
-										if (val - std::floor( val) < std::numeric_limits<float>::epsilon()
+										if (val - strus::Math::floor( val) < std::numeric_limits<float>::epsilon()
 										|| (val + std::numeric_limits<float>::epsilon()) > 0.0)
 										{
-											strus::NumericVariant av( (uint64_t)(std::floor( val + std::numeric_limits<float>::epsilon())));
+											strus::NumericVariant av( (uint64_t)(strus::Math::floor( val + std::numeric_limits<float>::epsilon())));
 											storagedoc->setMetaData( mi->name(), av);
 										}
 										else

@@ -42,7 +42,6 @@
 #include <algorithm>
 #include <cstring>
 #include <stdexcept>
-#include <cmath>
 #include <ctime>
 #include <sys/time.h>
 #include <cerrno>
