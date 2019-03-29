@@ -306,6 +306,20 @@ static void inspectTypes( const strus::VectorStorageClientInterface* storage, co
 	printArray( storage->types());
 }
 
+// Inspect strus::VectorStorageClientInterface::nofTypes()
+static void inspectNofTypes( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize)
+{
+	if (inspectargsize > 0) throw std::runtime_error( _TXT("too many arguments (no arguments expected)"));
+	std::cout << storage->nofTypes() << std::endl;
+}
+
+// Inspect strus::VectorStorageClientInterface::nofValues()
+static void inspectNofValues( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize)
+{
+	if (inspectargsize > 0) throw std::runtime_error( _TXT("too many arguments (no arguments expected)"));
+	std::cout << storage->nofFeatures() << std::endl;
+}
+
 // Inspect strus::VectorStorageClientInterface::featureTypes()
 static void inspectFeatureTypes( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize)
 {
@@ -568,6 +582,11 @@ int main( int argc, const char* argv[])
 		{
 			std::cout << _TXT("usage:") << " strusInspectVectorStorage [options] <what...>" << std::endl;
 			std::cout << "<what>    : " << _TXT("what to inspect:") << std::endl;
+
+			std::cout << "            \"noftypes\"" << std::endl;
+			std::cout << "               = " << _TXT("Return the number of types defined in the storage.") << std::endl;
+			std::cout << "            \"nofvalues\"" << std::endl;
+			std::cout << "               = " << _TXT("Return the number of features defined in the storage.") << std::endl;
 			std::cout << "            \"types\"" << std::endl;
 			std::cout << "               = " << _TXT("Return feature types defined in the storage.") << std::endl;
 			std::cout << "            \"feattypes\" <featname>" << std::endl;
@@ -716,6 +735,14 @@ int main( int argc, const char* argv[])
 		if (strus::caseInsensitiveEquals( what, "types"))
 		{
 			inspectTypes( storage.get(), inspectarg, inspectargsize);
+		}
+		else if (strus::caseInsensitiveEquals( what, "noftypes"))
+		{
+			inspectNofTypes( storage.get(), inspectarg, inspectargsize);
+		}
+		else if (strus::caseInsensitiveEquals( what, "nofvalues"))
+		{
+			inspectNofValues( storage.get(), inspectarg, inspectargsize);
 		}
 		else if (strus::caseInsensitiveEquals( what, "feattypes"))
 		{
