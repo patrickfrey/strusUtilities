@@ -383,6 +383,7 @@ static void writePosTagging(
 		const strus::PosTaggerDataInterface* data,
 		const std::map<std::string,int>& filemap,
 		const std::string& outputpath,
+		const std::string& errorpath,
 		const strus::DocumentClassDetectorInterface* dclassdetector,
 		const strus::analyzer::DocumentClass& dclass,
 		const strus::PosTaggerInstanceInterface* postaggerinst,
@@ -421,7 +422,19 @@ static void writePosTagging(
 			{
 				const char* errormsg = g_errorBuffer->fetchError();
 				if (!errormsg) errormsg = "output empty";
-				throw strus::runtime_error(_TXT("failed to POS tag file '%s': %s"), ai->c_str(), errormsg);
+				if (!errorpath.empty())
+				{
+					ec = strus::appendFile( errorpath, strus::string_format(_TXT("File '%s': %s\n"), ai->c_str(), errormsg));
+					if (ec)
+					{
+						std::cerr << strus::string_format(_TXT("failed to append to error file '%s': %s"), errorpath.c_str(), ::strerror(ec)) << std::endl;
+						throw strus::runtime_error(_TXT("failed to POS tag file '%s': %s"), ai->c_str(), errormsg);
+					}
+				}
+				else
+				{
+					throw strus::runtime_error(_TXT("failed to POS tag file '%s': %s"), ai->c_str(), errormsg);
+				}
 			}
 			std::string outputfilename;
 			if (outputpath.empty())
@@ -530,17 +543,18 @@ public:
 			const strus::PosTaggerInstanceInterface* postaggerinst_,
 			const strus::PosTaggerDataInterface* data_,
 			const std::map<std::string,int>* filemap_,
-			const std::string& outputpath_)
+			const std::string& outputpath_,
+			const std::string& errorpath_)
 		:m_threadid(threadid_),m_crawler(crawler_),m_dclassdetector(dclassdetector_),m_dclass(dclass_)
 		,m_postaggerinst(postaggerinst_)
-		,m_data(data_),m_filemap(filemap_),m_outputpath(outputpath_)
+		,m_data(data_),m_filemap(filemap_),m_outputpath(outputpath_),m_errorpath(errorpath_)
 	{}
 
 	virtual void run()
 	{
 		try
 		{
-			writePosTagging( m_data, *m_filemap, m_outputpath, m_dclassdetector, m_dclass, m_postaggerinst, m_crawler);
+			writePosTagging( m_data, *m_filemap, m_outputpath, m_errorpath, m_dclassdetector, m_dclass, m_postaggerinst, m_crawler);
 		}
 		catch (const std::bad_alloc& err)
 		{
@@ -565,6 +579,7 @@ private:
 	const strus::PosTaggerDataInterface* m_data;
 	const std::map<std::string,int>* m_filemap;
 	std::string m_outputpath;
+	std::string m_errorpath;
 };
 
 static void declareIgnoreToken( strus::PosTaggerDataInterface* taggerdata, const strus::TokenizerFunctionInstanceInterface* tokenizer, const std::string& value)
@@ -599,14 +614,14 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 24,
+				errorBuffer.get(), argc, argv, 25,
 				"h,help", "v,version", "V,verbose",
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"g,segmenter:", "C,contenttype:", "x,extension:",
 				"e,contentexpr:", "X,entityexpr:", "E,spaceexpr:", "p,punctexpr:", "D,punctdelim:",
 				"I,posinp", "t,threads:", "f,fetch:",
-				"P,prefix:", "Y,entityprefix:", "o,output:");
+				"P,prefix:", "Y,entityprefix:", "o,output:", "F,erroutput:");
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
@@ -785,6 +800,9 @@ int main( int argc, const char* argv[])
 			std::cout << "-o|--output <PATH>" << std::endl;
 			std::cout << "    " << _TXT("Write output POS tagging output files to subdirectories of") << std::endl;
 			std::cout << "    " << _TXT("<PATH> or to stdout if '-' is specified") << std::endl;
+			std::cout << "-F|--erroutput <PATH>" << std::endl;
+			std::cout << "    " << _TXT("Write tagging errors to output file <PATH> instead of throwing an exception") << std::endl;
+			std::cout << "    " << _TXT("Use '-' for stderr.") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
@@ -805,6 +823,7 @@ int main( int argc, const char* argv[])
 		int fetchSize = opt( "fetch") ? opt.asUint( "fetch") : 100;
 		if (!fetchSize) fetchSize = 1;
 		std::string outputpath;
+		std::string erroutputpath;
 
 		enum Action {DoGenInput,DoGenOutput};
 		Action action = opt( "posinp") ? DoGenInput : DoGenOutput;
@@ -812,6 +831,11 @@ int main( int argc, const char* argv[])
 		{
 			if (action == DoGenInput) throw strus::runtime_error(_TXT("option -o|--output makes no sense with option -I"));
 			outputpath = opt[ "output"];
+		}
+		if (opt( "erroutput"))
+		{
+			if (action == DoGenInput) throw strus::runtime_error(_TXT("option -F|--erroutput makes no sense with option -I"));
+			erroutputpath = opt[ "erroutput"];
 		}
 		if (opt( "segmenter"))
 		{
@@ -1104,12 +1128,35 @@ int main( int argc, const char* argv[])
 				int ti = 0, te = threads ? threads : 1;
 				for (; ti != te; ++ti)
 				{
+					std::string errorpath;
+					if (!erroutputpath.empty())
+					{
+						if (threads)
+						{
+							const char* ee = std::strchr( erroutputpath.c_str(), '.');
+							if (ee)
+							{
+								errorpath.append( erroutputpath.c_str(), (ee-erroutputpath.c_str())+1);
+								errorpath.append( strus::string_format( "%d", ti));
+								errorpath.append( ee);
+							}
+							else
+							{
+								errorpath.append( erroutputpath);
+								errorpath.append( strus::string_format( ".%d.txt", ti));
+							}
+						}
+						else
+						{
+							errorpath = erroutputpath;
+						}
+					}
 					int threadid = threads ? (ti+1) : -1;
 					workers[ti].reset(
 						new PosOutputWorker(
 							threadid, fileCrawler.get(), documentClassDetector.get(),
 							documentClass, postagger.get(), posTagData.get(), &posTagDocnoMap,
-							outputpath));
+							outputpath, errorpath));
 				}
 				std::cerr << _TXT("Tagging documents with POS tagging results ...") << std::endl;
 				break;
