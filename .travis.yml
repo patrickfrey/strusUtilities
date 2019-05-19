@@ -6,11 +6,11 @@ matrix:
       compiler: clang
       env: STRUS_WITH_VECTOR=NO STRUS_WITH_PATTERN=NO
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: clang
       env: STRUS_WITH_VECTOR=NO STRUS_WITH_PATTERN=NO
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc
       env: STRUS_WITH_VECTOR=NO STRUS_WITH_PATTERN=NO
 # Thu Jan 19: strusVector is currently disabled for OSX, we still have building problems with armadillo there:
@@ -18,11 +18,11 @@ matrix:
       compiler: clang
       env: STRUS_WITH_VECTOR=NO STRUS_WITH_PATTERN=YES
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: clang
       env: STRUS_WITH_VECTOR=YES STRUS_WITH_PATTERN=YES
     - os: linux
-      dist: trusty
+      dist: xenial
       compiler: gcc
       env: STRUS_WITH_VECTOR=YES STRUS_WITH_PATTERN=YES
 
