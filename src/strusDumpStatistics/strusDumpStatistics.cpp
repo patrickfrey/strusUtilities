@@ -282,20 +282,17 @@ int main( int argc, const char* argv[])
 		{
 			throw strus::runtime_error( "%s",  _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
 		}
-		const void* msg;
-		std::size_t msgsize;
-		std::string output;
-
 		FILE* outfile = ::fopen( outputfile.c_str(), "ab");
 		if (!outfile) throw strus::runtime_error( _TXT( "error opening file '%s' for writing (errno %u)"), outputfile.c_str(), errno);
 
 		if (dumpBinary)
 		{
 			std::cerr << "Dumping statistics in binary format ..." << std::endl;
-			while (statsqueue->getNext( msg, msgsize))
+			strus::StatisticsMessage msg = statsqueue->getNext();
+			for (; !msg.empty(); msg = statsqueue->getNext())
 			{
-				std::size_t written = ::fwrite( msg, 1, msgsize, outfile);
-				if (written != msgsize)
+				std::size_t written = ::fwrite( msg.ptr(), 1, msg.size(), outfile);
+				if (written != msg.size())
 				{
 					throw strus::runtime_error( _TXT( "error writing global statistics to file '%s' (errno %u)"), outputfile.c_str(), errno);
 				}
@@ -307,10 +304,12 @@ int main( int argc, const char* argv[])
 
 			const strus::StatisticsProcessorInterface* statsproc = storage->getStatisticsProcessor();
 			long nofDocuments = 0;
-			while (statsqueue->getNext( msg, msgsize))
+			
+			strus::StatisticsMessage msg = statsqueue->getNext();
+			for (; !msg.empty(); msg = statsqueue->getNext())
 			{
 				char buf[ 4096];
-				strus::local_ptr<strus::StatisticsViewerInterface> viewer( statsproc->createViewer( msg, msgsize));
+				strus::local_ptr<strus::StatisticsViewerInterface> viewer( statsproc->createViewer( msg.ptr(), msg.size()));
 				if (!viewer.get()) throw strus::runtime_error( _TXT( "failed to create statistics viewer for block"));
 
 				nofDocuments += viewer->nofDocumentsInsertedChange();

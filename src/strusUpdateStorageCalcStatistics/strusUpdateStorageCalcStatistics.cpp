@@ -90,12 +90,11 @@ static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const
 	strus::Reference<strus::StatisticsIteratorInterface> statitr( storage->createAllStatisticsIterator());
 	if (!statitr.get()) throw std::runtime_error( _TXT("failed to initialize statistics iterator"));
 	collectionSize += storage->nofDocumentsInserted();
-	const void* statmsg;
-	std::size_t statmsgsize;
-	while (statitr->getNext( statmsg, statmsgsize))
+
+	strus::StatisticsMessage msg = statitr->getNext();
+	for (; !msg.empty(); msg = statitr->getNext())
 	{
-		strus::Reference<strus::StatisticsViewerInterface>
-			viewer( statproc->createViewer( statmsg, statmsgsize));
+		strus::Reference<strus::StatisticsViewerInterface> viewer( statproc->createViewer( msg.ptr(), msg.size()));
 		if (!viewer.get()) throw std::runtime_error( _TXT("failed to statistics viewer"));
 
 		strus::TermStatisticsChange dfchg;
