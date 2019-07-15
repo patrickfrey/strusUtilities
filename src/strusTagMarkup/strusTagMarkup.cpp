@@ -125,8 +125,26 @@ struct MapFormat
 };
 
 
-class TagAttributeMarkupCount:
-	public strus::TagAttributeMarkupInterface
+class TagAttributeMarkupDelete
+	:public strus::TagAttributeMarkupInterface
+{
+public:
+	explicit TagAttributeMarkupDelete( const std::string& attributename_)
+		:m_attributename(attributename_)
+	{}
+	virtual ~TagAttributeMarkupDelete(){}
+
+	virtual strus::analyzer::DocumentAttribute synthesizeAttribute( const std::string& tagname, const std::vector<strus::analyzer::DocumentAttribute>& attributes) const
+	{
+		return strus::analyzer::DocumentAttribute( m_attributename, std::string());
+	}
+private:
+	std::string m_attributename;
+};
+
+
+class TagAttributeMarkupCount
+	:public strus::TagAttributeMarkupInterface
 {
 public:
 	explicit TagAttributeMarkupCount( const std::string& attributename_, const std::string& parameter, int instanceidx, int nofinstances)
@@ -157,8 +175,8 @@ private:
 	int m_incr;
 };
 
-class TagAttributeMarkupMap:
-	public strus::TagAttributeMarkupInterface
+class TagAttributeMarkupMap
+	:public strus::TagAttributeMarkupInterface
 {
 public:
 	explicit TagAttributeMarkupMap( const strus::TextProcessorInterface* textproc, const std::string& attributename_, const std::string& parameter, int instanceidx, int nofinstances)
@@ -386,12 +404,12 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 18,
+				errorBuffer.get(), argc, argv, 19,
 				"h,help", "v,version", "V,verbose",
 				"license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
 				"C,contenttype:", "x,extension:",
-				"e,expression:", "a,attribute:", "k,markup:", "P,parameter:",
+				"e,expression:", "d,delete:", "a,attribute:", "k,markup:", "P,parameter:",
 				"t,threads:", "f,fetch:");
 		if (errorBuffer->hasError())
 		{
@@ -528,6 +546,9 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select the tags to add attributes to.") << std::endl;
 			std::cout << "    " << _TXT("This option is mandatory.") << std::endl;
+			std::cout << "-d|--delete <XPATH>" << std::endl;
+			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
+			std::cout << "    " << _TXT("to select the tags to remove all id attributes from.") << std::endl;
 			std::cout << "-a|--attribute <NAME>" << std::endl;
 			std::cout << "    " << _TXT("Use <NAME> as the name of attribute added to the selected tags.") << std::endl;
 			std::cout << "    " << _TXT("If not specified, 'id'' is used.") << std::endl;
@@ -551,6 +572,7 @@ int main( int argc, const char* argv[])
 		std::string contenttype;
 		std::string fileext;
 		std::vector<std::string> expressions;
+		std::vector<std::string> deletes;
 		std::string attribute = "id";
 		std::string markup = "count";
 		std::string parameter;
@@ -572,6 +594,10 @@ int main( int argc, const char* argv[])
 		if (opt( "expression"))
 		{
 			expressions = opt.list( "expression");
+		}
+		if (opt( "delete"))
+		{
+			deletes = opt.list( "delete");
 		}
 		if (opt( "attribute"))
 		{
@@ -695,9 +721,9 @@ int main( int argc, const char* argv[])
 		if (!documentClassDetector.get()) throw std::runtime_error( errorBuffer->fetchError());
 
 		// Define entity expression segmenter if selector expressions for entities are defined:
-		if (expressions.empty())
+		if (expressions.empty() && deletes.empty())
 		{
-			throw std::runtime_error( _TXT("not expressions specified, option -e|--expression is mandatory"));
+			throw std::runtime_error( _TXT("not expressions specified, at least one option -e|--expression or -d|--delete is mandatory"));
 		}
 
 		int nofInstances = threads ? threads : 1;
@@ -725,6 +751,15 @@ int main( int argc, const char* argv[])
 			for (int eidx=1; ei != ee; ++ei,++eidx)
 			{
 				markupDefInstanceAr.back().push_back( strus::DocumentTagMarkupDef( hnd, *ei));
+			}
+			if (!deletes.empty())
+			{
+				strus::Reference<strus::TagAttributeMarkupInterface> delh( new TagAttributeMarkupDelete( attribute));
+				std::vector<std::string>::const_iterator di = deletes.begin(), de = deletes.end();
+				for (int didx=1; di != de; ++di,++didx)
+				{
+					markupDefInstanceAr.back().push_back( strus::DocumentTagMarkupDef( delh, *di));
+				}
 			}
 		}
 
