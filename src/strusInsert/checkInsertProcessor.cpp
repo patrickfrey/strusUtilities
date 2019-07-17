@@ -136,7 +136,7 @@ void CheckInsertProcessor::run()
 					}
 					else
 					{
-						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
+						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' schema '%s'"), dclass.mimeType().c_str(), dclass.schema().c_str()) << std::endl; 
 						continue;
 					}
 					if (!analyzerContext.get()) throw std::runtime_error( _TXT("error creating analyzer context"));

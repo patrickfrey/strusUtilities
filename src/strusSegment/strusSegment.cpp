@@ -334,9 +334,9 @@ int main( int argc, const char* argv[])
 		{
 			segmenterType = textproc->getSegmenterByMimeType( documentClass.mimeType());
 			if (!segmenterType) throw strus::runtime_error(_TXT("failed to find document segmenter specified by MIME type '%s'"), documentClass.mimeType().c_str());
-			if (!documentClass.scheme().empty())
+			if (!documentClass.schema().empty())
 			{
-				segmenteropts = textproc->getSegmenterOptions( documentClass.scheme());
+				segmenteropts = textproc->getSegmenterOptions( documentClass.schema());
 			}
 		}
 		else

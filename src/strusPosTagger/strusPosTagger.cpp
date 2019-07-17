@@ -999,9 +999,9 @@ int main( int argc, const char* argv[])
 			if (documentClass.defined())
 			{
 				segmenter = textproc->getSegmenterByMimeType( documentClass.mimeType());
-				if (!documentClass.scheme().empty())
+				if (!documentClass.schema().empty())
 				{
-					segmenterOpts = textproc->getSegmenterOptions( documentClass.scheme());
+					segmenterOpts = textproc->getSegmenterOptions( documentClass.schema());
 				}
 			}
 			else if (strus::caseInsensitiveEquals( fileext, ".xml"))

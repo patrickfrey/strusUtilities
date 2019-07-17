@@ -42,7 +42,7 @@ DocumentAnalyzer::DocumentAnalyzer(
 		}
 		else if (documentClass.defined())
 		{
-			segmenterOpts = textproc->getSegmenterOptions( documentClass.scheme());
+			segmenterOpts = textproc->getSegmenterOptions( documentClass.schema());
 			const SegmenterInterface* segmenter = textproc->getSegmenterByMimeType( documentClass.mimeType());
 			analyzerinst.reset( builder->createDocumentAnalyzer( segmenter, segmenterOpts));
 			if (!analyzerinst.get()
@@ -83,7 +83,7 @@ const DocumentAnalyzerInstanceInterface* DocumentAnalyzer::get(
 	}
 	else
 	{
-		return analyzermap->getAnalyzer( dclass.mimeType(), dclass.scheme());
+		return analyzermap->getAnalyzer( dclass.mimeType(), dclass.schema());
 	}
 }
 
@@ -109,7 +109,7 @@ void DocumentAnalyzer::addAnalyzerMap( const char* segmenterName, const Analyzer
 	}
 	else
 	{
-		analyzermap->addAnalyzer( mimeType, ""/*scheme*/, ana.get());
+		analyzermap->addAnalyzer( mimeType, ""/*schema*/, ana.get());
 	}
 	ana.release();
 }

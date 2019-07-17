@@ -236,7 +236,7 @@ static void analyzeDocument(
 	const strus::DocumentAnalyzerInstanceInterface* analyzer = analyzerMap.get( documentClass);
 	if (!analyzer)
 	{
-		throw strus::runtime_error( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), documentClass.mimeType().c_str(), documentClass.scheme().c_str()); 
+		throw strus::runtime_error( _TXT( "no analyzer defined for document class with MIME type '%s' schema '%s'"), documentClass.mimeType().c_str(), documentClass.schema().c_str()); 
 	}
 	strus::local_ptr<strus::DocumentAnalyzerContextInterface>
 		analyzerContext( analyzer->createContext( documentClass));

@@ -157,7 +157,7 @@ void KeyMapGenProcessor::run()
 					const strus::DocumentAnalyzerInstanceInterface* analyzer = m_analyzerMap->get( dclass);
 					if (!analyzer)
 					{
-						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' scheme '%s'"), dclass.mimeType().c_str(), dclass.scheme().c_str()) << std::endl; 
+						std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' schema '%s'"), dclass.mimeType().c_str(), dclass.schema().c_str()) << std::endl; 
 						continue;
 					}
 					analyzerContext.reset( analyzer->createContext( dclass));
