@@ -675,8 +675,13 @@ int main( int argc, const char* argv[])
 				throw std::runtime_error( _TXT("failed to parse document class"));
 			}
 		}
+		bool docpathIsFile = docpath == "-" || strus::isFile( docpath);
+		if (!docpathIsFile && !strus::isDir( docpath))
+		{
+			throw strus::runtime_error( _TXT("input file/directory '%s' does not exist"), docpath.c_str());
+		}
 		// Detect document content type if not explicitely defined:
-		if (!documentClass.defined() && strus::isFile( docpath))
+		if (!documentClass.defined() && docpathIsFile)
 		{
 			strus::InputStream input( docpath);
 			char hdrbuf[ 4096];
@@ -694,7 +699,7 @@ int main( int argc, const char* argv[])
 		strus::DocumentAnalyzer analyzerMap( analyzerBuilder.get(), documentClass, segmenterName, programFileName, errorBuffer.get());
 
 		// Do analyze document(s):
-		if (strus::isFile( docpath) || docpath == "-")
+		if (docpathIsFile)
 		{
 			analyzeDocument( analyzerMap, textproc, documentClass, docpath, doDump, uniqueDump, dumpConfig);
 			if (errorBuffer->hasError())
