@@ -283,7 +283,7 @@ int main( int argc, const char* argv[])
 		const strus::TextProcessorInterface* textproc = analyzerBuilder->getTextProcessor();
 		if (!textproc) throw std::runtime_error( _TXT("failed to get text processor"));
 
-		std::string analyzerConfig = strus::string_format( "[Element]\nfeature = %s %s text", normalizer.c_str(), tokenizer.c_str());
+		std::string analyzerConfig = strus::string_format( "[Element]\nfeature = %s %s text;", normalizer.c_str(), tokenizer.c_str());
 		// Create phrase type (tokenizer and normalizer):
 		if (!strus::load_QueryAnalyzer_program_std( analyzer.get(), textproc, analyzerConfig, errorBuffer.get()))
 		{
