@@ -312,7 +312,7 @@ int main( int argc, const char* argv[])
 		strus::local_ptr<strus::QueryAnalyzerContextInterface> qryanactx( analyzer->createContext());
 		if (!qryanactx.get()) throw std::runtime_error( _TXT("failed to create query analyzer context"));
 	
-		qryanactx->putField( 1, "", phrasestring);
+		qryanactx->putField( 1, "text", phrasestring);
 		strus::analyzer::QueryTermExpression qry = qryanactx->analyze();
 		if (errorBuffer->hasError()) throw std::runtime_error( _TXT("query analysis failed"));
 		std::vector<strus::analyzer::QueryTerm> terms;
