@@ -272,9 +272,9 @@ public:
 		return strus::QueryResult();
 	}
 
-	virtual std::string tostring() const
+	virtual strus::StructView view() const
 	{
-		return std::string();
+		return strus::StructView();
 	}
 
 	void check() const

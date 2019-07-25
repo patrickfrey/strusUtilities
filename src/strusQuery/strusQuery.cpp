@@ -502,7 +502,7 @@ int main( int argc_, const char* argv_[])
 			if (verbose)
 			{
 				std::cerr << "Query:" << std::endl;
-				std::cerr << query->tostring() << std::endl;
+				std::cerr << query->view().tostring() << std::endl;
 			}
 			strus::QueryResult result = query->evaluate();
 
