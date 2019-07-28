@@ -36,7 +36,7 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "strus/functionDescription.hpp"
+#include "strus/structView.hpp"
 #include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
@@ -151,28 +151,6 @@ static void print_function_description( std::ostream& out, const std::string& na
 	}
 }
 
-static void print_parameter_description( std::ostream& out, const std::string& name, const std::string& type, const std::string& domain, const std::string& text)
-{
-	if (g_html_output)
-	{
-		out << "<li><b>" << name << "</b>&nbsp;&nbsp;[" << type << "]&nbsp;&nbsp;";
-		if (!domain.empty())
-		{
-			out << "(" << domain << ")&nbsp;&nbsp;";
-		}
-		out << text << "</li>" << std::endl;
-	}
-	else
-	{
-		out << "\t" << name << " [" << type << "] ";
-		if (!domain.empty())
-		{
-			out << "(" << domain << ") ";
-		}
-		out << text << std::endl;
-	}
-}
-
 static void printTextProcessorDescription( std::ostream& out, const strus::TextProcessorInterface* textproc, strus::TextProcessorInterface::FunctionType type, const char* name)
 {
 	const char* label = "";
@@ -261,26 +239,77 @@ static void printTextProcessorDescription( std::ostream& out, const strus::TextP
 	}
 }
 
-static const char* functionDescriptionParameterTypeName( strus::FunctionDescription::Parameter::Type type_)
+static void printStructView( std::ostream& out, const strus::StructView& descr, std::size_t indent=0)
 {
-	static const char* ar[] = {"Feature","Attribute","Metadata","Numeric","String"};
-	return ar[ (unsigned int)type_];
-}
-
-static void printFunctionDescription( std::ostream& out, const std::string& label, const std::string& name, const strus::FunctionDescription& descr)
-{
-	typedef strus::FunctionDescription::Parameter Param;
-	std::ostringstream descrout;
-
-	descrout << descr.text() << std::endl;
-	print_startlist( descrout, _TXT("List of parameters"));
-	std::vector<Param>::const_iterator pi = descr.parameter().begin(), pe = descr.parameter().end();
-	for (; pi != pe; ++pi)
+	switch (descr.type())
 	{
-		print_parameter_description( descrout, pi->name(), functionDescriptionParameterTypeName( pi->type()), pi->domain(), pi->text());
+		case strus::StructView::Null:
+			out << std::string( indent*2, ' ') << "Null";
+			break;
+		case strus::StructView::String:
+			out << descr.asstring();
+			break;
+		case strus::StructView::Numeric:
+			out << descr.tostring();
+			break;
+		case strus::StructView::Structure:
+			if (descr.isArray())
+			{
+				if (g_html_output)
+				{
+					std::size_t ai = 0, ae = descr.arraySize();
+					if (ae)
+					{
+						out << "\n" << std::string( indent*2, ' ') << "<ul>";
+						for (; ai != ae; ++ai)
+						{
+							out << "\n" << std::string( indent*2, ' ') << "<li>";
+							printStructView( out, *descr.get(ai), indent+1);
+							out << "\n" << std::string( indent*2, ' ') << "</li>";
+						}
+						out << "\n" << std::string( indent*2, ' ') << "</ul>";
+					}
+				}
+				else
+				{
+					std::size_t ai = 0, ae = descr.arraySize();
+					for (; ai != ae; ++ai)
+					{
+						out << "\n" << std::string( indent*2, ' ') << "* ";
+						printStructView( out, *descr.get(ai), indent+1);
+					}
+				}
+			}
+			else
+			{
+				if (g_html_output)
+				{
+					strus::StructView::dict_iterator di = descr.dict_begin(), de = descr.dict_end();
+					if (di != de)
+					{
+						out << "<ul>";
+						for (; di != de; ++di)
+						{
+							out << "<li><b>" << di->first << "</b>&nbsp;&nbsp;";
+							printStructView( out, di->second, indent+1);
+							out << "</li>";
+						}
+						out << "</ul>";
+					}
+				}
+				else
+				{
+					strus::StructView::dict_iterator di = descr.dict_begin(), de = descr.dict_end();
+					for (; di != de; ++di)
+					{
+						out << "\n" << std::string( indent*2, ' ');
+						out << di->first << ":  ";
+						printStructView( out, di->second, indent+1);
+					}
+				}
+			}
+			break;
 	}
-	print_endlist( descrout);
-	print_function_description( out, name, descrout.str());
 }
 
 static void printQueryProcessorDescription( std::ostream& out, const strus::QueryProcessorInterface* queryproc, strus::QueryProcessorInterface::FunctionType type, const char* name)
@@ -317,19 +346,31 @@ static void printQueryProcessorDescription( std::ostream& out, const strus::Quer
 			case strus::QueryProcessorInterface::PostingJoinOperator:
 			{
 				const strus::PostingJoinOperatorInterface* opr = queryproc->getPostingJoinOperator( *fi);
-				print_function_description( out, *fi, opr->getDescription().text());
+				if (opr)
+				{
+					printStructView( out, opr->view());
+					out << std::endl;
+				}
 				break;
 			}
 			case strus::QueryProcessorInterface::WeightingFunction: 
 			{
 				const strus::WeightingFunctionInterface* func = queryproc->getWeightingFunction( *fi);
-				if (func) printFunctionDescription( out, label, *fi, func->getDescription());
+				if (func)
+				{
+					printStructView( out, func->view());
+					out << std::endl;
+				}
 				break;
 			}
 			case strus::QueryProcessorInterface::SummarizerFunction:
 			{
 				const strus::SummarizerFunctionInterface* func = queryproc->getSummarizerFunction( *fi);
-				if (func) printFunctionDescription( out, label, *fi, func->getDescription());
+				if (func)
+				{
+					printStructView( out, func->view());
+					out << std::endl;
+				}
 				break;
 			}
 			case strus::QueryProcessorInterface::ScalarFunctionParser:
@@ -337,11 +378,8 @@ static void printQueryProcessorDescription( std::ostream& out, const strus::Quer
 				const strus::ScalarFunctionParserInterface* func = queryproc->getScalarFunctionParser( *fi);
 				if (func)
 				{
-					const char* descr = func->getDescription();
-					if (descr && *descr)
-					{
-						print_function_description( out, *fi, descr);
-					}
+					printStructView( out, func->view());
+					out << std::endl;
 				}
 				break;
 			}
