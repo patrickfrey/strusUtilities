@@ -139,106 +139,6 @@ static void print_endlist( std::ostream& out)
 	}
 }
 
-static void print_function_description( std::ostream& out, const std::string& name, const std::string& descr)
-{
-	if (g_html_output)
-	{
-		out << "<li><b>" << name << "</b>&nbsp;&nbsp;&nbsp;&nbsp;" << descr << "</li>" << std::endl;
-	}
-	else
-	{
-		out << "[" << name << "]" << std::endl << "  " << descr << std::endl;
-	}
-}
-
-static void printTextProcessorDescription( std::ostream& out, const strus::TextProcessorInterface* textproc, strus::TextProcessorInterface::FunctionType type, const char* name)
-{
-	const char* label = "";
-	const char* label_descr = "";
-	switch (type)
-	{
-		case strus::TextProcessorInterface::Segmenter: label = _TXT("Segmenter"); label_descr = _TXT("list of segmenters"); break;
-		case strus::TextProcessorInterface::TokenizerFunction: label = _TXT("Tokenizer"); label_descr = _TXT("list of functions for tokenization"); break;
-		case strus::TextProcessorInterface::NormalizerFunction: label = _TXT("Normalizer"); label_descr = _TXT("list of functions for token normalization"); break;
-		case strus::TextProcessorInterface::AggregatorFunction: label = _TXT("Aggregator"); label_descr = _TXT("list of functions for aggregating values after document analysis, e.g. counting of words"); break;
-		case strus::TextProcessorInterface::PatternLexer: label = _TXT("PatternLexer"); label_descr = _TXT("list of lexers for pattern matching"); break;
-		case strus::TextProcessorInterface::PatternMatcher: label = _TXT("PatternMatcher"); label_descr = _TXT("list of modules for pattern matching"); break;
-	};
-	std::vector<std::string> funcs;
-	std::vector<std::string>::const_iterator fi,fe;
-	if (name)
-	{
-		funcs.push_back( name);
-	}
-	else
-	{
-		funcs = textproc->getFunctionList( type);
-	}
-	if (!funcs.empty())
-	{
-		print_subtitle( out, label, label_descr);
-		print_startlist( out, 0);
-	}
-	fi = funcs.begin(), fe = funcs.end();
-	for (; fi != fe; ++fi)
-	{
-		const char* descr = 0;
-		switch (type)
-		{
-			case strus::TextProcessorInterface::Segmenter:
-			{
-				const strus::SegmenterInterface* func = textproc->getSegmenterByName( *fi);
-				if (!func) break;
-				descr = func->getDescription();
-				break;
-			}
-			case strus::TextProcessorInterface::TokenizerFunction:
-			{
-				const strus::TokenizerFunctionInterface* func = textproc->getTokenizer( *fi);
-				if (!func) break;
-				descr = func->getDescription();
-				break;
-			}
-			case strus::TextProcessorInterface::NormalizerFunction:
-			{
-				const strus::NormalizerFunctionInterface* func = textproc->getNormalizer( *fi);
-				if (!func) break;
-				descr = func->getDescription();
-				break;
-			}
-			case strus::TextProcessorInterface::AggregatorFunction:
-			{
-				const strus::AggregatorFunctionInterface* func = textproc->getAggregator( *fi);
-				if (!func) break;
-				descr = func->getDescription();
-				break;
-			}
-			case strus::TextProcessorInterface::PatternLexer:
-			{
-				const strus::PatternLexerInterface* func = textproc->getPatternLexer( *fi);
-				if (!func) break;
-				descr = func->getDescription();
-				break;
-			}
-			case strus::TextProcessorInterface::PatternMatcher:
-			{
-				const strus::PatternMatcherInterface* func = textproc->getPatternMatcher( *fi);
-				if (!func) break;
-				descr = func->getDescription();
-				break;
-			}
-		};
-		if (descr && *descr)
-		{
-			print_function_description( out, *fi, descr);
-		}
-	}
-	if (!funcs.empty())
-	{
-		print_endlist( out);
-	}
-}
-
 static void printStructView( std::ostream& out, const strus::StructView& descr, std::size_t indent=0)
 {
 	switch (descr.type())
@@ -309,6 +209,95 @@ static void printStructView( std::ostream& out, const strus::StructView& descr, 
 				}
 			}
 			break;
+	}
+}
+
+static void printTextProcessorDescription( std::ostream& out, const strus::TextProcessorInterface* textproc, strus::TextProcessorInterface::FunctionType type, const char* name)
+{
+	const char* label = "";
+	const char* label_descr = "";
+	switch (type)
+	{
+		case strus::TextProcessorInterface::Segmenter: label = _TXT("Segmenter"); label_descr = _TXT("list of segmenters"); break;
+		case strus::TextProcessorInterface::TokenizerFunction: label = _TXT("Tokenizer"); label_descr = _TXT("list of functions for tokenization"); break;
+		case strus::TextProcessorInterface::NormalizerFunction: label = _TXT("Normalizer"); label_descr = _TXT("list of functions for token normalization"); break;
+		case strus::TextProcessorInterface::AggregatorFunction: label = _TXT("Aggregator"); label_descr = _TXT("list of functions for aggregating values after document analysis, e.g. counting of words"); break;
+		case strus::TextProcessorInterface::PatternLexer: label = _TXT("PatternLexer"); label_descr = _TXT("list of lexers for pattern matching"); break;
+		case strus::TextProcessorInterface::PatternMatcher: label = _TXT("PatternMatcher"); label_descr = _TXT("list of modules for pattern matching"); break;
+	};
+	std::vector<std::string> funcs;
+	std::vector<std::string>::const_iterator fi,fe;
+	if (name)
+	{
+		funcs.push_back( name);
+	}
+	else
+	{
+		funcs = textproc->getFunctionList( type);
+	}
+	if (!funcs.empty())
+	{
+		print_subtitle( out, label, label_descr);
+		print_startlist( out, 0);
+	}
+	fi = funcs.begin(), fe = funcs.end();
+	for (; fi != fe; ++fi)
+	{
+		switch (type)
+		{
+			case strus::TextProcessorInterface::Segmenter:
+			{
+				const strus::SegmenterInterface* func = textproc->getSegmenterByName( *fi);
+				if (!func) break;
+				printStructView( out, func->view());
+				out << std::endl;
+				break;
+			}
+			case strus::TextProcessorInterface::TokenizerFunction:
+			{
+				const strus::TokenizerFunctionInterface* func = textproc->getTokenizer( *fi);
+				if (!func) break;
+				printStructView( out, func->view());
+				out << std::endl;
+				break;
+			}
+			case strus::TextProcessorInterface::NormalizerFunction:
+			{
+				const strus::NormalizerFunctionInterface* func = textproc->getNormalizer( *fi);
+				if (!func) break;
+				printStructView( out, func->view());
+				out << std::endl;
+				break;
+			}
+			case strus::TextProcessorInterface::AggregatorFunction:
+			{
+				const strus::AggregatorFunctionInterface* func = textproc->getAggregator( *fi);
+				if (!func) break;
+				printStructView( out, func->view());
+				out << std::endl;
+				break;
+			}
+			case strus::TextProcessorInterface::PatternLexer:
+			{
+				const strus::PatternLexerInterface* func = textproc->getPatternLexer( *fi);
+				if (!func) break;
+				printStructView( out, func->view());
+				out << std::endl;
+				break;
+			}
+			case strus::TextProcessorInterface::PatternMatcher:
+			{
+				const strus::PatternMatcherInterface* func = textproc->getPatternMatcher( *fi);
+				if (!func) break;
+				printStructView( out, func->view());
+				out << std::endl;
+				break;
+			}
+		};
+	}
+	if (!funcs.empty())
+	{
+		print_endlist( out);
 	}
 }
 
