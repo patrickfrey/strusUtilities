@@ -26,7 +26,7 @@ each of these flags toggled to YES another section.
 	snappy-dev leveldb-dev libuv-dev
 
 ## Required packages with -DWITH_STRUS_PATTERN=YES
-	ragel libtre-dev boost-all >= 1.57 hyperscan >= 4.7
+	ragel libtre-dev boost-all >= 1.57 hyperscan >= 5.1
 
 ### Install hyperscan from sources
 	git clone https://github.com/intel/hyperscan.git

@@ -113,6 +113,7 @@ if test "x$STRUS_WITH_PATTERN" = "xYES"; then
 	# install hyperscan
 	git clone https://github.com/intel/hyperscan.git
 	cd hyperscan
+	git checkout tags/v5.1.1
 	build_dep_project "-DBUILD_SHARED_LIBS=1"
 	cd ..
 
