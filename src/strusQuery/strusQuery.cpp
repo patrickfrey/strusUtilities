@@ -493,8 +493,6 @@ int main( int argc_, const char* argv_[])
 			{
 				query->setDebugMode( true);
 			}
-			query->setMaxNofRanks( nofRanks);
-			query->setMinRank( firstRank);
 			if (!username.empty())
 			{
 				query->addAccess( username);
@@ -504,8 +502,7 @@ int main( int argc_, const char* argv_[])
 				std::cerr << "Query:" << std::endl;
 				std::cerr << query->view().tostring() << std::endl;
 			}
-			strus::QueryResult result = query->evaluate();
-
+			strus::QueryResult result = query->evaluate( firstRank, nofRanks);
 			if (!quiet)
 			{
 				std::cout << strus::string_format( _TXT("evaluated till pass %u, got %u ranks (%u without restrictions applied):"), result.evaluationPass(), result.nofRanked(), result.nofVisited()) << std::endl;

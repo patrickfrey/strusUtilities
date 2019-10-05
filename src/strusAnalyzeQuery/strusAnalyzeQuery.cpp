@@ -85,7 +85,7 @@ class Query
 {
 public:
 	Query()
-		:m_maxNofRanks(20),m_minRank(0),m_evalset_defined(false){}
+		:m_evalset_defined(false){}
 
 	virtual ~Query(){}
 
@@ -229,22 +229,6 @@ public:
 		m_globstats = stats_;
 	}
 
-	virtual void setMaxNofRanks( std::size_t maxNofRanks_)
-	{
-#ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::string_format( _TXT("called setMaxNofRanks %u"), (unsigned int)maxNofRanks_) << std::endl;
-#endif
-		m_maxNofRanks = maxNofRanks_;
-	}
-
-	virtual void setMinRank( std::size_t minRank_)
-	{
-#ifdef STRUS_LOWLEVEL_DEBUG
-		std::cerr << strus::string_format( _TXT( "called setMinRank %u"), (unsigned int)minRank_) << std::endl;
-#endif
-		m_minRank = minRank_;
-	}
-
 	virtual void addAccess( const std::string& username_)
 	{
 #ifdef STRUS_LOWLEVEL_DEBUG
@@ -267,7 +251,7 @@ public:
 #endif
 	}
 
-	virtual strus::QueryResult evaluate() const
+	virtual strus::QueryResult evaluate( int minRank, int maxNofRanks) const
 	{
 		return strus::QueryResult();
 	}
@@ -522,8 +506,6 @@ private:
 	std::map<int, std::string> m_variables;
 	std::vector<Feature> m_features;
 	std::vector<Restriction> m_restrictions;
-	std::size_t m_maxNofRanks;
-	std::size_t m_minRank;
 	std::vector<std::string> m_users;
 	std::vector<strus::Index> m_evalset_docnolist;
 	strus::GlobalStatistics m_globstats;
