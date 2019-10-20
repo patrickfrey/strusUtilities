@@ -14,7 +14,7 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/storageAlterMetaDataTableInterface.hpp"
+#include "strus/storageMetaDataTransactionInterface.hpp"
 #include "strus/versionBase.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -383,7 +383,7 @@ int main( int argc, const char* argv[])
 
 		// Create objects for altering the meta data table:
 		strus::local_ptr<strus::StorageObjectBuilderInterface> builder;
-		strus::local_ptr<strus::StorageAlterMetaDataTableInterface> md;
+		strus::local_ptr<strus::StorageMetaDataTransactionInterface> md;
 
 		builder.reset( moduleLoader->createStorageObjectBuilder());
 		if (!builder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
@@ -397,7 +397,8 @@ int main( int argc, const char* argv[])
 			builder.reset( builderproxy);
 		}
 
-		md.reset( strus::createAlterMetaDataTable( builder.get(), errorBuffer.get(), storagecfg));
+		strus::local_ptr<strus::StorageClientInterface> storage( strus::createStorageClient( builder.get(), errorBuffer.get(), storagecfg));		
+		md.reset( storage->createMetaDataTransaction());
 		if (!md.get()) throw std::runtime_error( _TXT("failed to create storage alter metadata table structure"));
 
 		// Execute alter meta data table commands:

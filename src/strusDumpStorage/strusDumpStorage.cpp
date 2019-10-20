@@ -311,9 +311,10 @@ int main( int argc, const char* argv[])
 			const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 			if (!dbi) throw std::runtime_error( _TXT("failed to get storage database interface"));
 			const strus::StorageInterface* sti = storageBuilder->getStorage();
-			if (!sti) throw std::runtime_error( _TXT("failed to get storage client"));
-
-			strus::local_ptr<strus::StorageDumpInterface> dump( sti->createDump( storagecfg, dbi, keyprefix));
+			if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
+			strus::Reference<strus::StorageClientInterface> cli( sti->createClient( storagecfg, dbi));
+			if (!cli.get()) throw std::runtime_error( _TXT("failed to create storage client"));
+			strus::local_ptr<strus::StorageDumpInterface> dump( cli->createDump( keyprefix));
 			if (!dump.get()) throw std::runtime_error( _TXT("could not create storage dump interface"));
 
 			const char* buf;
