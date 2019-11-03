@@ -14,7 +14,8 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/storageMetaDataTransactionInterface.hpp"
+#include "strus/storageMetaDataTableUpdateInterface.hpp"
+#include "strus/storageTransactionInterface.hpp"
 #include "strus/versionBase.hpp"
 #include "strus/versionStorage.hpp"
 #include "strus/versionModule.hpp"
@@ -32,6 +33,7 @@
 #include "strus/base/string_format.hpp"
 #include "strus/base/string_conv.hpp"
 #include "strus/base/local_ptr.hpp"
+#include "strus/base/fileio.hpp"
 #include "private/traceUtils.hpp"
 #include <iostream>
 #include <cstring>
@@ -186,7 +188,7 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 		{
 			break;
 		}
-		else if (*si == ';')
+		else if (*si == ';' || *si == ',')
 		{
 			++si;
 		}
@@ -219,8 +221,11 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-			errorBuffer.get(), argc, argv, 7,
-			"h,help", "v,version", "license", "G,debug:", "m,module:", "M,moduledir:", "T,trace:");
+			errorBuffer.get(), argc, argv, 9,
+			"h,help", "v,version", "license", "G,debug:",
+			"m,module:", "M,moduledir:",
+			"s,storage:", "S,configfile:", 
+			"T,trace:");
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
@@ -298,26 +303,50 @@ int main( int argc, const char* argv[])
 		}
 		else if (!printUsageAndExit)
 		{
-			if (opt.nofargs() < 2)
+			if (opt.nofargs() < 1)
 			{
 				std::cerr << _TXT("too few arguments") << std::endl;
 				printUsageAndExit = true;
 				rt = 1;
 			}
-			if (opt.nofargs() > 2)
+		}
+		std::string storagecfg;
+		int nof_storagecfg = 0;
+		if (opt("configfile"))
+		{
+			nof_storagecfg += 1;
+			std::string configfile = opt[ "configfile"];
+			int ec = strus::readFile( configfile, storagecfg);
+			if (ec) throw strus::runtime_error(_TXT("failed to read configuration file %s (errno %u)"), configfile.c_str(), ec);
+
+			std::string::iterator di = storagecfg.begin(), de = storagecfg.end();
+			for (; di != de; ++di)
 			{
-				std::cerr << _TXT("too many arguments") << std::endl;
-				printUsageAndExit = true;
-				rt = 2;
+				if ((unsigned char)*di < 32) *di = ' ';
 			}
 		}
+		if (opt("storage"))
+		{
+			nof_storagecfg += 1;
+			storagecfg = opt[ "storage"];
+		}
+		if (nof_storagecfg > 1)
+		{
+			std::cerr << _TXT("conflicting configuration options specified: --storage and --configfile") << std::endl;
+			rt = 10003;
+			printUsageAndExit = true;
+		}
+		else if (!printUsageAndExit && nof_storagecfg == 0)
+		{
+			std::cerr << _TXT("missing configuration option: --storage or --configfile has to be defined") << std::endl;
+			rt = 10004;
+			printUsageAndExit = true;
+		}
+
 		if (printUsageAndExit)
 		{
-			std::cout << _TXT("usage:") << " strusAlterMetaData [options] <config> <cmds>" << std::endl;
-			std::cout << "<config>  : " << _TXT("configuration string of the storage") << std::endl;
-			std::cout << "            " << _TXT("semicolon';' separated list of assignments:") << std::endl;
-			printStorageConfigOptions( std::cout, moduleLoader.get(), (opt.nofargs()>=1?opt[0]:""), errorBuffer.get());
-			std::cout << "<cmds>    : " << _TXT("semicolon separated list of commands:") << std::endl;
+			std::cout << _TXT("usage:") << " strusAlterMetaData [options] {<cmds>}" << std::endl;
+			std::cout << "<cmds>    : " << _TXT("comma/semicolon separated list of commands:") << std::endl;
 			std::cout << "            alter <name> <newname> <newtype>" << std::endl;
 			std::cout << "              <name>    :" << _TXT("name of the element to change") << std::endl;
 			std::cout << "              <newname> :" << _TXT("new name of the element") << std::endl;
@@ -355,15 +384,18 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
 			std::cout << "    " << _TXT("Search modules to load first in <DIR>") << std::endl;
+			std::cout << "-s|--storage <CONFIG>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration string as <CONFIG>") << std::endl;
+			std::cout << "    " << _TXT("<CONFIG> is a semicolon ';' separated list of assignments:") << std::endl;
+			printStorageConfigOptions( std::cout, moduleLoader.get(), storagecfg, errorBuffer.get());
+			std::cout << "-S|--configfile <FILENAME>" << std::endl;
+			std::cout << "    " << _TXT("Define the storage configuration file as <FILENAME>") << std::endl;
+			std::cout << "    " << _TXT("<FILENAME> is a file containing the configuration string") << std::endl;
 			std::cout << "-T|--trace <CONFIG>" << std::endl;
 			std::cout << "    " << _TXT("Print method call traces configured with <CONFIG>") << std::endl;
 			std::cout << "    " << strus::string_format( _TXT("Example: %s"), "-T \"log=dump;file=stdout\"") << std::endl;
 			return rt;
 		}
-		// Parse arguments:
-		std::string storagecfg = opt[0];
-		std::vector<AlterMetaDataCommand> cmds = parseCommands( opt[1]);
-
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -380,10 +412,19 @@ int main( int argc, const char* argv[])
 		{
 			throw std::runtime_error( _TXT("error in initialization"));
 		}
+		// Parse commands:
+		std::vector<AlterMetaDataCommand> cmds;
+		int ai = 0, ae = opt.nofargs();
+		for (; ai != ae; ++ai)
+		{
+			std::vector<AlterMetaDataCommand> add_cmds = parseCommands( opt[ ai]);
+			cmds.insert( cmds.end(), add_cmds.begin(), add_cmds.end());
+		}
 
 		// Create objects for altering the meta data table:
 		strus::local_ptr<strus::StorageObjectBuilderInterface> builder;
-		strus::local_ptr<strus::StorageMetaDataTransactionInterface> md;
+		strus::local_ptr<strus::StorageTransactionInterface> md;
+		strus::local_ptr<strus::StorageMetaDataTableUpdateInterface> mdupdate;
 
 		builder.reset( moduleLoader->createStorageObjectBuilder());
 		if (!builder.get()) throw std::runtime_error( _TXT("failed to create storage object builder"));
@@ -398,8 +439,10 @@ int main( int argc, const char* argv[])
 		}
 
 		strus::local_ptr<strus::StorageClientInterface> storage( strus::createStorageClient( builder.get(), errorBuffer.get(), storagecfg));		
-		md.reset( storage->createMetaDataTransaction());
-		if (!md.get()) throw std::runtime_error( _TXT("failed to create storage alter metadata table structure"));
+		md.reset( storage->createTransaction());
+		if (!md.get()) throw std::runtime_error( _TXT("failed to create storage alter metadata table transaction"));
+		mdupdate.reset( md->createMetaDataTableUpdate());
+		if (!mdupdate.get()) throw std::runtime_error( _TXT("failed to create storage alter metadata table structure"));
 
 		// Execute alter meta data table commands:
 		std::vector<AlterMetaDataCommand>::const_iterator ci = cmds.begin(), ce = cmds.end();
@@ -408,22 +451,23 @@ int main( int argc, const char* argv[])
 			switch (ci->id())
 			{
 				case AlterMetaDataCommand::Alter:
-					md->alterElement( ci->name(), ci->newname(), ci->type());
+					mdupdate->alterElement( ci->name(), ci->newname(), ci->type());
 					break;
 				case AlterMetaDataCommand::Add:
-					md->addElement( ci->name(), ci->type());
+					mdupdate->addElement( ci->name(), ci->type());
 					break;
 				case AlterMetaDataCommand::Delete:
-					md->deleteElement( ci->name());
+					mdupdate->deleteElement( ci->name());
 					break;
 				case AlterMetaDataCommand::Rename:
-					md->renameElement( ci->name(), ci->newname());
+					mdupdate->renameElement( ci->name(), ci->newname());
 					break;
 				case AlterMetaDataCommand::Clear:
-					md->clearElement( ci->name());
+					mdupdate->clearElement( ci->name());
 					break;
 			}
 		}
+		mdupdate->done();
 		std::cerr << _TXT("updating meta data table changes...") << std::endl;
 		if (!md->commit()) throw std::runtime_error( _TXT("alter meta data commit failed"));
 

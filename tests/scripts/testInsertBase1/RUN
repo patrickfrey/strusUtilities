@@ -1,5 +1,6 @@
-StrusCreate -S $T/storage.conf
-StrusInsert -S $T/storage.conf $T/doc.ana $T/data/
+StrusCreate -s path=storage
+StrusAlterMetaData -s path=storage "add title_start UInt8, add title_end UInt8, add doclen UInt32, add pageweight UInt8"
+StrusInsert -s path=storage $T/doc.ana $T/data/
 StrusInspect -s "path=storage" nofdocs
 StrusInspect -s "path=storage" attribute title
 StrusInspect -s "path=storage" attribute docid

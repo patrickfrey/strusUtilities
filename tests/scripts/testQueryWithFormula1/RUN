@@ -1,5 +1,6 @@
-StrusCreate -S $T/storage.conf
-StrusInsert -S $T/storage.conf $T/doc.ana $T/data/
-StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "going"
-StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "sequence( on, holidays | 2)"
+StrusCreate -s path=storage
+StrusAlterMetaData -s path=storage "add doclen UInt32, add continent UInt8, add pageweight Float32"
+StrusInsert -s path=storage $T/doc.ana $T/data/
+StrusQuery -s path=storage $T/query.ana $T/query.prg "going"
+StrusQuery -s path=storage $T/query.ana $T/query.prg "sequence( on, holidays | 2)"
 

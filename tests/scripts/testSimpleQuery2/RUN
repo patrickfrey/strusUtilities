@@ -1,9 +1,10 @@
-StrusCreate -S $T/storage.conf
-StrusInsert -S $T/storage.conf $T/doc.ana $T/data/
-StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "hardware:word"
-StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "software engineer:word"
-StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "software engineer"
-StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "software:title 'machine language instructions':word"
-StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "~hugaga:word software:word"
-StrusQuery -S $T/storage.conf $T/query.ana $T/query.prg "hugaga:word software:word"
+StrusCreate -s path=storage
+StrusAlterMetaData -s path=storage "add title_start UInt8, add title_end UInt8, add doclen UInt32, add pageweight UInt8"
+StrusInsert -s path=storage $T/doc.ana $T/data/
+StrusQuery -s path=storage $T/query.ana $T/query.prg "hardware:word"
+StrusQuery -s path=storage $T/query.ana $T/query.prg "software engineer:word"
+StrusQuery -s path=storage $T/query.ana $T/query.prg "software engineer"
+StrusQuery -s path=storage $T/query.ana $T/query.prg "software:title 'machine language instructions':word"
+StrusQuery -s path=storage $T/query.ana $T/query.prg "~hugaga:word software:word"
+StrusQuery -s path=storage $T/query.ana $T/query.prg "hugaga:word software:word"
 
