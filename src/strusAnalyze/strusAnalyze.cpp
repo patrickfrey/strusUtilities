@@ -223,6 +223,39 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 	return programFileName;
 }
 
+static bool compareOrderDocumentStructureByStartPos( const strus::analyzer::DocumentStructure& a, const strus::analyzer::DocumentStructure& b)
+{
+	if (a.source().start() == b.source().start())
+	{
+		if (a.source().end() == b.source().end())
+		{
+			if (a.sink().start() == b.sink().start())
+			{
+				if (a.sink().end() == b.sink().end())
+				{
+					return a.name() < b.name();
+				}
+				else
+				{
+					return a.sink().end() < b.sink().end();
+				}
+			}
+			else
+			{
+				return a.sink().start() < b.sink().start();
+			}
+		}
+		else
+		{
+			return a.source().end() < b.source().end();
+		}
+	}
+	else
+	{
+		return a.source().start() < b.source().start();
+	}
+}
+
 static void analyzeDocument(
 	const strus::DocumentAnalyzer& analyzerMap,
 	const strus::TextProcessorInterface* textproc,
@@ -340,6 +373,27 @@ static void analyzeDocument(
 						  << " " << ti->type()
 						  << " '" << ti->value() << "'"
 						  << std::endl;
+				}
+
+				if (!doc.searchIndexStructures().empty())
+				{
+					std::vector<strus::analyzer::DocumentStructure>
+						structlist = doc.searchIndexStructures();
+					std::sort( structlist.begin(), structlist.end(), &compareOrderDocumentStructureByStartPos);
+
+					std::cout << std::endl << _TXT("search index structures:") << std::endl;
+					std::vector<strus::analyzer::DocumentStructure>::const_iterator
+						si = structlist.begin(), se = structlist.end();
+					for (; si != se; ++si)
+					{
+						int sourcelen = si->source().end() - si->source().start();
+						int sinklen = si->sink().end() - si->sink().start();
+	
+						std::cout << si->source().start() << ":"
+							  << " " << si->name()
+							  << " " << strus::string_format("[%d] -> %d [%d]", sourcelen, si->sink().start(), sinklen)
+							  << std::endl;
+					}
 				}
 
 				std::vector<strus::analyzer::DocumentTerm> ftermar = doc.forwardIndexTerms();
@@ -536,9 +590,11 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("A type in <DUMPCFG> specifies the type to dump.") << std::endl;
 			std::cout << "    " << _TXT("A value an optional replacement of the term value.") << std::endl;
 			std::cout << "    " << _TXT("This kind of output is suitable for content analysis.") << std::endl;
+			std::cout << "    " << _TXT("Structures are ommited in the output of a dump.") << std::endl;
 			std::cout << "-U|--unique" << std::endl;
 			std::cout << "    " << _TXT("Ouput dump (Option -D|--dump) only one element per ordinal position.") << std::endl;
 			std::cout << "    " << _TXT("Order of priorization specified in dump configuration.") << std::endl;
+			std::cout << "    " << _TXT("Structures are ommited in the output of a dump.") << std::endl;
 			return rt;
 		}
 		// Parse arguments:

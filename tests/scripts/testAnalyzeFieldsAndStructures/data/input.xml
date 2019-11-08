@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<doc>
+<docid>123</docid>
+<title>Software</title>
+<text>
+<h1>Introduction</h1>
+<p>
+   From Wikipedia, the free encyclopedia, using e.g. PHP
+   Jump to: navigation, search
+   For other uses, see Software (disambiguation).
+</p>
+<h1>Contents</h1>
+<p>
+<ol>
+     <li>Overview</li>
+     <li>History</li>
+     <li>Types of software
+     <ol>
+          <li>Purpose, or domain of use</li>
+          <li>Nature or domain of execution</li>
+          <li>Programming tools</li>
+     </ol></li>
+     <li>Software topics
+     <ol>
+          <li>Architecture</li>
+          <li>Execution</li>
+          <li>Quality and reliability</li>
+          <li>License</li>
+          <li>Patents</li>
+     </ol></li>
+     <li>Design and implementation</li>
+     <li>Industry and organizations</li>
+     <li>See also</li>
+     <li>References</li>
+     <li>External links</li>
+</ol>
+</p>
+<h1>Overview</h1>
+<p>
+   The term "software" was first proposed by Alan Turing
+   and used in this sense by John W. Tukey.
+</p>
+<h1>History</h1>
+<p>
+   An outline (algorithm) for what would have been the first piece of
+   software was written by Ada Lovelace in the 19th century, for the
+   planned Analytical Engine. However, neither the Analytical Engine
+   nor any software for it were ever created.
+</p>
+<h1>Types of software</h1>
+<p>
+   On virtually all computer platforms, software can be grouped into a few
+   broad categories.
+
+     <ol><li>
+       Application software.
+     </li><li>System software includes:
+          <ul><li>Operating systems
+          </li><li>Device drivers.
+          </li><li>Utilities.
+          </li></ul>
+     </li><li>Malicious software or malware.
+     </li></ol>
+</p>
+<h1>Nature or domain of execution</h1>
+<p>
+     <ol><li>Desktop applications such as web browsers and Microsoft
+       Office, as well as smartphone and tablet applications
+       (called "apps").
+     </li><li>JavaScript scripts are pieces of software traditionally
+       embedded in web pages that are run directly inside the web
+       browser when a web page is loaded without the need for a web
+       browser plugin.
+     </li><li>Server software, including Web applications, which usually
+            run on the web server and output dynamically generated web pages
+            to web browsers, using e.g. PHP, Java, ASP.NET, or
+            even JavaScript that runs on the server.
+     </li><li>Plugins and extensions are software that extends or modifies
+       the functionality of another piece of software, and require that
+       software be used in order to function;
+     </li><li>Embedded software resides as firmware within embedded
+       systems, devices dedicated to a single use or a few uses such as
+       cars and televisions.
+     </li><li>Microcode is a special, relatively obscure type of embedded
+       software.
+     </li></ol>
+</p>
+<h1>Programming tools</h1>
+<p>
+   Programming tools are also software in the form of programs or
+   applications that software developers (also known as programmers,
+   coders, hackers or software engineers) use to create, debug,
+   maintain (i.e. improve or fix), or otherwise support
+   software.
+</p>
+<h1>Architecture</h1>
+<p>
+   Users often see things differently from programmers. People who use
+   modern general purpose computers usually see three layers
+   of software performing a variety of tasks: platform, application, and
+   user software.
+     <ol><li>Platform software
+     </li><li>Application software
+     </li><li>User-written software
+     </li></ol>
+</p>
+<h1>Execution</h1>
+<p>
+   Computer software has to be "loaded" into the computer's storage
+   (such as the hard drive or memory). 
+</p>
+<h1>Quality and reliability</h1>
+<p>
+   Software quality is very important.
+   Many bugs are discovered and eliminated (debugged) through
+   software testing.
+</p>
+<h1>License</h1>
+<p>
+   The software's license gives the user the right to use the software in
+   the licensed environment, and in the case of free software
+   licenses, also grants other rights such as the right to make copies.
+
+   Proprietary software can be divided into two types:
+     <ol><li>freeware
+     </li><li>software available for a fee
+     </li></ol>
+   Open source software, on the other hand, comes with a free
+   software license, granting the recipient the rights to modify and
+   redistribute the software.
+</p>
+<h1>Patents</h1>
+<p>
+   Software patents, like other types of patents, are theoretically
+   supposed to give an inventor an exclusive, time-limited license for a
+   detailed idea on how to implement a piece of
+   software, or a component of a piece of software.
+</p>
+<h1>Design and implementation</h1>
+<p>
+   Design and implementation of software varies depending on the
+   complexity of the software. 
+</p>
+<h1>See also</h1>
+<p>
+      <ol><li>Software release life cycle
+      </li><li>Classes of software
+            <ol><li>System software</li>
+                <li>Frontend software</li>
+                <li>Backend software</li>
+                <li>Embedded/Real-Time software</li>
+            </ol>
+      </li><li>Software asset management
+      </li><li>Crystal Clear device cdrom unmount.png Software portal
+      </li><li>Free and open-source software 
+      </li><li>Desktop computer clipart - Yellow theme.svg Information technology portal
+      </li></ol>
+</p>
+<h1>References</h1>
+<p>
+    <ol><li>"Compiler construction".
+    </li><li>"System Software". The University of Mississippi. 
+    </li><li>"Embedded Software—Technologies and Trends". IEEE Computer Society.
+    </li><li>"scripting intelligence book examples".
+    </li><li>"MSDN Library".
+    </li><li>v. Engelhardt, Sebastian ([XX]). "The Economic Properties of Software". Jena Economic Research Papers.
+    </li><li>Kaminsky, Dan. "Why Open Source Is The Optimum Economic Paradigm for Software".
+    </li></ol>
+</p>
+</text>
+</doc>
+

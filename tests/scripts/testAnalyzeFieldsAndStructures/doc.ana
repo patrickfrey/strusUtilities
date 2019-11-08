@@ -1,0 +1,45 @@
+[Attribute]
+    title = text content /doc/title();
+    docid = text content /doc/docid();
+
+[Content]
+    "encoding=UTF-8; content=JSON;" /doc/embedded();
+
+[SearchIndex]
+    start = empty content /doc/text;
+    para = empty content /doc/text/h1;
+    sent = empty content {position=unique} /doc/text/h1~;
+    sent = empty content {position=unique} /doc/text//li~;
+    sent = empty content {position=unique} /doc/title~;
+    punct = empty punctuation("en",",") {position=unique} /doc/text//();
+    sent = empty punctuation("en","")   {position=unique} /doc/text//();
+    stem = lc:convdia(en):stem(en) word /doc/title();
+    stem = lc:convdia(en):stem(en) word /doc/text//();
+    tist = lc:convdia(en):stem(en) word /doc/title();
+
+[ForwardIndex]
+    orig = orig split /doc/text//();
+    orig = orig split /doc/title();
+
+[Aggregator]
+    doclen = count( stem);
+
+[Field]
+    title   = /doc title;
+    body    = /doc text;
+    text    = /doc/text //li;
+    child   = /doc/text //ol;
+    child   = /doc/text //ul;
+    text    = /doc/text //p;
+    head    = /doc/text h1;
+    node    = /doc/text //li;
+
+[Structure]
+    tree    = node child cover;
+    main    = title body header;
+    section = head text header;
+
+
+
+
+
