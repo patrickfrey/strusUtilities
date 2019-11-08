@@ -289,7 +289,7 @@ int parser::parse_KEYWORD( unsigned int& duplicateflags, char const*& src, unsig
 	va_list argp;
 	va_start( argp, nn);
 
-	if (nn > sizeof(unsigned int)*8) throw std::logic_error("too many arguments (parse_KEYWORD)");
+	if (nn > sizeof(unsigned int)*8) throw std::runtime_error("too many arguments (parse_KEYWORD)");
 
 	std::string id = parse_IDENTIFIER( src);
 	va_start( argp, nn);

@@ -22,6 +22,7 @@
 #include "strus/postingIteratorInterface.hpp"
 #include "strus/forwardIteratorInterface.hpp"
 #include "strus/documentTermIteratorInterface.hpp"
+#include "strus/structIteratorInterface.hpp"
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/valueIteratorInterface.hpp"
@@ -82,6 +83,7 @@ namespace strus
 {
 	typedef strus::Reference<PostingIteratorInterface> PostingIteratorReference;
 	typedef strus::Reference<DocumentTermIteratorInterface> DocumentTermIteratorReference;
+	typedef strus::Reference<StructIteratorInterface> StructIteratorReference;
 	typedef strus::Reference<ForwardIteratorInterface> ForwardIteratorReference;
 	typedef strus::Reference<MetaDataReaderInterface> MetaDataReaderReference;
 }
@@ -97,17 +99,30 @@ static bool isIndex( char const* cc)
 	return (*cc == '\0');
 }
 
+static void printDocumentDocidLine( const strus::Index& docno, strus::AttributeReaderInterface* areader, const strus::Index& ahandle)
+{
+	if (ahandle > 0)
+	{
+		areader->skipDoc( docno);
+		std::cout << areader->getValue( ahandle) << ':' << std::endl;
+	}
+	else
+	{
+		std::cout << docno << ':' << std::endl;
+	}
+}
+
 static void inspectPositions( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
 {
 	if (size > 3) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
 	if (size < 2) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::Reference<strus::AttributeReaderInterface> areader;
-	strus::Index ehandle = -1;
+	strus::Index ahandle = -1;
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ehandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute.c_str());
 	}
 
 	strus::PostingIteratorReference itr(
@@ -121,22 +136,19 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			docno = itr->skipDoc( docno);
-			if (!docno)
-			{
-				if (printEmpty && ehandle <= 0) std::cout << docno << ':' << std::endl;
-				break;
-			}
+			strus::Index next_docno = itr->skipDoc( docno);
+			if (!next_docno) break;
 
-			if (ehandle > 0)
+			if (printEmpty && next_docno > docno)
 			{
-				areader->skipDoc(docno);
-				std::cout << areader->getValue( ehandle) << ':';
+				for (; docno < next_docno; ++docno)
+				{
+					printDocumentDocidLine( docno, areader.get(), ahandle);
+				}
 			}
-			else
-			{
-				std::cout << docno << ':';
-			}
+			docno = next_docno;
+			printDocumentDocidLine( docno, areader.get(), ahandle);
+
 			strus::Index pos=0;
 			while (0!=(pos=itr->skipPos(pos+1)))
 			{
@@ -192,11 +204,11 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::Reference<strus::AttributeReaderInterface> areader;
-	strus::Index ehandle = -1;
+	strus::Index ahandle = -1;
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ehandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute.c_str());
 	}
 
 	strus::DocumentTermIteratorReference itr(
@@ -209,22 +221,18 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			if (!itr->skipDoc( docno))
+			strus::Index next_docno = itr->skipDoc( docno);
+			if (!next_docno) break;
+
+			if (printEmpty && next_docno > docno)
 			{
-				if (printEmpty && ehandle <= 0)
+				for (; docno < next_docno; ++docno)
 				{
-					std::cout << docno << ':' << std::endl;
+					printDocumentDocidLine( docno, areader.get(), ahandle);
 				}
 			}
-			if (ehandle > 0)
-			{
-				areader->skipDoc(docno);
-				std::cout << areader->getValue( ehandle) << ':' << std::endl;
-			}
-			else
-			{
-				std::cout << docno << ':' << std::endl;
-			}
+			docno = next_docno;
+			printDocumentDocidLine( docno, areader.get(), ahandle);
 
 			strus::DocumentTermIteratorInterface::Term term;
 			while (itr->nextTerm( term))
@@ -241,13 +249,128 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 				:storage.documentNumber( key[1]);
 		if (docno)
 		{
-			if (itr->skipDoc( docno))
+			if (docno == itr->skipDoc( docno))
 			{
 				strus::DocumentTermIteratorInterface::Term term;
 				while (itr->nextTerm( term))
 				{
 					std::string termstr = itr->termValue( term.termno);
 					std::cout << term.firstpos << ' ' << term.tf << ' ' << termstr << std::endl;
+				}
+			}
+		}
+		else
+		{
+			throw strus::runtime_error( "%s",  _TXT("unknown document"));
+		}
+	}
+}
+
+static void inspectDocumentIndexStructures( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
+{
+	if (size > 3) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
+
+	strus::Reference<strus::AttributeReaderInterface> areader;
+	strus::Index ahandle = -1;
+	if (!attribute.empty())
+	{
+		areader.reset( storage.createAttributeReader());
+		ahandle = areader->elementHandle( attribute.c_str());
+	}
+	strus::ForwardIteratorReference viewer;
+	if (size == 3)
+	{
+		viewer.reset( storage.createForwardIterator( std::string(key[2])));
+		if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator for representing structure content"));
+	}
+	strus::StructIteratorReference itr(
+		storage.createStructIterator( std::string(key[0])));
+	if (!itr.get()) throw std::runtime_error( _TXT("failed to create document structure iterator"));
+
+	if (size == 1)
+	{
+		strus::Index maxDocno = storage.maxDocumentNumber();
+		strus::Index docno = 1;
+		for (; docno <= maxDocno; ++docno)
+		{
+			strus::Index next_docno = itr->skipDoc( docno);
+			if (!next_docno) break;
+
+			if (printEmpty && next_docno > docno)
+			{
+				for (; docno < next_docno; ++docno)
+				{
+					printDocumentDocidLine( docno, areader.get(), ahandle);
+				}
+			}
+			docno = next_docno;
+			printDocumentDocidLine( docno, areader.get(), ahandle);
+
+			strus::IndexRange source = itr->skipPosSource( 0);
+			for (;source.defined(); source = itr->skipPosSource( source.end()+1))
+			{
+				std::cout << "[" << source.start() << "," << source.end() << "]" << std::endl;
+
+				strus::IndexRange sink = itr->skipPosSink( 0);
+				for (;sink.defined(); sink = itr->skipPosSink( sink.end()+1))
+				{
+					std::cout << "\t-> " << "[" << sink.start() << "," << sink.end() << "]" << std::endl;
+				}
+			}
+		}
+	}
+	else
+	{
+		strus::Index docno = isIndex(key[1])
+				?stringToIndex( key[1])
+				:storage.documentNumber( key[1]);
+		if (docno)
+		{
+			if (docno == itr->skipDoc( docno))
+			{
+				if (viewer.get())
+				{
+					viewer->skipDoc( docno);
+					strus::IndexRange source = itr->skipPosSource( 0);
+					for (;source.defined(); source = itr->skipPosSource( source.end()+1))
+					{
+						strus::Index pos = viewer->skipPos( source.start());
+						std::string header;
+						for (; pos < source.end(); pos = viewer->skipPos( pos+1))
+						{
+							if (!header.empty()) header.push_back(' ');
+							header.append( viewer->fetch());
+						}
+						std::cout << header << std::endl << std::endl;
+						strus::IndexRange sink = itr->skipPosSink( 0);
+						for (;sink.defined(); sink = itr->skipPosSink( sink.end()+1))
+						{
+							strus::Index cp = viewer->skipPos( sink.start());
+							std::string content;
+							for (; cp < sink.end(); cp = viewer->skipPos( cp+1))
+							{
+								if (!content.empty()) content.push_back(' ');
+								content.append( viewer->fetch());
+							}
+							std::cout << "=>\t" << content << std::endl;
+						}
+						std::cout << std::endl;
+					}
+				}
+				else
+				{
+					strus::IndexRange source = itr->skipPosSource( 0);
+					for (;source.defined(); source = itr->skipPosSource( source.end()+1))
+					{
+						std::cout << "[" << source.start() << "," << source.end() << "]" << std::endl;
+		
+						strus::IndexRange sink = itr->skipPosSink( 0);
+						for (;sink.defined(); sink = itr->skipPosSink( sink.end()+1))
+						{
+							std::cout << "\t-> " << "[" << sink.start() << "," << sink.end() << "]" << std::endl;
+						}
+					}
 				}
 			}
 		}
@@ -276,11 +399,11 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::Reference<strus::AttributeReaderInterface> areader;
-	strus::Index ehandle = -1;
+	strus::Index ahandle = -1;
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ehandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute.c_str());
 	}
 
 	if (size == 1)
@@ -289,10 +412,10 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			if (ehandle > 0)
+			if (ahandle > 0)
 			{
 				areader->skipDoc(docno);
-				std::cout << areader->getValue( ehandle) << ' ' << storage.documentStatistics( docno, stat, key[0]) << std::endl;
+				std::cout << areader->getValue( ahandle) << ' ' << storage.documentStatistics( docno, stat, key[0]) << std::endl;
 			}
 			else
 			{
@@ -322,11 +445,11 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 	if (size < 2) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::Reference<strus::AttributeReaderInterface> areader;
-	strus::Index ehandle = -1;
+	strus::Index ahandle = -1;
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ehandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute.c_str());
 	}
 
 	strus::PostingIteratorReference itr(
@@ -343,7 +466,7 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 			strus::Index next_docno = itr->skipDoc( docno);
 			if (docno != next_docno)
 			{
-				if (printEmpty && ehandle <= 0)
+				if (printEmpty && ahandle <= 0)
 				{
 					if (!next_docno)
 					{
@@ -366,10 +489,10 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 					docno = next_docno;
 				}
 			}
-			if (ehandle > 0)
+			if (ahandle > 0)
 			{
 				areader->skipDoc(docno);
-				std::cout << areader->getValue( ehandle) << ' ' << (*itr).frequency() << std::endl;
+				std::cout << areader->getValue( ahandle) << ' ' << (*itr).frequency() << std::endl;
 			}
 			else
 			{
@@ -421,7 +544,7 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 		attreader( storage.createAttributeReader());
 	if (!attreader.get()) throw std::runtime_error( _TXT("failed to create attribute reader"));
 
-	strus::Index ehandle = attribute.empty()?0:attreader->elementHandle( attribute.c_str());
+	strus::Index ahandle = attribute.empty()?0:attreader->elementHandle( attribute.c_str());
 	strus::Index hnd = attreader->elementHandle( key[0]);
 	if (hnd == 0)
 	{
@@ -437,9 +560,9 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 			std::string value = attreader->getValue( hnd);
 			if (printEmpty || value.size())
 			{
-				if (ehandle > 0)
+				if (ahandle > 0)
 				{
-					std::cout << attreader->getValue( ehandle) << ' ' << value << std::endl;
+					std::cout << attreader->getValue( ahandle) << ' ' << value << std::endl;
 				}
 				else
 				{
@@ -490,11 +613,11 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::Reference<strus::AttributeReaderInterface> areader;
-	strus::Index ehandle = -1;
+	strus::Index ahandle = -1;
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ehandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute.c_str());
 	}
 
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
@@ -515,10 +638,10 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 			strus::NumericVariant value = metadata->getValue( hnd);
 			if (printEmpty || value.defined())
 			{
-				if (ehandle > 0)
+				if (ahandle > 0)
 				{
 					areader->skipDoc(docno);
-					std::cout << areader->getValue( ehandle) << ' ' << value.tostring( g_output_precision).c_str() << std::endl;
+					std::cout << areader->getValue( ahandle) << ' ' << value.tostring( g_output_precision).c_str() << std::endl;
 				}
 				else
 				{
@@ -574,11 +697,11 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
 
 	strus::Reference<strus::AttributeReaderInterface> areader;
-	strus::Index ehandle = -1;
+	strus::Index ahandle = -1;
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ehandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute.c_str());
 	}
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));
@@ -592,10 +715,10 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 			viewer->skipDoc( docno);
 			if (printEmpty || 0 != viewer->skipPos(0))
 			{
-				if (ehandle > 0)
+				if (ahandle > 0)
 				{
 					areader->skipDoc(docno);
-					std::cout << areader->getValue( ehandle) << ": " << std::endl;
+					std::cout << areader->getValue( ahandle) << ": " << std::endl;
 				}
 				else
 				{
@@ -954,6 +1077,12 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Get the list of tuples of term value, first position and ff ") << std::endl;
 			std::cout << "                 " << _TXT("for a search index term type.") << std::endl;
 			std::cout << "                 " << _TXT("If document is not specified then dump value for all docs.") << std::endl;
+			std::cout << "            \"indexstructs\" <name> [<doc-id/no>] [<fwtype>]" << std::endl;
+			std::cout << "               = " << _TXT("Get the list of structures defined in the document ") << std::endl;
+			std::cout << "                 " << _TXT("name structure type.") << std::endl;
+			std::cout << "                 " << _TXT("If document is not specified then dump value for all docs.") << std::endl;
+			std::cout << "                 " << _TXT("An optional third parameter specifies a forward index type") << std::endl;
+			std::cout << "                 " << _TXT("to use as representation instead of the ordinal positions.") << std::endl;
 			std::cout << "            \"nofdocs\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the number of documents in the storage") << std::endl;
 			std::cout << "            \"maxdocno\"" << std::endl;
@@ -1110,6 +1239,10 @@ int main( int argc, const char* argv[])
 		else if (strus::caseInsensitiveEquals( what, "indexterms"))
 		{
 			inspectDocumentIndexTerms( *storage, inpectarg, inpectargsize, attribute, printEmpty);
+		}
+		else if (strus::caseInsensitiveEquals( what, "indexstructs"))
+		{
+			inspectDocumentIndexStructures( *storage, inpectarg, inpectargsize, attribute, printEmpty);
 		}
 		else if (strus::caseInsensitiveEquals( what, "nofdocs"))
 		{

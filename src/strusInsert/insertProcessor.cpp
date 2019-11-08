@@ -148,14 +148,14 @@ void InsertProcessor::run()
 							if (oi != oe)
 							{
 								storagedoc.reset( transaction->createDocument( oi->value()));
-								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document structure"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document"));
 								docid = oi->value().c_str();
 								//... use the docid from the analyzer if defined there
 							}
 							else
 							{
 								storagedoc.reset( transaction->createDocument( *fitr));
-								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document structure"));
+								if (!storagedoc.get()) throw std::runtime_error( _TXT("error creating document"));
 								storagedoc->setAttribute(
 									strus::Constants::attribute_docid(), *fitr);
 								docid = fitr->c_str();
@@ -183,7 +183,23 @@ void InsertProcessor::run()
 										ti->type(), ti->value(), ti->pos());
 								}
 							}
-		
+							// Define all search index structures:
+							std::vector<strus::analyzer::DocumentStructure>
+								structlist = doc.searchIndexStructures();
+							std::vector<strus::analyzer::DocumentStructure>::const_iterator
+								si = structlist.begin(), se = structlist.end();
+							for (; si != se; ++si)
+							{
+								if (si->source().end() > (int)Constants::storage_max_position_info()
+								||  si->sink().end() > (int)Constants::storage_max_position_info())
+								{}
+								else
+								{
+									strus::IndexRange source( si->source().start(),si->source().end());
+									strus::IndexRange sink( si->sink().start(),si->sink().end());
+									storagedoc->addSearchIndexStructure( si->name(), source, sink);
+								}
+							}
 							// Define all forward index terms:
 							std::vector<strus::analyzer::DocumentTerm>::const_iterator
 								fi = doc.forwardIndexTerms().begin(),
