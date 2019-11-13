@@ -438,7 +438,8 @@ int main( int argc, const char* argv[])
 			builder.reset( builderproxy);
 		}
 
-		strus::local_ptr<strus::StorageClientInterface> storage( strus::createStorageClient( builder.get(), errorBuffer.get(), storagecfg));		
+		strus::local_ptr<strus::StorageClientInterface> storage( strus::createStorageClient( builder.get(), errorBuffer.get(), storagecfg));
+		if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
 		md.reset( storage->createTransaction());
 		if (!md.get()) throw std::runtime_error( _TXT("failed to create storage alter metadata table transaction"));
 		mdupdate.reset( md->createMetaDataTableUpdate());

@@ -3,7 +3,7 @@ TERM sent "":sent;
 SELECT selfeat;
 WEIGHT docfeat;
 
-EVAL bm25pff( debug="debugquery",
+EVAL bm25pff( debug="query",
               b=0.75, k1=1.2, avgdoclen=700, metadata_doclen=doclen,
               titleinc=4.0, windowsize=60, cardinality="60%", ffbase=0.4,
               maxdf=0.2,
@@ -11,7 +11,7 @@ EVAL bm25pff( debug="debugquery",
 
 SUMMARIZE attribute( name=title );
 SUMMARIZE matchphrase(
-              debug="debugsummary",
+              debug="summary",
               type=orig, windowsize=40, sentencesize=100, cardinality="60%",
               maxdf=0.2, matchmark='$<b>$</b>',
               .struct=sent, .para=para, .match=docfeat );

@@ -1,14 +1,14 @@
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
 [1] score 0.000034
-	title = 'Software' 1
-	phrase = 'In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.' 1
+	attribute:title = 'Software' 1
+	matchphrase:phrase = 'In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
 [1] score 0.000034
-	title = 'Software' 1
-	phrase = 'In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.' 1
-	debugsummary = 'summarize matchphrase
+	attribute:title = 'Software' 1
+	matchphrase:phrase = 'In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.' 1
+	debug:summary = 'summarize matchphrase
 find best match with all features:
 candidate pos=1, best=1, span=1, weight=0.000033, string= |  Software |  Introduction
 candidate pos=29, best=0, span=1, weight=0.000023, string=For other uses, see |  Software |  (disambiguation). A
@@ -165,7 +165,7 @@ candidate pos=3614, best=0, span=1, weight=0.000021, string=The Optimum Economic
 best match pos=193, span=2, is_docstart=0
 best match phrase pos=189, span=42, has start 1, has end=1, string='In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.'
 ' 1
-	debugquery = 'calculate BM25pff
+	debug:query = 'calculate BM25pff
 feature weights: 0.5000000 0.5000000, sum=1.000000
 title ff increments=0.0000000 0.0000000
 fallback to BM25 (too few query features)
