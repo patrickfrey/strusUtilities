@@ -75,7 +75,7 @@ static std::multimap<std::string,strus::Index> loadAttributeDocnoMap(
 	std::multimap<std::string,strus::Index> rt;
 	strus::local_ptr<strus::AttributeReaderInterface> attributeReader( storage->createAttributeReader());
 	if (!attributeReader.get()) throw std::runtime_error( _TXT("failed to create attribute reader"));
-	strus::Index ehnd = attributeReader->elementHandle( attributeName.c_str());
+	strus::Index ehnd = attributeReader->elementHandle( attributeName);
 	if (ehnd == 0) throw strus::runtime_error(_TXT("unknown attribute name '%s'"), attributeName.c_str());
 	strus::Index di = 1, de = storage->maxDocumentNumber()+1;
 	for (; di != de; ++di)

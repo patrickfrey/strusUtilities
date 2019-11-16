@@ -122,7 +122,7 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ahandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute);
 	}
 
 	strus::PostingIteratorReference itr(
@@ -208,7 +208,7 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ahandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute);
 	}
 
 	strus::DocumentTermIteratorReference itr(
@@ -276,7 +276,7 @@ static void inspectDocumentIndexStructures( strus::StorageClientInterface& stora
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ahandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute);
 	}
 	strus::ForwardIteratorReference viewer;
 	if (size == 3)
@@ -403,7 +403,7 @@ static void inspectDocumentTermTypeStats( strus::StorageClientInterface& storage
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ahandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute);
 	}
 
 	if (size == 1)
@@ -449,7 +449,7 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ahandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute);
 	}
 
 	strus::PostingIteratorReference itr(
@@ -544,7 +544,7 @@ static void inspectDocAttribute( const strus::StorageClientInterface& storage, c
 		attreader( storage.createAttributeReader());
 	if (!attreader.get()) throw std::runtime_error( _TXT("failed to create attribute reader"));
 
-	strus::Index ahandle = attribute.empty()?0:attreader->elementHandle( attribute.c_str());
+	strus::Index ahandle = attribute.empty()?0:attreader->elementHandle( attribute);
 	strus::Index hnd = attreader->elementHandle( key[0]);
 	if (hnd == 0)
 	{
@@ -617,7 +617,7 @@ static void inspectDocMetaData( const strus::StorageClientInterface& storage, co
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ahandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute);
 	}
 
 	strus::MetaDataReaderReference metadata( storage.createMetaDataReader());
@@ -701,7 +701,7 @@ static void inspectContent( strus::StorageClientInterface& storage, const char**
 	if (!attribute.empty())
 	{
 		areader.reset( storage.createAttributeReader());
-		ahandle = areader->elementHandle( attribute.c_str());
+		ahandle = areader->elementHandle( attribute);
 	}
 
 	strus::ForwardIteratorReference viewer( storage.createForwardIterator( std::string(key[0])));

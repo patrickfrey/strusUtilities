@@ -370,7 +370,7 @@ static void inspectFeatureSimilarity( const strus::VectorStorageClientInterface*
 	}
 	else
 	{
-		std::swap( feat2, type2);
+		feat2.swap( type2);
 		type2 = type1;
 	}
 	strus::WordVector v1 = storage->featureVector( type1, feat1);
