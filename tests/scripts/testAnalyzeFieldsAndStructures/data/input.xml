@@ -99,10 +99,12 @@
    modern general purpose computers usually see three layers
    of software performing a variety of tasks: platform, application, and
    user software.
-     <ol><li>Platform software
-     </li><li>Application software
-     </li><li>User-written software
-     </li></ol>
+     <h2>Platform software</h2>
+     <p>Here we talk about platform software</p>
+     <h2>Application software</h2>
+     <p>Here we talk about application software</p>
+     <h2>User-written software</h2>
+     <p>Here we talk about user written software</p>
 </p>
 <h1>Execution</h1>
 <p>
@@ -167,6 +169,28 @@
     </li><li>Kaminsky, Dan. "Why Open Source Is The Optimum Economic Paradigm for Software".
     </li></ol>
 </p>
+
+<h1>Blabla table header</h1>
+<table>
+<title>Blabla table title</title>
+<head id="C1">col 1</head>
+<head id="C2">col 2</head>
+<head id="C3">col 3</head>
+
+<head id="R1">row 1</head>
+<head id="R2">row 2</head>
+<head id="R3">row 3</head>
+
+<cell id="C1" id="R1">cell 1.1</head>
+<cell id="C2" id="R1">cell 2.1</head>
+<cell id="C3" id="R1">cell 3.1</head>
+<cell id="C1" id="R2">cell 1.2</head>
+<cell id="C2" id="R2">cell 2.2</head>
+<cell id="C3" id="R2">cell 3.2</head>
+<cell id="C1" id="R3">cell 1.3</head>
+<cell id="C2" id="R3">cell 2.3</head>
+<cell id="C3" id="R3">cell 3.3</head>
+</table>
 </text>
 </doc>
 

@@ -8,7 +8,13 @@
 [SearchIndex]
     start = empty content /doc/text;
     para = empty content /doc/text/h1;
+    para = empty content /doc/text//h2;
+    para = empty content /doc/text//h3;
+    para = empty content /doc/text//h4;
     sent = empty content {position=unique} /doc/text/h1~;
+    sent = empty content {position=unique} /doc/text//h2~;
+    sent = empty content {position=unique} /doc/text//h3~;
+    sent = empty content {position=unique} /doc/text//h4~;
     sent = empty content {position=unique} /doc/text//li~;
     sent = empty content {position=unique} /doc/title~;
     punct = empty punctuation("en",",") {position=unique} /doc/text//();
@@ -27,19 +33,36 @@
 [Field]
     title   = /doc title;
     body    = /doc text;
+    text    = /doc/text //table;
     text    = /doc/text //li;
+    text    = /doc/text //p;
     child   = /doc/text //ol;
     child   = /doc/text //ul;
-    text    = /doc/text //p;
-    head    = /doc/text h1;
+    head    = /doc/text /h1;
     node    = /doc/text //li;
+    beg_h1  = /doc/text /h1;
+    end_h1  = /doc/text /h1;
+    beg_h2  = /doc/text //h2;
+    end_h2  = /doc/text //h2;
+    end_h2  = /doc/text //h1;
+    beg_h3  = /doc/text //h3;
+    end_h3  = /doc/text //h3;
+    end_h3  = /doc/text //h2;
+    end_h3  = /doc/text /h1;
+    tabtitle= //table /title;
+    table   = //table /;
+    tabhead = //table /head /head@id;
+    tabcell = //table /cell /cell@id;
 
 [Structure]
     tree    = node child cover;
     main    = title body header;
     section = head text header;
-
-
-
+    para    = beg_h1 end_h1 span;
+    para    = beg_h2 end_h2 span;
+    para    = beg_h3 end_h3 span;
+    table   = tabtitle table label;
+    tabrel  = tabhead tabcell associative;
+    tabrow  = tabcell tabcell associative;
 
 

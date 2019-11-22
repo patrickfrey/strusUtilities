@@ -310,7 +310,7 @@ int main( int argc_, const char* argv_[])
 			}
 		}
 		// Parse arguments:
-		std::string logfile = "-";
+		std::string logfile = "-" /*stdout*/;
 		std::string fileext;
 		std::string segmenterName;
 		std::string contenttype;
