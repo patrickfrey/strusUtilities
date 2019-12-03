@@ -20,6 +20,8 @@ macro( add_utilities_test NAME )
     add_test( Test${NAME} execTest test${NAME} ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/../..  STRUS_MODULE_PATH=${STRUS_MODULE_PATH} )
 endmacro( add_utilities_test )
 
+add_utilities_test( InsertWikipedia1 )
+
 IF (WITH_STRUS_PATTERN STREQUAL "YES")
 add_test( TestTest execTest )
 add_utilities_test( PatternMatch1 )

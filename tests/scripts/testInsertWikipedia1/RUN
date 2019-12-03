@@ -1,0 +1,14 @@
+StrusCreate -s path=storage
+StrusAlterMetaData -s path=storage "add doclen UInt32"
+StrusInsert -s path=storage $T/doc.ana $T/data/
+StrusInspect -s "path=storage" nofdocs
+StrusInspect -s "path=storage" attribute title
+StrusInspect -s "path=storage" attribute docid
+StrusInspect -s "path=storage" metadata doclen
+StrusInspect -s "path=storage" indexterms word
+StrusInspect -s "path=storage" indexterms entity
+StrusInspect -s "path=storage" indexterms sent
+StrusInspect -s "path=storage" content orig
+StrusInspect -s "path=storage" content wordtype
+StrusInspect -s "path=storage" content entityref
+
