@@ -8,13 +8,9 @@
 [SearchIndex]
     start = empty content /doc/text;
     para = empty content /doc/text/h1;
-    para = empty content /doc/text//h2;
-    para = empty content /doc/text//h3;
-    para = empty content /doc/text//h4;
+    para = empty content /doc/text//{h2,h3,h4};
     sent = empty content {position=unique} /doc/text/h1~;
-    sent = empty content {position=unique} /doc/text//h2~;
-    sent = empty content {position=unique} /doc/text//h3~;
-    sent = empty content {position=unique} /doc/text//h4~;
+    sent = empty content {position=unique} /doc/text//{h2,h3,h4}~;
     sent = empty content {position=unique} /doc/text//li~;
     sent = empty content {position=unique} /doc/title~;
     punct = empty punctuation("en",",") {position=unique} /doc/text//();

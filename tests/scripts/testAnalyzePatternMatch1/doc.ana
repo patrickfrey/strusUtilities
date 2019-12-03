@@ -2,7 +2,7 @@
     title = text content /doc/head/id();
 
 [PatternMatch std]
-    bgepattern = {//text//(),//title//(),//ref()} "program.rul";
+    bgepattern = {"//text//()","//title//()","//ref()"} "program.rul";
 
 [SearchIndex]
     ref <- bgepattern orig;
