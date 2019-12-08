@@ -8,6 +8,8 @@
 #ifndef _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #define _STRUS_INSERTER_PROCESSOR_HPP_INCLUDED
 #include "strus/base/atomic.hpp"
+#include "strus/reference.hpp"
+#include "strus/storageTransactionInterface.hpp"
 #include "private/documentAnalyzer.hpp"
 
 namespace strus {
@@ -36,7 +38,7 @@ public:
 			const analyzer::DocumentClass& defaultDocumentClass_,
 			CommitQueue* commitque_,
 			FileCrawlerInterface* crawler_,
-			unsigned int transactionSize_,
+			int transactionSize_,
 			bool verbose_,
 			ErrorBufferInterface* errorhnd_);
 
@@ -46,13 +48,18 @@ public:
 	void run();
 
 private:
+	void processDocument( const std::string& filename);
+
+private:
 	StorageClientInterface* m_storage;
 	const TextProcessorInterface* m_textproc;
 	const strus::DocumentAnalyzer* m_analyzerMap;
 	analyzer::DocumentClass m_defaultDocumentClass;
 	CommitQueue* m_commitque;
 	FileCrawlerInterface* m_crawler;
-	unsigned int m_transactionSize;
+	strus::Reference<strus::StorageTransactionInterface> m_transaction;
+	int m_transactionSize;
+	int m_docCount;
 	bool m_verbose;
 	strus::AtomicFlag m_terminated;
 	ErrorBufferInterface* m_errorhnd;
