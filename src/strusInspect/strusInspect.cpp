@@ -975,10 +975,10 @@ static void inspectBlockStats( strus::StorageClientInterface& storage, const cha
 		}
 		const char* szent = "";
 		int64_t sz = ei->size();
-		if (sz > 100000) {sz /= 1024; szent="K";}
-		if (sz > 100000) {sz /= 1024; szent="M";}
-		if (sz > 100000) {sz /= 1024; szent="G";}
-		if (sz > 100000) {sz /= 1024; szent="T";}
+		if (sz > 100000) {sz = (sz + 512) / 1024; szent="K";}
+		if (sz > 100000) {sz = (sz + 512) / 1024; szent="M";}
+		if (sz > 100000) {sz = (sz + 512) / 1024; szent="G";}
+		if (sz > 100000) {sz = (sz + 512) / 1024; szent="T";}
 		std::cout << ei->type() << "\t" << percentage_str << "%\t" << sz << szent << std::endl;
 	}
 }
