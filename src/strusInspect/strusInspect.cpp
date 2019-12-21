@@ -965,14 +965,21 @@ static void inspectBlockStats( strus::StorageClientInterface& storage, const cha
 	{
 		double percentage = total ? (((double)ei->size() * 100.0) / (double)total) : 100.0;
 		char percentage_str[ 128];
-		std::snprintf( percentage_str, sizeof(percentage_str), "%.4f", percentage);
+		if (percentage < 3.0)
+		{
+			std::snprintf( percentage_str, sizeof(percentage_str), "%.2f", percentage);
+		}
+		else
+		{
+			std::snprintf( percentage_str, sizeof(percentage_str), "%.1f", percentage);
+		}
 		const char* szent = "";
 		int64_t sz = ei->size();
 		if (sz > 100000) {sz /= 1024; szent="K";}
 		if (sz > 100000) {sz /= 1024; szent="M";}
 		if (sz > 100000) {sz /= 1024; szent="G";}
 		if (sz > 100000) {sz /= 1024; szent="T";}
-		std::cout << ei->type() << "\t" << percentage_str << "\t" << sz << szent << std::endl;
+		std::cout << ei->type() << "\t" << percentage_str << "%\t" << sz << szent << std::endl;
 	}
 }
 
