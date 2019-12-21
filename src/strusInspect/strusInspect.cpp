@@ -26,6 +26,7 @@
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/valueIteratorInterface.hpp"
+#include "strus/blockStatistics.hpp"
 #include "strus/index.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/versionStorage.hpp"
@@ -942,6 +943,38 @@ static void inspectConfig( strus::StorageClientInterface& storage, const char**,
 	std::cout << storage.config() << std::endl;
 }
 
+static void inspectDiskUsage( strus::StorageClientInterface& storage, const char** arg, int size)
+{
+	if (size > 0) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	std::cout << storage.diskUsage() << std::endl;
+}
+
+static void inspectBlockStats( strus::StorageClientInterface& storage, const char** arg, int size)
+{
+	if (size > 0) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
+	strus::BlockStatistics bs = storage.blockStatistics();
+	std::vector<strus::BlockStatistics::Element>::const_iterator
+		ei = bs.elements().begin(), ee = bs.elements().end();
+	int64_t total = 0;
+	for (; ei != ee; ++ei)
+	{
+		total += ei->size();
+	}
+	ei = bs.elements().begin();
+	for (; ei != ee; ++ei)
+	{
+		double percentage = total ? (((double)ei->size() * 100.0) / (double)total) : 100.0;
+		char percentage_str[ 128];
+		std::snprintf( percentage_str, sizeof(percentage_str), "%.4f", percentage);
+		const char* szent = "";
+		int64_t sz = ei->size();
+		if (sz > 100000) {sz /= 1024; szent="K";}
+		if (sz > 100000) {sz /= 1024; szent="M";}
+		if (sz > 100000) {sz /= 1024; szent="G";}
+		if (sz > 100000) {sz /= 1024; szent="T";}
+		std::cout << ei->type() << "\t" << percentage_str << "\t" << sz << szent << std::endl;
+	}
+}
 
 int main( int argc, const char* argv[])
 {
@@ -1107,11 +1140,16 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Print a map docno to forward index element for a type") << std::endl;
 			std::cout << "                 " << _TXT("If document is not specified then dump value for all docs.") << std::endl;
 			std::cout << "            \"token\" <type> <doc-id/no>" << std::endl;
-			std::cout << "               = " << _TXT("Get the list of terms in the forward index for a type") << std::endl;
+			std::cout << "               = " << _TXT("Get the list of terms in the forward index for a type.") << std::endl;
 			std::cout << "            \"docno\" <docid>" << std::endl;
-			std::cout << "               = " << _TXT("Get the internal document number for a document id") << std::endl;
+			std::cout << "               = " << _TXT("Get the internal document number for a document id.") << std::endl;
 			std::cout << "            \"config\"" << std::endl;
-			std::cout << "               = " << _TXT("Get the configuration the storage was created with") << std::endl;
+			std::cout << "               = " << _TXT("Get the configuration the storage was created with.") << std::endl;
+			std::cout << "            \"diskusage\"" << std::endl;
+			std::cout << "               = " << _TXT("Get the disk usage of the storage.") << std::endl;
+			std::cout << "            \"blockstats\"" << std::endl;
+			std::cout << "               = " << _TXT("Get the block storage usage statistics of the storage.") << std::endl;
+
 			std::cout << _TXT("description: Inspect some data in the storage.") << std::endl;
 			std::cout << _TXT("options:") << std::endl;
 			std::cout << "-h|--help" << std::endl;
@@ -1291,6 +1329,14 @@ int main( int argc, const char* argv[])
 		else if (strus::caseInsensitiveEquals( what, "config"))
 		{
 			inspectConfig( *storage, inpectarg, inpectargsize);
+		}
+		else if (strus::caseInsensitiveEquals( what, "diskusage"))
+		{
+			inspectDiskUsage( *storage, inpectarg, inpectargsize);
+		}
+		else if (strus::caseInsensitiveEquals( what, "blockstats"))
+		{
+			inspectBlockStats( *storage, inpectarg, inpectargsize);
 		}
 		else
 		{
