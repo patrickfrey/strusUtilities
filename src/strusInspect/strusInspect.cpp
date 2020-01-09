@@ -7,6 +7,7 @@
  */
 #include "strus/lib/module.hpp"
 #include "strus/lib/error.hpp"
+#include "strus/lib/structs.hpp"
 #include "strus/lib/storage_objbuild.hpp"
 #include "strus/lib/rpc_client.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
@@ -267,7 +268,7 @@ static void inspectDocumentIndexTerms( strus::StorageClientInterface& storage, c
 	}
 }
 
-static void inspectDocumentIndexStructures( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty)
+static void inspectDocumentIndexStructures( strus::StorageClientInterface& storage, const char** key, int size, const std::string& attribute, bool printEmpty, strus::ErrorBufferInterface* errorhnd)
 {
 	if (size > 3) throw strus::runtime_error( "%s",  _TXT("too many arguments"));
 	if (size < 1) throw strus::runtime_error( "%s",  _TXT("too few arguments"));
@@ -285,9 +286,11 @@ static void inspectDocumentIndexStructures( strus::StorageClientInterface& stora
 		viewer.reset( storage.createForwardIterator( std::string(key[2])));
 		if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator for representing structure content"));
 	}
-	strus::StructIteratorReference itr(
-		storage.createStructIterator( std::string(key[0])));
+	strus::StructIteratorReference itr( storage.createStructIterator());
+	strus::Index structno = storage.structTypeNumber( key[0]);
+
 	if (!itr.get()) throw std::runtime_error( _TXT("failed to create document structure iterator"));
+	if (!structno) throw strus::runtime_error( _TXT("unknown structure id: %s"), key[0]);
 
 	if (size == 1)
 	{
@@ -295,28 +298,28 @@ static void inspectDocumentIndexStructures( strus::StorageClientInterface& stora
 		strus::Index docno = 1;
 		for (; docno <= maxDocno; ++docno)
 		{
-			strus::Index next_docno = itr->skipDoc( docno);
-			if (!next_docno) break;
-
-			if (printEmpty && next_docno > docno)
+			itr->skipDoc( docno);
+			strus::StorageStructMap structMap( itr.get(), docno, errorhnd);
+			if (structMap.empty())
 			{
-				for (; docno < next_docno; ++docno)
+				if (printEmpty)
 				{
 					printDocumentDocidLine( docno, areader.get(), ahandle);
 				}
+				continue;
 			}
-			docno = next_docno;
 			printDocumentDocidLine( docno, areader.get(), ahandle);
 
-			strus::IndexRange source = itr->skipPosSource( 0);
-			for (;source.defined(); source = itr->skipPosSource( source.end()+1))
+			strus::StorageStructMap::const_iterator si = structMap.begin( structno), se = structMap.end( structno);
+			for (; si != se; ++si)
 			{
-				std::cout << "[" << source.start() << "," << source.end() << "]" << std::endl;
-
-				strus::IndexRange sink = itr->skipPosSink( 0);
-				for (;sink.defined(); sink = itr->skipPosSink( sink.end()+1))
+				std::vector<strus::IndexRange>::const_iterator
+					ri = si->second.second.begin(), re = si->second.second.end();
+				for (; ri != re; ++ri)
 				{
-					std::cout << "\t-> " << "[" << sink.start() << "," << sink.end() << "]" << std::endl;
+					std::cout << strus::string_format( "[%d,%d] -> [%d,%d]",
+						(int)si->second.first.start(), (int)si->second.first.end(),
+						(int)ri->start(), (int)ri->end()) << std::endl;
 				}
 			}
 		}
@@ -328,49 +331,55 @@ static void inspectDocumentIndexStructures( strus::StorageClientInterface& stora
 				:storage.documentNumber( key[1]);
 		if (docno)
 		{
-			if (docno == itr->skipDoc( docno))
+			itr->skipDoc( docno);
+			strus::StorageStructMap structMap( itr.get(), docno, errorhnd);
+			if (viewer.get())
 			{
-				if (viewer.get())
+				viewer->skipDoc( docno);
+				strus::StorageStructMap::const_iterator si = structMap.begin( structno), se = structMap.end( structno);
+				for (; si != se; ++si)
 				{
-					viewer->skipDoc( docno);
-					strus::IndexRange source = itr->skipPosSource( 0);
-					for (;source.defined(); source = itr->skipPosSource( source.end()+1))
+					std::string header;
+					strus::IndexRange source = si->second.first;
+					strus::Index pos = viewer->skipPos( source.start());
+
+					for (; pos < source.end(); pos = viewer->skipPos( pos+1))
 					{
-						strus::Index pos = viewer->skipPos( source.start());
-						std::string header;
-						for (; pos < source.end(); pos = viewer->skipPos( pos+1))
+						if (!header.empty()) header.push_back(' ');
+						header.append( viewer->fetch());
+					}
+					std::cout << header << std::endl << std::endl;
+
+					std::vector<strus::IndexRange>::const_iterator
+						ri = si->second.second.begin(), re = si->second.second.end();
+					for (; ri != re; ++ri)
+					{
+						strus::IndexRange sink = *ri;
+						std::string content;
+
+						strus::Index cp = viewer->skipPos( sink.start());
+						for (; cp < sink.end(); cp = viewer->skipPos( cp+1))
 						{
-							if (!header.empty()) header.push_back(' ');
-							header.append( viewer->fetch());
+							if (!content.empty()) content.push_back(' ');
+							content.append( viewer->fetch());
 						}
-						std::cout << header << std::endl << std::endl;
-						strus::IndexRange sink = itr->skipPosSink( 0);
-						for (;sink.defined(); sink = itr->skipPosSink( sink.end()+1))
-						{
-							strus::Index cp = viewer->skipPos( sink.start());
-							std::string content;
-							for (; cp < sink.end(); cp = viewer->skipPos( cp+1))
-							{
-								if (!content.empty()) content.push_back(' ');
-								content.append( viewer->fetch());
-							}
-							std::cout << "=>\t" << content << std::endl;
-						}
+						std::cout << "=>\t" << content << std::endl;
 						std::cout << std::endl;
 					}
 				}
-				else
+			}
+			else
+			{
+				strus::StorageStructMap::const_iterator si = structMap.begin( structno), se = structMap.end( structno);
+				for (; si != se; ++si)
 				{
-					strus::IndexRange source = itr->skipPosSource( 0);
-					for (;source.defined(); source = itr->skipPosSource( source.end()+1))
+					std::vector<strus::IndexRange>::const_iterator
+						ri = si->second.second.begin(), re = si->second.second.end();
+					for (; ri != re; ++ri)
 					{
-						std::cout << "[" << source.start() << "," << source.end() << "]" << std::endl;
-		
-						strus::IndexRange sink = itr->skipPosSink( 0);
-						for (;sink.defined(); sink = itr->skipPosSink( sink.end()+1))
-						{
-							std::cout << "\t-> " << "[" << sink.start() << "," << sink.end() << "]" << std::endl;
-						}
+						std::cout << strus::string_format( "[%d,%d] -> [%d,%d]",
+							(int)si->second.first.start(), (int)si->second.first.end(),
+							(int)ri->start(), (int)ri->end()) << std::endl;
 					}
 				}
 			}
@@ -1287,7 +1296,7 @@ int main( int argc, const char* argv[])
 		}
 		else if (strus::caseInsensitiveEquals( what, "indexstructs"))
 		{
-			inspectDocumentIndexStructures( *storage, inpectarg, inpectargsize, attribute, printEmpty);
+			inspectDocumentIndexStructures( *storage, inpectarg, inpectargsize, attribute, printEmpty, errorBuffer.get());
 		}
 		else if (strus::caseInsensitiveEquals( what, "nofdocs"))
 		{
