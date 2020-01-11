@@ -46,6 +46,7 @@ public:
 
 	void sigStop();
 	void run();
+	bool hasError() const	{return m_gotError;}
 
 private:
 	void processDocument( const std::string& filename);
@@ -61,6 +62,7 @@ private:
 	int m_transactionSize;
 	int m_docCount;
 	bool m_verbose;
+	bool m_gotError;
 	strus::AtomicFlag m_terminated;
 	ErrorBufferInterface* m_errorhnd;
 };

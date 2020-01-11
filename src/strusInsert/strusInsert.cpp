@@ -464,6 +464,7 @@ int main( int argc_, const char* argv_[])
 				storage.get(), textproc, &analyzerMap, documentClass, commitQue.get(),
 				fileCrawler.get(), transactionSize, verbose, errorBuffer.get());
 			inserter.run();
+			if (inserter.hasError()) rt = -3;
 		}
 		else
 		{
@@ -484,8 +485,13 @@ int main( int argc_, const char* argv_[])
 					strus::Reference<strus::thread> th( new strus::thread( &strus::InsertProcessor::run, tc));
 					threadGroup.push_back( th);
 				}
-				std::vector<strus::Reference<strus::thread> >::iterator gi = threadGroup.begin(), ge = threadGroup.end();
+				std::vector<strus::Reference<strus::thread> >::iterator
+					gi = threadGroup.begin(), ge = threadGroup.end();
 				for (; gi != ge; ++gi) (*gi)->join();
+				for (int ti=0; ti<nofThreads; ++ti)
+				{
+					if (processorList[ ti]->hasError()) rt = -3;
+				}
 			}
 		}
 		// Close of the storage including compaction of the database:
@@ -509,7 +515,7 @@ int main( int argc_, const char* argv_[])
 			std::cerr << _TXT("failed to dump debug trace to file") << std::endl;
 		}
 		if (logfile) fclose( logfile);
-		return 0;
+		return rt;
 	}
 	catch (const std::bad_alloc&)
 	{

@@ -1,0 +1,113 @@
+# 
+# Document analyzer program for inserting into storage
+# Token types:
+#	-punct sentence delimiter (T# in vector storage and tagging)
+#	-comma punctuation without sentence delimiter (P# in vector storage and tagging)
+#	-C cardinal number
+#	-X existential there
+#	-A adjective/adverb
+#	-V verb, past tense or gerund or present participle or past participle or singular present
+#	-M modal, pre determiner
+#	-N noun singular or plural, foreign word
+#	-E entity (proper noun, singular or plural)
+#	-U URI
+#	-R entity, personal or possesive pronoun
+#	-W determiner
+#
+[ForwardIndex]
+	url = lc regex("^[a-z]{3,6}[:][/][/]([^ ?/]*)") {position=succ} //weblink@id;
+	url = lc regex("^([a-z]{1,32}[.][^ ?/]*)") {position=succ} //weblink@id;
+	pageref = orig content {position=succ} //pagelink@id;
+	categoryid = orig content {position=succ} //category@cid;
+	headid = orig content {position=succ} //title@id;
+	headid = orig content {position=succ} //heading@id;
+
+	entityref = orig content {position=succ} //N@id;
+	entityref = orig content {position=succ} //E@id;
+	entityref = orig content {position=succ} //R@id;
+
+	wordtype = const("T") content //T;
+	wordtype = const("P") content //P;
+	wordtype = const("C") content //C();
+	wordtype = const("X") content //X();
+	wordtype = const("A") content //A();
+	wordtype = const("V") content //V();
+	wordtype = const("M") content //M();
+	wordtype = const("N") content //N();
+	wordtype = const("E") content //E();
+	wordtype = const("U") content //U();
+	wordtype = const("R") content //R();
+	wordtype = const("W") content //W();
+
+	orig = orig content //{T,P,C,X,A,V,M,N,E,U,R,W}();
+	orig = orig content //{heading,tabtitle,head,cell}();
+	orig = orig content //{citation,ref,list,text,attr}();
+	orig = orig content //{pagelink,weblink,entity,quot}();
+	orig = orig word //math();
+	orig = orig content //{char,code,bibref,time}();
+
+[SearchIndex]
+	word = lc:entityid regex("^[a-z]{3,5}[:][/][/]([^ ?/]{1,32})") {position=succ} //weblink@id;
+	word = lc:entityid regex("^([a-z\.]{6,24}[^ ?/]{1,20})") {position=succ} //weblink@id;
+	headid = lc content {position=succ} //title@id;
+	headid = lc content {position=succ} //heading@id;
+	cithead= empty content //citlink@id;
+
+	sent = empty content //T;
+	title = lc word /doc/title();
+
+	entity = lc:entityid content {position=succ} //N@id;
+	entity = lc:entityid content {position=succ} //E@id;
+	entity = lc:entityid content {position=succ} //R@id;
+
+	word = lc word //{C,X,A,V,M,N,E,U,R,W}();
+	word = lc:entityid content //N();
+	word = lc:entityid content //E();
+
+	word = lc word //{heading,tabtitle,head,cell}();
+	word = lc word //{citation,ref,list,text,attr}();
+	word = lc word //{pagelink,weblink,entity,quot}();
+	word = lc word //{math,char,code}();
+
+[Field]
+	tabtitle= //table /tabtitle;
+	table   = //table /;
+	tabhead = //table /head /head@id;
+	tabcell = //table /cell /cell@id;
+	title   = /doc /title;
+	body    = /doc /;
+	start_h1= /doc /heading[@lv="h1"];
+	end_h1  = /doc /heading[@lv="h1"];
+	start_h2= /doc /heading[@lv="h2"];
+	end_h2  = /doc /heading[@lv="h2"];
+	end_h2  = /doc /heading[@lv="h1"];
+	start_h3= /doc /heading[@lv="h3"];
+	end_h3  = /doc /heading[@lv="h3"];
+	end_h3  = /doc /heading[@lv="h2"];
+	end_h3  = /doc /heading[@lv="h1"];
+	start_h4= /doc /heading[@lv="h4"];
+	end_h4  = /doc /heading[@lv="h4"];
+	end_h4  = /doc /heading[@lv="h3"];
+	end_h4  = /doc /heading[@lv="h2"];
+	end_h4  = /doc /heading[@lv="h1"];
+	cithead = /doc //citlink //citlink@id;
+	citbody = /doc //citation //citation@id;
+
+[Structure]
+	section = tabtitle table label;
+	tabrel  = tabhead tabcell associative;
+	citrel  = cithead citbody associative;
+	doc     = title body label;
+	section = title start_h1 span;
+	section = start_h1 end_h1 span;
+	section = start_h2 end_h2 span;
+	section = start_h3 end_h3 span;
+	section = start_h4 end_h4 span;
+
+[Attribute]
+	title = orig content /doc/title();
+	docid = orig content /doc/docid();
+[Aggregator]
+	doclen = count( word);
+[Metadata]
+

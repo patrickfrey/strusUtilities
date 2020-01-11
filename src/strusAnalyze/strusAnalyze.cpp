@@ -12,6 +12,7 @@
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/filecrawler.hpp"
+#include "strus/lib/fieldtrees.hpp"
 #include "private/fileCrawlerInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
@@ -26,6 +27,7 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
+#include "strus/index.hpp"
 #include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/documentClass.hpp"
@@ -256,13 +258,116 @@ static bool compareOrderDocumentStructureByStartPos( const strus::analyzer::Docu
 	}
 }
 
+enum OutputMode {
+	DumpOutput,
+	UniqueDumpOutput,
+	FeatureListOutput,
+	StructureListOutput,
+	StructureFieldTreeOutput
+};
+
+static std::string getMostUsedForwardIndexTerm( const strus::analyzer::Document& doc)
+{
+	std::map<std::string, std::set<strus::Index> > pmap;
+	std::vector<strus::analyzer::DocumentTerm>::const_iterator
+		fi = doc.forwardIndexTerms().begin(), fe = doc.forwardIndexTerms().end();
+	for (; fi != fe; ++fi)
+	{
+		pmap[ fi->type()].insert( fi->pos());
+	}
+	std::size_t maxOccurrence = 0;
+	std::string rt;
+	std::map<std::string, std::set<strus::Index> >::const_iterator
+		pi = pmap.begin(), pe = pmap.end();
+	for (; pi != pe; ++pi)
+	{
+		std::size_t occurrence = pi->second.size();
+		if (occurrence > maxOccurrence)
+		{
+			maxOccurrence = occurrence;
+			rt = pi->first;
+		}
+	}
+	return rt;
+}
+
+static std::map<strus::Index,std::string> getForwardIndexPosTermMap( const strus::analyzer::Document& doc)
+{
+	std::map<strus::Index,std::string> rt;
+	std::string value = getMostUsedForwardIndexTerm( doc);
+	std::vector<strus::analyzer::DocumentTerm>::const_iterator
+		fi = doc.forwardIndexTerms().begin(), fe = doc.forwardIndexTerms().end();
+	for (; fi != fe; ++fi)
+	{
+		rt[ fi->pos()] = fi->value();
+	}
+	return rt;
+}
+
+static std::string getFieldContentString( const strus::IndexRange& field, const std::map<strus::Index,std::string>& fmap)
+{
+	std::string rt;
+	strus::Index pos = field.start();
+	while (pos < field.end())
+	{
+		if (!rt.empty()) rt.push_back(' ');
+
+		std::map<strus::Index,std::string>::const_iterator fi = fmap.lower_bound( pos);
+		if (fi == fmap.end())
+		{
+			rt.append( "...");
+			return rt;
+		}
+		else if (fi->first > pos)
+		{
+			rt.append( "...");
+			if (fi->first < field.end()) rt.append( fi->second);
+		}
+		else
+		{
+			rt.append( fi->second);
+		}
+		pos = fi->first+1;
+	}
+	return rt;
+}
+
+static void printIndent( std::ostream& out, int depth)
+{
+	for (; depth>0; --depth) out << "  ";
+}
+
+static void printRange( std::ostream& out, const strus::IndexRange& range)
+{
+	out << strus::string_format("[%d,%d]", (int)range.start(), (int)range.end());
+}
+
+static void printFieldTreeContent( std::ostream& out, const strus::FieldTree& tree, const std::map<strus::Index,std::string>& fmap, int depth)
+{
+	printIndent( out, depth);
+	printRange( out, tree.range);
+	if (tree.chld.empty())
+	{
+		out << " " << getFieldContentString( tree.range, fmap) << std::endl;
+	}
+	else
+	{
+		out << ":" << std::endl;
+		strus::FieldTree::const_iterator ci = tree.chld.begin(), ce = tree.chld.end();
+		for (; ci != ce; ++ci)
+		{
+			printFieldTreeContent( out, *ci, fmap, depth+1);
+		}
+	}
+}
+
+
 static void analyzeDocument(
 	const strus::DocumentAnalyzer& analyzerMap,
 	const strus::TextProcessorInterface* textproc,
 	const strus::analyzer::DocumentClass& documentClass,
 	const std::string& docpath,
-	bool doDump,
-	bool uniqueDump,
+	OutputMode outputMode,
 	const DumpConfig& dumpConfig)
 {
 	// Create the document analyzer context:
@@ -297,140 +402,212 @@ static void analyzeDocument(
 		strus::analyzer::Document doc;
 		while (analyzerContext->analyzeNext( doc))
 		{
-			if (doDump)
+			switch (outputMode)
 			{
-				std::vector<strus::analyzer::DocumentTerm> termar;
-				std::vector<strus::analyzer::DocumentMetaData>::const_iterator
-					mi = doc.metadata().begin(), me = doc.metadata().end();
-				for (; mi != me; ++mi)
+				case DumpOutput:
+				case UniqueDumpOutput:
 				{
-					DumpConfig::const_iterator dci = dumpConfig.find( mi->name());
-					if (dci != dumpConfig.end())
+					std::vector<strus::analyzer::DocumentTerm> termar;
+					std::vector<strus::analyzer::DocumentMetaData>::const_iterator
+						mi = doc.metadata().begin(), me = doc.metadata().end();
+					for (; mi != me; ++mi)
 					{
-						if (dci->second.value.empty())
+						DumpConfig::const_iterator dci = dumpConfig.find( mi->name());
+						if (dci != dumpConfig.end())
 						{
-							termar.push_back( strus::analyzer::DocumentTerm( mi->name(), mi->value().tostring().c_str(), 0/*pos*/));
-						}
-						else
-						{
-							termar.push_back( strus::analyzer::DocumentTerm( mi->name(), dci->second.value, 0/*pos*/));
+							if (dci->second.value.empty())
+							{
+								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), mi->value().tostring().c_str(), 0/*pos*/));
+							}
+							else
+							{
+								termar.push_back( strus::analyzer::DocumentTerm( mi->name(), dci->second.value, 0/*pos*/));
+							}
 						}
 					}
-				}
-				std::vector<strus::analyzer::DocumentAttribute>::const_iterator
-					ai = doc.attributes().begin(), ae = doc.attributes().end();
-				for (; ai != ae; ++ai)
-				{
-					DumpConfig::const_iterator dci = dumpConfig.find( ai->name());
-					if (dci != dumpConfig.end())
+					std::vector<strus::analyzer::DocumentAttribute>::const_iterator
+						ai = doc.attributes().begin(), ae = doc.attributes().end();
+					for (; ai != ae; ++ai)
 					{
-						if (dci->second.value.empty())
+						DumpConfig::const_iterator dci = dumpConfig.find( ai->name());
+						if (dci != dumpConfig.end())
 						{
-							termar.push_back( strus::analyzer::DocumentTerm( ai->name(), ai->value(), 0/*pos*/));
-						}
-						else
-						{
-							termar.push_back( strus::analyzer::DocumentTerm( ai->name(), dci->second.value, 0/*pos*/));
+							if (dci->second.value.empty())
+							{
+								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), ai->value(), 0/*pos*/));
+							}
+							else
+							{
+								termar.push_back( strus::analyzer::DocumentTerm( ai->name(), dci->second.value, 0/*pos*/));
+							}
 						}
 					}
-				}
-				if (uniqueDump)
-				{
-					filterTermsUniquePosition( termar, dumpConfig, doc.searchIndexTerms());
-					filterTermsUniquePosition( termar, dumpConfig, doc.forwardIndexTerms());
-				}
-				else
-				{
-					filterTerms( termar, dumpConfig, doc.forwardIndexTerms());
-					filterTerms( termar, dumpConfig, doc.searchIndexTerms());
-				}
-				std::sort( termar.begin(), termar.end(), TermOrder());
-
-				std::vector<strus::analyzer::DocumentTerm>::const_iterator
-					ti = termar.begin(), te = termar.end();
-				for (unsigned int tidx=0; ti != te; ++ti,++tidx)
-				{
-					if (tidx) std::cout << ' ';
-					std::cout << ti->value();
-				}
-			}
-			else
-			{
-				if (!doc.subDocumentTypeName().empty())
-				{
-					std::cout << "-- " << strus::string_format( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
-				}
-				std::vector<strus::analyzer::DocumentTerm> itermar = doc.searchIndexTerms();
-				std::sort( itermar.begin(), itermar.end(), TermOrder());
-	
-				std::vector<strus::analyzer::DocumentTerm>::const_iterator
-					ti = itermar.begin(), te = itermar.end();
-
-				std::cout << std::endl << _TXT("search index terms:") << std::endl;
-				for (; ti != te; ++ti)
-				{
-					std::cout << ti->pos() << ":"
-						  << " " << ti->type()
-						  << " '" << ti->value() << "'"
-						  << std::endl;
-				}
-
-				if (!doc.searchIndexStructures().empty())
-				{
-					std::vector<strus::analyzer::DocumentStructure>
-						structlist = doc.searchIndexStructures();
-					std::sort( structlist.begin(), structlist.end(), &compareOrderDocumentStructureByStartPos);
-
-					std::cout << std::endl << _TXT("search index structures:") << std::endl;
-					std::vector<strus::analyzer::DocumentStructure>::const_iterator
-						si = structlist.begin(), se = structlist.end();
-					for (; si != se; ++si)
+					if (outputMode == UniqueDumpOutput)
 					{
-						int sourcelen = si->source().end() - si->source().start();
-						int sinklen = si->sink().end() - si->sink().start();
-	
-						std::cout << si->source().start() << ":"
-							  << " " << si->name()
-							  << " " << strus::string_format("[%d] -> %d [%d]", sourcelen, si->sink().start(), sinklen)
+						filterTermsUniquePosition( termar, dumpConfig, doc.searchIndexTerms());
+						filterTermsUniquePosition( termar, dumpConfig, doc.forwardIndexTerms());
+					}
+					else
+					{
+						filterTerms( termar, dumpConfig, doc.forwardIndexTerms());
+						filterTerms( termar, dumpConfig, doc.searchIndexTerms());
+					}
+					std::sort( termar.begin(), termar.end(), TermOrder());
+
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
+						ti = termar.begin(), te = termar.end();
+					for (unsigned int tidx=0; ti != te; ++ti,++tidx)
+					{
+						if (tidx) std::cout << ' ';
+						std::cout << ti->value();
+					}
+					break;
+				}
+				case FeatureListOutput:
+				{
+					if (!doc.subDocumentTypeName().empty())
+					{
+						std::cout << "-- " << strus::string_format( _TXT("document type name %s"), doc.subDocumentTypeName().c_str()) << std::endl;
+					}
+					std::vector<strus::analyzer::DocumentTerm> itermar = doc.searchIndexTerms();
+					std::sort( itermar.begin(), itermar.end(), TermOrder());
+		
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
+						ti = itermar.begin(), te = itermar.end();
+
+					std::cout << std::endl << _TXT("search index terms:") << std::endl;
+					for (; ti != te; ++ti)
+					{
+						std::cout << ti->pos() << ":"
+							  << " " << ti->type()
+							  << " '" << ti->value() << "'"
 							  << std::endl;
 					}
-				}
 
-				std::vector<strus::analyzer::DocumentTerm> ftermar = doc.forwardIndexTerms();
-				std::sort( ftermar.begin(), ftermar.end(), TermOrder());
+					if (!doc.searchIndexStructures().empty())
+					{
+						std::vector<strus::analyzer::DocumentStructure>
+							structlist = doc.searchIndexStructures();
+						std::sort( structlist.begin(), structlist.end(), &compareOrderDocumentStructureByStartPos);
 
-				std::vector<strus::analyzer::DocumentTerm>::const_iterator
-					fi = ftermar.begin(), fe = ftermar.end();
+						std::cout << std::endl << _TXT("search index structures:") << std::endl;
+						std::vector<strus::analyzer::DocumentStructure>::const_iterator
+							si = structlist.begin(), se = structlist.end();
+						for (; si != se; ++si)
+						{
+							std::cout
+								<< strus::string_format("%s: [%d,%d] -> [%d,%d]",
+									si->name().c_str(),
+									(int)si->source().start(), (int)si->source().end(),
+									(int)si->sink().start(), (int)si->sink().end())
+								<< std::endl;
+						}
+					}
 
-				std::cout << std::endl << _TXT("forward index terms:") << std::endl;
-				for (; fi != fe; ++fi)
-				{
-					std::cout << fi->pos()
-						  << " " << fi->type()
-						  << " '" << fi->value() << "'"
-						  << std::endl;
-				}
+					std::vector<strus::analyzer::DocumentTerm> ftermar = doc.forwardIndexTerms();
+					std::sort( ftermar.begin(), ftermar.end(), TermOrder());
 
-				std::vector<strus::analyzer::DocumentMetaData>::const_iterator
-					mi = doc.metadata().begin(), me = doc.metadata().end();
+					std::vector<strus::analyzer::DocumentTerm>::const_iterator
+						fi = ftermar.begin(), fe = ftermar.end();
+
+					std::cout << std::endl << _TXT("forward index terms:") << std::endl;
+					for (; fi != fe; ++fi)
+					{
+						std::cout << fi->pos()
+							  << " " << fi->type()
+							  << " '" << fi->value() << "'"
+							  << std::endl;
+					}
+
+					std::vector<strus::analyzer::DocumentMetaData>::const_iterator
+						mi = doc.metadata().begin(), me = doc.metadata().end();
+		
+					std::cout << std::endl << _TXT("metadata:") << std::endl;
+					for (; mi != me; ++mi)
+					{
+						std::cout << mi->name()
+							  << " '" << mi->value().tostring().c_str() << "'"
+							  << std::endl;
+					}
 	
-				std::cout << std::endl << _TXT("metadata:") << std::endl;
-				for (; mi != me; ++mi)
-				{
-					std::cout << mi->name()
-						  << " '" << mi->value().tostring().c_str() << "'"
-						  << std::endl;
+					std::vector<strus::analyzer::DocumentAttribute>::const_iterator
+						ai = doc.attributes().begin(), ae = doc.attributes().end();
+
+					std::cout << std::endl << _TXT("attributes:") << std::endl;
+					for (; ai != ae; ++ai)
+					{
+						std::cout << ai->name()
+							  << " '" << ai->value() << "'"
+							  << std::endl;
+					}
+					break;
 				}
-
-				std::vector<strus::analyzer::DocumentAttribute>::const_iterator
-					ai = doc.attributes().begin(), ae = doc.attributes().end();
-
-				std::cout << std::endl << _TXT("attributes:") << std::endl;
-				for (; ai != ae; ++ai)
+				case StructureListOutput:
 				{
-					std::cout << ai->name()
-						  << " '" << ai->value() << "'"
-						  << std::endl;
+					if (!doc.searchIndexStructures().empty())
+					{
+						std::map<strus::Index,std::string>
+							fmap = getForwardIndexPosTermMap( doc);
+						std::vector<strus::analyzer::DocumentStructure>
+							structlist = doc.searchIndexStructures();
+						std::sort( structlist.begin(), structlist.end(), &compareOrderDocumentStructureByStartPos);
+
+						std::cout << std::endl << _TXT("search index structures:") << std::endl;
+						std::vector<strus::analyzer::DocumentStructure>::const_iterator
+							si = structlist.begin(), se = structlist.end();
+						for (; si != se; ++si)
+						{
+							strus::IndexRange source( si->source().start(), si->source().end());
+							strus::IndexRange sink( si->sink().start(), si->sink().end());
+							std::cout << si->name() << ": [[";
+							std::cout << getFieldContentString( source, fmap);
+							std::cout << "]] => [[";
+							std::cout << getFieldContentString( sink, fmap);
+							std::cout << "]]" << std::endl;
+						}
+					}
+					break;
+				}
+				case StructureFieldTreeOutput:
+				{
+					if (!doc.searchIndexStructures().empty())
+					{
+						std::map<strus::Index,std::string>
+							fmap = getForwardIndexPosTermMap( doc);
+						strus::LocalErrorBuffer errorbuf;
+						std::vector<strus::analyzer::DocumentStructure>
+							structlist = doc.searchIndexStructures();
+						std::vector<strus::IndexRange> fieldlist;
+						std::vector<strus::analyzer::DocumentStructure>::const_iterator
+							si = structlist.begin(), se = structlist.end();
+						for (; si != se; ++si)
+						{
+							strus::IndexRange source( si->source().start(), si->source().end());
+							strus::IndexRange sink( si->sink().start(), si->sink().end());
+							fieldlist.push_back( source);
+							fieldlist.push_back( sink);
+						}
+						std::vector<strus::IndexRange> rest;
+						std::vector<strus::FieldTree> treelist = strus::buildFieldTrees( rest, fieldlist, &errorbuf);
+						if (errorbuf.hasError()) throw strus::runtime_error( _TXT("error in field tree output: %s"), errorbuf.fetchError());
+						if (!rest.empty())
+						{
+							std::cerr << _TXT("got field overlaps without complete coverage, structure fields not strictly hierarchical:") << std::endl;
+							std::vector<strus::IndexRange>::const_iterator
+								ri = rest.begin(), re = rest.end();
+							for (; ri != re; ++ri)
+							{
+								std::cerr << "=> " << getFieldContentString( *ri, fmap) << std::endl;
+							}
+						}
+						std::cout << std::endl << _TXT("search index trees:") << std::endl;
+						std::vector<strus::FieldTree>::const_iterator ti = treelist.begin(), te = treelist.end();
+						for (; ti != te; ++ti)
+						{
+							printFieldTreeContent( std::cout, *ti, fmap, 0);
+						}
+					}
+					break;
 				}
 			}
 		}
@@ -456,10 +633,11 @@ int main( int argc, const char* argv[])
 	{
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
-				errorBuffer.get(), argc, argv, 15,
+				errorBuffer.get(), argc, argv, 17,
 				"h,help", "v,version", "license", "G,debug:", "m,module:",
 				"M,moduledir:", "r,rpc:", "T,trace:", "R,resourcedir:",
-				"g,segmenter:", "C,contenttype:", "x,extension:", "d,delim:", "D,dump:", "U,unique");
+				"g,segmenter:", "C,contenttype:", "x,extension:", "d,delim:",
+				"D,dump:", "U,unique", "structlist", "fieldtree");
 		if (errorBuffer->hasError())
 		{
 			throw strus::runtime_error(_TXT("failed to parse program arguments"));
@@ -595,14 +773,17 @@ int main( int argc, const char* argv[])
 			std::cout << "    " << _TXT("Ouput dump (Option -D|--dump) only one element per ordinal position.") << std::endl;
 			std::cout << "    " << _TXT("Order of priorization specified in dump configuration.") << std::endl;
 			std::cout << "    " << _TXT("Structures are ommited in the output of a dump.") << std::endl;
+			std::cout << "--structlist" << std::endl;
+			std::cout << "    " << _TXT("Output list of structures with contents from forward index.") << std::endl;
+			std::cout << "--fieldtree" << std::endl;
+			std::cout << "    " << _TXT("Output tree of structure fields with contents from forward index.") << std::endl;
 			return rt;
 		}
 		// Parse arguments:
 		std::string segmenterName;
 		std::string contenttype;
 		DumpConfig dumpConfig;
-		bool doDump = false;
-		bool uniqueDump = false;
+		OutputMode outputMode = FeatureListOutput;
 		std::string fileext;
 		std::string resultDelimiter;
 
@@ -626,10 +807,15 @@ int main( int argc, const char* argv[])
 		{
 			resultDelimiter = opt[ "delim"];
 		}
+		std::pair<const char*,const char*>
+			conflict = opt.conflictingOpts( 3, "dump", "structlist", "fieldtree");
+		if (conflict.first && conflict.second)
+		{
+			throw strus::runtime_error( _TXT("conflicting options: --%s and --%s"), conflict.first, conflict.second);
+		}
 		if (opt( "dump"))
 		{
 			strus::local_ptr<strus::DebugTraceContextInterface> dbgtracectx( dbgtrace->createTraceContext( "dump"));
-			doDump = true;
 			std::string ds = opt[ "dump"];
 			char const* di = ds.c_str();
 			int priority = -1;
@@ -649,12 +835,21 @@ int main( int argc, const char* argv[])
 					}
 				}
 			}
-			uniqueDump = opt("unique");
+			outputMode = opt("unique") ? UniqueDumpOutput : DumpOutput;
 		}
 		else if (opt("unique"))
 		{
 			throw strus::runtime_error(_TXT("option --unique makes only sense with option --dump"));
 		}
+		else if (opt("structlist"))
+		{
+			outputMode = StructureListOutput;
+		}
+		else if (opt("fieldtree"))
+		{
+			outputMode = StructureFieldTreeOutput;
+		}
+
 		// Declare trace proxy objects:
 		typedef strus::Reference<strus::TraceProxy> TraceReference;
 		std::vector<TraceReference> trace;
@@ -757,7 +952,7 @@ int main( int argc, const char* argv[])
 		// Do analyze document(s):
 		if (docpathIsFile)
 		{
-			analyzeDocument( analyzerMap, textproc, documentClass, docpath, doDump, uniqueDump, dumpConfig);
+			analyzeDocument( analyzerMap, textproc, documentClass, docpath, outputMode, dumpConfig);
 			if (errorBuffer->hasError())
 			{
 				throw std::runtime_error( _TXT("error in analyze document"));
@@ -777,7 +972,7 @@ int main( int argc, const char* argv[])
 				for (int fidx=0; fitr != files.end(); ++fitr,++fidx)
 				{
 					if (fidx) std::cout << std::endl << resultDelimiter;
-					analyzeDocument( analyzerMap, textproc, documentClass, *fitr, doDump, uniqueDump, dumpConfig);
+					analyzeDocument( analyzerMap, textproc, documentClass, *fitr, outputMode, dumpConfig);
 				}
 			}
 		}

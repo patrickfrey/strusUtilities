@@ -51,6 +51,7 @@ InsertProcessor::InsertProcessor(
 	,m_transactionSize(transactionSize_)
 	,m_docCount(0)
 	,m_verbose(verbose_)
+	,m_gotError(false)
 	,m_terminated(false)
 	,m_errorhnd(errorhnd_)
 {}
@@ -77,11 +78,13 @@ void InsertProcessor::processDocument( const std::string& filename)
 		if (input.error())
 		{
 			std::cerr << string_format( _TXT( "failed to read document file '%s': %s"), filename.c_str(), ::strerror( input.error())) << std::endl; 
+			m_gotError = true;
 			return;
 		}
 		if (!m_textproc->detectDocumentClass( dclass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
 		{
 			std::cerr << string_format( _TXT( "failed to detect document class of file '%s'"), filename.c_str()) << std::endl; 
+			m_gotError = true;
 			return;
 		}
 	}
@@ -93,6 +96,7 @@ void InsertProcessor::processDocument( const std::string& filename)
 	if (!analyzer)
 	{
 		std::cerr << string_format( _TXT( "no analyzer defined for document class with MIME type '%s' schema '%s'"), dclass.mimeType().c_str(), dclass.schema().c_str()) << std::endl; 
+		m_gotError = true;
 		return;
 	}
 	analyzerContext.reset( analyzer->createContext( dclass));
@@ -111,6 +115,7 @@ void InsertProcessor::processDocument( const std::string& filename)
 			if (input.error())
 			{
 				std::cerr << string_format( _TXT( "failed to read document file '%s': %s"), filename.c_str(), ::strerror( input.error())) << std::endl; 
+				m_gotError = true;
 				break;
 			}
 			eof = true;
@@ -245,6 +250,7 @@ void InsertProcessor::run()
 					m_transaction.reset( m_storage->createTransaction());
 					if (!m_transaction.get()) throw strus::runtime_error( _TXT("error recreating storage transaction: %s"), m_errorhnd->fetchError());
 					m_docCount = 0;
+					m_gotError = true;
 				}
 				catch (const std::runtime_error& err)
 				{
@@ -260,6 +266,7 @@ void InsertProcessor::run()
 					m_transaction.reset( m_storage->createTransaction());
 					if (!m_transaction.get()) throw strus::runtime_error( _TXT("error recreating storage transaction: %s"), m_errorhnd->fetchError());
 					m_docCount = 0;
+					m_gotError = true;
 				}
 			}
 		}
@@ -273,6 +280,7 @@ void InsertProcessor::run()
 	catch (const std::bad_alloc& err)
 	{
 		std::cerr << _TXT("failed to complete inserts due to a memory allocation error") << std::endl;
+		m_gotError = true;
 	}
 	catch (const std::runtime_error& err)
 	{
@@ -285,10 +293,12 @@ void InsertProcessor::run()
 		{
 			std::cerr << string_format( _TXT("failed to complete inserts: %s"), err.what()) << std::endl;
 		}
+		m_gotError = true;
 	}
 	catch (...)
 	{
 		std::cerr << _TXT("failed to complete inserts: uncaught exception in thread") << std::endl; 
+		m_gotError = true;
 	}
 	m_errorhnd->releaseContext();
 }
