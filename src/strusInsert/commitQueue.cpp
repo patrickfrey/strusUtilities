@@ -22,7 +22,8 @@ void CommitQueue::handleWaitingTransactions()
 		{
 			Reference<StorageTransactionInterface> transaction = getNextTransaction();
 			if (!transaction.get()) break;
-			if (!transaction->commit())
+			strus::StorageCommitResult cmres = transaction->commit();
+			if (!cmres.success())
 			{
 				throw std::runtime_error( _TXT("transaction commit failed"));
 			}

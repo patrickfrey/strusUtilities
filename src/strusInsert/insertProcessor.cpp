@@ -205,7 +205,7 @@ void InsertProcessor::processDocument( const std::string& filename)
 			if (m_errorhnd->hasError())
 			{
 				const char* errmsg = m_errorhnd->fetchError();
-				throw strus::runtime_error( _TXT( "failed to process document '%s' in file %s': %s"), docid, filename.c_str(), errmsg);
+				throw strus::runtime_error( _TXT( "error in file %s': %s"), filename.c_str(), errmsg);
 			}
 			m_docCount++;
 			if (m_docCount == m_transactionSize && m_docCount && !m_terminated.test())
@@ -246,7 +246,7 @@ void InsertProcessor::run()
 				}
 				catch (const std::bad_alloc& err)
 				{
-					std::cerr << string_format( _TXT( "failed to process document '%s': memory allocation error"), fitr->c_str()) << std::endl;
+					std::cerr << string_format( _TXT( "memory allocation error")) << std::endl;
 					m_transaction.reset( m_storage->createTransaction());
 					if (!m_transaction.get()) throw strus::runtime_error( _TXT("error recreating storage transaction: %s"), m_errorhnd->fetchError());
 					m_docCount = 0;
@@ -257,11 +257,11 @@ void InsertProcessor::run()
 					const char* errmsg = m_errorhnd->fetchError();
 					if (errmsg)
 					{
-						std::cerr << string_format( _TXT( "failed to process document '%s': %s; %s"), fitr->c_str(), err.what(), errmsg) << std::endl;
+						std::cerr << "ERROR " << strus::string_format( "%s; %s", fitr->c_str(), err.what(), errmsg) << std::endl;
 					}
 					else
 					{
-						std::cerr << string_format( _TXT( "failed to process document '%s': %s"), fitr->c_str(), err.what()) << std::endl;
+						std::cerr << "ERROR " << err.what() << std::endl;
 					}
 					m_transaction.reset( m_storage->createTransaction());
 					if (!m_transaction.get()) throw strus::runtime_error( _TXT("error recreating storage transaction: %s"), m_errorhnd->fetchError());
