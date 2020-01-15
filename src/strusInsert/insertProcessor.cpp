@@ -257,7 +257,7 @@ void InsertProcessor::run()
 					const char* errmsg = m_errorhnd->fetchError();
 					if (errmsg)
 					{
-						std::cerr << "ERROR " << strus::string_format( "%s; %s", fitr->c_str(), err.what(), errmsg) << std::endl;
+						std::cerr << "ERROR " << strus::string_format( "%s; %s", err.what(), errmsg) << std::endl;
 					}
 					else
 					{

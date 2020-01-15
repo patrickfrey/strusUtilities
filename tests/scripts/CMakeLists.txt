@@ -36,7 +36,6 @@ add_utilities_test( PatternMatchNamesEditDist )
 add_utilities_test( PatternMatchNamesEditDist )
 add_utilities_test( PatternMatchFormatString1 )
 add_utilities_test( PatternMatchVariableSequence )
-add_utilities_test( AnalyzePatternMatch1 )
 ENDIF (WITH_STRUS_PATTERN STREQUAL "YES")
 
 add_utilities_test( AnalyzeSubSegmenter1 )

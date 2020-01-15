@@ -1,2 +1,0 @@
-StrusAnalyze  -m modstrus_analyzer_pattern -R $T doc.ana $T/input.xml 
-StrusAnalyze  -m modstrus_analyzer_pattern -R $T doc_pp.ana $T/input.xml 
