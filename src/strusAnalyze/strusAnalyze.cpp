@@ -13,7 +13,7 @@
 #include "strus/lib/rpc_client_socket.hpp"
 #include "strus/lib/filecrawler.hpp"
 #include "strus/lib/fieldtrees.hpp"
-#include "private/fileCrawlerInterface.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include "strus/rpcClientInterface.hpp"
 #include "strus/rpcClientMessagingInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"

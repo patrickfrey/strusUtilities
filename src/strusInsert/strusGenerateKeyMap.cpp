@@ -9,7 +9,7 @@
 #include "strus/lib/error.hpp"
 #include "strus/lib/analyzer_prgload_std.hpp"
 #include "strus/lib/filecrawler.hpp"
-#include "private/fileCrawlerInterface.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
 #include "strus/index.hpp"

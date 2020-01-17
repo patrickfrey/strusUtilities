@@ -37,7 +37,7 @@
 #include "strus/textProcessorInterface.hpp"
 #include "strus/normalizerFunctionInterface.hpp"
 #include "strus/normalizerFunctionInstanceInterface.hpp"
-#include "private/fileCrawlerInterface.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"
 #include "private/traceUtils.hpp"

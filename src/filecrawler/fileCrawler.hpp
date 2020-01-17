@@ -11,7 +11,7 @@
 #include "strus/base/thread.hpp"
 #include "strus/index.hpp"
 #include "strus/errorBufferInterface.hpp"
-#include "private/fileCrawlerInterface.hpp"
+#include "strus/fileCrawlerInterface.hpp"
 #include <vector>
 #include <string>
 #include <list>
