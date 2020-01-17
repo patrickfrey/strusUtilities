@@ -731,9 +731,9 @@ int main( int argc, const char* argv[])
 			std::cout << "-V,--verbose" << std::endl;
 			std::cout << "    " << _TXT("Verbose output of actions to stderr") << std::endl;
 			std::cout << "-I|--posinp" << std::endl;
-			std::cout << "    " << _TXT("Action is collect POS input to the argument file <file>") << std::endl;
+			std::cout << "    " << _TXT("Action is collect POS input to the argument file <posfile>") << std::endl;
 			std::cout << "    " << _TXT("If not specified then the action is POS tagging") << std::endl;
-			std::cout << "    " << _TXT("with the tags read from the argument <file> (output of POS tagger)") << std::endl;
+			std::cout << "    " << _TXT("with the tags read from the argument <posfile> (output of POS tagger)") << std::endl;
 			std::cout << "-e|--contentexpr <XPATH>" << std::endl;
 			std::cout << "    " << _TXT("Use <XPATH> as expression (abbreviated syntax of XPath)") << std::endl;
 			std::cout << "    " << _TXT("to select content to process (many definitions allowed).") << std::endl;
