@@ -1,0 +1,3 @@
+StrusMergeMarkup -x ".xml"  -k "T,P,C,X,A,V,M,N,E,U,R,W"  -o "-"  -F $E/errout   $T/data/  $T/markup
+
+        

@@ -63,5 +63,6 @@ add_utilities_test( Summarization1 )
 add_utilities_test( UpdateCalcStats1 )
 add_utilities_test( PosTagger1 )
 add_utilities_test( MarkupDocumentTags )
+add_utilities_test( MergeMarkup1 )
 ENDIF( UNIX )
 

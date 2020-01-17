@@ -25,5 +25,6 @@ add_subdirectory( strusPatternMatcher )
 add_subdirectory( strusPatternSerialize )
 add_subdirectory( strusPosTagger )
 add_subdirectory( strusTagMarkup )
+add_subdirectory( strusMergeMarkup )
 add_subdirectory( strusHelp )
 

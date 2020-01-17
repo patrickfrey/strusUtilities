@@ -68,6 +68,7 @@ static ProgramPath g_prgpathmap[] =
 	{"StrusSegment", "strusSegment"},
 	{"StrusPosTagger", "strusPosTagger"},
 	{"StrusTagMarkup", "strusTagMarkup"},
+	{"StrusMergeMarkup", "strusMergeMarkup"},
 	{0,0}
 };
 
