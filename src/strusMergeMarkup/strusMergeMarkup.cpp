@@ -62,6 +62,7 @@ public:
 			strus::FileCrawlerInterface* crawler_,
 			const strus::DocumentClassDetectorInterface* dclassdetector_,
 			FileType fileType_,
+			const std::set<std::string>& markupset_,
 			const std::string& inputPath_,
 			const std::string& markupPath_,
 			const std::string& outputPath_,
@@ -69,7 +70,7 @@ public:
 		:m_threadid(threadid_),m_inputPath(inputPath_),m_markupPath(markupPath_)
 		,m_outputPath(outputPath_),m_errorPath(errorPath_)
 		,m_crawler(crawler_),m_dclassdetector(dclassdetector_)
-		,m_fileType(fileType_)
+		,m_fileType(fileType_),m_markupset(markupset_)
 	{}
 
 	virtual void run()
@@ -93,11 +94,13 @@ public:
 				
 				if (!m_errorPath.empty())
 				{
-					errorFile = strus::joinFilePath( m_errorPath, restPath);
+					errorFile = strus::replaceFileExtension( strus::joinFilePath( m_errorPath, restPath), ".err");
+					if (errorFile.empty()) throw std::bad_alloc();
 				}
 				else if (!outputFile.empty())
 				{
-					errorFile = outputFile + ".err";
+					errorFile = strus::replaceFileExtension( outputFile, ".err");
+					if (errorFile.empty()) throw std::bad_alloc();
 				}
 				processFile( inputFile, markupFile, outputFile, errorFile);
 			}
@@ -105,7 +108,7 @@ public:
 	}
 
 private:
-	strus::analyzer::DocumentClass detectDocumentClass( const std::string& inputStr, const std::string& inputFile, const std::string& errorFile)
+	strus::analyzer::DocumentClass detectDocumentClass( const std::string& inputStr)
 	{
 		strus::analyzer::DocumentClass rt;
 		std::size_t detbufsize = inputStr.size() > 1000 ? 1000 : inputStr.size();
@@ -115,44 +118,43 @@ private:
 		}
 		else
 		{
-			printError( inputFile, errorFile, strus::string_format( _TXT("failed to detect document type: %s"), g_errorBuffer->fetchError()));
-			return strus::analyzer::DocumentClass();
+			throw strus::runtime_error( _TXT("failed to detect document class: %s"), g_errorBuffer->fetchError());
 		}
 	}
 
-	strus::DocTreeRef readDocTree( const strus::analyzer::DocumentClass& dclass, const std::string& inputStr, const std::string& inputFile, const std::string& errorFile)
+	strus::DocTreeRef readDocTree( const strus::analyzer::DocumentClass& dclass, const std::string& content)
 	{
 		strus::DocTreeRef rt;
 		if (!dclass.defined()) return rt;
 		if (dclass.mimeType() == "application/xml")
 		{
-			rt.reset( strus::createDocTree_xml( dclass.encoding().c_str(), inputStr.c_str(), inputStr.size(), g_errorBuffer));
+			rt.reset( strus::createDocTree_xml( dclass.encoding().c_str(), content.c_str(), content.size(), g_errorBuffer));
 			if (!rt.get())
 			{
-				printError( inputFile, errorFile, g_errorBuffer->fetchError());
+				throw strus::runtime_error( _TXT("failed to build tree from XML: %s"), g_errorBuffer->fetchError());
 			}
 		}
 		else
 		{
-			printError( inputFile, errorFile, _TXT("file not XML (only XML supported till now)"));
+			throw std::runtime_error( _TXT("file not XML (only XML supported till now)"));
 		}
 		return rt;
 	}
 
-	void writeDocTree( const strus::analyzer::DocumentClass& dclass, const std::string& outputFile, const strus::DocTreeRef& doctree, const std::string& inputFile, const std::string& errorFile)
+	void writeDocTree( const strus::analyzer::DocumentClass& dclass, const std::string& outputFile, const strus::DocTreeRef& doctree)
 	{
 		std::ostringstream outbuf;
 		if (dclass.mimeType() == "application/xml")
 		{
 			if (!strus::printDocTree_xml( outbuf, dclass.encoding().c_str(), *doctree, g_errorBuffer))
 			{
-				printError( inputFile, errorFile, g_errorBuffer->fetchError());
+				throw strus::runtime_error(_TXT("XML serialization error: %s"), g_errorBuffer->fetchError());
 			}
-			printOutput( inputFile, errorFile, outputFile, outbuf.str());
+			printOutput( outputFile, outbuf.str());
 		}
 		else
 		{
-			printError( inputFile, errorFile, _TXT("file not XML (only XML supported till now)"));
+			throw std::runtime_error( _TXT("file not XML (only XML supported till now)"));
 		}
 	}
 
@@ -160,25 +162,72 @@ private:
 	{
 		try
 		{
+			int ec = 0;
+			if (!errorFile.empty())
+			{
+				ec = strus::removeFile( errorFile, false/*fail if not exist*/);
+				if (ec) throw strus::runtime_error(_TXT("failed to remove previous error file: %s"), std::strerror(ec));
+			}
 			std::string inputStr;
 			std::string markupStr;
 
-			int ec = strus::readFile( inputFile, inputStr);
+			ec = strus::readFile( inputFile, inputStr);
 			if (ec) throw strus::runtime_error(_TXT("error in thread %d reading input file '%s': %s"), m_threadid, inputFile.c_str(), std::strerror(ec));
 			ec = strus::readFile( markupFile, markupStr);
-			if (ec) 
+			if (ec) throw strus::runtime_error( _TXT("error reading markup file '%s': %s"), markupFile.c_str(), std::strerror(ec));
+
+			strus::analyzer::DocumentClass inputClass;
+			strus::analyzer::DocumentClass markupClass;
+			try
 			{
-				printError( inputFile, errorFile, strus::string_format( _TXT("error reading markup file '%s': %s"), markupFile.c_str(), std::strerror(ec)));
-				return;
+				inputClass = detectDocumentClass( inputStr);
 			}
-			strus::analyzer::DocumentClass inputClass = detectDocumentClass( inputStr, inputFile, errorFile);
-			strus::analyzer::DocumentClass markupClass = detectDocumentClass( markupStr, markupFile, errorFile);
-			strus::DocTreeRef inputTree = readDocTree( inputClass, inputStr, inputFile, errorFile);
-			strus::DocTreeRef markupTree = readDocTree( markupClass, markupStr, markupFile, errorFile);
-			if (inputTree.get() && markupTree.get())
+			catch (const std::runtime_error& err)
 			{
-				strus::DocTreeRef resultTree = mergeTree( inputFile, errorFile, inputTree, markupTree);
-				writeDocTree( inputClass, outputFile, resultTree, inputFile, errorFile);
+				throw strus::runtime_error(_TXT("failed to detect document class of input file: %s"), err.what());
+			}
+			try
+			{
+				markupClass = detectDocumentClass( markupStr);
+			}
+			catch (const std::runtime_error& err)
+			{
+				throw strus::runtime_error(_TXT("failed to detect document class of markup file: %s"), err.what());
+			}
+			strus::DocTreeRef inputTree;
+			strus::DocTreeRef markupTree;
+			strus::DocTreeRef resultTree;
+			try
+			{
+				inputTree = readDocTree( inputClass, inputStr);
+			}
+			catch (const std::runtime_error& err)
+			{
+				throw strus::runtime_error( _TXT("failed to create document structure tree from input content: %s"), err.what());
+			}
+			try
+			{
+				markupTree = readDocTree( markupClass, markupStr);
+			}
+			catch (const std::runtime_error& err)
+			{
+				throw strus::runtime_error( _TXT("failed to create document structure tree from markup content: %s"), err.what());
+			}
+			try
+			{
+				resultTree = mergeTree( inputTree, markupTree);
+			}
+			catch (const std::runtime_error& err)
+			{
+				throw strus::runtime_error( _TXT("failed to merge markups into input tree structure: %s"), err.what());
+			}
+			try
+			{
+				writeDocTree( inputClass, outputFile, resultTree);
+			}
+			catch (const std::runtime_error& err)
+			{
+				throw strus::runtime_error( _TXT("failed to write merged document tree to output file: %s"), err.what());
 			}
 		}
 		catch (const std::runtime_error& err)
@@ -201,12 +250,12 @@ private:
 			std::string firstDirectoryCreated;
 			ec = strus::mkdirp( errorDir, firstDirectoryCreated);
 			if (ec) throw strus::runtime_error(_TXT("error in thread %d create parent path (mkdirp) of error directory %s: %s"), m_threadid, errorDir.c_str(), std::strerror(ec));
-			ec = strus::writeFile( errorFile, msg);
+			ec = strus::writeFile( errorFile, msg + "\n");
 			if (ec) throw strus::runtime_error(_TXT("error in thread %d writing error to file %s: %s"), m_threadid, errorFile.c_str(), std::strerror(ec));
 		}
 	}
 
-	void printOutput( const std::string& inputFile, const std::string& errorFile, const std::string& outputFile, const std::string& content)
+	void printOutput( const std::string& outputFile, const std::string& content)
 	{
 		if (outputFile.empty())
 		{
@@ -225,9 +274,222 @@ private:
 		}
 	}
 
-	strus::DocTreeRef mergeTree( const std::string& inputFile, const std::string& errorFile, const strus::DocTreeRef& inputTree, const strus::DocTreeRef& markupTree)
+	struct Segment
 	{
-		return inputTree;
+		std::string key;
+		std::string content;
+		strus::DocTreeRef node;
+		strus::DocTreeRef replace;
+		std::vector<std::string> tags;
+
+		Segment( const std::string& content_, const strus::DocTreeRef& node_, const std::vector<std::string>& tagstk)
+			:key(getKey(content_)),content(content_),node(node_),replace(),tags(tagstk){}
+		Segment( const Segment& o)
+			:key(o.key),content(o.content),node(o.node),replace(o.replace),tags(o.tags){}
+
+		static std::string getKey( const std::string& content)
+		{
+			std::string rt;
+			std::string::const_iterator ci = content.begin(), ce = content.end();
+			for (; ci != ce; ++ci)
+			{
+				if ((unsigned char)*ci > 32) rt.push_back( *ci);
+			}
+			return rt;
+		}
+	};
+
+	void segmentTree( std::vector<Segment>& dest, const strus::DocTreeRef& node, bool withEmptyKeys, const std::vector<std::string>& tagstk_)
+	{
+		std::vector<std::string> tagstk = tagstk_;
+		if (!node->name().empty())
+		{
+			tagstk.push_back( node->name());
+		}
+		if (node->chld().empty())
+		{
+			dest.push_back( Segment( node->value(), node, tagstk));
+			if (!withEmptyKeys && dest.back().key.empty())
+			{
+				dest.pop_back();
+			}
+		}
+		else
+		{
+			strus::DocTree::chld_iterator ci = node->chld().begin(), ce = node->chld().end();
+			for (; ci != ce; ++ci)
+			{
+				segmentTree( dest, *ci, withEmptyKeys, tagstk);
+			}
+		}
+	}
+
+	void printTreeToString( std::string& dest, const strus::DocTreeRef& node)
+	{
+		if (!node->name().empty())
+		{
+			dest.append( strus::string_format( "<%s>", node->name().c_str()));
+		}
+		if (!node->value().empty())
+		{
+			dest.append( node->value());
+		}
+		else
+		{
+			strus::DocTree::chld_iterator ci = node->chld().begin(), ce = node->chld().end();
+			for (; ci != ce; ++ci)
+			{
+				printTreeToString( dest, *ci);
+			}
+		}
+		if (!node->name().empty())
+		{
+			dest.append( strus::string_format( "</%s>", node->name().c_str()));
+		}
+	}
+
+	std::string treeToString( const strus::DocTreeRef& node)
+	{
+		std::string rt;
+		printTreeToString( rt, node);
+		return rt;
+	}
+
+	bool stringHasPrefix( const char* si, const char* se, const std::string& prefix)
+	{
+		if (si + prefix.size() > se) return false;
+		return 0==std::memcmp( si, prefix.c_str(), prefix.size());
+	}
+
+	static std::string tagPath( const std::vector<std::string>& tags)
+	{
+		std::string rt;
+		std::vector<std::string>::const_iterator ti = tags.begin(), te = tags.end();
+		for (; ti != te; ++ti)
+		{
+			rt.push_back('/');
+			rt.append( *ti);
+		}
+		return rt;
+	}
+
+	static bool tagPathStartsWith( const std::vector<std::string>& tags, const std::vector<std::string>& prefix_tags)
+	{
+		if (tags.size() < prefix_tags.size()) return false;
+		std::vector<std::string>::const_iterator ti = tags.begin();
+		std::vector<std::string>::const_iterator pi = prefix_tags.begin(), pe = prefix_tags.end();
+		for (; pi != pe && *ti == *pi; ++ti,++pi){}
+		return pi == pe;
+	}
+
+	static bool hasMarkup( const strus::DocTreeRef& node)
+	{
+		strus::DocTree::chld_iterator ni = node->chld().begin(), ne = node->chld().end();
+		for (; ni != ne; ++ni)
+		{
+			if (!(*ni)->name().empty()) return true;
+			if (hasMarkup(*ni)) return true;
+		}
+		return false;
+	}
+
+	strus::DocTreeRef matchSegment( const Segment& segment, std::vector<Segment>::const_iterator ci, const std::vector<Segment>::const_iterator ce)
+	{
+		strus::DocTreeRef rt;
+		if (segment.key.empty()) return rt;
+		for (int cidx=0; ci != ce; ++ci,++cidx)
+		{
+			if (strus::stringStartsWith( segment.key, ci->key) && tagPathStartsWith( ci->tags, segment.tags))
+			{
+				rt.reset( new strus::DocTree( ""/*name*/, ""/*value*/, segment.node->attr()));
+
+				char const* ki = segment.key.c_str();
+				const char* ke = ki + segment.key.size();
+				std::vector<Segment>::const_iterator xi = ci, xe = ce;
+				int xidx = cidx;
+				for (; xi != xe && stringHasPrefix( ki, ke, xi->key) && tagPathStartsWith( xi->tags, segment.tags);
+					ki+=xi->key.size(),++xi,++xidx)
+				{
+					if (!xi->node->name().empty() && !m_markupset.empty())
+					{
+						if (m_markupset.find( xi->node->name()) == m_markupset.end())
+						{
+							break;
+						}
+					}
+					rt->addChld( xi->node);
+				}
+				if (ki == ke && hasMarkup( rt))
+				{
+					//... matched
+					if (rt->chld().size() == 1 && segment.node->name() == (*rt->chld().begin())->name())
+					{
+						//... single child, the embed it:
+						strus::DocTreeRef single_chld = *rt->chld().begin();
+						if (Segment::getKey( single_chld->value()) == Segment::getKey( segment.node->value()))
+						{
+							rt.reset();
+							continue;
+						}
+						else
+						{
+							rt = single_chld;
+						}
+					}
+					return rt;
+				}
+				rt.reset();
+			}
+		}
+		return rt;
+	}
+
+	strus::DocTreeRef deepCopyTree( const strus::DocTreeRef& node, const std::map<const strus::DocTree*,const strus::DocTree*>& nodeReplaceMap)
+	{
+		strus::DocTreeRef rt;
+		std::map<const strus::DocTree*,const strus::DocTree*>::const_iterator
+			ni = nodeReplaceMap.find( node.get());
+		if (ni != nodeReplaceMap.end())
+		{
+			rt.reset( new strus::DocTree( node->name(), ni->second->value(), node->attr(), ni->second->chld()));
+		}
+		else
+		{
+			rt.reset( new strus::DocTree( node->name(), node->value(), node->attr()));
+			strus::DocTree::chld_iterator ci = node->chld().begin(), ce = node->chld().end();
+			for (; ci != ce; ++ci)
+			{
+				rt->addChld( deepCopyTree( *ci, nodeReplaceMap));
+			}
+		}
+		return rt;
+	}
+
+	strus::DocTreeRef mergeTree( const strus::DocTreeRef& inputTree, const strus::DocTreeRef& markupTree)
+	{
+		std::vector<Segment> inputseg;
+		std::vector<Segment> markupseg;
+		segmentTree( inputseg, inputTree, false/*withEmptyKeys*/, std::vector<std::string>());
+		segmentTree( markupseg, markupTree, true/*withEmptyKeys*/, std::vector<std::string>());
+
+		std::vector<Segment>::iterator si = inputseg.begin(), se = inputseg.end();
+		std::vector<Segment>::const_iterator mi = markupseg.begin(), me = markupseg.end();
+
+		std::map<const strus::DocTree*,const strus::DocTree*> nodeReplaceMap;
+		for (; si != se; ++si)
+		{
+			strus::DocTreeRef mt = matchSegment( *si, mi, me);
+			if (mt.get())
+			{
+				if (g_verbose)
+				{
+					std::cerr << "MATCH [" << si->content << "] => " << treeToString( mt) << std::endl;
+				}
+				si->replace = mt;
+				nodeReplaceMap[ si->node.get()] = si->replace.get();
+			}
+		}
+		return deepCopyTree( inputTree, nodeReplaceMap);
 	}
 	
 private:
@@ -239,6 +501,7 @@ private:
 	strus::FileCrawlerInterface* m_crawler;
 	const strus::DocumentClassDetectorInterface* m_dclassdetector;
 	FileType m_fileType;
+	std::set<std::string> m_markupset;
 };
 
 
@@ -330,8 +593,8 @@ int main( int argc, const char* argv[])
 			std::cout << "-x|--extension <EXT>" << std::endl;
 			std::cout << "    " << _TXT("extension of the input files processed") << std::endl;
 			std::cout << "    " << _TXT("(default depending on the content type).") << std::endl;
-			std::cout << "-k|--markup <CHRS>" << std::endl;
-			std::cout << "    " << _TXT("comma separated list of markup tags to process.") << std::endl;
+			std::cout << "-k|--markup <TAGS>" << std::endl;
+			std::cout << "    " << _TXT("specify comma separated list of markup tags to process.") << std::endl;
 			std::cout << "-t|--threads <N>" << std::endl;
 			std::cout << "    " << _TXT("Set <N> as number of threads to use") << std::endl;
 			std::cout << "-f|--fetch <N>" << std::endl;
@@ -352,7 +615,7 @@ int main( int argc, const char* argv[])
 		if (threads > MaxNofThreads) threads = MaxNofThreads;
 		int fetchSize = opt( "fetch") ? opt.asUint( "fetch") : 100;
 		if (!fetchSize) fetchSize = 1;
-		std::vector<std::string> markupar;
+		std::set<std::string> markupset;
 		std::string markuppath;
 		std::string inputpath;
 		std::string outputpath;
@@ -377,7 +640,7 @@ int main( int argc, const char* argv[])
 		}
 		if (opt( "markup"))
 		{
-			std::string markupstr = opt[ "extension"];
+			std::string markupstr = opt[ "markup"];
 			char const* mi = markupstr.c_str();
 			const char* me = mi + markupstr.size();
 			while (mi != me)
@@ -388,13 +651,13 @@ int main( int argc, const char* argv[])
 				{
 					mk.push_back( *mi);
 				}
-				if (!mk.empty()) markupar.push_back( mk);
+				if (!mk.empty()) markupset.insert( mk);
 				for (;mi != me && ((unsigned char)*mi <= 32 || *mi == ',' || *mi == ';' || *mi == ':'); ++mi){}
 			}
 		}
 		if (g_verbose)
 		{
-			std::vector<std::string>::const_iterator mi = markupar.begin(), me = markupar.end();
+			std::set<std::string>::const_iterator mi = markupset.begin(), me = markupset.end();
 			for (; mi != me; ++mi)
 			{
 				std::cerr << strus::string_format( _TXT("using markup tag '%s'"), mi->c_str()) << std::endl;
@@ -434,7 +697,8 @@ int main( int argc, const char* argv[])
 			workers[ti].reset(
 				new Worker(
 					threadid, fileCrawler.get(), detect.get(),
-					FileTypeXML, inputpath, markuppath, outputpath, errorpath));
+					FileTypeXML, markupset,
+					inputpath, markuppath, outputpath, errorpath));
 		}
 		if (errorBuffer->hasError())
 		{

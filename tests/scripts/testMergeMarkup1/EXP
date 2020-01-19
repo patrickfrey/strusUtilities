@@ -11,94 +11,97 @@
 
 <br/>
 <text>The</text>
-<entity lv="3"><text>United States presidential election of 1852</text>
+<entity lv="3"><text><E>United States presidential election</E> of <C>1852</C></text>
   </entity>
-<text>was the seventeenth quadrennial</text>
-<pagelink id="United States presidential election"><text>presidential election</text>
+<text> <V>was</V> the <A>seventeenth</A> <A>quadrennial</A> </text>
+<pagelink id="United States presidential election"><text><A>presidential</A> <N>election</N></text>
   </pagelink>
-<text>, held on Tuesday, November 2, 1852.</text>
-<pagelink id="Democratic Party (United States)"><text>Democrat</text>
+<text><P/>, <V>held</V> on <E>Tuesday</E><P/>, <E>November</E> <C>2</C><P/>, <C>1852</C><T/>. </text>
+<pagelink id="Democratic Party (United States)"><text><E id="Democratic Party">Democrat</E></text>
   </pagelink>
 
-<pagelink id="Franklin Pierce">Franklin Pierce
+<pagelink id="Franklin Pierce"><text><E>Franklin Pierce</E></text>
   </pagelink>
-<text>, a former Senator from</text>
-<pagelink id="New Hampshire">New Hampshire
+<text><P/>, a <A>former</A> <E>Senator</E> from </text>
+<pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
   </pagelink>
-<text>, defeated General</text>
-<pagelink id="Winfield Scott">Winfield Scott
+<text><P/>, <V>defeated</V> <E>General</E> </text>
+<pagelink id="Winfield Scott"><text><E>Winfield Scott</E></text>
   </pagelink>
-<text>, the</text>
-<pagelink id="United States Whig Party"><text>Whig</text>
+<text><P/>, the </text>
+<pagelink id="Whig Party (United States)"><text><E id="Whig Party">Whig</E></text>
   </pagelink>
-<text>nominee. This was the last election in which the Whigs served as the principal opposition to the Democrats.</text>
+<text> <N>nominee</N><T/>. This <V>was</V> the <A>last</A> <N>election</N> in <W>which</W> the <E>Whigs</E> <V>served</V> as the <A>principal</A> <N>opposition</N> to the <E>Democrats</E><T/>.
+</text>
 <br/>
-<text>Incumbent Whig President</text>
-<pagelink id="Millard Fillmore">Millard Fillmore
+<text><E>Incumbent Whig President</E> </text>
+<pagelink id="Millard Fillmore"><text><E>Millard Fillmore</E></text>
   </pagelink>
-<text>had acceded to the presidency after the death of President</text>
-<pagelink id="Zachary Taylor">Zachary Taylor
+<text> <V>had</V> <V>acceded</V> to the <N>presidency</N> after the <N>death</N> of <E>President</E> </text>
+<pagelink id="Zachary Taylor"><text><E>Zachary Taylor</E></text>
   </pagelink>
-<text>in 1850. Due to Fillmore's support of the</text>
-<pagelink id="Compromise of 1850">Compromise of 1850
+<text> in <C>1850</C><T/>. Due to <E id="Millard Fillmore">Fillmore</E>'s <N>support</N> of the </text>
+<pagelink id="Compromise of 1850"><text><E>Compromise of 1850</E></text>
   </pagelink>
-<text>and his enforcement of the</text>
-<pagelink id="Fugitive Slave Act of 1850"><text>Fugitive Slave Law</text>
+<text> and <R>his</R> <N>enforcement</N> of the </text>
+<pagelink id="Fugitive Slave Act of 1850"><text><E id="Fugitive Slave Act of 1850">Fugitive Slave Law</E></text>
   </pagelink>
-<text>, he was popular in the South but opposed by many Northern Whigs. On the 53rd ballot of the</text>
-<pagelink id="1852 Whig National Convention">1852 Whig National Convention
+<text><P/>, <R id="Franklin Pierce">he</R> <V>was</V> <A>popular</A> in the <E id="Southern United States">South</E> but <V>opposed</V> by <A>many</A> <E>Northern Whigs</E><T/>. On the <A>53rd</A> <N>ballot</N> of the </text>
+<pagelink id="1852 Whig National Convention"><text><E>1852 Whig National Convention</E></text>
   </pagelink>
-<text>, Scott defeated Fillmore to clinch the party's nomination. The Democrats were divided among four major candidates, who traded leads through the first 48 ballots of the</text>
-<pagelink id="1852 Democratic National Convention">1852 Democratic National Convention
+<text><P/>, <E id="Winfield Scott">Scott</E> <V>defeated</V> <E id="Millard Fillmore">Fillmore</E> to <V>clinch</V> the <N>party</N>'s <N>nomination</N><T/>. The <E>Democrats</E> <V>were</V> <V>divided</V> among <C>four</C> <A>major</A> <N>candidates</N><P/>, <W>who</W> <V>traded</V> <N>leads</N> through the <A>first</A> <C>48</C> <N>ballots</N> of the </text>
+<pagelink id="1852 Democratic National Convention"><text><E>1852 Democratic National Convention</E></text>
   </pagelink>
-<text>. On the 49th ballot,</text>
-<pagelink id="dark horse">dark horse
+<text><T/>. On the <A>49th</A> <N>ballot</N><P/>, </text>
+<pagelink id="Dark Horse"><text><A>dark</A> <N>horse</N></text>
   </pagelink>
-<text>candidate</text>
-<pagelink id="Franklin Pierce">Franklin Pierce
+<text><N>candidate</N></text>
+<pagelink id="Franklin Pierce"><text><E>Franklin Pierce</E></text>
   </pagelink>
-<text>won his party's nomination. The</text>
-<pagelink id="Free Soil Party">Free Soil Party
+<text> <V>won</V> <R id="Franklin Pierce">his</R> <N>party</N>'s <N>nomination</N><T/>. The </text>
+<pagelink id="Free Soil Party"><text><E>Free Soil Party</E></text>
   </pagelink>
-<text>, a</text>
-<pagelink id="third party (United States)"><text>third party</text>
+<text><P/>, a </text>
+<pagelink id="Third party (United States)"><text><A>third</A> <N>party</N></text>
   </pagelink>
-<text>opposed to the extension of</text>
-<pagelink id="slavery in the United States"><text>slavery</text>
+<text> <V>opposed</V> to the <N>extension</N> of </text>
+<pagelink id="Slavery in the United States"><text><N>slavery</N></text>
   </pagelink>
 <text>into the</text>
-<pagelink id="United States territories"><text>territories</text>
+<pagelink id="Territories of the United States"><text><N>territories</N></text>
   </pagelink>
-<text>, nominated Senator</text>
-<pagelink id="John P. Hale">John P. Hale
+<text><P/>, <V>nominated</V> <E>Senator</E> </text>
+<pagelink id="John P. Hale"><text><E>John P. Hale</E></text>
   </pagelink>
-<text>of New Hampshire.</text>
+<text> of <E>New Hampshire</E><T/>.
+</text>
 <br/>
-<text>With no major policy differences between the two major candidates, the election became a contest of personalities. Though Scott had been the top U.S. general in the</text>
-<pagelink id="Mexican–American War">Mexican–American War
+<text>With no <A>major</A> <N>policy differences</N> between the <C>two</C> <A>major</A> <N>candidates</N><P/>, the <N>election</N> <V>became</V> a <N>contest</N> of <N>personalities</N><T/>. Though <E id="Winfield Scott">Scott</E> <V>had</V> <V>been</V> the <A>top</A> <E>U.S.</E> <N>general</N> in the </text>
+<pagelink id="Mexican–American War"><text><A>Mexican</A>–<E>American War</E></text>
   </pagelink>
-<text>and had had a long and distinguished military career, Pierce had also served in the Mexican–American War. The Whigs were badly divided between their Northern and Southern wings, and Scott's anti-slavery reputation further damaged his campaign in the South. A group of Southern Whigs and a separate group of Southern Democrats each nominated their own tickets, but both efforts failed to attract support.</text>
+<text> and <V>had</V> <V>had</V> a <A>long</A> and <A>distinguished</A> <A>military</A> <N>career</N><P/>, <E id="Franklin Pierce">Pierce</E> <V>had</V> <A>also</A> <V>served</V> in the <A>Mexican</A>–<E>American War</E><T/>. The <E id="Northern Whigs">Whigs</E> <V>were</V> <A>badly</A> <V>divided</V> between <R id="Winfield Scott , Franklin Pierce">their</R> <A>Northern</A> and <A>Southern</A> <N>wings</N><P/>, and <E id="Winfield Scott">Scott</E>'s <A>anti</A>-<N>slavery reputation</N> <A>further</A> <V>damaged</V> <R id="Franklin Pierce">his</R> <N>campaign</N> in the <E id="Southern United States">South</E><T/>. A <N>group</N> of <E>Southern Whigs</E> and a <A>separate</A> <N>group</N> of <E>Southern Democrats</E> each <V>nominated</V> <R id="Winfield Scott , Franklin Pierce">their</R> <A>own</A> <N>tickets</N><P/>, but both <N>efforts</N> <V>failed</V> to <V>attract</V> <N>support</N><T/>.
+</text>
 <br/>
-<text>Pierce and his running mate</text>
-<pagelink id="William R. King">William R. King
+<text><E id="Franklin Pierce">Pierce</E> and <R>his</R> <N>running mate</N> </text>
+<pagelink id="William R. King"><text><E>William R. King</E></text>
   </pagelink>
-<text>won by a comfortable majority in the popular vote and carried 27 of the 31 states, while Scott won 43.9% of the popular vote. Pierce won the</text>
-<pagelink id="List of United States presidential elections by Electoral College margin"><text>highest share of the electoral vote</text>
+<text> <V>won</V> by a <A>comfortable</A> <N>majority</N> in the <A>popular</A> <N>vote</N> and <V>carried</V> <C>27</C> of the <C>31</C> <N>states</N><P/>, while <E id="Winfield Scott">Scott</E> <V>won</V> <C>43.9</C><N>%</N> of the <A>popular</A> <N>vote</N><T/>. <E id="Franklin Pierce">Pierce</E> <V>won</V> the </text>
+<pagelink id="List of United States presidential elections by Electoral College margin"><text><A>highest</A> <N>share</N> of the <A>electoral</A> <N>vote</N></text>
   </pagelink>
 <text>since</text>
-<pagelink id="James Monroe">James Monroe
+<pagelink id="James Monroe"><text><E>James Monroe</E></text>
   </pagelink>
-<text>'s uncontested</text>
-<pagelink id="United States presidential election, 1820"><text>1820 re-election</text>
+<text>'s <A>uncontested</A> </text>
+<pagelink id="1820 United States presidential election"><text><C>1820</C> <N>re</N>-<N>election</N></text>
   </pagelink>
-<text>. In the aftermath of this overwhelming defeat the Whig Party rapidly collapsed as a national political force as internal tensions regarding the issue of slavery caused mass abandonment of the party.</text>
+<text><T/>. In the <N>aftermath</N> of this <A>overwhelming</A> <N>defeat</N> the <E>Whig Party</E> <A>rapidly</A> <V>collapsed</V> as a <A>national</A> <A>political</A> <N>force</N> as <A>internal</A> <N>tensions</N> <V>regarding</V> the <N>issue</N> of <N>slavery</N> <V>caused</V> <A>mass</A> <N>abandonment</N> of the <N>party</N><T/>.</text>
 <citation id="cit1" class="For"><list lv="l1"><attr>related races</attr>
     </list>
   <list lv="l1"><attr>United States elections, 1852</attr>
     </list>
   </citation>
 <citation id="cit2" class="Use mdy dates" date="November 2013"/>
-<citation id="cit4"><table id="table1"><tabtitle><text>cite web</text>
+<citation id="cit4"><table id="table1"><tabtitle><text><V>cite</V> <N>web</N></text>
       </tabtitle>
     <head id="C0"><text>url</text>
       </head>
@@ -110,11 +113,11 @@
       </cell>
     <head id="C2"><text>work</text>
       </head>
-    <cell id="C2"><text>The American Presidency Project</text>
+    <cell id="C2"><text><E>The American Presidency Project</E></text>
       </cell>
     <head id="C3"><text>publisher</text>
       </head>
-    <cell id="C3"><pagelink id="UC Santa Barbara">UC Santa Barbara
+    <cell id="C3"><pagelink id="University of California, Santa Barbara"><text><E>UC</E> <E>Santa Barbara</E></text>
         </pagelink>
       </cell>
     </table>
@@ -123,27 +126,27 @@
       </tabtitle>
     <head id="C0"><text>election name</text>
       </head>
-    <cell id="C0"><text>United States presidential election, 1852</text>
+    <cell id="C0"><text><E>United States presidential election</E>, 1852</text>
       </cell>
     <head id="C1"><text>country</text>
       </head>
-    <cell id="C1"><text>United States</text>
+    <cell id="C1"><text><E>United States</E></text>
       </cell>
     <head id="C2"><text>previous election</text>
       </head>
-    <cell id="C2"><text>United States presidential election, 1848</text>
+    <cell id="C2"><text><E>United States presidential election</E>, 1848</text>
       </cell>
     <head id="C3"><text>next election</text>
       </head>
-    <cell id="C3"><text>United States presidential election, 1856</text>
+    <cell id="C3"><text><E>United States presidential election</E>, 1856</text>
       </cell>
     <head id="C4"><text>votes for election</text>
       </head>
     <cell id="C4"><text>All 296 electoral votes of the</text>
-      <pagelink id="Electoral College (United States)"><text>Electoral College</text>
+      <pagelink id="United States Electoral College"><text>Electoral College</text>
         </pagelink>
       </cell>
-    <head id="C5"><text>needed votes</text>
+    <head id="C5"><text><V>needed</V> <N>votes</N></text>
       </head>
     <cell id="C5"><text>149 electoral</text>
       </cell>
@@ -154,7 +157,7 @@
       
       <mark>decrease</mark>
       <text>3.1</text>
-      <pagelink id="percentage point"><text>pp</text>
+      <pagelink id="Percentage point"><text>pp</text>
         </pagelink>
       </cell>
     <head id="C7"><text>election date</text>
@@ -168,11 +171,11 @@
       </cell>
     <head id="C9"><text>party1</text>
       </head>
-    <cell id="C9"><text>Democratic Party (United States)</text>
+    <cell id="C9"><text><E>Democratic Party</E> <P/>(<E>United States</E><P/>)</text>
       </cell>
     <head id="C10"><text>home state1</text>
       </head>
-    <cell id="C10"><pagelink id="New Hampshire">New Hampshire
+    <cell id="C10"><pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
         </pagelink>
       </cell>
     <head id="C11"><text>image2</text>
@@ -182,65 +185,65 @@
       </cell>
     <head id="C12"><text>nominee2</text>
       </head>
-    <cell id="C12"><pagelink id="Winfield Scott">Winfield Scott
+    <cell id="C12"><pagelink id="Winfield Scott"><text><E>Winfield Scott</E></text>
         </pagelink>
       </cell>
     <head id="C13"><text>party2</text>
       </head>
-    <cell id="C13"><text>Whig Party (United States)</text>
+    <cell id="C13"><text><E>Whig Party</E> <P/>(<E>United States</E><P/>)</text>
       </cell>
     <head id="C14"><text>home state2</text>
       </head>
-    <cell id="C14"><pagelink id="New Jersey">New Jersey
+    <cell id="C14"><pagelink id="New Jersey"><text><E>New Jersey</E></text>
         </pagelink>
       </cell>
     <head id="C15"><text>running mate2</text>
       </head>
-    <cell id="C15"><pagelink id="William Alexander Graham"><text>William A. Graham</text>
+    <cell id="C15"><pagelink id="William Alexander Graham"><text><E>William A. Graham</E></text>
         </pagelink>
       </cell>
-    <head id="C16"><text>map caption</text>
+    <head id="C16"><text><V>map</V> <N>caption</N></text>
       </head>
-    <cell id="C16"><text>Presidential election results map.</text>
+    <cell id="C16"><text><A>Presidential</A> <N>election results</N> <V>map</V><T/>.</text>
       
-        <text>Blue</text>
+        <text><A>Blue</A></text>
         
-      <text>denotes states won by Pierce/King,</text>
+      <text> <V>denotes</V> <N>states</N> <V>won</V> by <E id="Franklin Pierce">Pierce</E>/<E id="William R King">King</E><P/>, </text>
       
-        <text>buff</text>
+        <text><N>buff</N></text>
         
-      <text>denotes those won by</text>
+      <text> <V>denotes</V> those <V>won</V> by </text>
       <weblink id="file:Scott/Graham."/>
-      <text>Numbers indicate the number of electoral votes allotted to each state.</text>
+      <text> <N>Numbers</N> <V>indicate</V> the <N>number</N> of <A>electoral</A> <N>votes</N> <V>allotted</V> to each <N>state</N><T/>.</text>
       </cell>
     <head id="C17"><text>before election</text>
       </head>
-    <cell id="C17"><pagelink id="Millard Fillmore">Millard Fillmore
+    <cell id="C17"><pagelink id="Millard Fillmore"><text><E>Millard Fillmore</E></text>
         </pagelink>
       </cell>
     <head id="C18"><text>before party</text>
       </head>
-    <cell id="C18"><text>Whig Party (United States)</text>
+    <cell id="C18"><text><E>Whig Party</E> <P/>(<E>United States</E><P/>)</text>
       </cell>
     <head id="C19"><text>after election</text>
       </head>
-    <cell id="C19"><pagelink id="Franklin Pierce">Franklin Pierce
+    <cell id="C19"><pagelink id="Franklin Pierce"><text><E>Franklin Pierce</E></text>
         </pagelink>
       </cell>
     <head id="C20"><text>after party</text>
       </head>
-    <cell id="C20"><text>Democratic Party (United States)</text>
+    <cell id="C20"><text><E>Democratic Party</E> <P/>(<E>United States</E><P/>)</text>
       </cell>
-    <head id="C21"><text>map</text>
+    <head id="C21"><text><V>map</V> </text>
       </head>
     <cell id="C21"><mark>United States presidential election, 1852 imagemap</mark>
       </cell>
     </table>
   </citation>
-<heading lv="h1"><text>Nominations</text>
+<heading lv="h1"><text> <E>Nominations</E> </text>
   </heading>
-<text>The 1852 presidential election conventions of the parties are considered below in order of the party's popular vote.</text>
-<heading lv="h2"><text>Democratic Party nomination</text>
+<text>The <C>1852</C> <A>presidential</A> <N>election conventions</N> of the <N>parties</N> <V>are</V> <V>considered</V> <A>below</A> in <N>order</N> of the <N>party</N>'s <A>popular</A> <N>vote</N><T/>.</text>
+<heading lv="h2"><text> <E>Democratic Party</E> nomination </text>
   </heading>
 <citlink id="cit5"/>
 
@@ -250,49 +253,49 @@
 <br/>
 <filelink id="1852DemocraticCampaignPoster.png"><text>Pierce/King campaign poster</text>
   </filelink>
-<list lv="l1"><pagelink id="Franklin Pierce">Franklin Pierce
+<list lv="l1"><pagelink id="Franklin Pierce"><text><E>Franklin Pierce</E></text>
     </pagelink>
   <text>, former</text>
   <pagelink id="United States Senate"><text>U.S. Senator</text>
     </pagelink>
   <text>from</text>
-  <pagelink id="New Hampshire">New Hampshire
+  <pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
     </pagelink>
   </list>
-<list lv="l1"><pagelink id="Lewis Cass">Lewis Cass
+<list lv="l1"><pagelink id="Lewis Cass"><text><E>Lewis Cass</E></text>
     </pagelink>
-  <text>,</text>
+  <text><P/>, </text>
   <pagelink id="United States Senate"><text>U.S. Senator</text>
     </pagelink>
   <text>from</text>
-  <pagelink id="Michigan">Michigan
+  <pagelink id="Michigan"><text><E id="United States presidential election in Michigan, 1852">Michigan</E></text>
     </pagelink>
   </list>
-<list lv="l1"><pagelink id="James Buchanan">James Buchanan
+<list lv="l1"><pagelink id="James Buchanan"><text><E>James Buchanan</E></text>
     </pagelink>
   <text>, former</text>
-  <pagelink id="United States Secretary of State"><text>U.S. Secretary of State</text>
+  <pagelink id="United States Secretary of State"><text>U.S. Secretary of <E>State</E></text>
     </pagelink>
   <text>from</text>
-  <pagelink id="Pennsylvania">Pennsylvania
+  <pagelink id="Pennsylvania"><text><E id="United States presidential election in Pennsylvania, 1852">Pennsylvania</E></text>
     </pagelink>
   </list>
-<list lv="l1"><pagelink id="William L. Marcy">William L. Marcy
+<list lv="l1"><pagelink id="William L. Marcy"><text><E>William L. Marcy</E></text>
     </pagelink>
   <text>, former</text>
-  <pagelink id="United States Secretary of War"><text>U.S. Secretary of War</text>
+  <pagelink id="United States Secretary of War"><text>U.S. Secretary of <E>War</E></text>
     </pagelink>
   <text>from</text>
-  <pagelink id="New York (state)"><text>New York</text>
+  <pagelink id="New York (state)"><text><E>New York</E></text>
     </pagelink>
   </list>
-<list lv="l1"><pagelink id="Stephen Douglas">Stephen Douglas
+<list lv="l1"><pagelink id="Stephen A. Douglas"><text>Stephen <E>Douglas</E></text>
     </pagelink>
-  <text>,</text>
+  <text><P/>, </text>
   <pagelink id="United States Senate"><text>U.S. Senator</text>
     </pagelink>
   <text>from</text>
-  <pagelink id="Illinois">Illinois
+  <pagelink id="Illinois"><text><E id="United States presidential election in Illinois, 1852">Illinois</E></text>
     </pagelink>
   </list>
 
@@ -300,91 +303,97 @@
 <reflink id="ref2"/>
 
 <br/>
-<text>As Democrats convened in Baltimore in June 1852, four major candidates vied for the nomination:</text>
-<pagelink id="Lewis Cass">Lewis Cass
+<text>As <E>Democrats</E> <V>convened</V> in <E>Baltimore</E> in <E>June</E> <C>1852</C><P/>, <C>four</C> <A>major</A> <N>candidates</N> <V>vied</V> for the <N>nomination</N><P/>: </text>
+<pagelink id="Lewis Cass"><text><E>Lewis Cass</E></text>
   </pagelink>
-<text>of Michigan, the nominee in</text>
-<pagelink id="United States presidential election, 1848"><text>1848</text>
+<text> of <E id="United States presidential election in Michigan, 1852">Michigan</E><P/>, the <N>nominee</N> in </text>
+<pagelink id="1848 United States presidential election"><text><C>1848</C></text>
   </pagelink>
-<text>, who had the backing of northerners in support of the</text>
-<pagelink id="Compromise of 1850">Compromise of 1850
+<text><P/>, <W>who</W> <V>had</V> the <N>backing</N> of <N>northerners</N> in <N>support</N> of the </text>
+<pagelink id="Compromise of 1850"><text><E>Compromise of 1850</E></text>
   </pagelink>
-<text>;</text>
-<pagelink id="James Buchanan">James Buchanan
+<text><P/>; </text>
+<pagelink id="James Buchanan"><text><E>James Buchanan</E></text>
   </pagelink>
-<text>of Pennsylvania, popular in the</text>
-<pagelink id="Southern United States"><text>South</text>
+<text> of <E id="United States presidential election in Pennsylvania, 1852">Pennsylvania</E>, popular in the </text>
+<pagelink id="Southern United States"><text><E id="Southern United States">South</E></text>
   </pagelink>
 <text>as well as in his home state;</text>
-<pagelink id="Stephen A. Douglas">Stephen A. Douglas
+<pagelink id="Stephen A. Douglas"><text><E>Stephen A. Douglas</E></text>
   </pagelink>
-<text>of Illinois, candidate of the expansionists and the railroad interests; and</text>
-<pagelink id="William L. Marcy">William L. Marcy
+<text> of <E id="United States presidential election in Illinois, 1852">Illinois</E>, candidate of the expansionists and the railroad interests; and </text>
+<pagelink id="William L. Marcy"><text><E>William L. Marcy</E></text>
   </pagelink>
-<text>of New York, whose strength was centered in his home state. Throughout the balloting, numerous favorite son candidates received a few votes.</text>
+<text> of <E>New York</E><P/>, <W>whose</W> <N>strength</N> <V>was</V> <V>centered</V> in <R>his</R> <N>home state</N><T/>. Throughout the <N>balloting</N><P/>, <A>numerous</A> <A>favorite</A> <N>son candidates</N> <V>received</V> a <A>few</A> <N>votes</N><T/>.
+</text>
 <br/>
-<text>Cass led on the first nineteen ballots, with Buchanan second, and Douglas and Marcy exchanging third and fourth places. Buchanan took the lead on the 20th ballot and retained it on each of the next nine tallies. Douglas managed a narrow lead on the 30th and 31st ballots. Cass then recaptured first place through the 44th ballot. Marcy carried the next four ballots. Franklin Pierce of New Hampshire, a former Congressman and Senator, did not get on the board until the 35th ballot, when the Virginia delegation brought him forward as a compromise choice. He consolidated his support in subsequent voting and was nominated nearly unanimously on the 49th ballot.</text>
+<text><E id="Lewis Cass">Cass</E> <V>led</V> on the <A>first</A> <C>nineteen</C> <N>ballots</N><P/>, with <E>Buchanan</E> <A>second</A><P/>, and <E>Douglas</E> and <E id="William L Marcy">Marcy</E> <V>exchanging</V> <A>third</A> and <A>fourth</A> <N>places</N><T/>. <E>Buchanan</E> <V>took</V> the <N>lead</N> on the <A>20th</A> <N>ballot</N> and <V>retained</V> <R>it</R> on each of the <A>next</A> <C>nine</C> <N>tallies</N><T/>. <E>Douglas</E> <V>managed</V> a <A>narrow</A> <N>lead</N> on the <A>30th</A> and <A>31st</A> <N>ballots</N><T/>. <E id="Lewis Cass">Cass</E> <A>then</A> <V>recaptured</V> <A>first</A> <N>place</N> through the <A>44th</A> <N>ballot</N><T/>. <E id="William L Marcy">Marcy</E> <V>carried</V> the <A>next</A> <C>four</C> <N>ballots</N><T/>. <E>Franklin Pierce</E> of <E>New Hampshire</E><P/>, a <A>former</A> <E>Congressman</E> and <E>Senator</E><P/>, <V>did</V> <A>not</A> <V>get</V> on the <N>board</N> until the <A>35th</A> <N>ballot</N><P/>, <W>when</W> the <E id="United States presidential election in Virginia, 1852">Virginia</E> <N>delegation</N> <V>brought</V> <R>him</R> <A>forward</A> as a <N>compromise choice</N><T/>. <R id="Franklin Pierce">He</R> <V>consolidated</V> <R id="Franklin Pierce">his</R> <N>support</N> in <A>subsequent</A> <N>voting</N> and <V>was</V> <V>nominated</V> <A>nearly</A> <A>unanimously</A> on the <A>49th</A> <N>ballot</N><T/>.</text>
 <reflink id="ref3"/>
 
 <br/>
-<text>In a peace gesture to the Buchanan wing of the party, Pierce's supporters allowed Buchanan's allies to fill the second position, knowing that they would select Alabama Senator William R. King. On the second ballot, with only minor opposition, King finally obtained the Democratic vice-presidential nomination. During the ensuing campaign, King's</text>
-<pagelink id="tuberculosis">tuberculosis
+<text>In a <N>peace gesture</N> to the <E>Buchanan</E> <N>wing</N> of the <N>party</N><P/>, <E id="Franklin Pierce">Pierce</E>'s <N>supporters</N> <V>allowed</V> <E>Buchanan</E>'s <N>allies</N> to <V>fill</V> the <A>second</A> <N>position</N><P/>, <V>knowing</V> that <R>they</R> <M>would</M> <V>select</V> <E>Alabama Senator</E> <E>William R. King</E><T/>. On the <A>second</A> <N>ballot</N><P/>, with <A>only</A> <A>minor</A> <N>opposition</N><P/>, <E id="William R King">King</E> <A>finally</A> <V>obtained</V> the <A>Democratic</A> <N>vice</N>-<A>presidential</A> <N>nomination</N><T/>. During the <V>ensuing</V> <N>campaign</N><P/>, <E id="William R King">King</E>'s </text>
+<pagelink id="Tuberculosis"><text><N>tuberculosis</N></text>
   </pagelink>
-<text>, which he believed he had contracted while in</text>
-<pagelink id="Paris">Paris
+<text><P/>, <W>which</W> <R id="Franklin Pierce">he</R> <V>believed</V> <R id="Franklin Pierce">he</R> <V>had</V> <V>contracted</V> while in </text>
+<pagelink id="Paris"><text><E>Paris</E></text>
   </pagelink>
-<text>, France, denied him the active behind-the-scenes role that he might otherwise have played, although he worked hard to assure his region's voters that New Hampshire's Pierce was a</text>
-<quot><text>northern man with southern principles.</text>
+<text><P/>, <E>France</E><P/>, <V>denied</V> <R id="Franklin Pierce">him</R> the <A>active</A> behind-the-<N>scenes</N> <N>role</N> <W>that</W> <R id="Franklin Pierce">he</R> <M>might</M> <A>otherwise</A> <V>have</V> <V>played</V><P/>, although <R id="Franklin Pierce">he</R> <V>worked</V> <A>hard</A> to <V>assure</V> <R id="Franklin Pierce">his</R> <N>region</N>'s <N>voters</N> that <E>New Hampshire</E>'s <E id="Franklin Pierce">Pierce</E> <V>was</V> a </text>
+<quot><text><A>northern</A> <N>man</N> with <A>southern</A> <N>principles</N><T/>.</text>
   </quot>
-<text>King died shortly after his inauguration on April 18, 1853.</text>
-<ref id="ref2"><list lv="l1"><text>Former Senator</text>
+<text> <E id="William R King">King</E> <V>died</V> <A>shortly</A> after <R id="Franklin Pierce">his</R> <N>inauguration</N> on <E>April</E> <C>18</C><P/>, <C>1853</C><T/>.</text>
+<ref id="ref2"><list lv="l1"><text><E>Former Senator</E> 
+</text>
     <br/>
     
-    <entity lv="3"><pagelink id="Franklin Pierce">Franklin Pierce
+    <entity lv="3"><pagelink id="Franklin Pierce"><text><E>Franklin Pierce</E></text>
         </pagelink>
       </entity>
     
     <br/>
     <text>from</text>
-    <pagelink id="New Hampshire">New Hampshire
+    <pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
       </pagelink>
     </list>
-  <list lv="l1"><text>Senator</text>
+  <list lv="l1"><text><E>Senator</E> 
+</text>
     <br/>
     
-    <entity lv="3"><pagelink id="Lewis Cass">Lewis Cass
+    <entity lv="3"><pagelink id="Lewis Cass"><text><E>Lewis Cass</E></text>
         </pagelink>
       </entity>
     
     <br/>
     <text>from</text>
-    <pagelink id="Michigan">Michigan
+    <pagelink id="Michigan"><text><E id="United States presidential election in Michigan, 1852">Michigan</E></text>
       </pagelink>
     </list>
-  <list lv="l1"><text>Former Secretary of State</text>
+  <list lv="l1"><text>Former Secretary of <E>State</E> 
+</text>
     <br/>
     
-    <entity lv="3"><pagelink id="James Buchanan">James Buchanan
+    <entity lv="3"><pagelink id="James Buchanan"><text><E>James Buchanan</E></text>
         </pagelink>
       </entity>
     </list>
-  <list lv="l1"><text>Former Secretary of War</text>
+  <list lv="l1"><text>Former Secretary of <E>War</E> 
+</text>
     <br/>
     
-    <entity lv="3"><pagelink id="William L. Marcy">William L. Marcy
+    <entity lv="3"><pagelink id="William L. Marcy"><text><E>William L. Marcy</E></text>
         </pagelink>
       </entity>
     </list>
-  <list lv="l1"><text>Senator</text>
+  <list lv="l1"><text><E>Senator</E> 
+</text>
     <br/>
     
-    <entity lv="3"><pagelink id="Stephen A. Douglas">Stephen A. Douglas
+    <entity lv="3"><pagelink id="Stephen A. Douglas"><text><E>Stephen A. Douglas</E></text>
         </pagelink>
       </entity>
     
     <br/>
     <text>from</text>
-    <pagelink id="Illinois">Illinois
+    <pagelink id="Illinois"><text><E id="United States presidential election in Illinois, 1852">Illinois</E></text>
       </pagelink>
     </list>
   
@@ -401,10 +410,10 @@
   <head id="C1"><pagelink id="William R. King"><citlink id="cit7"/>
       </pagelink>
     </head>
-  <cell id="C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,R1"><filelink id="US Democratic Party Logo.svg"><text>Democratic Party (United States)</text>
+  <cell id="C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,R1"><filelink id="US Democratic Party Logo.svg"><text><E>Democratic Party</E> <P/>(<E>United States</E><P/>)</text>
       </filelink>
     
-      <entity lv="3"><text>Democratic Party Ticket, 1852</text>
+      <entity lv="3"><text><E>Democratic Party</E> <E>Ticket</E><P/>, <C>1852</C></text>
         </entity>
       
     </cell>
@@ -424,7 +433,7 @@
     <pagelink id="United States Senate"><text>U.S. Senator</text>
       </pagelink>
     <text>from</text>
-    <pagelink id="New Hampshire">New Hampshire
+    <pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
       </pagelink>
     
     <br/>
@@ -435,7 +444,7 @@
   <cell id="C1,R5"><pagelink id="United States Senate"><text>U.S. Senator</text>
       </pagelink>
     <text>from</text>
-    <pagelink id="Alabama">Alabama
+    <pagelink id="Alabama"><text><E id="United States presidential election in Alabama, 1852">Alabama</E></text>
       </pagelink>
     
     <br/>
@@ -443,24 +452,24 @@
       <text>(1819–1844 &amp; 1848–1852)</text>
       
     </cell>
-  <cell id="C0,C1,R6"><pagelink id="Franklin Pierce presidential campaign, 1852"><entity lv="3"><text>Campaign</text>
+  <cell id="C0,C1,R6"><pagelink id="Franklin Pierce presidential campaign, 1852"><entity lv="3"><text><E>Campaign</E></text>
         </entity>
       </pagelink>
     </cell>
   </table>
-<citation id="cit5" class="Main"><attr>1852 Democratic National Convention</attr>
+<citation id="cit5" class="Main"><attr><E>1852 Democratic National Convention</E></attr>
   </citation>
 <citation id="cit6" class="color"><list lv="l1"><attr>black</attr>
     </list>
-  <list lv="l1"><attr>Franklin Pierce</attr>
+  <list lv="l1"><attr><E>Franklin Pierce</E></attr>
     </list>
   </citation>
 <citation id="cit7" class="color"><list lv="l1"><attr>black</attr>
     </list>
-  <list lv="l1"><attr>William R. King</attr>
+  <list lv="l1"><attr><E>William R. King</E></attr>
     </list>
   </citation>
-<heading lv="h2"><text>Whig Party nomination</text>
+<heading lv="h2"><text> <E>Whig Party</E> nomination </text>
   </heading>
 <citlink id="cit8"/>
 
@@ -470,25 +479,25 @@
 <br/>
 <filelink id="Scott Graham.png"><text>Scott/Graham campaign poster</text>
   </filelink>
-<list lv="l1"><text>Winfield Scott, Commanding General of the</text>
+<list lv="l1"><text> <E>Winfield Scott</E>, Commanding General of the </text>
   <pagelink id="United States Army"><text>U.S. Army</text>
     </pagelink>
   <text>from</text>
-  <pagelink id="New Jersey">New Jersey
+  <pagelink id="New Jersey"><text><E>New Jersey</E></text>
     </pagelink>
   </list>
-<list lv="l1"><text>Millard Fillmore,</text>
-  <pagelink id="President of the United States">President of the United States
+<list lv="l1"><text> <E>Millard Fillmore</E>, </text>
+  <pagelink id="President of the United States"><text><E>President of the United States</E></text>
     </pagelink>
   <text>from</text>
-  <pagelink id="New York (state)"><text>New York</text>
+  <pagelink id="New York (state)"><text><E>New York</E></text>
     </pagelink>
   </list>
-<list lv="l1"><text>Daniel Webster,</text>
-  <pagelink id="United States Secretary of State"><text>U.S. Secretary of State</text>
+<list lv="l1"><text> <E>Daniel Webster</E>,  </text>
+  <pagelink id="United States Secretary of State"><text>U.S. Secretary of <E>State</E></text>
     </pagelink>
   <text>from</text>
-  <pagelink id="Massachusetts">Massachusetts
+  <pagelink id="Massachusetts"><text><E id="United States presidential election in Massachusetts, 1852">Massachusetts</E></text>
     </pagelink>
   </list>
 
@@ -496,50 +505,54 @@
 <reflink id="ref4"/>
 
 <br/>
-<text>The 1852 Whig National Convention, held in</text>
-<pagelink id="Baltimore, Maryland">Baltimore, Maryland
+<text>The <E>1852 Whig National Convention</E><P/>, <V>held</V> in </text>
+<pagelink id="Baltimore"><text><E>Baltimore</E><P/>, <E id="United States presidential election in Maryland, 1852">Maryland</E></text>
   </pagelink>
-<text>, was bitterly divided. Supporters of President Fillmore pointed to the successful</text>
-<pagelink id="Compromise of 1850">Compromise of 1850
+<text><P/>, <V>was</V> <A>bitterly</A> <V>divided</V><T/>. <N>Supporters</N> of <E>President Fillmore</E> <V>pointed</V> to the <A>successful</A> </text>
+<pagelink id="Compromise of 1850"><text><E>Compromise of 1850</E></text>
   </pagelink>
-<text>and the failure of a nascent secession movement in the Southern states in 1850–1851. The northern Whigs believed that the Compromise of 1850 favored the slaveholding South over the North. Northern Whigs favored heroic</text>
-<pagelink id="Mexican–American War">Mexican–American War
+<text> and the <N>failure</N> of a <N>nascent secession movement</N> in the <A>Southern</A> <N>states</N> in <C>1850–1851</C><T/>. The <A>northern</A> <E>Whigs</E> <V>believed</V> that the <E>Compromise of 1850</E> <V>favored</V> the <N>slaveholding</N> <E id="Southern United States">South</E> over the <E>North</E><T/>. <E>Northern Whigs</E> <V>favored</V> <A>heroic</A> </text>
+<pagelink id="Mexican–American War"><text><A>Mexican</A>–<E>American War</E></text>
   </pagelink>
-<text>General</text>
-<pagelink id="Winfield Scott">Winfield Scott
+<text> <E>General</E> </text>
+<pagelink id="Winfield Scott"><text><E>Winfield Scott</E></text>
   </pagelink>
-<text>of New Jersey. Scott had earned the nickname of</text>
-<quot><text>Old Fuss and Feathers</text>
+<text> of <E>New Jersey</E><T/>. <E id="Winfield Scott">Scott</E> <V>had</V> <V>earned</V> the <N>nickname</N> of </text>
+<quot><text><E>Old Fuss</E> and <E>Feathers</E></text>
   </quot>
-<text>in the military due to his insistence on appearance and discipline, and while respected, was also seen by the people as somewhat</text>
-<pagelink id="foppish">foppish
+<text> in the <N>military</N> due to <R id="Franklin Pierce">his</R> <N>insistence</N> on <N>appearance</N> and <N>discipline</N><P/>, and while <V>respected</V><P/>, <V>was</V> <A>also</A> <V>seen</V> by the <N>people</N> as <A>somewhat</A> </text>
+<pagelink id="Fop"><text><A>foppish</A></text>
   </pagelink>
-<text>. A deadlock occurred because most New England delegates supported</text>
-<pagelink id="Daniel Webster">Daniel Webster
+<text><T/>. A <N>deadlock</N> <V>occurred</V> because <A>most</A> <E>New England</E> <N>delegates</N> <V>supported</V> </text>
+<pagelink id="Daniel Webster"><text><E>Daniel Webster</E></text>
   </pagelink>
-<text>. On the first ballot, Fillmore received all delegate votes from the South save four, but only received eighteen northern delegate votes. The vote was 133 for Fillmore, 131 for Scott, and 29 for Webster. Scott was nominated on the 53rd ballot by a margin of 159–112 (with 21 for Webster), again with a highly sectional vote; Scott won the North by a 142–11 vote (with 21 for Webster) while Fillmore won the South by a margin of 101–17.</text>
+<text><T/>. On the <A>first</A> <N>ballot</N><P/>, <E id="President Fillmore">Fillmore</E> <V>received</V> all <N>delegate votes</N> from the <E id="Southern United States">South</E> <V>save</V> <C>four</C><P/>, but <A>only</A> <V>received</V> <C>eighteen</C> <A>northern</A> <N>delegate votes</N><T/>. The <N>vote</N> <V>was</V> <C>133</C> for <E id="President Fillmore">Fillmore</E><P/>, <C>131</C> for <E id="Winfield Scott">Scott</E><P/>, and <C>29</C> for <E id="Daniel Webster">Webster</E><T/>. <E id="Winfield Scott">Scott</E> <V>was</V> <V>nominated</V> on the <A>53rd</A> <N>ballot</N> by a <N>margin</N> of <C>159–112</C> <P/>(with <C>21</C> for <E id="Daniel Webster">Webster</E><P/>), <A>again</A> with a <A>highly</A> <A>sectional</A> <N>vote</N><P/>; <E id="Winfield Scott">Scott</E> <V>won</V> the <E>North</E> by a <C>142–11</C> <N>vote</N> <P/>(with <C>21</C> for <E id="Daniel Webster">Webster</E><P/>) while <E id="President Fillmore">Fillmore</E> <V>won</V> the <E id="Southern United States">South</E> by a <N>margin</N> of <C>101–17</C><T/>.
+</text>
 <br/>
-<pagelink id="William Alexander Graham">William Alexander Graham
+<pagelink id="William Alexander Graham"><text><E>William Alexander Graham</E></text>
   </pagelink>
-<text>was chosen as the vice-presidential nominee. 1852 would be the last time the Whig Party would nominate a candidate for president. Within the decade, the party fell apart and ceased to exist, principally due to regional divisions caused by the slavery issue.</text>
-<ref id="ref4"><list lv="l1"><text>Commanding General</text>
+<text> <V>was</V> <V>chosen</V> as the <N>vice</N>-<A>presidential</A> <N>nominee</N><T/>. <C>1852</C> <M>would</M> <V>be</V> the <A>last</A> <N>time</N> the <E>Whig Party</E> <M>would</M> <V>nominate</V> a <N>candidate</N> for <N>president</N><T/>. Within the <N>decade</N><P/>, the <N>party</N> <V>fell</V> <A>apart</A> and <V>ceased</V> to <V>exist</V><P/>, <A>principally</A> <A>due</A> to <A>regional</A> <N>divisions</N> <V>caused</V> by the <N>slavery issue</N><T/>.</text>
+<ref id="ref4"><list lv="l1"><text><E>Commanding General</E>
+</text>
     <br/>
     
-    <entity lv="3"><pagelink id="Winfield Scott">Winfield Scott
+    <entity lv="3"><pagelink id="Winfield Scott"><text><E>Winfield Scott</E></text>
         </pagelink>
       </entity>
     </list>
-  <list lv="l1"><text>President</text>
+  <list lv="l1"><text><E>President</E>
+</text>
     <br/>
     
-    <entity lv="3"><pagelink id="Millard Fillmore">Millard Fillmore
+    <entity lv="3"><pagelink id="Millard Fillmore"><text><E>Millard Fillmore</E></text>
         </pagelink>
       </entity>
     </list>
-  <list lv="l1"><text>U.S. Secretary of State</text>
+  <list lv="l1"><text>U.S. Secretary of <E>State</E>
+</text>
     <br/>
     
-    <entity lv="3"><pagelink id="Daniel Webster">Daniel Webster
+    <entity lv="3"><pagelink id="Daniel Webster"><text><E>Daniel Webster</E></text>
         </pagelink>
       </entity>
     </list>
@@ -552,7 +565,7 @@
   <head id="C1"><pagelink id="William Alexander Graham"><citlink id="cit10"/>
       </pagelink>
     </head>
-  <cell id="C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,R1"><entity lv="3"><text>Whig Party Ticket, 1852</text>
+  <cell id="C0,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,R1"><entity lv="3"><text><E>Whig Party</E> <E>Ticket</E><P/>, <C>1852</C></text>
         </entity>
       
     </cell>
@@ -568,7 +581,8 @@
   <cell id="C1,R4"><filelink id="William Alexander Graham - Brady-Handy.jpg"><text>200x200px</text>
       </filelink>
     </cell>
-  <cell id="C0,R5"><text>3rd</text>
+  <cell id="C0,R5"><text><E>3rd</E>
+</text>
     <br/>
     <pagelink id="Commanding General of the United States Army"><text>Commanding General of the U.S. Army</text>
       </pagelink>
@@ -578,7 +592,8 @@
       <text>(1841–1861)</text>
       
     </cell>
-  <cell id="C1,R5"><text>20th</text>
+  <cell id="C1,R5"><text><E>20th</E>
+</text>
     <br/>
     <pagelink id="United States Secretary of the Navy"><text>U.S. Secretary of the Navy</text>
       </pagelink>
@@ -588,164 +603,167 @@
       <text>(1850–1852)</text>
       
     </cell>
-  <cell id="C0,C1,R6"><pagelink id="Winfield Scott presidential campaign, 1852"><entity lv="3"><text>Campaign</text>
+  <cell id="C0,C1,R6"><pagelink id="Winfield Scott presidential campaign, 1852"><entity lv="3"><text><E>Campaign</E></text>
         </entity>
       </pagelink>
     </cell>
   </table>
-<citation id="cit8" class="Main"><attr>1852 Whig National Convention</attr>
+<citation id="cit8" class="Main"><attr><E>1852 Whig National Convention</E></attr>
   </citation>
 <citation id="cit9" class="color"><list lv="l1"><attr>black</attr>
     </list>
-  <list lv="l1"><attr>Winfield Scott</attr>
+  <list lv="l1"><attr><E>Winfield Scott</E></attr>
     </list>
   </citation>
 <citation id="cit10" class="color"><list lv="l1"><attr>black</attr>
     </list>
-  <list lv="l1"><attr>William A. Graham</attr>
+  <list lv="l1"><attr><E>William A. Graham</E></attr>
     </list>
   </citation>
-<heading lv="h2"><text>Free Soil Party nomination</text>
+<heading lv="h2"><text> <E>Free Soil Party</E> nomination </text>
   </heading>
 <citlink id="cit11"/>
-<list lv="l1"><pagelink id="John P. Hale">John P. Hale
+<list lv="l1"><pagelink id="John P. Hale"><text><E>John P. Hale</E></text>
     </pagelink>
-  <text>,</text>
+  <text><P/>, </text>
   <pagelink id="United States Senate"><text>U.S. Senator</text>
     </pagelink>
   <text>from</text>
-  <pagelink id="New Hampshire">New Hampshire
+  <pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
     </pagelink>
   </list>
 
 <br/>
 <reflink id="ref5"/>
 <text>The</text>
-<pagelink id="Free Soil Party">Free Soil Party
+<pagelink id="Free Soil Party"><text><E>Free Soil Party</E></text>
   </pagelink>
-<text>was still the strongest</text>
-<pagelink id="Third party (United States)"><text>third party</text>
+<text> <V>was</V> <A>still</A> the <A>strongest</A> </text>
+<pagelink id="Third party (United States)"><text><A>third</A> <N>party</N></text>
   </pagelink>
-<text>in 1852. However, following the Compromise of 1850, most of the</text>
-<quot><pagelink id="Barnburner">Barnburners
+<text> in <C>1852</C><T/>. <A>However</A><P/>, <V>following</V> the <E>Compromise of 1850</E><P/>, <A>most</A> of the </text>
+<quot><pagelink id="Barnburners and Hunkers"><text><E id="Barnburners and Hunkers">Barnburners</E></text>
     </pagelink>
   
   </quot>
-<text>who supported it in 1848 had returned to the Democratic Party while most of the</text>
-<pagelink id="Conscience Whigs">Conscience Whigs
+<text> <W>who</W> <V>supported</V> <R>it</R> in <C>1848</C> <V>had</V> <V>returned</V> to the <E>Democratic Party</E> while <A>most</A> of the </text>
+<pagelink id="Whig Party (United States)"><text><E id="Whig Party">Conscience Whigs</E></text>
   </pagelink>
-<text>rejoined the Whig Party.  The second Free Soil National Convention assembled in the Masonic Hall in</text>
-<pagelink id="Pittsburgh, Pennsylvania">Pittsburgh, Pennsylvania
+<text> <V>rejoined</V> the <E>Whig Party</E><T/>.  The <A>second</A> <A>Free</A> <E>Soil National Convention</E> <V>assembled</V> in the <E>Masonic Hall</E> in </text>
+<pagelink id="Pittsburgh"><text><E>Pittsburgh</E><P/>, <E id="United States presidential election in Pennsylvania, 1852">Pennsylvania</E></text>
   </pagelink>
-<text>. New Hampshire Senator</text>
-<pagelink id="John P. Hale">John P. Hale
+<text><T/>. <E>New Hampshire</E> <E>Senator</E> </text>
+<pagelink id="John P. Hale"><text><E>John P. Hale</E></text>
   </pagelink>
-<text>was nominated for president with 192 delegate votes (sixteen votes were cast for a smattering of candidates).</text>
-<pagelink id="George Washington Julian">George Washington Julian
+<text> <V>was</V> <V>nominated</V> for <N>president</N> with <C>192</C> <N>delegate votes</N> <P/>(<C>sixteen</C> <N>votes</N> <V>were</V> <V>cast</V> for a <N>smattering</N> of <N>candidates</N><P/>)<T/>. </text>
+<pagelink id="George Washington Julian"><text><E>George Washington Julian</E></text>
   </pagelink>
-<text>of Indiana was nominated for vice-president over</text>
-<pagelink id="Samuel Lewis (politician)"><text>Samuel Lewis</text>
+<text> of <E id="United States presidential election in Indiana, 1852">Indiana</E> <V>was</V> <V>nominated</V> for <N>vice</N>-<N>president</N> over </text>
+<pagelink id="Samuel Lewis (politician)"><text><E>Samuel Lewis</E></text>
   </pagelink>
-<text>of Ohio and</text>
-<pagelink id="Joshua R. Giddings">Joshua R. Giddings
+<text> of <E id="United States presidential election in Ohio, 1852">Ohio</E> and </text>
+<pagelink id="Joshua Reed Giddings"><text><E>Joshua R. Giddings</E></text>
   </pagelink>
-<text>of Ohio.</text>
-<ref id="ref5"><list lv="l1"><text>Senator</text>
-    <entity lv="3"><pagelink id="John P. Hale">John P. Hale
+<text> of <E id="United States presidential election in Ohio, 1852">Ohio</E><T/>.</text>
+<ref id="ref5"><list lv="l1"><text><E>Senator</E> 
+</text>
+    <entity lv="3"><pagelink id="John P. Hale"><text><E>John P. Hale</E></text>
         </pagelink>
       </entity>
     
     <br/>
     <text>from</text>
-    <pagelink id="New Hampshire">New Hampshire
+    <pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
       </pagelink>
     </list>
   
   <br/>
   </ref>
-<citation id="cit11" class="Main"><attr>Free Soil Party</attr>
+<citation id="cit11" class="Main"><attr><E>Free Soil Party</E></attr>
   </citation>
 <heading lv="h2"><text>Union Party nomination</text>
   </heading>
-<text>The Union party was formed in 1851, an offshoot of the Whig party in several Southern states, including Georgia. As the 1852 presidential election approached, Union party leaders decided to wait and see who was nominated by the two major parties. The movement to nominate Daniel Webster as a third-party candidate began in earnest following the Whig Convention, largely driven by those who had been strenuously opposed to Winfield Scott's nomination, among them</text>
-<pagelink id="Alexander H. Stephens"><text>Alexander Stephens</text>
+<text>The <E>Union</E> <N>party</N> <V>was</V> <V>formed</V> in <C>1851</C><P/>, an <N>offshoot</N> of the <E id="Whig Party">Whig</E> <N>party</N> in <A>several</A> <A>Southern</A> <N>states</N><P/>, <V>including</V> <E id="United States presidential election in Georgia, 1852">Georgia</E><T/>. As the <C>1852</C> <A>presidential</A> <N>election</N> <V>approached</V><P/>, <E>Union</E> <N>party leaders</N> <V>decided</V> to <V>wait</V> and <V>see</V> <W>who</W> <V>was</V> <V>nominated</V> by the <C>two</C> <A>major</A> <N>parties</N><T/>. The <N>movement</N> to <V>nominate</V> <E>Daniel Webster</E> as a <A>third</A>-<N>party candidate</N> <V>began</V> in <A>earnest</A> <V>following</V> the <E>Whig Convention</E><P/>, <A>largely</A> <V>driven</V> by those <W>who</W> <V>had</V> <V>been</V> <A>strenuously</A> <V>opposed</V> to <E>Winfield Scott</E>'s <N>nomination</N><P/>, among them </text>
+<pagelink id="Alexander H. Stephens"><text><E id="Alexander H. Stephens">Alexander Stephens</E></text>
   </pagelink>
-<text>,</text>
-<pagelink id="Robert Toombs">Robert Toombs
+<text><P/>, </text>
+<pagelink id="Robert Toombs"><text><E>Robert Toombs</E></text>
   </pagelink>
-<text>, and</text>
-<pagelink id="George Ticknor Curtis"><text>George Curtis</text>
+<text><P/>, and </text>
+<pagelink id="George Ticknor Curtis"><text><E id="George Ticknor Curtis">George Curtis</E></text>
   </pagelink>
-<text>. While Webster was against what he perceived as a</text>
-<quot><text>revolt</text>
+<text><T/>. While <E id="Daniel Webster">Webster</E> <V>was</V> against <W>what</W> <R>he</R> <V>perceived</V> as a </text>
+<quot><text><N>revolt</N></text>
   </quot>
-<text>from the Whig Party and preferred not to be nominated, he let Americans vote for him should the party choose to nominate him.</text>
+<text> from the <E>Whig Party</E> and <V>preferred</V> <A>not</A> to <V>be</V> <V>nominated</V><P/>, <R>he</R> <V>let</V> <E>Americans</E> <V>vote</V> for <R>him</R> <M>should</M> the <N>party</N> <V>choose</V> to <V>nominate</V> <R>him</R><T/>.
+</text>
 <br/>
-<text>The Union Party held its Georgia state convention on August 7, 1852 and nominated Webster for president and</text>
-<pagelink id="Charles J. Jenkins">Charles J. Jenkins
+<text>The <E>Union Party</E> <V>held</V> <R>its</R> <E id="United States presidential election in Georgia, 1852">Georgia</E> <N>state convention</N> on <E>August</E> <C>7</C><P/>, <C>1852</C> and <V>nominated</V> <E id="Daniel Webster">Webster</E> for <N>president</N> and </text>
+<pagelink id="Charles J. Jenkins"><text><E>Charles J. Jenkins</E></text>
   </pagelink>
-<text>of Georgia for vice-president. A formal convention was held at</text>
-<pagelink id="Faneuil Hall">Faneuil Hall
+<text> of <E id="United States presidential election in Georgia, 1852">Georgia</E> for <N>vice</N>-<N>president</N><T/>. A <A>formal</A> <N>convention</N> <V>was</V> <V>held</V> at </text>
+<pagelink id="Faneuil Hall"><text><E>Faneuil Hall</E></text>
   </pagelink>
 <text>in</text>
-<pagelink id="Boston">Boston
+<pagelink id="Boston"><text><E>Boston</E></text>
   </pagelink>
-<text>,</text>
-<pagelink id="Massachusetts">Massachusetts
+<text><P/>, </text>
+<pagelink id="Massachusetts"><text><E id="United States presidential election in Massachusetts, 1852">Massachusetts</E></text>
   </pagelink>
-<text>on September 15, affirming the nominations made at the state convention in Georgia and rejecting Winfield Scott as nothing more than a military figure. The Webster/Jenkins ticket received nationwide support, particularly among Southern Whigs, but also in Massachusetts and New York, but it was largely perceived by many as nothing more than getting voters who would, in different circumstances, support Scott.</text>
+<text> on <E>September</E> <C>15</C><P/>, <V>affirming</V> the <N>nominations</N> <V>made</V> at the <N>state convention</N> in <E id="United States presidential election in Georgia, 1852">Georgia</E> and <V>rejecting</V> <E>Winfield Scott</E> as <N>nothing</N> <A>more</A> than a <A>military</A> <N>figure</N><T/>. The <E id="Daniel Webster">Webster</E>/<E id="Charles J Jenkins">Jenkins</E> <N>ticket</N> <V>received</V> <A>nationwide</A> <N>support</N><P/>, <A>particularly</A> among <E>Southern Whigs</E><P/>, but <A>also</A> in <E id="United States presidential election in Massachusetts, 1852">Massachusetts</E> and <E>New York</E><P/>, but <R>it</R> <V>was</V> <A>largely</A> <V>perceived</V> by <A>many</A> as <N>nothing</N> <A>more</A> than <V>getting</V> <N>voters</N> <W>who</W> <M>would</M><P/>, in <A>different</A> <N>circumstances</N><P/>, <N>support</N> <E id="Winfield Scott">Scott</E><T/>.
+</text>
 <br/>
-<text>Webster had no real chance of winning the election, but even the new</text>
-<pagelink id="Know-Nothing movement"><text>Know-Nothing party</text>
+<text><E id="Daniel Webster">Webster</E> <V>had</V> no <A>real</A> <N>chance</N> of <V>winning</V> the <N>election</N><P/>, but <A>even</A> the <A>new</A> </text>
+<pagelink id="Know Nothing"><text><E>Know</E>-<N>Nothing party</N></text>
   </pagelink>
-<text>endorsed Webster, nominating him without even his own permission. However, Webster died nine days before the election of a</text>
-<pagelink id="cerebral hemorrhage">cerebral hemorrhage
+<text> <V>endorsed</V> <E id="Daniel Webster">Webster</E><P/>, <V>nominating</V> <R>him</R> without <A>even</A> <R>his</R> <A>own</A> <N>permission</N><T/>. <A>However</A><P/>, <E id="Daniel Webster">Webster</E> <V>died</V> <C>nine</C> <N>days</N> before the <N>election</N> of a </text>
+<pagelink id="Intracerebral hemorrhage"><text><A>cerebral</A> <N>hemorrhage</N></text>
   </pagelink>
-<text>on October 24, 1852.</text>
+<text> on <E>October</E> <C>24</C><P/>, <C>1852</C><T/>.</text>
 <heading lv="h2"><text>Native American (Know-Nothing) Party nomination</text>
   </heading>
-<text>Around the mid-1840s,</text>
-<pagelink id="Nativism (politics)"><text>nativists</text>
+<text>Around the <N>mid-1840s</N><P/>, </text>
+<pagelink id="Nativism (politics)"><text><N>nativists</N></text>
   </pagelink>
-<text>were present in New York politics, under the aegis of the American Republican Party. The American Republican party was formed in 1843 in major opposition to</text>
-<pagelink id="immigration">immigration
+<text> <V>were</V> <A>present</A> in <E>New York</E> <N>politics</N><P/>, under the <N>aegis</N> of the <E>American</E> <E>Republican Party</E><T/>. The <A>American</A> <A>Republican</A> <N>party</N> <V>was</V> <V>formed</V> in <C>1843</C> in <A>major</A> <N>opposition</N> to </text>
+<pagelink id="Immigration"><text><N>immigration</N></text>
   </pagelink>
 <text>and</text>
-<pagelink id="Catholicism">Catholicism
+<pagelink id="Catholic Church"><text><E id="Catholic Church">Catholicism</E></text>
   </pagelink>
-<text>. In 1845, the party changed its name to the Native American Party. Their opponents nicknamed them the</text>
-<quot><pagelink id="Know Nothing">Know Nothings
+<text><T/>. In <C>1845</C><P/>, the <N>party</N> <V>changed</V> <R>its</R> <N>name</N> to the <A>Native</A> <E>American Party</E><T/>. <R>Their</R> <N>opponents</N> <V>nicknamed</V> them the </text>
+<quot><pagelink id="Know Nothing"><text><E id="Know Nothing">Know Nothings</E></text>
     </pagelink>
   
   </quot>
-<text>and the party liked the name and it became the nickname of the party after that until it collapsed in 1860. In 1852, the original candidate planned by the Native American Party was Daniel Webster, the nominee of the Union party as well as Secretary of State. They nominated Webster without his permission, with</text>
-<pagelink id="George Corbin Washington">George Corbin Washington
+<text> and the <N>party</N> <V>liked</V> the <N>name</N> and <R>it</R> <V>became</V> the <N>nickname</N> of the <N>party</N> after that until <R>it</R> <V>collapsed</V> in <C>1860</C><T/>. In <C>1852</C><P/>, the <A>original</A> <N>candidate</N> <V>planned</V> by the <A>Native</A> <E>American Party</E> <V>was</V> <E>Daniel Webster</E><P/>, the <N>nominee</N> of the <E>Union</E> <N>party</N> <A>as</A> <A>well</A> as <E>Secretary</E> of <E>State</E><T/>. <R>They</R> <V>nominated</V> <E id="Daniel Webster">Webster</E> without <R>his</R> <N>permission</N><P/>, with </text>
+<pagelink id="George Corbin Washington"><text><E>George Corbin Washington</E></text>
   </pagelink>
-<text>(grandnephew of</text>
-<pagelink id="George Washington">George Washington
+<text> <P/>(<N>grandnephew</N> of </text>
+<pagelink id="George Washington"><text><E>George Washington</E></text>
   </pagelink>
-<text>) as his running mate. Webster died of natural causes nine days before the election, and the Know Nothings quickly replaced Webster by nominating</text>
-<pagelink id="Jacob Broom (congressman)"><text>Jacob Broom</text>
+<text><P/>) as <R>his</R> <N>running mate</N><T/>. <E id="Daniel Webster">Webster</E> <V>died</V> of <A>natural</A> <N>causes</N> <C>nine</C> <N>days</N> before the <N>election</N><P/>, and the <E id="Know Nothing">Know Nothings</E> <A>quickly</A> <V>replaced</V> <E id="Daniel Webster">Webster</E> by <V>nominating</V> </text>
+<pagelink id="Jacob Broom (congressman)"><text><E>Jacob Broom</E></text>
   </pagelink>
-<text>as president and replaced Washington with</text>
-<pagelink id="Reynell Coates">Reynell Coates
+<text> as <N>president</N> and <V>replaced</V> <E id="George Corbin Washington">Washington</E> with </text>
+<pagelink id="Reynell Coates"><text><E>Reynell Coates</E></text>
   </pagelink>
-<text>. With Webster collecting a few thousand votes, Broom received too few, and lost the election. In the future, former president</text>
-<pagelink id="Millard Fillmore">Millard Fillmore
+<text><T/>. With <E id="Daniel Webster">Webster</E> <V>collecting</V> a <A>few</A> <C>thousand</C> <N>votes</N><P/>, <E id="Jacob Broom">Broom</E> <V>received</V> <A>too</A> <A>few</A><P/>, and <V>lost</V> the <N>election</N><T/>. In the <N>future</N><P/>, <A>former</A> <N>president</N> </text>
+<pagelink id="Millard Fillmore"><text><E>Millard Fillmore</E></text>
   </pagelink>
-<text>would be their candidate in</text>
-<pagelink id="United States presidential election, 1856"><text>1856</text>
+<text> <M>would</M> <V>be</V> <R id="Daniel Webster , Jacob Broom">their</R> <N>candidate</N> in </text>
+<pagelink id="1856 United States presidential election"><text><C>1856</C></text>
   </pagelink>
-<text>.</text>
+<text><T/>. </text>
 <heading lv="h2"><text>Southern Rights Party nomination</text>
   </heading>
-<list lv="l1"><pagelink id="George Troup">George Troup
+<list lv="l1"><pagelink id="George Troup"><text><E>George Troup</E></text>
     </pagelink>
   <text>, former</text>
   <pagelink id="United States Senate"><text>U.S. Senator</text>
     </pagelink>
   <text>from</text>
-  <pagelink id="Georgia (U.S. State)"><text>Georgia</text>
+  <pagelink id="Georgia (U.S. state)"><text><E id="United States presidential election in Georgia, 1852">Georgia</E></text>
     </pagelink>
   </list>
 
@@ -753,100 +771,104 @@
 <reflink id="ref6"/>
 
 <br/>
-<text>The Southern Rights Party was an offshoot of the Democratic party in several Southern states which advocated secession from the Union, electing a number of Congressmen and holding referendums on secession in a number of southern states, none of which were successful.</text>
+<text>The <E id="United States Southern Rights Party">Southern Rights</E> <E id="American Party">Party</E> <V>was</V> an <N>offshoot</N> of the <A>Democratic</A> <N>party</N> in <A>several</A> <A>Southern</A> <N>states</N> <W>which</W> <V>advocated</V> <N>secession</N> from the <E>Union</E><P/>, <V>electing</V> a <N>number</N> of <N>Congressmen</N> and <V>holding</V> <N>referendums</N> on <N>secession</N> in a <N>number</N> of <A>southern</A> <N>states</N><P/>, <N>none</N> of <W>which</W> <V>were</V> <A>successful</A><T/>.
+</text>
 <br/>
-<text>It was unclear in early 1852 if the Party would contest the presidential election. When the Alabama state convention was held in early March, only nine counties were represented. The party decided to see who was nominated by the two major national parties and support one of them if possible.</text>
+<text><R>It</R> <V>was</V> <A>unclear</A> in <A>early</A> <C>1852</C> if the <E id="American Party">Party</E> <M>would</M> <V>contest</V> the <A>presidential</A> <N>election</N><T/>. <W>When</W> the <E id="United States presidential election in Alabama, 1852">Alabama</E> <N>state convention</N> <V>was</V> <V>held</V> in <A>early</A> <E>March</E><P/>, <A>only</A> <C>nine</C> <N>counties</N> <V>were</V> <V>represented</V><T/>. The <N>party</N> <V>decided</V> to <V>see</V> <W>who</W> <V>was</V> <V>nominated</V> by the <C>two</C> <A>major</A> <A>national</A> <N>parties</N> and <V>support</V> <C>one</C> of them if <A>possible</A><T/>. </text>
 <br/>
-<text>When Georgia held its state convention, it acted as the state Democratic Party and sent delegates to the national convention.</text>
+<text><W>When</W> <E id="United States presidential election in Georgia, 1852">Georgia</E> <V>held</V> <R>its</R> <N>state convention</N><P/>, <R>it</R> <V>acted</V> as the <N>state</N> <E>Democratic Party</E> and <V>sent</V> <N>delegates</N> to the <A>national</A> <N>convention</N><T/>.
+</text>
 <br/>
-<text>After the Democratic National Convention, the Party was not sure that it wanted to support Franklin Pierce, the Democratic nominee. Alabama held a state convention from July 13–15 and discussed at length the options of running a separate ticket or supporting Pierce. The convention was unable to arrive at a decision, deciding to appoint a committee to review the positions of Scott and Pierce with the option of calling a</text>
-<quot><text>national</text>
+<text>After the <E>Democratic National Convention</E><P/>, the <E id="American Party">Party</E> <V>was</V> <A>not</A> <A>sure</A> that <R>it</R> <V>wanted</V> to <V>support</V> <E>Franklin Pierce</E><P/>, the <A>Democratic</A> <N>nominee</N><T/>. <E id="United States presidential election in Alabama, 1852">Alabama</E> <V>held</V> a <N>state convention</N> from <E>July 13–15</E> and <V>discussed</V> at <N>length</N> the <N>options</N> of <V>running</V> a <A>separate</A> <N>ticket</N> or <V>supporting</V> <E id="Franklin Pierce">Pierce</E><T/>. The <N>convention</N> <V>was</V> <A>unable</A> to <V>arrive</V> at a <N>decision</N><P/>, <V>deciding</V> to <V>appoint</V> a <N>committee</N> to <V>review</V> the <N>positions</N> of <E>Scott</E> and <E id="Franklin Pierce">Pierce</E> with the <N>option</N> of <V>calling</V> a </text>
+<quot><text><A>national</A></text>
   </quot>
 <text>convention if the two major party candidates appeared deficient.</text>
 <br/>
 <text>The committee took its time reviewing the positions of Pierce and Scott, finally deciding on August 25 to call a convention for a Southern Rights Party ticket.</text>
 <br/>
-<text>The convention assembled in Montgomery, Alabama, with 62 delegates present, a committee to recommend a ticket being appointed while the delegates listened to speeches in the interim. The committee eventually recommended former Senator</text>
-<pagelink id="George Troup">George Troup
+<text>The <N>convention</N> <V>assembled</V> in <E>Montgomery</E><P/>, <E id="United States presidential election in Alabama, 1852">Alabama</E><P/>, with <C>62</C> <N>delegates</N> <A>present</A><P/>, a <N>committee</N> to <V>recommend</V> a <N>ticket</N> <V>being</V> <V>appointed</V> while the <N>delegates</N> <V>listened</V> to <N>speeches</N> in the <A>interim</A><T/>. The <N>committee</N> <A>eventually</A> <V>recommended</V> <A>former</A> <E>Senator</E> </text>
+<pagelink id="George Troup"><text><E>George Troup</E></text>
   </pagelink>
-<text>of Georgia for President, and former Governor</text>
+<text> of <E id="United States presidential election in Georgia, 1852">Georgia</E> for <E>President</E><P/>, and <A>former</A> <E>Governor</E> </text>
 <pagelink id="John A. Quitman"><text>John Quitman</text>
   </pagelink>
-<text>of Mississippi for Vice-President; they were unanimously nominated.</text>
+<text> of <E id="United States presidential election in Mississippi, 1852">Mississippi</E> for <E>Vice</E>-<E>President</E><P/>; <R>they</R> <V>were</V> <A>unanimously</A> <V>nominated</V><T/>.
+</text>
 <br/>
-<text>The two nominees accepted their nominations soon after the convention, which was held rather late in the season. Troup stated in a letter, dated September 27 and printed in the New York Times on October 16, that he had planned to vote for Pierce and had always wholeheartedly supported William R.D. King. He indicated in the letter that he preferred to decline the honor, as he was rather ill at the time and feared that he would die before the election. The Party's executive committee edited the letter to excise those portions which indicated that Troup preferred to decline, a fact which was revealed after the election.</text>
-<ref id="ref6"><list lv="l1"><text>Former Senator</text>
-    <entity lv="3"><pagelink id="George Troup">George Troup
+<text>The <C>two</C> <N>nominees</N> <V>accepted</V> <R>their</R> <N>nominations</N> <A>soon</A> after the <N>convention</N><P/>, <W>which</W> <V>was</V> <V>held</V> <A>rather</A> <A>late</A> in the <N>season</N><T/>. <E id="George Troup">Troup</E> <V>stated</V> in a <N>letter</N><P/>, <V>dated</V> <E>September</E> <C>27</C> and <V>printed</V> in the <E>New York</E> <E>Times</E> on <E>October</E> <C>16</C><P/>, that <R>he</R> <V>had</V> <V>planned</V> to <V>vote</V> for <E id="Franklin Pierce">Pierce</E> and <V>had</V> <A>always</A> <A>wholeheartedly</A> <V>supported</V> <E>William R.D. King</E><T/>. <R id="George Troup">He</R> <V>indicated</V> in the <N>letter</N> <W>that</W> <R id="George Troup">he</R> <V>preferred</V> to <V>decline</V> the <N>honor</N><P/>, as <R id="George Troup">he</R> <V>was</V> <A>rather</A> <A>ill</A> at the <N>time</N> and <V>feared</V> that <R id="George Troup">he</R> <M>would</M> <V>die</V> before the <N>election</N><T/>. The <E id="American Party">Party</E>'s <A>executive</A> <N>committee</N> <V>edited</V> the <N>letter</N> to <V>excise</V> those <N>portions</N> <W>which</W> <V>indicated</V> that <E id="George Troup">Troup</E> <V>preferred</V> to <V>decline</V><P/>, a <N>fact</N> <W>which</W> <V>was</V> <V>revealed</V> after the <N>election</N><T/>. </text>
+<ref id="ref6"><list lv="l1"><text><E>Former Senator</E> 
+</text>
+    <entity lv="3"><pagelink id="George Troup"><text><E>George Troup</E></text>
         </pagelink>
       </entity>
     
     <br/>
     <text>from</text>
-    <pagelink id="Georgia (U.S. State)"><text>Georgia</text>
+    <pagelink id="Georgia (U.S. state)"><text><E id="United States presidential election in Georgia, 1852">Georgia</E></text>
       </pagelink>
     </list>
   
   <br/>
   </ref>
-<heading lv="h2"><text>Liberty Party nomination</text>
+<heading lv="h2"><text> <E>Liberty Party</E> nomination </text>
   </heading>
 <text>The</text>
-<pagelink id="Liberty Party (1840s)"><text>Liberty Party</text>
+<pagelink id="Liberty Party (United States, 1840)"><text><E>Liberty Party</E></text>
   </pagelink>
-<text>had ceased to become a significant political force after most of its members joined the Free Soil Party in 1848.  Nonetheless, some of those who rejected the fusion strategy held a Liberty Party National Convention in</text>
-<pagelink id="Buffalo, New York">Buffalo, New York
+<text> <V>had</V> <V>ceased</V> to <V>become</V> a <A>significant</A> <A>political</A> <N>force</N> after <A>most</A> of <R>its</R> <N>members</N> <V>joined</V> the <E>Free Soil Party</E> in <C>1848</C><T/>.  <A>Nonetheless</A><P/>, some of those <W>who</W> <V>rejected</V> the <N>fusion strategy</N> <V>held</V> a <E>Liberty Party</E> <E>National Convention</E> in </text>
+<pagelink id="Buffalo, New York"><text><E>Buffalo, New York</E></text>
   </pagelink>
-<text>. There were few delegates present, so a ticket was recommended and a later convention called. The Convention recommended</text>
-<pagelink id="Gerrit Smith">Gerrit Smith
+<text><T/>. <X>There</X> <V>were</V> <A>few</A> <N>delegates</N> <A>present</A><P/>, <A>so</A> a <N>ticket</N> <V>was</V> <V>recommended</V> and a <A>later</A> <N>convention</N> <V>called</V><T/>. The <E id="National Convention">Convention</E> <V>recommended</V> </text>
+<pagelink id="Gerrit Smith"><text><E>Gerrit Smith</E></text>
   </pagelink>
-<text>of New York for president and</text>
-<pagelink id="Charles Durkee">Charles Durkee
+<text> of <E>New York</E> for <N>president</N> and </text>
+<pagelink id="Charles Durkee"><text><E>Charles Durkee</E></text>
   </pagelink>
-<text>of Wisconsin for vice-president. A second convention was held in</text>
-<pagelink id="Syracuse, New York">Syracuse, New York
+<text> of <E id="United States presidential election in Wisconsin, 1852">Wisconsin</E> for <N>vice</N>-<N>president</N><T/>. A <A>second</A> <N>convention</N> <V>was</V> <V>held</V> in </text>
+<pagelink id="Syracuse, New York"><text><E>Syracuse, New York</E></text>
   </pagelink>
-<text>, in early September 1852, but it too failed to draw enough delegates to select a nominee. Yet a third convention gathered in Syracuse later that month and nominated</text>
-<pagelink id="William Goodell (abolitionist)"><text>William Goodell</text>
+<text><P/>, in <A>early</A> <E>September</E> <C>1852</C><P/>, but <R>it</R> <A>too</A> <V>failed</V> to <V>draw</V> <A>enough</A> <N>delegates</N> to <V>select</V> a <N>nominee</N><T/>. <A>Yet</A> a <A>third</A> <N>convention</N> <V>gathered</V> in <E>Syracuse</E> <A>later</A> that <N>month</N> and <V>nominated</V> </text>
+<pagelink id="William Goodell (abolitionist)"><text><E>William Goodell</E></text>
   </pagelink>
-<text>of New York for president and</text>
-<pagelink id="S.M. Bell (politican)"><text>S.M. Bell</text>
+<text> of <E>New York</E> for <N>president</N> and </text>
+<pagelink id="S.M. Bell (politican)"><text><E>S.M. Bell</E></text>
   </pagelink>
-<text>of Virginia for vice-president.</text>
+<text>  of <E id="United States presidential election in Virginia, 1852">Virginia</E> for <N>vice</N>-<N>president</N><T/>.</text>
 <heading lv="h1"><text>General election</text>
   </heading>
 <heading lv="h2"><text>Fall campaign</text>
   </heading>
-<filelink id="Scott vs Pierce campaign.jpg"><text>Political cartoon favoring Winfield Scott</text>
+<filelink id="Scott vs Pierce campaign.jpg"><text>Political cartoon favoring <E>Winfield Scott</E></text>
   </filelink>
 
 <br/>
-<text>The Whigs' platform was almost indistinguishable from that of the Democrats, reducing the campaign to a contest between the personalities of the two candidates. The lack of clearcut issues between the two parties helped drive voter turnout down to its lowest level since 1836. The decline was further exacerbated by Scott's antislavery reputation, which decimated the Southern Whig vote at the same time as the pro-slavery Whig platform undermined the Northern Whig vote. After the Compromise of 1850 was passed, many of the southern Whig Party members broke with the party's key figure,</text>
-<pagelink id="Henry Clay">Henry Clay
+<text>The <E>Whigs</E>' <N>platform</N> <V>was</V> <A>almost</A> <A>indistinguishable</A> from that of the <E>Democrats</E><P/>, <V>reducing</V> the <N>campaign</N> to a <N>contest</N> between the <N>personalities</N> of the <C>two</C> <N>candidates</N><T/>. The <N>lack</N> of <N>clearcut issues</N> between the <C>two</C> <N>parties</N> <V>helped</V> <V>drive</V> <N>voter turnout</N> <A>down</A> to <R>its</R> <A>lowest</A> <N>level</N> since <C>1836</C><T/>. The <N>decline</N> <V>was</V> <A>further</A> <V>exacerbated</V> by <E>Scott</E>'s <N>antislavery reputation</N><P/>, <W>which</W> <V>decimated</V> the <E>Southern Whig</E> <N>vote</N> at the <A>same</A> <N>time</N> as the <A>pro</A>-<N>slavery</N> <E id="Whig Party">Whig</E> <N>platform</N> <V>undermined</V> the <E>Northern Whig</E> <N>vote</N><T/>. After the <E>Compromise of 1850</E> <V>was</V> <V>passed</V><P/>, <A>many</A> of the <A>southern</A> <E>Whig Party</E> <N>members</N> <V>broke</V> with the <N>party</N>'s <A>key</A> <N>figure</N><P/>, </text>
+<pagelink id="Henry Clay"><text><E>Henry Clay</E></text>
   </pagelink>
-<text>.</text>
+<text><T/>. </text>
 <citlink id="cit12"/>
 
 <br/>
-<text>Finally, Scott's status as a war hero was somewhat offset by the fact that Pierce was himself a</text>
-<pagelink id="Mexican–American War">Mexican–American War
+<text><A>Finally</A><P/>, <E>Scott</E>'s <N>status</N> as a <N>war hero</N> <V>was</V> <A>somewhat</A> <V>offset</V> by the <N>fact</N> that <E id="Franklin Pierce">Pierce</E> <V>was</V> himself a </text>
+<pagelink id="Mexican–American War"><text><A>Mexican</A>–<E>American War</E></text>
   </pagelink>
 
-<pagelink id="brigadier general (United States)"><text>brigadier general</text>
+<pagelink id="Brigadier general (United States)"><text><N>brigadier general</N></text>
   </pagelink>
-<text>.</text>
+<text><T/>. </text>
 <br/>
-<text>The Democrats adopted the slogan:</text>
-<entity lv="2"><text>The Whigs we Polked in forty-four, We'll Pierce in fifty-two</text>
+<text>The <E>Democrats</E> <V>adopted</V> the <N>slogan</N><P/>: </text>
+<entity lv="2"><text>The <E>Whigs</E> we <V>Polked</V> in <C>forty</C>-<C>four</C><P/>, We<M>'ll</M> <V>Pierce</V> in <C>fifty</C>-<C>two</C></text>
   </entity>
-<text>, playing on the names of Pierce and former President</text>
-<pagelink id="James K. Polk">James K. Polk
+<text><P/>, <V>playing</V> on the <N>names</N> of <E id="Franklin Pierce">Pierce</E> and <A>former</A> <E>President</E> </text>
+<pagelink id="James K. Polk"><text><E>James K. Polk</E></text>
   </pagelink>
-<text>.</text>
+<text><T/>. </text>
 <citlink id="cit13"/>
 
 <br/>
-<text>Just nine days before the election, Webster died, causing many Union state parties to remove their slates of electors. The Union ticket appeared on the ballot in Georgia and Massachusetts, however.</text>
-<citation id="cit12"><table id="table5"><tabtitle><text>cite web</text>
+<text><A>Just</A> <C>nine</C> <N>days</N> before the <N>election</N><P/>, <E id="Daniel Webster">Webster</E> <V>died</V><P/>, <V>causing</V> <A>many</A> <E>Union</E> <N>state parties</N> to <V>remove</V> <R>their</R> <N>slates</N> of <N>electors</N><T/>. The <E>Union</E> <N>ticket</N> <V>appeared</V> on the <N>ballot</N> in <E id="United States presidential election in Georgia, 1852">Georgia</E> and <E id="United States presidential election in Massachusetts, 1852">Massachusetts</E><P/>, <A>however</A><T/>.</text>
+<citation id="cit12"><table id="table5"><tabtitle><text><V>cite</V> <N>web</N></text>
       </tabtitle>
     <head id="C0"><text>url</text>
       </head>
@@ -854,7 +876,7 @@
       </cell>
     <head id="C1"><text>title</text>
       </head>
-    <cell id="C1"><text>Franklin Pierce</text>
+    <cell id="C1"><text><E>Franklin Pierce</E></text>
       </cell>
     <head id="C2"><text>date</text>
       </head>
@@ -862,15 +884,15 @@
       </cell>
     </table>
   </citation>
-<citation id="cit13"><table id="table6"><tabtitle><text>cite journal</text>
+<citation id="cit13"><table id="table6"><tabtitle><text><V>cite</V> <N>journal</N></text>
       </tabtitle>
     <head id="C0"><text>work</text>
       </head>
-    <cell id="C0"><text>The Mountain Sentinel</text>
+    <cell id="C0"><text><E>The Mountain Sentinel</E></text>
       </cell>
     <head id="C1"><text>location</text>
       </head>
-    <cell id="C1"><text>Ebensburg, PA</text>
+    <cell id="C1"><text><E>Ebensburg</E><P/>, <E>PA</E></text>
       </cell>
     <head id="C2"><text>page</text>
       </head>
@@ -890,50 +912,55 @@
       </cell>
     </table>
   </citation>
-<heading lv="h2"><text>Results</text>
+<heading lv="h2"><text> <E>Results</E> </text>
   </heading>
-<filelink id="PresidentialCounty1852Colorbrewer.gif"><text>Results by county explicitly indicating the percentage of the winning candidate in each county. Shades of blue are for Pierce (Democratic), shades of yellow are for Scott (Whig), shades of red are for Hale (Free Soil), shades of orange are for Webster (Union), shades of green are for (Independent Democrats), and shades of purple are for Troup (Southern Rights).</text>
+<filelink id="PresidentialCounty1852Colorbrewer.gif"><text>Results by county explicitly indicating the percentage of the winning candidate in each county. <N>Shades</N> of <A>blue</A> <V>are</V> for <E id="Franklin Pierce">Pierce</E> <P/>(<E id="Democratic Party">Democratic</E><P/>), <N>shades</N> of <A>yellow</A> <V>are</V> for <E>Scott</E> <P/>(<E id="Whig Party">Whig</E><P/>), <N>shades</N> of <N>red</N> <V>are</V> for <E>Hale</E> <P/>(<A>Free</A> <E>Soil</E><P/>), <N>shades</N> of <N>orange</N> <V>are</V> for <E id="Daniel Webster">Webster</E> <P/>(<E>Union</E><P/>), <N>shades</N> of <A>green</A> <V>are</V> for <P/>(<E>Independent Democrats</E><P/>), and <N>shades</N> of <N>purple</N> <V>are</V> for <E>Troup</E> <P/>(<E id="United States Southern Rights Party">Southern Rights</E><P/>)<T/>.</text>
   </filelink>
 
 <br/>
-<text>When American voters went to the polls, Pierce won in a landslide; Scott won only the states of</text>
-<pagelink id="Kentucky">Kentucky
+<text><W>When</W> <A>American</A> <N>voters</N> <V>went</V> to the <N>polls</N><P/>, <E id="Franklin Pierce">Pierce</E> <V>won</V> in a <N>landslide</N><P/>; <E>Scott</E> <V>won</V> <A>only</A> the <N>states</N> of </text>
+<pagelink id="Kentucky"><text><E id="United States presidential election in Kentucky, 1852">Kentucky</E></text>
   </pagelink>
-<text>,</text>
-<pagelink id="Tennessee">Tennessee
+<text><P/>, </text>
+<pagelink id="Tennessee"><text><E id="United States presidential election in Tennessee, 1852">Tennessee</E></text>
   </pagelink>
-<text>,</text>
-<pagelink id="Massachusetts">Massachusetts
+<text><P/>, </text>
+<pagelink id="Massachusetts"><text><E id="United States presidential election in Massachusetts, 1852">Massachusetts</E></text>
   </pagelink>
-<text>, and</text>
-<pagelink id="Vermont">Vermont
+<text><P/>, and </text>
+<pagelink id="Vermont"><text><E>Vermont</E></text>
   </pagelink>
-<text>, while the Free Soil vote collapsed to less than half of what</text>
-<pagelink id="Martin Van Buren">Martin Van Buren
+<text><P/>, while the <A>Free</A> <E>Soil</E> <N>vote</N> <V>collapsed</V> to <A>less</A> than half of <W>what</W> </text>
+<pagelink id="Martin Van Buren"><text><E>Martin Van Buren</E></text>
   </pagelink>
-<text>had earned in the previous election, with the party taking no states. The fact that Daniel Webster received a substantial share of the vote in Georgia and Massachusetts, even though he was dead, shows how disenchanted voters were with the two main candidates.</text>
+<text> <V>had</V> <V>earned</V> in the <A>previous</A> <N>election</N><P/>, with the <N>party</N> <V>taking</V> no <N>states</N><T/>. The <N>fact</N> that <E>Daniel Webster</E> <V>received</V> a <A>substantial</A> <N>share</N> of the <N>vote</N> in <E id="United States presidential election in Georgia, 1852">Georgia</E> and <E id="United States presidential election in Massachusetts, 1852">Massachusetts</E><P/>, <A>even</A> though <R id="Franklin Pierce">he</R> <V>was</V> <A>dead</A><P/>, <V>shows</V> <W>how</W> <A>disenchanted</A> <N>voters</N> <V>were</V> with the <C>two</C> <A>main</A> <N>candidates</N><T/>.
+</text>
 <br/>
-<text>As a result of the devastating defeat and the growing tensions within the party between pro-slavery Southerners and anti-slavery Northerners, the Whig Party quickly fell apart after the 1852 election and ceased to exist. Some Southern Whigs would join the Democratic Party, and many Northern Whigs would help to form the new</text>
-<pagelink id="Republican Party (United States)"><text>Republican Party</text>
+<text>As a <N>result</N> of the <A>devastating</A> <N>defeat</N> and the <V>growing</V> <N>tensions</N> within the <N>party</N> between <A>pro</A>-<N>slavery</N> <E>Southerners</E> and <A>anti</A>-<N>slavery</N> <E>Northerners</E><P/>, the <E>Whig Party</E> <A>quickly</A> <V>fell</V> <A>apart</A> after the <C>1852</C> <N>election</N> and <V>ceased</V> to <V>exist</V><T/>. Some <E>Southern Whigs</E> <M>would</M> <V>join</V> the <E>Democratic Party</E><P/>, and <A>many</A> <E>Northern Whigs</E> <M>would</M> <V>help</V> to <V>form</V> the <A>new</A> </text>
+<pagelink id="Republican Party (United States)"><text><E>Republican Party</E></text>
   </pagelink>
-<text>in 1854.</text>
+<text> in <C>1854</C><T/>.
+</text>
 <br/>
-<text>Some Whigs in both sections would support the so-called</text>
-<quot><pagelink id="Know-Nothing">Know-Nothing
+<text>Some <E id="Southern Whigs">Whigs</E> in both <N>sections</N> <M>would</M> <V>support</V> the <A>so</A>-<V>called</V> </text>
+<quot><pagelink id="Know Nothing"><text><E>Know</E>-<N>Nothing</N></text>
     </pagelink>
   </quot>
-<text>party in the 1856 presidential election. Similarly, the Free Soil Party rapidly fell away into obscurity after the election, and the remaining members mostly opted to join the former Northern Whigs in forming the Republican Party.</text>
+<text> party in the <C>1856</C> <A>presidential</A> <N>election</N><T/>. <A>Similarly</A><P/>, the <E>Free Soil Party</E> <A>rapidly</A> <V>fell</V> <A>away</A> into <N>obscurity</N> after the <N>election</N><P/>, and the <V>remaining</V> <N>members</N> <A>mostly</A> <V>opted</V> to <V>join</V> the <A>former</A> <E>Northern Whigs</E> in <V>forming</V> the <E>Republican Party</E><T/>.
+</text>
 <br/>
-<text>The Southern Rights Party effectively collapsed following the election, attaining only five percent of the vote in Alabama, and a few hundred in its nominee's home state of Georgia. It would elect a number of Congressmen in 1853, but they would shortly after rejoin the Democratic Party upon taking their seats in Congress.</text>
+<text>The <E id="United States Southern Rights Party">Southern Rights</E> <E id="Republican Party">Party</E> <A>effectively</A> <V>collapsed</V> <V>following</V> the <N>election</N><P/>, <V>attaining</V> <A>only</A> <C>five</C> <N>percent</N> of the <N>vote</N> in <E id="United States presidential election in Alabama, 1852">Alabama</E><P/>, and a <A>few</A> <C>hundred</C> in <R>its</R> <N>nominee</N>'s <N>home state</N> of <E id="United States presidential election in Georgia, 1852">Georgia</E><T/>. <R>It</R> <M>would</M> <V>elect</V> a <N>number</N> of <N>Congressmen</N> in <C>1853</C><P/>, but <R>they</R> <M>would</M> <A>shortly</A> after <V>rejoin</V> the <E>Democratic Party</E> upon <V>taking</V> <R>their</R> <N>seats</N> in <E>Congress</E><T/>.
+</text>
 <br/>
-<text>This was the last election in which the Democrats won Michigan until 1932,</text>
+<text>This <V>was</V> the <A>last</A> <N>election</N> in <W>which</W> the <E>Democrats</E> <V>won</V> <E id="United States presidential election in Michigan, 1852">Michigan</E> until <C>1932</C><P/>,</text>
 <citlink id="cit14"/>
-<text>the last in which the Democrats won Iowa, Maine, New Hampshire, Ohio</text>
+<text> the <A>last</A> in <W>which</W> the <E>Democrats</E> <V>won</V> <E id="United States presidential election in Iowa, 1852">Iowa</E><P/>, <E id="United States presidential election in Maine, 1852">Maine</E><P/>, <E>New Hampshire</E><P/>, <E id="United States presidential election in Ohio, 1852">Ohio</E></text>
 <citlink id="cit15"/>
-<text>or Rhode Island until 1912, the last in which the Democrats won Wisconsin until 1892, the last in which the Democrats won Connecticut until 1876 and the last in which the Democrats won New York until 1868. It was, however, the last election in which the Democrats' chief opponent won Kentucky until 1896,</text>
+<text> or <E id="United States presidential election in Rhode Island, 1852">Rhode Island</E> until <C>1912</C><P/>, the <A>last</A> in <W>which</W> the <E>Democrats</E> <V>won</V> <E id="United States presidential election in Wisconsin, 1852">Wisconsin</E> until <C>1892</C><P/>, the <A>last</A> in <W>which</W> the <E>Democrats</E> <V>won</V> <E id="United States presidential election in Connecticut, 1852">Connecticut</E> until <C>1876</C> and the <A>last</A> in <W>which</W> the <E>Democrats</E> <V>won</V> <E>New York</E> until <C>1868</C><T/>. <R>It</R> <V>was</V><P/>, <A>however</A><P/>, the <A>last</A> <N>election</N> in <W>which</W> the <E>Democrats</E>' <A>chief</A> <N>opponent</N> <V>won</V> <E id="United States presidential election in Kentucky, 1852">Kentucky</E> until <C>1896</C><P/>,</text>
 <citlink id="cit16"/>
 <reflink id="ref9"/>
-<text>and indeed the last until 1928 in which the Democrats' opponent obtained an absolute majority in the Bluegrass State.</text>
+<text> and <A>indeed</A> the <A>last</A> until <C>1928</C> in <W>which</W> the <E>Democrats</E>' <N>opponent</N> <V>obtained</V> an <A>absolute</A> <N>majority</N> in the <E>Bluegrass State</E><T/>.
+</text>
 <br/>
 <citlink id="cit17"/>
 
@@ -962,23 +989,23 @@
 <citlink id="cit28"/>
 
 <br/>
-<entity lv="3"><text>Source (Popular Vote):</text>
+<entity lv="3"><text><E>Source</E> <P/>(<E>Popular Vote</E><P/>):</text>
   </entity>
 
 <citlink id="cit29"/>
 
 <br/>
-<entity lv="3"><text>Source (Electoral Vote):</text>
+<entity lv="3"><text><E>Source</E> <P/>(<E>Electoral Vote</E><P/>):</text>
   </entity>
 
 <citlink id="cit30"/>
-<list lv="l1"><text>The leading candidates for Vice President were both born in</text>
-  <pagelink id="North Carolina">North Carolina
+<list lv="l1"><text> The <V>leading</V> <N>candidates</N> for <E>Vice President</E> <V>were</V> both <V>born</V> in </text>
+  <pagelink id="North Carolina"><text><E>North Carolina</E></text>
     </pagelink>
-  <text>and in fact both attended the</text>
-  <pagelink id="University of North Carolina at Chapel Hill">University of North Carolina at Chapel Hill
+  <text> and in <N>fact</N> both <V>attended</V> the </text>
+  <pagelink id="University of North Carolina at Chapel Hill"><text><E>University of North Carolina at Chapel Hill</E></text>
     </pagelink>
-  <text>, albeit two decades apart. While there, they were members of opposing debate societies: the Dialectic and Philanthropic Societies. Both also served in North Carolina politics: King was a representative from North Carolina before he moved to Alabama, and Graham was a governor of North Carolina.</text>
+  <text><P/>, albeit <C>two</C> <N>decades</N> <A>apart</A><T/>. While <A>there</A><P/>, <R>they</R> <V>were</V> <N>members</N> of <V>opposing</V> <N>debate societies</N><P/>: the Dialectic and Philanthropic Societies. Both <A>also</A> <V>served</V> in <E>North Carolina</E> <N>politics</N><P/>: <E>King</E> <V>was</V> a <N>representative</N> from <E>North Carolina</E> before <R>he</R> <V>moved</V> to <E id="United States presidential election in Alabama, 1852">Alabama</E><P/>, and <E>Graham</E> <V>was</V> a <N>governor</N> of <E>North Carolina</E><T/>.</text>
   </list>
 
 <br/>
@@ -987,27 +1014,27 @@
 <br/>
 <citlink id="cit36"/>
 <ref id="ref9"><text>Counting the Votes;</text>
-  <weblink id="http://www.countingthevotes.com/kentucky"><text>Kentucky</text>
+  <weblink id="http://www.countingthevotes.com/kentucky"><text> <E>Kentucky</E></text>
     </weblink>
   </ref>
-<citation id="cit14" class="efn"><attr><text>In 1892 Democrat </text>
-    <pagelink id="Grover Cleveland">Grover Cleveland
+<citation id="cit14" class="efn"><attr><text>In <C>1892</C> <E id="Democratic Party">Democrat</E> </text>
+    <pagelink id="Grover Cleveland"><text><E>Grover Cleveland</E></text>
       </pagelink>
-    <text>did win one electoral vote from each of five Michigan congressional districts he carried despite losing the state</text>
+    <text> <V>did</V> <V>win</V> <C>one</C> <A>electoral</A> <N>vote</N> from each of <C>five</C> <A>Michigan</A> <A>congressional</A> <N>districts</N> <R>he</R> <V>carried</V> despite <V>losing</V> the <N>state</N></text>
     </attr>
   </citation>
-<citation id="cit15" class="efn"><attr>In 1892 the direct election of Presidential electors meant Grover Cleveland received one Ohio electoral vote</attr>
+<citation id="cit15" class="efn"><attr>In <C>1892</C> the <A>direct</A> <N>election</N> of <A>Presidential</A> <N>electors</N> <V>meant</V> <E>Grover Cleveland</E> <V>received</V> <C>one</C> <E id="United States presidential election in Ohio, 1852">Ohio</E> <A>electoral</A> <N>vote</N></attr>
   </citation>
 <citation id="cit16" class="efn"/>
-<citation id="cit18" class="efn"><attr><text>The popular vote figures exclude </text>
-    <pagelink id="South Carolina">South Carolina
+<citation id="cit18" class="efn"><attr><text>The <A>popular</A> <N>vote figures</N> <V>exclude</V> </text>
+    <pagelink id="South Carolina"><text><E>South Carolina</E></text>
       </pagelink>
-    <text>where the Electors were chosen by the state legislature rather than by popular vote.</text>
+    <text> <W>where</W> the <E>Electors</E> <V>were</V> <V>chosen</V> by the <N>state legislature</N> <A>rather</A> than by <A>popular</A> <N>vote</N><T/>.</text>
     </attr>
   </citation>
-<citation id="cit17"><table id="table7"><tabtitle><text>start U.S. presidential ticket box</text>
+<citation id="cit17"><table id="table7"><tabtitle><text><V>start</V> <E>U.S.</E> <A>presidential</A> <N>ticket box</N></text>
       </tabtitle>
-    <head id="C0"><text>pv footnote</text>
+    <head id="C0"><text><N>pv</N> <N>footnote</N></text>
       </head>
     <cell id="C0"><citlink id="cit18"/>
       </cell>
@@ -1017,34 +1044,34 @@
       </tabtitle>
     <head id="C0"><text>name</text>
       </head>
-    <cell id="C0"><pagelink id="Franklin Pierce">Franklin Pierce
+    <cell id="C0"><pagelink id="Franklin Pierce"><text><E>Franklin Pierce</E></text>
         </pagelink>
       </cell>
     <head id="C1"><text>vp name</text>
       </head>
-    <cell id="C1"><pagelink id="William R. King">William R. King
+    <cell id="C1"><pagelink id="William R. King"><text><E>William R. King</E></text>
         </pagelink>
       </cell>
     <head id="C2"><text>party</text>
       </head>
-    <cell id="C2"><pagelink id="United States Democratic Party"><text>Democratic</text>
+    <cell id="C2"><pagelink id="Democratic Party (United States)"><text><E>Democratic</E></text>
         </pagelink>
       </cell>
     <head id="C3"><text>state</text>
       </head>
-    <cell id="C3"><pagelink id="New Hampshire">New Hampshire
+    <cell id="C3"><pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
         </pagelink>
       </cell>
     <head id="C4"><text>vp state</text>
       </head>
-    <cell id="C4"><pagelink id="Alabama">Alabama
+    <cell id="C4"><pagelink id="Alabama"><text><E>Alabama</E></text>
         </pagelink>
       </cell>
-    <head id="C5"><text>pv</text>
+    <head id="C5"><text><N>pv</N> </text>
       </head>
-    <cell id="C5"><text>1,607,510</text>
+    <cell id="C5"><text><C>1,607,510</C></text>
       </cell>
-    <head id="C6"><text>pv pct</text>
+    <head id="C6"><text><V>pv</V> <N>pct</N></text>
       </head>
     <cell id="C6"><text>50.84%</text>
       </cell>
@@ -1058,34 +1085,34 @@
       </tabtitle>
     <head id="C0"><text>name</text>
       </head>
-    <cell id="C0"><pagelink id="Winfield Scott">Winfield Scott
+    <cell id="C0"><pagelink id="Winfield Scott"><text><E>Winfield Scott</E></text>
         </pagelink>
       </cell>
     <head id="C1"><text>vp name</text>
       </head>
-    <cell id="C1"><pagelink id="William Alexander Graham">William Alexander Graham
+    <cell id="C1"><pagelink id="William Alexander Graham"><text><E>William Alexander Graham</E></text>
         </pagelink>
       </cell>
     <head id="C2"><text>party</text>
       </head>
-    <cell id="C2"><pagelink id="United States Whig Party"><text>Whig</text>
+    <cell id="C2"><pagelink id="Whig Party (United States)"><text><E>Whig</E></text>
         </pagelink>
       </cell>
     <head id="C3"><text>state</text>
       </head>
-    <cell id="C3"><pagelink id="New Jersey">New Jersey
+    <cell id="C3"><pagelink id="New Jersey"><text><E>New Jersey</E></text>
         </pagelink>
       </cell>
     <head id="C4"><text>vp state</text>
       </head>
-    <cell id="C4"><pagelink id="North Carolina">North Carolina
+    <cell id="C4"><pagelink id="North Carolina"><text><E>North Carolina</E></text>
         </pagelink>
       </cell>
-    <head id="C5"><text>pv</text>
+    <head id="C5"><text><N>pv</N> </text>
       </head>
-    <cell id="C5"><text>1,386,942</text>
+    <cell id="C5"><text><C>1,386,942</C></text>
       </cell>
-    <head id="C6"><text>pv pct</text>
+    <head id="C6"><text><V>pv</V> <N>pct</N></text>
       </head>
     <cell id="C6"><text>43.87%</text>
       </cell>
@@ -1099,34 +1126,34 @@
       </tabtitle>
     <head id="C0"><text>name</text>
       </head>
-    <cell id="C0"><pagelink id="John P. Hale">John P. Hale
+    <cell id="C0"><pagelink id="John P. Hale"><text><E>John P. Hale</E></text>
         </pagelink>
       </cell>
     <head id="C1"><text>vp name</text>
       </head>
-    <cell id="C1"><pagelink id="George Washington Julian">George Washington Julian
+    <cell id="C1"><pagelink id="George Washington Julian"><text><E>George Washington Julian</E></text>
         </pagelink>
       </cell>
     <head id="C2"><text>party</text>
       </head>
-    <cell id="C2"><pagelink id="United States Free Soil Party"><text>Free Soil</text>
+    <cell id="C2"><pagelink id="Free Soil Party"><text><E>Free Soil</E></text>
         </pagelink>
       </cell>
     <head id="C3"><text>state</text>
       </head>
-    <cell id="C3"><pagelink id="New Hampshire">New Hampshire
+    <cell id="C3"><pagelink id="New Hampshire"><text><E>New Hampshire</E></text>
         </pagelink>
       </cell>
     <head id="C4"><text>vp state</text>
       </head>
-    <cell id="C4"><pagelink id="Indiana">Indiana
+    <cell id="C4"><pagelink id="Indiana"><text><E>Indiana</E></text>
         </pagelink>
       </cell>
-    <head id="C5"><text>pv</text>
+    <head id="C5"><text><N>pv</N> </text>
       </head>
-    <cell id="C5"><text>155,210</text>
+    <cell id="C5"><text><C>155,210</C></text>
       </cell>
-    <head id="C6"><text>pv pct</text>
+    <head id="C6"><text><V>pv</V> <N>pct</N></text>
       </head>
     <cell id="C6"><text>4.91%</text>
       </cell>
@@ -1136,54 +1163,54 @@
       </cell>
     </table>
   </citation>
-<citation id="cit23" class="efn"><attr><text>Daniel Webster died on October 24, 1852, one week before the election.  However, his name remained on the ballot in Massachusetts and Georgia, and he still managed to poll nearly seven thousand votes. He was also the original candidate of the </text>
-    <pagelink id="Native American Party">Native American Party
+<citation id="cit23" class="efn"><attr><text><E>Daniel Webster</E> <V>died</V> on <E>October</E> <C>24</C><P/>, <C>1852</C><P/>, <C>one</C> <N>week</N> before the <N>election</N><T/>.  <A>However</A><P/>, <R>his</R> <N>name</N> <V>remained</V> on the <N>ballot</N> in <E id="United States presidential election in Massachusetts, 1852">Massachusetts</E> and <E id="United States presidential election in Georgia, 1852">Georgia</E><P/>, and <R>he</R> <A>still</A> <V>managed</V> to <V>poll</V> <A>nearly</A> <C>seven</C> <C>thousand</C> <N>votes</N><T/>. <R>He</R> <V>was</V> <A>also</A> the <A>original</A> <N>candidate</N> of the </text>
+    <pagelink id="Know Nothing"><text><A>Native</A> <E>American Party</E></text>
       </pagelink>
-    <text>but was replaced on his death by</text>
-    <pagelink id="Jacob Broom (congressman)"><text>Jacob Broom</text>
+    <text> but <V>was</V> <V>replaced</V> on <R>his</R> <N>death</N> by </text>
+    <pagelink id="Jacob Broom (congressman)"><text><E>Jacob Broom</E></text>
       </pagelink>
-    <text>.</text>
+    <text><T/>.</text>
     </attr>
   </citation>
-<citation id="cit24" class="efn"><attr><text>For a detailed discussion of the Union Party formed by Pro-Union Whigs, see Michael F. Holt, </text>
-    <entity lv="2"><text>The Rise and Fall of the Whig Party: Jacksonian Politics and the Onset of the Civil War</text>
+<citation id="cit24" class="efn"><attr><text>For a <A>detailed</A> <N>discussion</N> of the <E>Union Party</E> <V>formed</V> by <E>Pro</E>-<E>Union Whigs</E><P/>, <V>see</V> <E>Michael F. Holt</E><P/>, </text>
+    <entity lv="2"><text>The <N>Rise</N> and <N>Fall</N> of the <E>Whig Party</E><P/>: Jacksonian Politics and the Onset of the Civil <E>War</E></text>
       </entity>
-    <text>(New York: Oxford University Press, 1999), Chapters 19 and 20.</text>
+    <text> (<E>New York</E>: Oxford University Press, 1999), Chapters 19 and 20.</text>
     </attr>
   </citation>
 <citation id="cit22"><table id="table11"><tabtitle><text>U.S. presidential ticket box row</text>
       </tabtitle>
     <head id="C0"><text>name</text>
       </head>
-    <cell id="C0"><pagelink id="Daniel Webster">Daniel Webster
+    <cell id="C0"><pagelink id="Daniel Webster"><text><E>Daniel Webster</E></text>
         </pagelink>
       <citlink id="cit23"/>
       </cell>
     <head id="C1"><text>vp name</text>
       </head>
-    <cell id="C1"><pagelink id="Charles J. Jenkins">Charles J. Jenkins
+    <cell id="C1"><pagelink id="Charles J. Jenkins"><text><E>Charles J. Jenkins</E></text>
         </pagelink>
       </cell>
     <head id="C2"><text>party</text>
       </head>
-    <cell id="C2"><text>Union</text>
+    <cell id="C2"><text><E>Union</E></text>
       <citlink id="cit24"/>
       </cell>
     <head id="C3"><text>state</text>
       </head>
-    <cell id="C3"><pagelink id="Massachusetts">Massachusetts
+    <cell id="C3"><pagelink id="Massachusetts"><text><E>Massachusetts</E></text>
         </pagelink>
       </cell>
     <head id="C4"><text>vp state</text>
       </head>
-    <cell id="C4"><pagelink id="Georgia (U.S. state)"><text>Georgia</text>
+    <cell id="C4"><pagelink id="Georgia (U.S. state)"><text><E>Georgia</E></text>
         </pagelink>
       </cell>
-    <head id="C5"><text>pv</text>
+    <head id="C5"><text><N>pv</N> </text>
       </head>
-    <cell id="C5"><text>6,994</text>
+    <cell id="C5"><text><C>6,994</C></text>
       </cell>
-    <head id="C6"><text>pv pct</text>
+    <head id="C6"><text><V>pv</V> <N>pct</N></text>
       </head>
     <cell id="C6"><text>0.22%</text>
       </cell>
@@ -1197,34 +1224,34 @@
       </tabtitle>
     <head id="C0"><text>name</text>
       </head>
-    <cell id="C0"><pagelink id="Jacob Broom (congressman)"><text>Jacob Broom</text>
+    <cell id="C0"><pagelink id="Jacob Broom (congressman)"><text><E>Jacob Broom</E></text>
         </pagelink>
       </cell>
     <head id="C1"><text>state</text>
       </head>
-    <cell id="C1"><pagelink id="Pennsylvania">Pennsylvania
+    <cell id="C1"><pagelink id="Pennsylvania"><text><E>Pennsylvania</E></text>
         </pagelink>
       </cell>
     <head id="C2"><text>vp name</text>
       </head>
-    <cell id="C2"><pagelink id="Reynell Coates">Reynell Coates
+    <cell id="C2"><pagelink id="Reynell Coates"><text><E>Reynell Coates</E></text>
         </pagelink>
       </cell>
     <head id="C3"><text>vp state</text>
       </head>
-    <cell id="C3"><pagelink id="New Jersey">New Jersey
+    <cell id="C3"><pagelink id="New Jersey"><text><E>New Jersey</E></text>
         </pagelink>
       </cell>
     <head id="C4"><text>party</text>
       </head>
-    <cell id="C4"><pagelink id="Native American Party"><text>Native American</text>
+    <cell id="C4"><pagelink id="Know Nothing"><text><E>Native American</E></text>
         </pagelink>
       </cell>
-    <head id="C5"><text>pv</text>
+    <head id="C5"><text><N>pv</N> </text>
       </head>
-    <cell id="C5"><text>2,566</text>
+    <cell id="C5"><text><C>2,566</C></text>
       </cell>
-    <head id="C6"><text>pv pct</text>
+    <head id="C6"><text><V>pv</V> <N>pct</N></text>
       </head>
     <cell id="C6"><text>0.08%</text>
       </cell>
@@ -1238,34 +1265,34 @@
       </tabtitle>
     <head id="C0"><text>name</text>
       </head>
-    <cell id="C0"><pagelink id="George Troup">George Troup
+    <cell id="C0"><pagelink id="George Troup"><text><E>George Troup</E></text>
         </pagelink>
       </cell>
     <head id="C1"><text>state</text>
       </head>
-    <cell id="C1"><pagelink id="Georgia (U.S. state)"><text>Georgia</text>
+    <cell id="C1"><pagelink id="Georgia (U.S. state)"><text><E>Georgia</E></text>
         </pagelink>
       </cell>
     <head id="C2"><text>vp name</text>
       </head>
-    <cell id="C2"><pagelink id="John A. Quitman">John A. Quitman
+    <cell id="C2"><pagelink id="John A. Quitman"><text><E>John A. Quitman</E></text>
         </pagelink>
       </cell>
     <head id="C3"><text>vp state</text>
       </head>
-    <cell id="C3"><pagelink id="Mississippi">Mississippi
+    <cell id="C3"><pagelink id="Mississippi"><text><E>Mississippi</E></text>
         </pagelink>
       </cell>
     <head id="C4"><text>party</text>
       </head>
-    <cell id="C4"><pagelink id="United States Southern Rights Party"><text>Southern Rights</text>
+    <cell id="C4"><pagelink id="United States Southern Rights Party"><text><E>Southern Rights</E></text>
         </pagelink>
       </cell>
-    <head id="C5"><text>pv</text>
+    <head id="C5"><text><N>pv</N> </text>
       </head>
-    <cell id="C5"><text>2,331</text>
+    <cell id="C5"><text><C>2,331</C></text>
       </cell>
-    <head id="C6"><text>pv pct</text>
+    <head id="C6"><text><V>pv</V> <N>pct</N></text>
       </head>
     <cell id="C6"><text>0.07%</text>
       </cell>
@@ -1277,11 +1304,11 @@
   </citation>
 <citation id="cit27"><table id="table14"><tabtitle><text>U.S. presidential ticket box other</text>
       </tabtitle>
-    <head id="C0"><text>pv</text>
+    <head id="C0"><text><N>pv</N> </text>
       </head>
     <cell id="C0"><text>277</text>
       </cell>
-    <head id="C1"><text>pv pct</text>
+    <head id="C1"><text><V>pv</V> <N>pct</N></text>
       </head>
     <cell id="C1"><text>0.01%</text>
       </cell>
@@ -1289,9 +1316,9 @@
   </citation>
 <citation id="cit28"><table id="table15"><tabtitle><text>end U.S. presidential ticket box</text>
       </tabtitle>
-    <head id="C0"><text>pv</text>
+    <head id="C0"><text><N>pv</N> </text>
       </head>
-    <cell id="C0"><text>3,161,830</text>
+    <cell id="C0"><text><C>3,161,830</C></text>
       </cell>
     <head id="C1"><text>ev</text>
       </head>
@@ -1327,23 +1354,23 @@
       </cell>
     </table>
   </citation>
-<citation id="cit32" class="bar percent"><attr>50.84</attr>
+<citation id="cit32" class="bar percent"><attr><C>50.84</C></attr>
   </citation>
-<citation id="cit33" class="bar percent"><list lv="l1"><attr>Scott</attr>
+<citation id="cit33" class="bar percent"><list lv="l1"><attr><E>Scott</E></attr>
     </list>
-  <list lv="l1"><attr>43.87</attr>
-    </list>
-  </citation>
-<citation id="cit34" class="bar percent"><list lv="l1"><attr>Hale</attr>
-    </list>
-  <list lv="l1"><attr>4.91</attr>
+  <list lv="l1"><attr><C>43.87</C></attr>
     </list>
   </citation>
-<citation id="cit35" class="bar percent"><list lv="l1"><attr>Others</attr>
+<citation id="cit34" class="bar percent"><list lv="l1"><attr><E>Hale</E></attr>
+    </list>
+  <list lv="l1"><attr><C>4.91</C></attr>
+    </list>
+  </citation>
+<citation id="cit35" class="bar percent"><list lv="l1"><attr><E>Others</E></attr>
     </list>
   <list lv="l1"><attr>#777777</attr>
     </list>
-  <list lv="l1"><attr>0.38</attr>
+  <list lv="l1"><attr><C>0.38</C></attr>
     </list>
   </citation>
 <citation id="cit31"><table id="table18"><tabtitle><text>bar box</text>
@@ -1354,11 +1381,11 @@
       </cell>
     </table>
   </citation>
-<citation id="cit37" class="bar percent"><attr>85.81</attr>
+<citation id="cit37" class="bar percent"><attr><C>85.81</C></attr>
   </citation>
-<citation id="cit38" class="bar percent"><list lv="l1"><attr>Scott</attr>
+<citation id="cit38" class="bar percent"><list lv="l1"><attr><E>Scott</E></attr>
     </list>
-  <list lv="l1"><attr>14.19</attr>
+  <list lv="l1"><attr><C>14.19</C></attr>
     </list>
   </citation>
 <citation id="cit36"><table id="table19"><tabtitle><text>bar box</text>
@@ -1377,7 +1404,7 @@
 <ref id="ref10"><text>PresidentialCounty1852Colorbrewer.gif</text>
   <attr>Map of presidential election results by county DemocraticPresidentialCounty1852Colorbrewer.png</attr>
   <attr>Map of Democratic presidential election results by county WhigPresidentialCounty1852Colorbrewer.png</attr>
-  <attr><text>Map of Whig presidential election results by county </text>
+  <attr><text>Map of <E id="Whig Party">Whig</E> presidential election results by county</text>
     <code>FreeSoilPresidentialCounty1852Colorbrewer</code>
     <text>.png</text>
     </attr>
@@ -1391,13 +1418,14 @@
   </ref>
 <heading lv="h1"><text>Results by state</text>
   </heading>
-<text>Source: Data from</text>
-<pagelink id="Walter Dean Burnham">Walter Dean Burnham
+<text><E>Source</E><P/>: Data from </text>
+<pagelink id="Walter Dean Burnham"><text><E>Walter Dean Burnham</E></text>
   </pagelink>
-<text>,</text>
+<text><P/>, </text>
 <entity lv="2"><text>Presidential ballots, 1836–1892</text>
   </entity>
-<text>(Johns Hopkins University Press, 1955) pp 247–57.</text>
+<text> (<E>Johns Hopkins University Press</E>, 1955) <E id="Percentage point">pp</E> 247–57.
+</text>
 <br/>
 <tablink id="table20"/>
 <mark>Party shading/Democratic</mark>
@@ -1444,11 +1472,11 @@
     <br/>
     <text>Free Soil</text>
     </head>
-  <head id="C11,C12"><text>Margin</text>
+  <head id="C11,C12"><text><E>Margin</E></text>
     </head>
-  <head id="C13,C14"><text>State Total</text>
+  <head id="C13,C14"><text> <E>State Total</E></text>
     </head>
-  <head id="C0"><text>State</text>
+  <head id="C0"><text> <E>State</E></text>
     </head>
   <head id="C1"><text>electoral</text>
     <br/>
@@ -1485,502 +1513,502 @@
   <head id="C13"><text>#</text>
     </head>
   <head id="C14"/>
-  <head id="R3"><pagelink id="United States presidential election in Alabama, 1852"><text>Alabama</text>
+  <head id="R3"><pagelink id="United States presidential election in Alabama, 1852"><text><E>Alabama</E></text>
       </pagelink>
     </head>
   <head id="R3"><text>9</text>
     </head>
-  <head id="R3"><text>AL</text>
+  <head id="R3"><text> <E>AL</E></text>
     </head>
-  <head id="R4"><pagelink id="United States presidential election in Arkansas, 1852"><text>Arkansas</text>
+  <head id="R4"><pagelink id="United States presidential election in Arkansas, 1852"><text><E>Arkansas</E></text>
       </pagelink>
     </head>
   <head id="R4"><text>4</text>
     </head>
-  <head id="R4"><text>AR</text>
+  <head id="R4"><text> <E>AR</E></text>
     </head>
-  <head id="R5"><pagelink id="United States presidential election in California, 1852"><text>California</text>
+  <head id="R5"><pagelink id="United States presidential election in California, 1852"><text><E>California</E></text>
       </pagelink>
     </head>
   <head id="R5"><text>4</text>
     </head>
-  <head id="R5"><text>CA</text>
+  <head id="R5"><text> <E>CA</E></text>
     </head>
-  <head id="R6"><pagelink id="United States presidential election in Connecticut, 1852"><text>Connecticut</text>
+  <head id="R6"><pagelink id="United States presidential election in Connecticut, 1852"><text><E>Connecticut</E></text>
       </pagelink>
     </head>
   <head id="R6"><text>6</text>
     </head>
-  <head id="R6"><text>CT</text>
+  <head id="R6"><text> <E>CT</E></text>
     </head>
-  <head id="R7"><pagelink id="United States presidential election in Delaware, 1852"><text>Delaware</text>
+  <head id="R7"><pagelink id="United States presidential election in Delaware, 1852"><text><E>Delaware</E></text>
       </pagelink>
     </head>
   <head id="R7"><text>3</text>
     </head>
-  <head id="R7"><text>DE</text>
+  <head id="R7"><text> <E>DE</E></text>
     </head>
-  <head id="R8"><pagelink id="United States presidential election in Florida, 1852"><text>Florida</text>
+  <head id="R8"><pagelink id="United States presidential election in Florida, 1852"><text><E>Florida</E></text>
       </pagelink>
     </head>
   <head id="R8"><text>3</text>
     </head>
-  <head id="R8"><text>FL</text>
+  <head id="R8"><text> <E>FL</E></text>
     </head>
-  <head id="R9"><pagelink id="United States presidential election in Georgia, 1852"><text>Georgia</text>
+  <head id="R9"><pagelink id="United States presidential election in Georgia, 1852"><text><E>Georgia</E></text>
       </pagelink>
     </head>
   <head id="R9"><text>10</text>
     </head>
-  <head id="R9"><text>GA</text>
+  <head id="R9"><text> <E>GA</E></text>
     </head>
-  <head id="R10"><pagelink id="United States presidential election in Illinois, 1852"><text>Illinois</text>
+  <head id="R10"><pagelink id="United States presidential election in Illinois, 1852"><text><E>Illinois</E></text>
       </pagelink>
     </head>
   <head id="R10"><text>11</text>
     </head>
-  <head id="R10"><text>IL</text>
+  <head id="R10"><text> <E>IL</E></text>
     </head>
-  <head id="R11"><pagelink id="United States presidential election in Indiana, 1852"><text>Indiana</text>
+  <head id="R11"><pagelink id="United States presidential election in Indiana, 1852"><text><E>Indiana</E></text>
       </pagelink>
     </head>
   <head id="R11"><text>13</text>
     </head>
-  <head id="R11"><text>IN</text>
+  <head id="R11"><text> <E>IN</E></text>
     </head>
-  <head id="R12"><pagelink id="United States presidential election in Iowa, 1852"><text>Iowa</text>
+  <head id="R12"><pagelink id="United States presidential election in Iowa, 1852"><text><E>Iowa</E></text>
       </pagelink>
     </head>
   <head id="R12"><text>4</text>
     </head>
-  <head id="R12"><text>IA</text>
+  <head id="R12"><text> <E>IA</E></text>
     </head>
-  <head id="R13"><pagelink id="United States presidential election in Kentucky, 1852"><text>Kentucky</text>
+  <head id="R13"><pagelink id="United States presidential election in Kentucky, 1852"><text><E>Kentucky</E></text>
       </pagelink>
     </head>
   <head id="R13"><text>12</text>
     </head>
-  <head id="R13"><text>KY</text>
+  <head id="R13"><text> <E>KY</E></text>
     </head>
-  <head id="R14"><pagelink id="United States presidential election in Louisiana, 1852"><text>Louisiana</text>
+  <head id="R14"><pagelink id="United States presidential election in Louisiana, 1852"><text><E>Louisiana</E></text>
       </pagelink>
     </head>
   <head id="R14"><text>6</text>
     </head>
-  <head id="R14"><text>LA</text>
+  <head id="R14"><text> <E>LA</E></text>
     </head>
-  <head id="R15"><pagelink id="United States presidential election in Maine, 1852"><text>Maine</text>
+  <head id="R15"><pagelink id="United States presidential election in Maine, 1852"><text><E>Maine</E></text>
       </pagelink>
     </head>
   <head id="R15"><text>8</text>
     </head>
-  <head id="R15"><text>ME</text>
+  <head id="R15"><text> <E>ME</E></text>
     </head>
-  <head id="R16"><pagelink id="United States presidential election in Maryland, 1852"><text>Maryland</text>
+  <head id="R16"><pagelink id="United States presidential election in Maryland, 1852"><text><E>Maryland</E></text>
       </pagelink>
     </head>
   <head id="R16"><text>8</text>
     </head>
-  <head id="R16"><text>MD</text>
+  <head id="R16"><text> <E>MD</E></text>
     </head>
-  <head id="R17"><pagelink id="United States presidential election in Massachusetts, 1852"><text>Massachusetts</text>
+  <head id="R17"><pagelink id="United States presidential election in Massachusetts, 1852"><text><E id="United States presidential election in Massachusetts, 1852">Massachusetts</E></text>
       </pagelink>
     </head>
   <head id="R17"><text>13</text>
     </head>
-  <head id="R17"><text>MA</text>
+  <head id="R17"><text> <E>MA</E></text>
     </head>
-  <head id="R18"><pagelink id="United States presidential election in Michigan, 1852"><text>Michigan</text>
+  <head id="R18"><pagelink id="United States presidential election in Michigan, 1852"><text><E>Michigan</E></text>
       </pagelink>
     </head>
   <head id="R18"><text>6</text>
     </head>
-  <head id="R18"><text>MI</text>
+  <head id="R18"><text> <E>MI</E></text>
     </head>
-  <head id="R19"><pagelink id="United States presidential election in Mississippi, 1852"><text>Mississippi</text>
+  <head id="R19"><pagelink id="United States presidential election in Mississippi, 1852"><text><E>Mississippi</E></text>
       </pagelink>
     </head>
   <head id="R19"><text>7</text>
     </head>
-  <head id="R19"><text>MS</text>
+  <head id="R19"><text> <E>MS</E></text>
     </head>
-  <head id="R20"><pagelink id="United States presidential election in Missouri, 1852"><text>Missouri</text>
+  <head id="R20"><pagelink id="United States presidential election in Missouri, 1852"><text><E>Missouri</E></text>
       </pagelink>
     </head>
   <head id="R20"><text>9</text>
     </head>
-  <head id="R20"><text>MO</text>
+  <head id="R20"><text> <E>MO</E></text>
     </head>
-  <head id="R21"><pagelink id="United States presidential election in New Hampshire, 1852"><text>New Hampshire</text>
+  <head id="R21"><pagelink id="United States presidential election in New Hampshire, 1852"><text><E>New Hampshire</E></text>
       </pagelink>
     </head>
   <head id="R21"><text>5</text>
     </head>
-  <head id="R21"><text>NH</text>
+  <head id="R21"><text> <E>NH</E></text>
     </head>
-  <head id="R22"><pagelink id="United States presidential election in New Jersey, 1852"><text>New Jersey</text>
+  <head id="R22"><pagelink id="United States presidential election in New Jersey, 1852"><text><E>New Jersey</E></text>
       </pagelink>
     </head>
   <head id="R22"><text>7</text>
     </head>
-  <head id="R22"><text>NJ</text>
+  <head id="R22"><text> <E>NJ</E></text>
     </head>
-  <head id="R23"><pagelink id="United States presidential election in New York, 1852"><text>New York</text>
+  <head id="R23"><pagelink id="United States presidential election in New York, 1852"><text><E>New York</E></text>
       </pagelink>
     </head>
   <head id="R23"><text>35</text>
     </head>
-  <head id="R23"><text>NY</text>
+  <head id="R23"><text> <E>NY</E></text>
     </head>
-  <head id="R24"><pagelink id="United States presidential election in North Carolina, 1852"><text>North Carolina</text>
+  <head id="R24"><pagelink id="United States presidential election in North Carolina, 1852"><text><E>North Carolina</E></text>
       </pagelink>
     </head>
   <head id="R24"><text>10</text>
     </head>
-  <head id="R24"><text>NC</text>
+  <head id="R24"><text> <E>NC</E></text>
     </head>
-  <head id="R25"><pagelink id="United States presidential election in Ohio, 1852"><text>Ohio</text>
+  <head id="R25"><pagelink id="United States presidential election in Ohio, 1852"><text><E>Ohio</E></text>
       </pagelink>
     </head>
   <head id="R25"><text>23</text>
     </head>
-  <head id="R25"><text>OH</text>
+  <head id="R25"><text> <E>OH</E></text>
     </head>
-  <head id="R26"><pagelink id="United States presidential election in Pennsylvania, 1852"><text>Pennsylvania</text>
+  <head id="R26"><pagelink id="United States presidential election in Pennsylvania, 1852"><text><E>Pennsylvania</E></text>
       </pagelink>
     </head>
   <head id="R26"><text>27</text>
     </head>
-  <head id="R26"><text>PA</text>
+  <head id="R26"><text> <E>PA</E></text>
     </head>
-  <head id="R27"><pagelink id="United States presidential election in Rhode Island, 1852"><text>Rhode Island</text>
+  <head id="R27"><pagelink id="United States presidential election in Rhode Island, 1852"><text><E>Rhode Island</E></text>
       </pagelink>
     </head>
   <head id="R27"><text>4</text>
     </head>
-  <head id="R27"><text>RI</text>
+  <head id="R27"><text> <E>RI</E></text>
     </head>
-  <head id="R28"><pagelink id="United States presidential election in South Carolina, 1852"><text>South Carolina</text>
+  <head id="R28"><pagelink id="United States presidential election in South Carolina, 1852"><text><E>South Carolina</E></text>
       </pagelink>
     </head>
   <head id="R28"><text>8</text>
     </head>
-  <head id="R28"><text>SC</text>
+  <head id="R28"><text> <E>SC</E></text>
     </head>
-  <head id="R29"><pagelink id="United States presidential election in Tennessee, 1852"><text>Tennessee</text>
+  <head id="R29"><pagelink id="United States presidential election in Tennessee, 1852"><text><E>Tennessee</E></text>
       </pagelink>
     </head>
   <head id="R29"><text>12</text>
     </head>
-  <head id="R29"><text>TN</text>
+  <head id="R29"><text> <E>TN</E></text>
     </head>
-  <head id="R30"><pagelink id="United States presidential election in Texas, 1852"><text>Texas</text>
+  <head id="R30"><pagelink id="United States presidential election in Texas, 1852"><text><E>Texas</E></text>
       </pagelink>
     </head>
   <head id="R30"><text>4</text>
     </head>
-  <head id="R30"><text>TX</text>
+  <head id="R30"><text> <E>TX</E></text>
     </head>
-  <head id="R31"><pagelink id="United States presidential election in Vermont, 1852"><text>Vermont</text>
+  <head id="R31"><pagelink id="United States presidential election in Vermont, 1852"><text><E>Vermont</E></text>
       </pagelink>
     </head>
   <head id="R31"><text>5</text>
     </head>
-  <head id="R31"><text>VT</text>
+  <head id="R31"><text> <E>VT</E></text>
     </head>
-  <head id="R32"><pagelink id="United States presidential election in Virginia, 1852"><text>Virginia</text>
+  <head id="R32"><pagelink id="United States presidential election in Virginia, 1852"><text><E id="United States presidential election in Virginia, 1852">Virginia</E></text>
       </pagelink>
     </head>
   <head id="R32"><text>15</text>
     </head>
-  <head id="R32"><text>VA</text>
+  <head id="R32"><text> <E>VA</E></text>
     </head>
-  <head id="R33"><pagelink id="United States presidential election in Wisconsin, 1852"><text>Wisconsin</text>
+  <head id="R33"><pagelink id="United States presidential election in Wisconsin, 1852"><text><E>Wisconsin</E></text>
       </pagelink>
     </head>
   <head id="R33"><text>5</text>
     </head>
-  <head id="R33"><text>WI</text>
+  <head id="R33"><text> <E>WI</E></text>
     </head>
   <head id="C0"/>
   <head id="C1"><text>296</text>
     </head>
-  <head id="C2"><text>1,605,943</text>
+  <head id="C2"><text> <C>1,605,943</C></text>
     </head>
-  <head id="C3"><text>50.83</text>
+  <head id="C3"><text> <C>50.83</C></text>
     </head>
   <head id="C4"><text>254</text>
     </head>
-  <head id="C5"><text>1,386,418</text>
+  <head id="C5"><text> <C>1,386,418</C></text>
     </head>
-  <head id="C6"><text>43.88</text>
+  <head id="C6"><text> <C>43.88</C></text>
     </head>
   <head id="C7"><text>42</text>
     </head>
-  <head id="C8"><text>155,799</text>
+  <head id="C8"><text> <C>155,799</C></text>
     </head>
-  <head id="C9"><text>4.93</text>
+  <head id="C9"><text> <C>4.93</C></text>
     </head>
   <head id="C10"><text>-</text>
     </head>
   <head id="C11"/>
   <head id="C12"/>
-  <head id="C13"><text>3,159,640</text>
+  <head id="C13"><text> <C>3,159,640</C></text>
     </head>
-  <head id="C14"><text>US</text>
+  <head id="C14"><text> <E>US</E></text>
     </head>
   <head id="C0"><text>TO WIN:</text>
     </head>
   <head id="C1"><text>149</text>
     </head>
   <head id="C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18"/>
-  <cell id="C2,R3"><text>00013618</text>
+  <cell id="C2,R3"><text><C>00013618</C></text>
       
-    <text>26,881</text>
+    <text><C>26,881</C></text>
     </cell>
-  <cell id="C3,R3"><text>60.89</text>
+  <cell id="C3,R3"><text><C>60.89</C></text>
     </cell>
   <cell id="C4,R3"><text>9</text>
     </cell>
-  <cell id="C5,R3"><text>00048669</text>
+  <cell id="C5,R3"><text><C>00048669</C></text>
       
-    <text>15,061</text>
+    <text><C>15,061</C></text>
     </cell>
-  <cell id="C6,R3"><text>34.12</text>
+  <cell id="C6,R3"><text><C>34.12</C></text>
     </cell>
   <cell id="C7,R3"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R3"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R3"><text>11,280</text>
+  <cell id="C11,R3"><text><C>11,280</C></text>
     </cell>
-  <cell id="C12,R3"><text>26.77</text>
+  <cell id="C12,R3"><text><C>26.77</C></text>
     </cell>
-  <cell id="C13,R3"><text>44,147</text>
+  <cell id="C13,R3"><text><C>44,147</C></text>
     </cell>
-  <cell id="C2,R4"><text>12,173</text>
+  <cell id="C2,R4"><text><C>12,173</C></text>
     </cell>
-  <cell id="C3,R4"><text>62.18</text>
+  <cell id="C3,R4"><text><C>62.18</C></text>
     </cell>
   <cell id="C4,R4"><text>4</text>
     </cell>
-  <cell id="C5,R4"><text>7,404</text>
+  <cell id="C5,R4"><text><C>7,404</C></text>
     </cell>
-  <cell id="C6,R4"><text>37.82</text>
+  <cell id="C6,R4"><text><C>37.82</C></text>
     </cell>
   <cell id="C7,R4"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R4"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R4"><text>4,769</text>
+  <cell id="C11,R4"><text><C>4,769</C></text>
     </cell>
-  <cell id="C12,R4"><text>24.36</text>
+  <cell id="C12,R4"><text><C>24.36</C></text>
     </cell>
-  <cell id="C13,R4"><text>19,577</text>
+  <cell id="C13,R4"><text><C>19,577</C></text>
     </cell>
-  <cell id="C2,R5"><text>40,721</text>
+  <cell id="C2,R5"><text><C>40,721</C></text>
     </cell>
-  <cell id="C3,R5"><text>53.02</text>
+  <cell id="C3,R5"><text><C>53.02</C></text>
     </cell>
   <cell id="C4,R5"><text>4</text>
     </cell>
-  <cell id="C5,R5"><text>35,972</text>
+  <cell id="C5,R5"><text><C>35,972</C></text>
     </cell>
-  <cell id="C6,R5"><text>46.83</text>
+  <cell id="C6,R5"><text><C>46.83</C></text>
     </cell>
   <cell id="C7,R5"><text>-</text>
     </cell>
   <cell id="C8,R5"><text>61</text>
     </cell>
-  <cell id="C9,R5"><text>0.08</text>
+  <cell id="C9,R5"><text><C>0.08</C></text>
     </cell>
   <cell id="C10,R5"><text>-</text>
     </cell>
-  <cell id="C11,R5"><text>4,749</text>
+  <cell id="C11,R5"><text><C>4,749</C></text>
     </cell>
-  <cell id="C12,R5"><text>6.19</text>
+  <cell id="C12,R5"><text><C>6.19</C></text>
     </cell>
-  <cell id="C13,R5"><text>76,810</text>
+  <cell id="C13,R5"><text><C>76,810</C></text>
     </cell>
-  <cell id="C2,R6"><text>33,249</text>
+  <cell id="C2,R6"><text><C>33,249</C></text>
     </cell>
-  <cell id="C3,R6"><text>49.79</text>
+  <cell id="C3,R6"><text><C>49.79</C></text>
     </cell>
   <cell id="C4,R6"><text>6</text>
     </cell>
-  <cell id="C5,R6"><text>30,359</text>
+  <cell id="C5,R6"><text><C>30,359</C></text>
     </cell>
-  <cell id="C6,R6"><text>45.56</text>
+  <cell id="C6,R6"><text><C>45.56</C></text>
     </cell>
   <cell id="C7,R6"><text>-</text>
     </cell>
-  <cell id="C8,R6"><text>3,161</text>
+  <cell id="C8,R6"><text><C>3,161</C></text>
     </cell>
-  <cell id="C9,R6"><text>4.73</text>
+  <cell id="C9,R6"><text><C>4.73</C></text>
     </cell>
   <cell id="C10,R6"><text>-</text>
     </cell>
-  <cell id="C11,R6"><text>2,890</text>
+  <cell id="C11,R6"><text><C>2,890</C></text>
     </cell>
-  <cell id="C12,R6"><text>4.23</text>
+  <cell id="C12,R6"><text><C>4.23</C></text>
     </cell>
-  <cell id="C13,R6"><text>66,781</text>
+  <cell id="C13,R6"><text><C>66,781</C></text>
     </cell>
-  <cell id="C2,R7"><text>6,318</text>
+  <cell id="C2,R7"><text><C>6,318</C></text>
     </cell>
-  <cell id="C3,R7"><text>49.85</text>
+  <cell id="C3,R7"><text><C>49.85</C></text>
     </cell>
   <cell id="C4,R7"><text>3</text>
     </cell>
-  <cell id="C5,R7"><text>6,293</text>
+  <cell id="C5,R7"><text><C>6,293</C></text>
     </cell>
-  <cell id="C6,R7"><text>49.66</text>
+  <cell id="C6,R7"><text><C>49.66</C></text>
     </cell>
   <cell id="C7,R7"><text>-</text>
     </cell>
   <cell id="C8,R7"><text>62</text>
     </cell>
-  <cell id="C9,R7"><text>0.49</text>
+  <cell id="C9,R7"><text><C>0.49</C></text>
     </cell>
   <cell id="C10,R7"><text>-</text>
     </cell>
   <cell id="C11,R7"><text>25</text>
     </cell>
-  <cell id="C12,R7"><text>0.19</text>
+  <cell id="C12,R7"><text><C>0.19</C></text>
     </cell>
-  <cell id="C13,R7"><text>12,673</text>
+  <cell id="C13,R7"><text><C>12,673</C></text>
     </cell>
-  <cell id="C2,R8"><text>4,318</text>
+  <cell id="C2,R8"><text><C>4,318</C></text>
     </cell>
-  <cell id="C3,R8"><text>60.03</text>
+  <cell id="C3,R8"><text><C>60.03</C></text>
     </cell>
   <cell id="C4,R8"><text>3</text>
     </cell>
-  <cell id="C5,R8"><text>2,875</text>
+  <cell id="C5,R8"><text><C>2,875</C></text>
     </cell>
-  <cell id="C6,R8"><text>39.97</text>
+  <cell id="C6,R8"><text><C>39.97</C></text>
     </cell>
   <cell id="C7,R8"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R8"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R8"><text>1,443</text>
+  <cell id="C11,R8"><text><C>1,443</C></text>
     </cell>
-  <cell id="C12,R8"><text>20.06</text>
+  <cell id="C12,R8"><text><C>20.06</C></text>
     </cell>
-  <cell id="C13,R8"><text>7,193</text>
+  <cell id="C13,R8"><text><C>7,193</C></text>
     </cell>
-  <cell id="C2,R9"><text>40,516</text>
+  <cell id="C2,R9"><text><C>40,516</C></text>
     </cell>
-  <cell id="C3,R9"><text>64.70</text>
+  <cell id="C3,R9"><text><C>64.70</C></text>
     </cell>
   <cell id="C4,R9"><text>10</text>
     </cell>
-  <cell id="C5,R9"><text>16,660</text>
+  <cell id="C5,R9"><text><C>16,660</C></text>
     </cell>
-  <cell id="C6,R9"><text>26.60</text>
+  <cell id="C6,R9"><text><C>26.60</C></text>
     </cell>
   <cell id="C7,R9"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R9"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R9"><text>23,856</text>
+  <cell id="C11,R9"><text><C>23,856</C></text>
     </cell>
-  <cell id="C12,R9"><text>38.10</text>
+  <cell id="C12,R9"><text><C>38.10</C></text>
     </cell>
-  <cell id="C13,R9"><text>62,626</text>
+  <cell id="C13,R9"><text><C>62,626</C></text>
     </cell>
-  <cell id="C2,R10"><text>80,378</text>
+  <cell id="C2,R10"><text><C>80,378</C></text>
     </cell>
-  <cell id="C3,R10"><text>51.87</text>
+  <cell id="C3,R10"><text><C>51.87</C></text>
     </cell>
   <cell id="C4,R10"><text>11</text>
     </cell>
-  <cell id="C5,R10"><text>64,733</text>
+  <cell id="C5,R10"><text><C>64,733</C></text>
     </cell>
-  <cell id="C6,R10"><text>41.77</text>
+  <cell id="C6,R10"><text><C>41.77</C></text>
     </cell>
   <cell id="C7,R10"><text>-</text>
     </cell>
-  <cell id="C8,R10"><text>9,863</text>
+  <cell id="C8,R10"><text><C>9,863</C></text>
     </cell>
-  <cell id="C9,R10"><text>6.36</text>
+  <cell id="C9,R10"><text><C>6.36</C></text>
     </cell>
   <cell id="C10,R10"><text>-</text>
     </cell>
-  <cell id="C11,R10"><text>15,645</text>
+  <cell id="C11,R10"><text><C>15,645</C></text>
     </cell>
-  <cell id="C12,R10"><text>10.10</text>
+  <cell id="C12,R10"><text><C>10.10</C></text>
     </cell>
-  <cell id="C13,R10"><text>154,974</text>
+  <cell id="C13,R10"><text><C>154,974</C></text>
     </cell>
-  <cell id="C2,R11"><text>95,340</text>
+  <cell id="C2,R11"><text><C>95,340</C></text>
     </cell>
-  <cell id="C3,R11"><text>52.05</text>
+  <cell id="C3,R11"><text><C>52.05</C></text>
     </cell>
   <cell id="C4,R11"><text>13</text>
     </cell>
-  <cell id="C5,R11"><text>80,901</text>
+  <cell id="C5,R11"><text><C>80,901</C></text>
     </cell>
-  <cell id="C6,R11"><text>44.17</text>
+  <cell id="C6,R11"><text><C>44.17</C></text>
     </cell>
   <cell id="C7,R11"><text>-</text>
     </cell>
-  <cell id="C8,R11"><text>6,929</text>
+  <cell id="C8,R11"><text><C>6,929</C></text>
     </cell>
-  <cell id="C9,R11"><text>3.78</text>
+  <cell id="C9,R11"><text><C>3.78</C></text>
     </cell>
   <cell id="C10,R11"><text>-</text>
     </cell>
-  <cell id="C11,R11"><text>14,439</text>
+  <cell id="C11,R11"><text><C>14,439</C></text>
     </cell>
-  <cell id="C12,R11"><text>7.88</text>
+  <cell id="C12,R11"><text><C>7.88</C></text>
     </cell>
-  <cell id="C13,R11"><text>183,170</text>
+  <cell id="C13,R11"><text><C>183,170</C></text>
     </cell>
-  <cell id="C2,R12"><text>17,763</text>
+  <cell id="C2,R12"><text><C>17,763</C></text>
     </cell>
-  <cell id="C3,R12"><text>50.23</text>
+  <cell id="C3,R12"><text><C>50.23</C></text>
     </cell>
   <cell id="C4,R12"><text>4</text>
     </cell>
-  <cell id="C5,R12"><text>15,856</text>
+  <cell id="C5,R12"><text><C>15,856</C></text>
     </cell>
-  <cell id="C6,R12"><text>44.84</text>
+  <cell id="C6,R12"><text><C>44.84</C></text>
     </cell>
   <cell id="C7,R12"><text>-</text>
     </cell>
-  <cell id="C8,R12"><text>1,606</text>
+  <cell id="C8,R12"><text><C>1,606</C></text>
     </cell>
-  <cell id="C9,R12"><text>4.54</text>
+  <cell id="C9,R12"><text><C>4.54</C></text>
     </cell>
   <cell id="C10,R12"><text>-</text>
     </cell>
-  <cell id="C11,R12"><text>1,907</text>
+  <cell id="C11,R12"><text><C>1,907</C></text>
     </cell>
-  <cell id="C12,R12"><text>5.39</text>
+  <cell id="C12,R12"><text><C>5.39</C></text>
     </cell>
-  <cell id="C13,R12"><text>35,364</text>
+  <cell id="C13,R12"><text><C>35,364</C></text>
     </cell>
-  <cell id="C2,R13"><text>53,494</text>
+  <cell id="C2,R13"><text><C>53,494</C></text>
     </cell>
-  <cell id="C3,R13"><text>48.32</text>
+  <cell id="C3,R13"><text><C>48.32</C></text>
     </cell>
   <cell id="C4,R13"><text>-</text>
     </cell>
-  <cell id="C5,R13"><text>57,428</text>
+  <cell id="C5,R13"><text><C>57,428</C></text>
     </cell>
-  <cell id="C6,R13"><text>51.44</text>
+  <cell id="C6,R13"><text><C>51.44</C></text>
     </cell>
   <cell id="C7,R13"><text>12</text>
     </cell>
   <cell id="C8,R13"><text>266</text>
     </cell>
-  <cell id="C9,R13"><text>0.24</text>
+  <cell id="C9,R13"><text><C>0.24</C></text>
     </cell>
   <cell id="C10,R13"><text>-</text>
     </cell>
@@ -1988,92 +2016,92 @@
     </cell>
   <cell id="C12,R13"><text>-3.12</text>
     </cell>
-  <cell id="C13,R13"><text>111,148</text>
+  <cell id="C13,R13"><text><C>111,148</C></text>
     </cell>
-  <cell id="C2,R14"><text>18,647</text>
+  <cell id="C2,R14"><text><C>18,647</C></text>
     </cell>
-  <cell id="C3,R14"><text>51.94</text>
+  <cell id="C3,R14"><text><C>51.94</C></text>
     </cell>
   <cell id="C4,R14"><text>6</text>
     </cell>
-  <cell id="C5,R14"><text>17,255</text>
+  <cell id="C5,R14"><text><C>17,255</C></text>
     </cell>
-  <cell id="C6,R14"><text>48.06</text>
+  <cell id="C6,R14"><text><C>48.06</C></text>
     </cell>
   <cell id="C7,R14"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R14"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R14"><text>1,392</text>
+  <cell id="C11,R14"><text><C>1,392</C></text>
     </cell>
-  <cell id="C12,R14"><text>3.88</text>
+  <cell id="C12,R14"><text><C>3.88</C></text>
     </cell>
-  <cell id="C13,R14"><text>42,873</text>
+  <cell id="C13,R14"><text><C>42,873</C></text>
     </cell>
-  <cell id="C2,R15"><text>41,609</text>
+  <cell id="C2,R15"><text><C>41,609</C></text>
     </cell>
-  <cell id="C3,R15"><text>50.63</text>
+  <cell id="C3,R15"><text><C>50.63</C></text>
     </cell>
   <cell id="C4,R15"><text>8</text>
     </cell>
-  <cell id="C5,R15"><text>32,543</text>
+  <cell id="C5,R15"><text><C>32,543</C></text>
     </cell>
-  <cell id="C6,R15"><text>39.60</text>
+  <cell id="C6,R15"><text><C>39.60</C></text>
     </cell>
   <cell id="C7,R15"><text>-</text>
     </cell>
-  <cell id="C8,R15"><text>8,030</text>
+  <cell id="C8,R15"><text><C>8,030</C></text>
     </cell>
-  <cell id="C9,R15"><text>9.77</text>
+  <cell id="C9,R15"><text><C>9.77</C></text>
     </cell>
   <cell id="C10,R15"><text>-</text>
     </cell>
-  <cell id="C11,R15"><text>9,066</text>
+  <cell id="C11,R15"><text><C>9,066</C></text>
     </cell>
-  <cell id="C12,R15"><text>11.03</text>
+  <cell id="C12,R15"><text><C>11.03</C></text>
     </cell>
-  <cell id="C13,R15"><text>82,182</text>
+  <cell id="C13,R15"><text><C>82,182</C></text>
     </cell>
-  <cell id="C2,R16"><text>40,022</text>
+  <cell id="C2,R16"><text><C>40,022</C></text>
     </cell>
-  <cell id="C3,R16"><text>53.28</text>
+  <cell id="C3,R16"><text><C>53.28</C></text>
     </cell>
   <cell id="C4,R16"><text>8</text>
     </cell>
-  <cell id="C5,R16"><text>35,077</text>
+  <cell id="C5,R16"><text><C>35,077</C></text>
     </cell>
-  <cell id="C6,R16"><text>46.69</text>
+  <cell id="C6,R16"><text><C>46.69</C></text>
     </cell>
   <cell id="C7,R16"><text>-</text>
     </cell>
   <cell id="C8,R16"><text>21</text>
     </cell>
-  <cell id="C9,R16"><text>0.03</text>
+  <cell id="C9,R16"><text><C>0.03</C></text>
     </cell>
   <cell id="C10,R16"><text>-</text>
     </cell>
-  <cell id="C11,R16"><text>4,945</text>
+  <cell id="C11,R16"><text><C>4,945</C></text>
     </cell>
-  <cell id="C12,R16"><text>6.59</text>
+  <cell id="C12,R16"><text><C>6.59</C></text>
     </cell>
-  <cell id="C13,R16"><text>75,120</text>
+  <cell id="C13,R16"><text><C>75,120</C></text>
     </cell>
-  <cell id="C2,R17"><text>44,569</text>
+  <cell id="C2,R17"><text><C>44,569</C></text>
     </cell>
-  <cell id="C3,R17"><text>35.07</text>
+  <cell id="C3,R17"><text><C>35.07</C></text>
     </cell>
   <cell id="C4,R17"><text>-</text>
     </cell>
-  <cell id="C5,R17"><text>52,683</text>
+  <cell id="C5,R17"><text><C>52,683</C></text>
     </cell>
-  <cell id="C6,R17"><text>41.45</text>
+  <cell id="C6,R17"><text><C>41.45</C></text>
     </cell>
   <cell id="C7,R17"><text>13</text>
     </cell>
-  <cell id="C8,R17"><text>28,203</text>
+  <cell id="C8,R17"><text><C>28,203</C></text>
     </cell>
-  <cell id="C9,R17"><text>22.19</text>
+  <cell id="C9,R17"><text><C>22.19</C></text>
     </cell>
   <cell id="C10,R17"><text>-</text>
     </cell>
@@ -2081,155 +2109,155 @@
     </cell>
   <cell id="C12,R17"><text>-6.38</text>
     </cell>
-  <cell id="C13,R17"><text>127,103</text>
+  <cell id="C13,R17"><text><C>127,103</C></text>
     </cell>
-  <cell id="C2,R18"><text>41,842</text>
+  <cell id="C2,R18"><text><C>41,842</C></text>
     </cell>
-  <cell id="C3,R18"><text>50.45</text>
+  <cell id="C3,R18"><text><C>50.45</C></text>
     </cell>
   <cell id="C4,R18"><text>6</text>
     </cell>
-  <cell id="C5,R18"><text>33,860</text>
+  <cell id="C5,R18"><text><C>33,860</C></text>
     </cell>
-  <cell id="C6,R18"><text>40.83</text>
+  <cell id="C6,R18"><text><C>40.83</C></text>
     </cell>
   <cell id="C7,R18"><text>-</text>
     </cell>
-  <cell id="C8,R18"><text>7,237</text>
+  <cell id="C8,R18"><text><C>7,237</C></text>
     </cell>
-  <cell id="C9,R18"><text>8.73</text>
+  <cell id="C9,R18"><text><C>8.73</C></text>
     </cell>
   <cell id="C10,R18"><text>-</text>
     </cell>
-  <cell id="C11,R18"><text>7,982</text>
+  <cell id="C11,R18"><text><C>7,982</C></text>
     </cell>
-  <cell id="C12,R18"><text>9.62</text>
+  <cell id="C12,R18"><text><C>9.62</C></text>
     </cell>
-  <cell id="C13,R18"><text>82,939</text>
+  <cell id="C13,R18"><text><C>82,939</C></text>
     </cell>
-  <cell id="C2,R19"><text>26,896</text>
+  <cell id="C2,R19"><text><C>26,896</C></text>
     </cell>
-  <cell id="C3,R19"><text>60.50</text>
+  <cell id="C3,R19"><text><C>60.50</C></text>
     </cell>
   <cell id="C4,R19"><text>7</text>
     </cell>
-  <cell id="C5,R19"><text>17,558</text>
+  <cell id="C5,R19"><text><C>17,558</C></text>
     </cell>
-  <cell id="C6,R19"><text>39.50</text>
+  <cell id="C6,R19"><text><C>39.50</C></text>
     </cell>
   <cell id="C7,R19"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R19"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R19"><text>9,338</text>
+  <cell id="C11,R19"><text><C>9,338</C></text>
     </cell>
-  <cell id="C12,R19"><text>21.00</text>
+  <cell id="C12,R19"><text><C>21.00</C></text>
     </cell>
-  <cell id="C13,R19"><text>44,454</text>
+  <cell id="C13,R19"><text><C>44,454</C></text>
     </cell>
-  <cell id="C2,R20"><text>38,817</text>
+  <cell id="C2,R20"><text><C>38,817</C></text>
     </cell>
-  <cell id="C3,R20"><text>56.42</text>
+  <cell id="C3,R20"><text><C>56.42</C></text>
     </cell>
   <cell id="C4,R20"><text>9</text>
     </cell>
-  <cell id="C5,R20"><text>29,984</text>
+  <cell id="C5,R20"><text><C>29,984</C></text>
     </cell>
-  <cell id="C6,R20"><text>43.58</text>
+  <cell id="C6,R20"><text><C>43.58</C></text>
     </cell>
   <cell id="C7,R20"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R20"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R20"><text>8,833</text>
+  <cell id="C11,R20"><text><C>8,833</C></text>
     </cell>
-  <cell id="C12,R20"><text>12.84</text>
+  <cell id="C12,R20"><text><C>12.84</C></text>
     </cell>
-  <cell id="C13,R20"><text>68,801</text>
+  <cell id="C13,R20"><text><C>68,801</C></text>
     </cell>
-  <cell id="C2,R21"><text>28,503</text>
+  <cell id="C2,R21"><text><C>28,503</C></text>
     </cell>
-  <cell id="C3,R21"><text>56.40</text>
+  <cell id="C3,R21"><text><C>56.40</C></text>
     </cell>
   <cell id="C4,R21"><text>5</text>
     </cell>
-  <cell id="C5,R21"><text>15,486</text>
+  <cell id="C5,R21"><text><C>15,486</C></text>
     </cell>
-  <cell id="C6,R21"><text>30.64</text>
+  <cell id="C6,R21"><text><C>30.64</C></text>
     </cell>
   <cell id="C7,R21"><text>-</text>
     </cell>
-  <cell id="C8,R21"><text>6,546</text>
+  <cell id="C8,R21"><text><C>6,546</C></text>
     </cell>
-  <cell id="C9,R21"><text>12.95</text>
+  <cell id="C9,R21"><text><C>12.95</C></text>
     </cell>
   <cell id="C10,R21"><text>-</text>
     </cell>
-  <cell id="C11,R21"><text>13,017</text>
+  <cell id="C11,R21"><text><C>13,017</C></text>
     </cell>
-  <cell id="C12,R21"><text>25.76</text>
+  <cell id="C12,R21"><text><C>25.76</C></text>
     </cell>
-  <cell id="C13,R21"><text>50,535</text>
+  <cell id="C13,R21"><text><C>50,535</C></text>
     </cell>
-  <cell id="C2,R22"><text>44,305</text>
+  <cell id="C2,R22"><text><C>44,305</C></text>
     </cell>
-  <cell id="C3,R22"><text>53.24</text>
+  <cell id="C3,R22"><text><C>53.24</C></text>
     </cell>
   <cell id="C4,R22"><text>7</text>
     </cell>
-  <cell id="C5,R22"><text>38,556</text>
+  <cell id="C5,R22"><text><C>38,556</C></text>
     </cell>
-  <cell id="C6,R22"><text>46.33</text>
+  <cell id="C6,R22"><text><C>46.33</C></text>
     </cell>
   <cell id="C7,R22"><text>-</text>
     </cell>
   <cell id="C8,R22"><text>359</text>
     </cell>
-  <cell id="C9,R22"><text>0.43</text>
+  <cell id="C9,R22"><text><C>0.43</C></text>
     </cell>
   <cell id="C10,R22"><text>-</text>
     </cell>
-  <cell id="C11,R22"><text>5,749</text>
+  <cell id="C11,R22"><text><C>5,749</C></text>
     </cell>
-  <cell id="C12,R22"><text>6.91</text>
+  <cell id="C12,R22"><text><C>6.91</C></text>
     </cell>
-  <cell id="C13,R22"><text>83,220</text>
+  <cell id="C13,R22"><text><C>83,220</C></text>
     </cell>
-  <cell id="C2,R23"><text>262,083</text>
+  <cell id="C2,R23"><text><C>262,083</C></text>
     </cell>
-  <cell id="C3,R23"><text>50.18</text>
+  <cell id="C3,R23"><text><C>50.18</C></text>
     </cell>
   <cell id="C4,R23"><text>35</text>
     </cell>
-  <cell id="C5,R23"><text>234,882</text>
+  <cell id="C5,R23"><text><C>234,882</C></text>
     </cell>
-  <cell id="C6,R23"><text>44.97</text>
+  <cell id="C6,R23"><text><C>44.97</C></text>
     </cell>
   <cell id="C7,R23"><text>-</text>
     </cell>
-  <cell id="C8,R23"><text>25,329</text>
+  <cell id="C8,R23"><text><C>25,329</C></text>
     </cell>
-  <cell id="C9,R23"><text>4.85</text>
+  <cell id="C9,R23"><text><C>4.85</C></text>
     </cell>
   <cell id="C10,R23"><text>-</text>
     </cell>
-  <cell id="C11,R23"><text>27,201</text>
+  <cell id="C11,R23"><text><C>27,201</C></text>
     </cell>
-  <cell id="C12,R23"><text>5.21</text>
+  <cell id="C12,R23"><text><C>5.21</C></text>
     </cell>
-  <cell id="C13,R23"><text>522,294</text>
+  <cell id="C13,R23"><text><C>522,294</C></text>
     </cell>
-  <cell id="C2,R24"><text>39,778</text>
+  <cell id="C2,R24"><text><C>39,778</C></text>
     </cell>
-  <cell id="C3,R24"><text>50.43</text>
+  <cell id="C3,R24"><text><C>50.43</C></text>
     </cell>
   <cell id="C4,R24"><text>10</text>
     </cell>
-  <cell id="C5,R24"><text>39,043</text>
+  <cell id="C5,R24"><text><C>39,043</C></text>
     </cell>
-  <cell id="C6,R24"><text>49.49</text>
+  <cell id="C6,R24"><text><C>49.49</C></text>
     </cell>
   <cell id="C7,R24"><text>-</text>
     </cell>
@@ -2238,81 +2266,81 @@
     </cell>
   <cell id="C11,R24"><text>735</text>
     </cell>
-  <cell id="C12,R24"><text>0.94</text>
+  <cell id="C12,R24"><text><C>0.94</C></text>
     </cell>
-  <cell id="C13,R24"><text>78,881</text>
+  <cell id="C13,R24"><text><C>78,881</C></text>
     </cell>
-  <cell id="C2,R25"><text>168,933</text>
+  <cell id="C2,R25"><text><C>168,933</C></text>
     </cell>
-  <cell id="C3,R25"><text>47.83</text>
+  <cell id="C3,R25"><text><C>47.83</C></text>
     </cell>
   <cell id="C4,R25"><text>23</text>
     </cell>
-  <cell id="C5,R25"><text>152,523</text>
+  <cell id="C5,R25"><text><C>152,523</C></text>
     </cell>
-  <cell id="C6,R25"><text>43.18</text>
+  <cell id="C6,R25"><text><C>43.18</C></text>
     </cell>
   <cell id="C7,R25"><text>-</text>
     </cell>
-  <cell id="C8,R25"><text>31,732</text>
+  <cell id="C8,R25"><text><C>31,732</C></text>
     </cell>
-  <cell id="C9,R25"><text>8.98</text>
+  <cell id="C9,R25"><text><C>8.98</C></text>
     </cell>
   <cell id="C10,R25"><text>-</text>
     </cell>
-  <cell id="C11,R25"><text>16,410</text>
+  <cell id="C11,R25"><text><C>16,410</C></text>
     </cell>
-  <cell id="C12,R25"><text>4.65</text>
+  <cell id="C12,R25"><text><C>4.65</C></text>
     </cell>
-  <cell id="C13,R25"><text>353,188</text>
+  <cell id="C13,R25"><text><C>353,188</C></text>
     </cell>
-  <cell id="C2,R26"><text>198,562</text>
+  <cell id="C2,R26"><text><C>198,562</C></text>
     </cell>
-  <cell id="C3,R26"><text>51.20</text>
+  <cell id="C3,R26"><text><C>51.20</C></text>
     </cell>
   <cell id="C4,R26"><text>27</text>
     </cell>
-  <cell id="C5,R26"><text>179,104</text>
+  <cell id="C5,R26"><text><C>179,104</C></text>
     </cell>
-  <cell id="C6,R26"><text>46.18</text>
+  <cell id="C6,R26"><text><C>46.18</C></text>
     </cell>
   <cell id="C7,R26"><text>-</text>
     </cell>
-  <cell id="C8,R26"><text>8,495</text>
+  <cell id="C8,R26"><text><C>8,495</C></text>
     </cell>
-  <cell id="C9,R26"><text>2.19</text>
+  <cell id="C9,R26"><text><C>2.19</C></text>
     </cell>
   <cell id="C10,R26"><text>-</text>
     </cell>
-  <cell id="C11,R26"><text>19,458</text>
+  <cell id="C11,R26"><text><C>19,458</C></text>
     </cell>
-  <cell id="C12,R26"><text>5.02</text>
+  <cell id="C12,R26"><text><C>5.02</C></text>
     </cell>
-  <cell id="C13,R26"><text>387,389</text>
+  <cell id="C13,R26"><text><C>387,389</C></text>
     </cell>
-  <cell id="C2,R27"><text>8,735</text>
+  <cell id="C2,R27"><text><C>8,735</C></text>
     </cell>
-  <cell id="C3,R27"><text>51.37</text>
+  <cell id="C3,R27"><text><C>51.37</C></text>
     </cell>
   <cell id="C4,R27"><text>4</text>
     </cell>
-  <cell id="C5,R27"><text>7,626</text>
+  <cell id="C5,R27"><text><C>7,626</C></text>
     </cell>
-  <cell id="C6,R27"><text>44.85</text>
+  <cell id="C6,R27"><text><C>44.85</C></text>
     </cell>
   <cell id="C7,R27"><text>-</text>
     </cell>
   <cell id="C8,R27"><text>644</text>
     </cell>
-  <cell id="C9,R27"><text>3.79</text>
+  <cell id="C9,R27"><text><C>3.79</C></text>
     </cell>
   <cell id="C10,R27"><text>-</text>
     </cell>
-  <cell id="C11,R27"><text>1,109</text>
+  <cell id="C11,R27"><text><C>1,109</C></text>
     </cell>
-  <cell id="C12,R27"><text>6.52</text>
+  <cell id="C12,R27"><text><C>6.52</C></text>
     </cell>
-  <cell id="C13,R27"><text>17,005</text>
+  <cell id="C13,R27"><text><C>17,005</C></text>
     </cell>
   <cell id="C2,C3,R28"><entity lv="2"><text>no popular vote</text>
       </entity>
@@ -2331,15 +2359,15 @@
     </cell>
   <cell id="C13,R28"><text>-</text>
     </cell>
-  <cell id="C2,R29"><text>56,900</text>
+  <cell id="C2,R29"><text><C>56,900</C></text>
     </cell>
-  <cell id="C3,R29"><text>49.27</text>
+  <cell id="C3,R29"><text><C>49.27</C></text>
     </cell>
   <cell id="C4,R29"><text>-</text>
     </cell>
-  <cell id="C5,R29"><text>58,586</text>
+  <cell id="C5,R29"><text><C>58,586</C></text>
     </cell>
-  <cell id="C6,R29"><text>50.73</text>
+  <cell id="C6,R29"><text><C>50.73</C></text>
     </cell>
   <cell id="C7,R29"><text>12</text>
     </cell>
@@ -2350,44 +2378,44 @@
     </cell>
   <cell id="C12,R29"><text>-1.46</text>
     </cell>
-  <cell id="C13,R29"><text>115,486</text>
+  <cell id="C13,R29"><text><C>115,486</C></text>
     </cell>
-  <cell id="C2,R30"><text>13,552</text>
+  <cell id="C2,R30"><text><C>13,552</C></text>
     </cell>
-  <cell id="C3,R30"><text>73.07</text>
+  <cell id="C3,R30"><text><C>73.07</C></text>
     </cell>
   <cell id="C4,R30"><text>4</text>
     </cell>
-  <cell id="C5,R30"><text>4,995</text>
+  <cell id="C5,R30"><text><C>4,995</C></text>
     </cell>
-  <cell id="C6,R30"><text>26.93</text>
+  <cell id="C6,R30"><text><C>26.93</C></text>
     </cell>
   <cell id="C7,R30"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R30"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R30"><text>8,557</text>
+  <cell id="C11,R30"><text><C>8,557</C></text>
     </cell>
-  <cell id="C12,R30"><text>46.14</text>
+  <cell id="C12,R30"><text><C>46.14</C></text>
     </cell>
-  <cell id="C13,R30"><text>18,547</text>
+  <cell id="C13,R30"><text><C>18,547</C></text>
     </cell>
-  <cell id="C2,R31"><text>13,044</text>
+  <cell id="C2,R31"><text><C>13,044</C></text>
     </cell>
-  <cell id="C3,R31"><text>29.72</text>
+  <cell id="C3,R31"><text><C>29.72</C></text>
     </cell>
   <cell id="C4,R31"><text>-</text>
     </cell>
-  <cell id="C5,R31"><text>22,173</text>
+  <cell id="C5,R31"><text><C>22,173</C></text>
     </cell>
-  <cell id="C6,R31"><text>50.52</text>
+  <cell id="C6,R31"><text><C>50.52</C></text>
     </cell>
   <cell id="C7,R31"><text>5</text>
     </cell>
-  <cell id="C8,R31"><text>8,621</text>
+  <cell id="C8,R31"><text><C>8,621</C></text>
     </cell>
-  <cell id="C9,R31"><text>19.64</text>
+  <cell id="C9,R31"><text><C>19.64</C></text>
     </cell>
   <cell id="C10,R31"><text>-</text>
     </cell>
@@ -2395,52 +2423,52 @@
     </cell>
   <cell id="C12,R31"><text>-20.80</text>
     </cell>
-  <cell id="C13,R31"><text>43,890</text>
+  <cell id="C13,R31"><text><C>43,890</C></text>
     </cell>
-  <cell id="C2,R32"><text>73,872</text>
+  <cell id="C2,R32"><text><C>73,872</C></text>
     </cell>
-  <cell id="C3,R32"><text>55.71</text>
+  <cell id="C3,R32"><text><C>55.71</C></text>
     </cell>
   <cell id="C4,R32"><text>15</text>
     </cell>
-  <cell id="C5,R32"><text>58,732</text>
+  <cell id="C5,R32"><text><C>58,732</C></text>
     </cell>
-  <cell id="C6,R32"><text>44.29</text>
+  <cell id="C6,R32"><text><C>44.29</C></text>
     </cell>
   <cell id="C7,R32"><text>-</text>
     </cell>
   <cell id="C8,C9,C10,R32"><entity lv="2"><text>no ballots</text>
       </entity>
     </cell>
-  <cell id="C11,R32"><text>15,140</text>
+  <cell id="C11,R32"><text><C>15,140</C></text>
     </cell>
-  <cell id="C12,R32"><text>11.42</text>
+  <cell id="C12,R32"><text><C>11.42</C></text>
     </cell>
-  <cell id="C13,R32"><text>132,604</text>
+  <cell id="C13,R32"><text><C>132,604</C></text>
     </cell>
-  <cell id="C2,R33"><text>33,658</text>
+  <cell id="C2,R33"><text><C>33,658</C></text>
     </cell>
-  <cell id="C3,R33"><text>52.04</text>
+  <cell id="C3,R33"><text><C>52.04</C></text>
     </cell>
   <cell id="C4,R33"><text>5</text>
     </cell>
-  <cell id="C5,R33"><text>22,210</text>
+  <cell id="C5,R33"><text><C>22,210</C></text>
     </cell>
-  <cell id="C6,R33"><text>34.34</text>
+  <cell id="C6,R33"><text><C>34.34</C></text>
     </cell>
   <cell id="C7,R33"><text>-</text>
     </cell>
-  <cell id="C8,R33"><text>8,814</text>
+  <cell id="C8,R33"><text><C>8,814</C></text>
     </cell>
-  <cell id="C9,R33"><text>13.63</text>
+  <cell id="C9,R33"><text><C>13.63</C></text>
     </cell>
   <cell id="C10,R33"><text>-</text>
     </cell>
-  <cell id="C11,R33"><text>11,448</text>
+  <cell id="C11,R33"><text><C>11,448</C></text>
     </cell>
-  <cell id="C12,R33"><text>17.70</text>
+  <cell id="C12,R33"><text><C>17.70</C></text>
     </cell>
-  <cell id="C13,R33"><text>64,682</text>
+  <cell id="C13,R33"><text><C>64,682</C></text>
     </cell>
   </table>
 <heading lv="h1"><text>Electoral college selection</text>
@@ -2459,11 +2487,11 @@
       </tabtitle>
     <head id="C0"><text>method</text>
       </head>
-    <cell id="C0"><text>Each Elector appointed by state legislature</text>
+    <cell id="C0"><text>Each <E>Elector</E> <V>appointed</V> by <N>state legislature</N></text>
       </cell>
     <head id="C1"><text>states</text>
       </head>
-    <cell id="C1"><pagelink id="South Carolina">South Carolina
+    <cell id="C1"><pagelink id="South Carolina"><text><E>South Carolina</E></text>
         </pagelink>
       </cell>
     </table>
@@ -2472,7 +2500,7 @@
       </tabtitle>
     <head id="C0"><text>method</text>
       </head>
-    <cell id="C0"><text>Each Elector chosen by voters statewide</text>
+    <cell id="C0"><text>Each <E>Elector</E> <V>chosen</V> by <N>voters</N> <A>statewide</A></text>
       </cell>
     <head id="C1"><text>states</text>
       </head>
@@ -2483,41 +2511,43 @@
   </citation>
 <heading lv="h1"><text>See also</text>
   </heading>
-<list lv="l1"><pagelink id="History of the United States (1849–65)">History of the United States (1849–65)
+<list lv="l1"><pagelink id="History of the United States (1849–1865)"><text><E>History of the United States</E> (1849–65)</text>
     </pagelink>
   </list>
-<list lv="l1"><pagelink id="Inauguration of Franklin Pierce">Inauguration of Franklin Pierce
+<list lv="l1"><pagelink id="Inauguration of Franklin Pierce"><text><E>Inauguration of Franklin Pierce</E></text>
     </pagelink>
   </list>
-<list lv="l1"><pagelink id="Second Party System">Second Party System
+<list lv="l1"><pagelink id="Second Party System"><text><E>Second Party System</E></text>
     </pagelink>
   </list>
-<list lv="l1"><pagelink id="United States House of Representatives elections, 1852">United States House of Representatives elections, 1852
+<list lv="l1"><pagelink id="United States House of Representatives elections, 1852"><text><E>United States House of Representatives elections, 1852</E></text>
     </pagelink>
   </list>
-<list lv="l1"><pagelink id="United States Senate elections, 1852">United States Senate elections, 1852
+<list lv="l1"><pagelink id="1852 and 1853 United States Senate elections"><text><E>United States Senate</E> elections, 1852</text>
     </pagelink>
   </list>
-<heading lv="h1"><text>Notes</text>
+<heading lv="h1"><text><E>Notes</E></text>
   </heading>
 <mark>notelist</mark>
-<heading lv="h1"><text>References</text>
+<heading lv="h1"><text> <E>References</E> </text>
   </heading>
-<text>;Books</text>
+<text><P/>;<E>Books</E>
+</text>
 <br/>
 <text>:* Holt, Michael F.</text>
-<entity lv="2"><text>The Rise and Fall of the American Whig Party: Jacksonian Politics and the Onset of the Civil War.</text>
+<entity lv="2"><text>The Rise and Fall of the American <E>Whig Party</E>: Jacksonian Politics and the Onset of the Civil <E>War</E>.</text>
   </entity>
-<text>Oxford University Press,</text>
-<pagelink id="New York City"><text>New York, New York</text>
+<text> <E>Oxford University Press</E><P/>, </text>
+<pagelink id="New York City"><text><E>New York</E><P/>, <E>New York</E></text>
   </pagelink>
-<text>: 1999.</text>
+<text><P/>: 1999.
+</text>
 <br/>
 <text>;Web sites</text>
 <br/>
-<text>:*</text>
+<text><E>:*</E> </text>
 <citlink id="cit42"/>
-<citation id="cit42"><table id="table23"><tabtitle><text>cite web</text>
+<citation id="cit42"><table id="table23"><tabtitle><text><V>cite</V> <N>web</N></text>
       </tabtitle>
     <head id="C0"><text>title</text>
       </head>
@@ -2525,7 +2555,7 @@
       </cell>
     <head id="C1"><text>work</text>
       </head>
-    <cell id="C1"><text>The Green Papers</text>
+    <cell id="C1"><text><E>The Green Papers</E></text>
       </cell>
     <head id="C2"><text>url</text>
       </head>
@@ -2553,18 +2583,18 @@
 <list lv="l1"><weblink id="http://www.multied.com/elections/1852Pop.html"><text>1852 state-by-state popular vote</text>
     </weblink>
   </list>
-<list lv="l1"><weblink id="http://www.ourcampaigns.com/RaceDetail.html?RaceID=58094"><text>Democratic National Convention overview</text>
+<list lv="l1"><weblink id="http://www.ourcampaigns.com/RaceDetail.html?RaceID=58094"><text> <E id="Democratic Party">Democratic</E> National Convention overview</text>
     </weblink>
   </list>
-<list lv="l1"><weblink id="http://www.ourcampaigns.com/RaceDetail.html?RaceID=58513"><text>Whig National Convention overview</text>
+<list lv="l1"><weblink id="http://www.ourcampaigns.com/RaceDetail.html?RaceID=58513"><text> <E id="Whig Party">Whig</E> National Convention overview</text>
     </weblink>
   </list>
 <list lv="l1"><weblink id="http://www.ourcampaigns.com/RaceDetail.html?RaceID=178091"><text>Native American National Convention overview</text>
     </weblink>
   </list>
-<list lv="l1"><weblink id="https://web.archive.org/web/20120825102042/http://www.mit.edu/~mi22295/elections.html#1852"><text>How close was the 1852 election?</text>
+<list lv="l1"><weblink id="https://web.archive.org/web/20120825102042/http://www.mit.edu/~mi22295/elections.html#1852"><text> <W>How</W> <A>close</A> <V>was</V> the <C>1852</C> <N>election</N><T/>?</text>
     </weblink>
-  <text>— Michael Sheppard, Massachusetts Institute of Technology</text>
+  <text> — <E>Michael Sheppard</E><P/>, <E>Massachusetts Institute</E> of <E>Technology</E></text>
   </list>
 <list lv="l1"><weblink id="http://www.countingthevotes.com/1852/"><text>Election of 1852 in Counting the Votes</text>
     </weblink>
@@ -2595,7 +2625,7 @@
   </category>
 <citation id="cit43" class="Britannica"><list lv="l1"><attr>1771610</attr>
     </list>
-  <list lv="l1"><attr>United States presidential election of 1852</attr>
+  <list lv="l1"><attr><E>United States presidential election</E> of 1852</attr>
     </list>
   </citation></doc>
 
