@@ -513,7 +513,14 @@ int main( int argc_, const char* argv_[])
 			{
 				for (int widx=1; wi != we; ++wi,++widx)
 				{
-					std::cout << strus::string_format( _TXT( "[%u] score %f"), widx, wi->weight()) << std::endl;
+					if (wi->field().defined())
+					{
+						std::cout << strus::string_format( _TXT( "[%u] field [%d,%d] score %f"), widx, (int)wi->field().start(), (int)wi->field().end(), wi->weight()) << std::endl;
+					}
+					else
+					{
+						std::cout << strus::string_format( _TXT( "[%u] score %f"), widx, wi->weight()) << std::endl;
+					}
 					std::vector<strus::SummaryElement>::const_iterator
 						ai = wi->summaryElements().begin(),
 						ae = wi->summaryElements().end();
