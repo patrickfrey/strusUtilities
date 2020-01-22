@@ -10,166 +10,166 @@ ranked list (starting with rank 0, maximum 20 results):
 	matchphrase:phrase = 'In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.' 1
 	debug:summary = 'summarize matchphrase
 find best match with all features:
-candidate pos=1, best=1, span=1, weight=0.000033, string= |  Software |  Introduction
-candidate pos=29, best=0, span=1, weight=0.000023, string=For other uses, see |  Software |  (disambiguation). A
-candidate pos=43, best=0, span=1, weight=0.000023, string=the user interacts with application |  software |  on a typical desktop computer.The
-candidate pos=52, best=0, span=1, weight=0.000023, string=desktop computer.The application |  software |  layer interfaces with the operating
-candidate pos=73, best=0, span=1, weight=0.000022, string=The arrows indicate information Computer |  software, |  or simply software,
-candidate pos=77, best=0, span=1, weight=0.000022, string=Computer software, or simply |  software, |  is that part of
-candidate pos=117, best=0, span=1, weight=0.000022, string=History Types of |  software |  Purpose, or domain of
-candidate pos=135, best=0, span=1, weight=0.000023, string=Programming tools |  Software |  topics Architecture Execution
-candidate pos=172, best=0, span=23, weight=0.000027, string=Overview The term "software" |  was first proposed by Alan Turing and used in this sense by John W. Tukey. In computer science and software engineering, |  computer software is all
-candidate pos=193, best=1, span=2, weight=0.000039, string=In computer science and |  software engineering, |  computer software is all
-candidate pos=194, best=0, span=4, weight=0.000033, string=In computer science and software |  engineering, computer software |  is all information processed by
-candidate pos=211, best=0, span=1, weight=0.000022, string=programs and data. Computer |  software |  includes computer programs, libraries
-candidate pos=234, best=0, span=1, weight=0.000022, string=media. Computer hardware and |  software |  require each other and neither
-candidate pos=388, best=0, span=1, weight=0.000022, string=interrupted. The majority of |  software |  is written in high-level
-candidate pos=433, best=0, span=1, weight=0.000022, string=combination of the two. |  Software |  may also be written in
-candidate pos=488, best=0, span=1, weight=0.000021, string=been the first piece of |  software |  was written by Ada Lovelace
-candidate pos=513, best=0, span=1, weight=0.000021, string=the Analytical Engine nor any |  software |  for it were ever created.
-candidate pos=524, best=0, span=1, weight=0.000022, string=The first theory about |  software—prior |  to creation of computers
-candidate pos=571, best=0, span=2, weight=0.000038, string=fields of computer science and |  software engineering, |  which both study software
-candidate pos=572, best=0, span=6, weight=0.000030, string=of computer science and software |  engineering, which both study software |  and its creation. Computer
-candidate pos=577, best=0, span=25, weight=0.000026, string=engineering, which both study |  software and its creation. Computer science is more theoretical (Turing's essay is an example of computer science), whereas software engineering |  focuses on more practical concerns.
-candidate pos=600, best=0, span=2, weight=0.000038, string=computer science), whereas |  software engineering |  focuses on more practical concerns.
-candidate pos=601, best=0, span=14, weight=0.000025, string=science), whereas software |  engineering focuses on more practical concerns. However, prior to this, software |  as we now understand it—programs
-candidate pos=653, best=0, span=1, weight=0.000022, string=them. Types of |  software |  On virtually all computer
-candidate pos=661, best=0, span=1, weight=0.000021, string=virtually all computer platforms, |  software |  can be grouped into a
-candidate pos=672, best=0, span=1, weight=0.000022, string=few broad categories. Application |  software, |  which is software that
-candidate pos=676, best=0, span=1, weight=0.000021, string=Application software, which is |  software |  that uses the computer system
-candidate pos=706, best=0, span=1, weight=0.000021, string=many different types of application |  software, |  because the range of
-candidate pos=727, best=0, span=1, weight=0.000021, string=so large—see list of |  software. |  System software,
-candidate pos=731, best=0, span=1, weight=0.000022, string=of software. System |  software, |  which is software that
-candidate pos=735, best=0, span=1, weight=0.000021, string=System software, which is |  software |  that directly operates the computer
-candidate pos=752, best=0, span=1, weight=0.000021, string=needed by users and other |  software, |  and to provide a
-candidate pos=762, best=0, span=1, weight=0.000021, string=a platform for running application |  software. |  System software includes:
-candidate pos=765, best=0, span=1, weight=0.000022, string=running application software. System |  software |  includes: Operating systems,
-candidate pos=776, best=0, span=1, weight=0.000021, string=which are essential collections of |  software |  that manage resources and provides
-candidate pos=786, best=0, span=1, weight=0.000021, string=provides common services for other |  software |  that runs "on top"
-candidate pos=822, best=0, span=1, weight=0.000021, string=system comes bundled with additional |  software |  (including application software)
-candidate pos=826, best=0, span=1, weight=0.000021, string=additional software (including application |  software) |  so that a user
-candidate pos=929, best=0, span=1, weight=0.000022, string=computers. Malicious |  software |  or malware, which is
-candidate pos=935, best=0, span=1, weight=0.000021, string=or malware, which is |  software |  that is developed to harm
-candidate pos=1014, best=0, span=1, weight=0.000021, string=in some parts of the |  software |  industry to merge desktop applications
-candidate pos=1063, best=0, span=1, weight=0.000021, string=JavaScript scripts are pieces of |  software |  traditionally embedded in web pages
-candidate pos=1092, best=0, span=1, weight=0.000022, string=a web browser plugin. |  Software |  written in other programming languages
-candidate pos=1108, best=0, span=1, weight=0.000021, string=the web browser if the |  software |  is either translated into JavaScript,
-candidate pos=1150, best=0, span=1, weight=0.000021, string=Flash plugin. Server |  software, |  including Web applications,
-candidate pos=1233, best=0, span=1, weight=0.000021, string=Plugins and extensions are |  software |  that extends or modifies the
-candidate pos=1244, best=0, span=1, weight=0.000021, string=functionality of another piece of |  software, |  and require that software
-candidate pos=1249, best=0, span=1, weight=0.000021, string=software, and require that |  software |  be used in order to
-candidate pos=1259, best=0, span=1, weight=0.000021, string=to function; Embedded |  software |  resides as firmware within embedded
-candidate pos=1325, best=0, span=1, weight=0.000021, string=clear distinction between the system |  software |  and the application software.
-candidate pos=1329, best=0, span=1, weight=0.000021, string=system software and the application |  software. |  However, some embedded
-candidate pos=1350, best=0, span=1, weight=0.000021, string=retain the distinction between system |  software |  and application software (although
-candidate pos=1353, best=0, span=1, weight=0.000021, string=between system software and application |  software |  (although typically there will
-candidate pos=1383, best=0, span=1, weight=0.000021, string=relatively obscure type of embedded |  software |  which tells the processor itself
-candidate pos=1420, best=0, span=1, weight=0.000021, string=and any necessary correctional microcode |  software |  updates are supplied by them
-candidate pos=1464, best=0, span=23, weight=0.000028, string=Programming tools are also |  software in the form of programs or applications that software developers (also known as programmers, coders, hackers or software engineers) |  use to create,
-candidate pos=1473, best=0, span=14, weight=0.000029, string=of programs or applications that |  software developers (also known as programmers, coders, hackers or software engineers) |  use to create,
-candidate pos=1485, best=0, span=2, weight=0.000037, string=coders, hackers or |  software engineers) |  use to create,
-candidate pos=1486, best=0, span=22, weight=0.000023, string=coders, hackers or software |  engineers) use to create, debug, maintain (i.e. improve or fix), or otherwise support software. |  Software is written in
-candidate pos=1509, best=0, span=1, weight=0.000022, string=or otherwise support software. |  Software |  is written in one or
-candidate pos=1699, best=0, span=1, weight=0.000020, string=usually see three layers of |  software |  performing a variety of tasks:
-candidate pos=1712, best=0, span=1, weight=0.000020, string=application, and user |  software. |  Platform software: The
-candidate pos=1715, best=0, span=1, weight=0.000021, string=and user software. Platform |  software: |  The Platform includes the
-candidate pos=1758, best=0, span=1, weight=0.000021, string=equipment). Platform |  software |  often comes bundled with the
-candidate pos=1779, best=0, span=1, weight=0.000021, string=ability to change the platform |  software. |  Application software:
-candidate pos=1783, best=0, span=1, weight=0.000021, string=platform software. Application |  software: |  Application software or Applications
-candidate pos=1786, best=0, span=1, weight=0.000021, string=Application software: Application |  software |  or Applications are what most
-candidate pos=1799, best=0, span=1, weight=0.000021, string=of when they think of |  software. |  Typical examples include office
-candidate pos=1811, best=0, span=1, weight=0.000021, string=and video games. Application |  software |  is often purchased separately from
-candidate pos=1873, best=0, span=1, weight=0.000021, string=and other "system |  software" |  as applications. User-written
-candidate pos=1880, best=0, span=1, weight=0.000021, string=applications. User-written |  software: |  End-user development tailors
-candidate pos=1894, best=0, span=1, weight=0.000021, string=users' specific needs. User |  software |  include spreadsheet templates and word
-candidate pos=1911, best=0, span=1, weight=0.000021, string=are a kind of user |  software. |  Users create this software
-candidate pos=1916, best=0, span=1, weight=0.000021, string=software. Users create this |  software |  themselves and often overlook how
-candidate pos=1933, best=0, span=1, weight=0.000021, string=how competently the user-written |  software |  has been integrated into default
-candidate pos=1970, best=0, span=1, weight=0.000021, string=Execution Computer |  software |  has to be "loaded"
-candidate pos=1993, best=0, span=1, weight=0.000021, string=memory). Once the |  software |  has loaded, the computer
-candidate pos=2004, best=0, span=1, weight=0.000021, string=is able to execute the |  software. |  This involves passing instructions
-candidate pos=2013, best=0, span=1, weight=0.000021, string=passing instructions from the application |  software, |  through the system software,
-candidate pos=2018, best=0, span=1, weight=0.000021, string=software, through the system |  software, |  to the hardware which
-candidate pos=2148, best=0, span=1, weight=0.000022, string=Quality and reliability |  Software |  quality is very important,
-candidate pos=2159, best=0, span=1, weight=0.000021, string=especially for commercial and system |  software |  like Microsoft Office, Microsoft
-candidate pos=2170, best=0, span=1, weight=0.000021, string=Windows and Linux. If |  software |  is faulty (buggy),
-candidate pos=2211, best=0, span=1, weight=0.000022, string=alpha and beta testing. |  Software |  is often also a victim
-candidate pos=2222, best=0, span=1, weight=0.000021, string=to what is known as |  software |  aging, the progressive performance
-candidate pos=2247, best=0, span=1, weight=0.000021, string=eliminated (debugged) through |  software |  testing. However, software
-candidate pos=2252, best=0, span=1, weight=0.000021, string=software testing. However, |  software |  testing rarely—if ever—eliminates
-candidate pos=2285, best=0, span=1, weight=0.000021, string=In the waterfall method of |  software |  development, separate testing teams
-candidate pos=2303, best=0, span=1, weight=0.000021, string=approaches, collectively termed agile |  software |  development, developers often do
-candidate pos=2317, best=0, span=1, weight=0.000020, string=testing, and demonstrate the |  software |  to users/clients regularly to
-candidate pos=2326, best=0, span=1, weight=0.000022, string=regularly to obtain feedback. |  Software |  can be tested through unit
-candidate pos=2371, best=0, span=1, weight=0.000021, string=NASA has extremely rigorous |  software |  testing procedures for many operating
-candidate pos=2414, best=0, span=4, weight=0.000034, string=overall. Programs containing command |  software enable hardware engineering |  and system operations to function
-candidate pos=2417, best=0, span=15, weight=0.000025, string=containing command software enable hardware |  engineering and system operations to function much easier together. License The software's |  license gives the user
-candidate pos=2442, best=0, span=1, weight=0.000021, string=the right to use the |  software |  in the licensed environment,
-candidate pos=2454, best=0, span=1, weight=0.000020, string=in the case of free |  software |  licenses, also grants other
-candidate pos=2470, best=0, span=1, weight=0.000021, string=to make copies. Proprietary |  software |  can be divided into two
-candidate pos=2488, best=0, span=1, weight=0.000021, string=category of "free trial" |  software |  or "freemium" software (in
-candidate pos=2492, best=0, span=1, weight=0.000021, string=trial" software or "freemium" |  software |  (in the past,
-candidate pos=2508, best=0, span=1, weight=0.000020, string=used for free trial/freemium |  software). |  As the name
-candidate pos=2532, best=0, span=1, weight=0.000021, string=of free trials or freemium |  software, |  this is sometimes only
-candidate pos=2551, best=0, span=1, weight=0.000022, string=with limited functionality. |  software |  available for a fee,
-candidate pos=2562, best=0, span=1, weight=0.000021, string=often inaccurately termed "commercial |  software", |  which can only be
-candidate pos=2579, best=0, span=1, weight=0.000021, string=license. Open source |  software, |  on the other hand,
-candidate pos=2590, best=0, span=1, weight=0.000021, string=comes with a free |  software |  license, granting the recipient
-candidate pos=2603, best=0, span=1, weight=0.000020, string=to modify and redistribute the |  software. |  Patents Software
-candidate pos=2608, best=0, span=1, weight=0.000022, string=software. Patents |  Software |  patents, like other types
-candidate pos=2648, best=0, span=1, weight=0.000021, string=to implement a piece of |  software, |  or a component of
-candidate pos=2657, best=0, span=1, weight=0.000021, string=component of a piece of |  software. |  Ideas for useful things
-candidate pos=2664, best=0, span=1, weight=0.000021, string=Ideas for useful things that |  software |  could do, and user
-candidate pos=2688, best=0, span=1, weight=0.000021, string=the actual |  software |  packages implementing the patent)
-candidate pos=2713, best=0, span=1, weight=0.000021, string=generally automatically. So |  software |  patents are supposed to cover
-candidate pos=2756, best=0, span=1, weight=0.000020, string=of the requirements for a |  software |  patent to be held valid—although
-candidate pos=2766, best=0, span=1, weight=0.000020, string=valid—although since all useful |  software |  has effects on the physical
-candidate pos=2782, best=0, span=1, weight=0.000022, string=be open to debate. |  Software |  patents are controversial in the
-candidate pos=2788, best=0, span=1, weight=0.000021, string=patents are controversial in the |  software |  industry with many people holding
-candidate pos=2874, best=0, span=1, weight=0.000021, string=experts and companies arguing that |  software |  is such a fast-moving
-candidate pos=2882, best=0, span=1, weight=0.000020, string=a fast-moving field that |  software |  patents merely create vast additional
-candidate pos=2904, best=0, span=1, weight=0.000021, string=the case of debates about |  software |  patents outside the United States,
-candidate pos=2936, best=0, span=1, weight=0.000020, string=allowing or continue to allow |  software |  patents. Design and
-candidate pos=2948, best=0, span=1, weight=0.000021, string=Design and implementation of |  software |  varies depending on the complexity
-candidate pos=2956, best=0, span=1, weight=0.000021, string=on the complexity of the |  software. |  For instance, the
-candidate pos=2987, best=0, span=1, weight=0.000022, string=much more basic functionality. |  Software |  is usually designed and created
-candidate pos=3022, best=0, span=1, weight=0.000020, string=the process and compile the |  software |  (if applicable).
-candidate pos=3035, best=0, span=1, weight=0.000021, string=in a different section, |  software |  is usually created on top
-candidate pos=3043, best=0, span=1, weight=0.000021, string=created on top of existing |  software |  and the application programming interface
-candidate pos=3055, best=0, span=1, weight=0.000020, string=that the underlying |  software |  provides like GTK+, JavaBeans
-candidate pos=3227, best=0, span=1, weight=0.000021, string=applications are written using their |  software |  libraries that usually have numerous
-candidate pos=3261, best=0, span=36, weight=0.000024, string=can be useful for creating |  software. Computer software has special economic characteristics that make its design, creation, and distribution different from most other economic goods. A person who creates software is called a programmer, software engineer |  or software developer, terms
-candidate pos=3264, best=0, span=33, weight=0.000025, string=for creating software. Computer |  software has special economic characteristics that make its design, creation, and distribution different from most other economic goods. A person who creates software is called a programmer, software engineer |  or software developer, terms
-candidate pos=3289, best=0, span=8, weight=0.000031, string=A person who creates |  software is called a programmer, software engineer |  or software developer, terms
-candidate pos=3295, best=0, span=2, weight=0.000037, string=is called a programmer, |  software engineer |  or software developer, terms
-candidate pos=3296, best=0, span=3, weight=0.000031, string=called a programmer, software |  engineer or software |  developer, terms that all
-candidate pos=3359, best=0, span=1, weight=0.000021, string=A great variety of |  software |  companies and programmers in the
-candidate pos=3368, best=0, span=1, weight=0.000021, string=in the world comprise a |  software |  industry. Software can be
-candidate pos=3371, best=0, span=1, weight=0.000022, string=comprise a software industry. |  Software |  can be quite a profitable
-candidate pos=3417, best=0, span=1, weight=0.000020, string=Microsoft Windows and Microsoft Office |  software |  products. Non-profit software
-candidate pos=3422, best=0, span=1, weight=0.000021, string=software products. Non-profit |  software |  organizations include the Free Software
-candidate pos=3427, best=0, span=1, weight=0.000021, string=software organizations include the Free |  Software |  Foundation, GNU Project and
-candidate pos=3436, best=0, span=1, weight=0.000022, string=Project and Mozilla Foundation. |  Software |  standard organizations like the W3C,
-candidate pos=3446, best=0, span=1, weight=0.000021, string=W3C, IETF develop recommended |  software |  standards such as XML,
-candidate pos=3458, best=0, span=1, weight=0.000021, string=and HTML, so that |  software |  can interoperate through these standards.
-candidate pos=3469, best=0, span=1, weight=0.000021, string=Other well-known large |  software |  companies include Oracle, Novell,
-candidate pos=3497, best=0, span=1, weight=0.000022, string=See also |  Software |  release life cycle List
-candidate pos=3504, best=0, span=1, weight=0.000021, string=life cycle List of |  software |  Software asset management
-candidate pos=3506, best=0, span=1, weight=0.000022, string=List of software |  Software |  asset management Crystal Clear
-candidate pos=3517, best=0, span=1, weight=0.000021, string=device cdrom unmount.png |  Software |  portal Free and open-source
-candidate pos=3524, best=0, span=1, weight=0.000021, string=Free and open-source |  software |  Desktop computer clipart -
-candidate pos=3548, best=0, span=1, weight=0.000021, string=construction". "System |  Software". |  The University of Mississippi.
-candidate pos=3558, best=0, span=1, weight=0.000021, string=Mississippi. "Embedded |  Software—Technologies |  and Trends". IEEE
-candidate pos=3593, best=0, span=1, weight=0.000021, string="The Economic Properties of |  Software". |  Jena Economic Research Papers.
-candidate pos=3614, best=0, span=1, weight=0.000021, string=The Optimum Economic Paradigm for |  Software". | 
+candidate pos=1, best=1, span=1, weight=0.00003, string= |  Software |  Introduction
+candidate pos=29, best=0, span=1, weight=0.00002, string=For other uses, see |  Software |  (disambiguation). A
+candidate pos=43, best=0, span=1, weight=0.00002, string=the user interacts with application |  software |  on a typical desktop computer.The
+candidate pos=52, best=0, span=1, weight=0.00002, string=desktop computer.The application |  software |  layer interfaces with the operating
+candidate pos=73, best=0, span=1, weight=0.00002, string=The arrows indicate information Computer |  software, |  or simply software,
+candidate pos=77, best=0, span=1, weight=0.00002, string=Computer software, or simply |  software, |  is that part of
+candidate pos=117, best=0, span=1, weight=0.00002, string=History Types of |  software |  Purpose, or domain of
+candidate pos=135, best=0, span=1, weight=0.00002, string=Programming tools |  Software |  topics Architecture Execution
+candidate pos=172, best=0, span=23, weight=0.00003, string=Overview The term "software" |  was first proposed by Alan Turing and used in this sense by John W. Tukey. In computer science and software engineering, |  computer software is all
+candidate pos=193, best=1, span=2, weight=0.00004, string=In computer science and |  software engineering, |  computer software is all
+candidate pos=194, best=0, span=4, weight=0.00003, string=In computer science and software |  engineering, computer software |  is all information processed by
+candidate pos=211, best=0, span=1, weight=0.00002, string=programs and data. Computer |  software |  includes computer programs, libraries
+candidate pos=234, best=0, span=1, weight=0.00002, string=media. Computer hardware and |  software |  require each other and neither
+candidate pos=388, best=0, span=1, weight=0.00002, string=interrupted. The majority of |  software |  is written in high-level
+candidate pos=433, best=0, span=1, weight=0.00002, string=combination of the two. |  Software |  may also be written in
+candidate pos=488, best=0, span=1, weight=0.00002, string=been the first piece of |  software |  was written by Ada Lovelace
+candidate pos=513, best=0, span=1, weight=0.00002, string=the Analytical Engine nor any |  software |  for it were ever created.
+candidate pos=524, best=0, span=1, weight=0.00002, string=The first theory about |  software—prior |  to creation of computers
+candidate pos=571, best=0, span=2, weight=0.00004, string=fields of computer science and |  software engineering, |  which both study software
+candidate pos=572, best=0, span=6, weight=0.00003, string=of computer science and software |  engineering, which both study software |  and its creation. Computer
+candidate pos=577, best=0, span=25, weight=0.00003, string=engineering, which both study |  software and its creation. Computer science is more theoretical (Turing's essay is an example of computer science), whereas software engineering |  focuses on more practical concerns.
+candidate pos=600, best=0, span=2, weight=0.00004, string=computer science), whereas |  software engineering |  focuses on more practical concerns.
+candidate pos=601, best=0, span=14, weight=0.00003, string=science), whereas software |  engineering focuses on more practical concerns. However, prior to this, software |  as we now understand it—programs
+candidate pos=653, best=0, span=1, weight=0.00002, string=them. Types of |  software |  On virtually all computer
+candidate pos=661, best=0, span=1, weight=0.00002, string=virtually all computer platforms, |  software |  can be grouped into a
+candidate pos=672, best=0, span=1, weight=0.00002, string=few broad categories. Application |  software, |  which is software that
+candidate pos=676, best=0, span=1, weight=0.00002, string=Application software, which is |  software |  that uses the computer system
+candidate pos=706, best=0, span=1, weight=0.00002, string=many different types of application |  software, |  because the range of
+candidate pos=727, best=0, span=1, weight=0.00002, string=so large—see list of |  software. |  System software,
+candidate pos=731, best=0, span=1, weight=0.00002, string=of software. System |  software, |  which is software that
+candidate pos=735, best=0, span=1, weight=0.00002, string=System software, which is |  software |  that directly operates the computer
+candidate pos=752, best=0, span=1, weight=0.00002, string=needed by users and other |  software, |  and to provide a
+candidate pos=762, best=0, span=1, weight=0.00002, string=a platform for running application |  software. |  System software includes:
+candidate pos=765, best=0, span=1, weight=0.00002, string=running application software. System |  software |  includes: Operating systems,
+candidate pos=776, best=0, span=1, weight=0.00002, string=which are essential collections of |  software |  that manage resources and provides
+candidate pos=786, best=0, span=1, weight=0.00002, string=provides common services for other |  software |  that runs "on top"
+candidate pos=822, best=0, span=1, weight=0.00002, string=system comes bundled with additional |  software |  (including application software)
+candidate pos=826, best=0, span=1, weight=0.00002, string=additional software (including application |  software) |  so that a user
+candidate pos=929, best=0, span=1, weight=0.00002, string=computers. Malicious |  software |  or malware, which is
+candidate pos=935, best=0, span=1, weight=0.00002, string=or malware, which is |  software |  that is developed to harm
+candidate pos=1014, best=0, span=1, weight=0.00002, string=in some parts of the |  software |  industry to merge desktop applications
+candidate pos=1063, best=0, span=1, weight=0.00002, string=JavaScript scripts are pieces of |  software |  traditionally embedded in web pages
+candidate pos=1092, best=0, span=1, weight=0.00002, string=a web browser plugin. |  Software |  written in other programming languages
+candidate pos=1108, best=0, span=1, weight=0.00002, string=the web browser if the |  software |  is either translated into JavaScript,
+candidate pos=1150, best=0, span=1, weight=0.00002, string=Flash plugin. Server |  software, |  including Web applications,
+candidate pos=1233, best=0, span=1, weight=0.00002, string=Plugins and extensions are |  software |  that extends or modifies the
+candidate pos=1244, best=0, span=1, weight=0.00002, string=functionality of another piece of |  software, |  and require that software
+candidate pos=1249, best=0, span=1, weight=0.00002, string=software, and require that |  software |  be used in order to
+candidate pos=1259, best=0, span=1, weight=0.00002, string=to function; Embedded |  software |  resides as firmware within embedded
+candidate pos=1325, best=0, span=1, weight=0.00002, string=clear distinction between the system |  software |  and the application software.
+candidate pos=1329, best=0, span=1, weight=0.00002, string=system software and the application |  software. |  However, some embedded
+candidate pos=1350, best=0, span=1, weight=0.00002, string=retain the distinction between system |  software |  and application software (although
+candidate pos=1353, best=0, span=1, weight=0.00002, string=between system software and application |  software |  (although typically there will
+candidate pos=1383, best=0, span=1, weight=0.00002, string=relatively obscure type of embedded |  software |  which tells the processor itself
+candidate pos=1420, best=0, span=1, weight=0.00002, string=and any necessary correctional microcode |  software |  updates are supplied by them
+candidate pos=1464, best=0, span=23, weight=0.00003, string=Programming tools are also |  software in the form of programs or applications that software developers (also known as programmers, coders, hackers or software engineers) |  use to create,
+candidate pos=1473, best=0, span=14, weight=0.00003, string=of programs or applications that |  software developers (also known as programmers, coders, hackers or software engineers) |  use to create,
+candidate pos=1485, best=0, span=2, weight=0.00004, string=coders, hackers or |  software engineers) |  use to create,
+candidate pos=1486, best=0, span=22, weight=0.00002, string=coders, hackers or software |  engineers) use to create, debug, maintain (i.e. improve or fix), or otherwise support software. |  Software is written in
+candidate pos=1509, best=0, span=1, weight=0.00002, string=or otherwise support software. |  Software |  is written in one or
+candidate pos=1699, best=0, span=1, weight=0.00002, string=usually see three layers of |  software |  performing a variety of tasks:
+candidate pos=1712, best=0, span=1, weight=0.00002, string=application, and user |  software. |  Platform software: The
+candidate pos=1715, best=0, span=1, weight=0.00002, string=and user software. Platform |  software: |  The Platform includes the
+candidate pos=1758, best=0, span=1, weight=0.00002, string=equipment). Platform |  software |  often comes bundled with the
+candidate pos=1779, best=0, span=1, weight=0.00002, string=ability to change the platform |  software. |  Application software:
+candidate pos=1783, best=0, span=1, weight=0.00002, string=platform software. Application |  software: |  Application software or Applications
+candidate pos=1786, best=0, span=1, weight=0.00002, string=Application software: Application |  software |  or Applications are what most
+candidate pos=1799, best=0, span=1, weight=0.00002, string=of when they think of |  software. |  Typical examples include office
+candidate pos=1811, best=0, span=1, weight=0.00002, string=and video games. Application |  software |  is often purchased separately from
+candidate pos=1873, best=0, span=1, weight=0.00002, string=and other "system |  software" |  as applications. User-written
+candidate pos=1880, best=0, span=1, weight=0.00002, string=applications. User-written |  software: |  End-user development tailors
+candidate pos=1894, best=0, span=1, weight=0.00002, string=users' specific needs. User |  software |  include spreadsheet templates and word
+candidate pos=1911, best=0, span=1, weight=0.00002, string=are a kind of user |  software. |  Users create this software
+candidate pos=1916, best=0, span=1, weight=0.00002, string=software. Users create this |  software |  themselves and often overlook how
+candidate pos=1933, best=0, span=1, weight=0.00002, string=how competently the user-written |  software |  has been integrated into default
+candidate pos=1970, best=0, span=1, weight=0.00002, string=Execution Computer |  software |  has to be "loaded"
+candidate pos=1993, best=0, span=1, weight=0.00002, string=memory). Once the |  software |  has loaded, the computer
+candidate pos=2004, best=0, span=1, weight=0.00002, string=is able to execute the |  software. |  This involves passing instructions
+candidate pos=2013, best=0, span=1, weight=0.00002, string=passing instructions from the application |  software, |  through the system software,
+candidate pos=2018, best=0, span=1, weight=0.00002, string=software, through the system |  software, |  to the hardware which
+candidate pos=2148, best=0, span=1, weight=0.00002, string=Quality and reliability |  Software |  quality is very important,
+candidate pos=2159, best=0, span=1, weight=0.00002, string=especially for commercial and system |  software |  like Microsoft Office, Microsoft
+candidate pos=2170, best=0, span=1, weight=0.00002, string=Windows and Linux. If |  software |  is faulty (buggy),
+candidate pos=2211, best=0, span=1, weight=0.00002, string=alpha and beta testing. |  Software |  is often also a victim
+candidate pos=2222, best=0, span=1, weight=0.00002, string=to what is known as |  software |  aging, the progressive performance
+candidate pos=2247, best=0, span=1, weight=0.00002, string=eliminated (debugged) through |  software |  testing. However, software
+candidate pos=2252, best=0, span=1, weight=0.00002, string=software testing. However, |  software |  testing rarely—if ever—eliminates
+candidate pos=2285, best=0, span=1, weight=0.00002, string=In the waterfall method of |  software |  development, separate testing teams
+candidate pos=2303, best=0, span=1, weight=0.00002, string=approaches, collectively termed agile |  software |  development, developers often do
+candidate pos=2317, best=0, span=1, weight=0.00002, string=testing, and demonstrate the |  software |  to users/clients regularly to
+candidate pos=2326, best=0, span=1, weight=0.00002, string=regularly to obtain feedback. |  Software |  can be tested through unit
+candidate pos=2371, best=0, span=1, weight=0.00002, string=NASA has extremely rigorous |  software |  testing procedures for many operating
+candidate pos=2414, best=0, span=4, weight=0.00003, string=overall. Programs containing command |  software enable hardware engineering |  and system operations to function
+candidate pos=2417, best=0, span=15, weight=0.00002, string=containing command software enable hardware |  engineering and system operations to function much easier together. License The software's |  license gives the user
+candidate pos=2442, best=0, span=1, weight=0.00002, string=the right to use the |  software |  in the licensed environment,
+candidate pos=2454, best=0, span=1, weight=0.00002, string=in the case of free |  software |  licenses, also grants other
+candidate pos=2470, best=0, span=1, weight=0.00002, string=to make copies. Proprietary |  software |  can be divided into two
+candidate pos=2488, best=0, span=1, weight=0.00002, string=category of "free trial" |  software |  or "freemium" software (in
+candidate pos=2492, best=0, span=1, weight=0.00002, string=trial" software or "freemium" |  software |  (in the past,
+candidate pos=2508, best=0, span=1, weight=0.00002, string=used for free trial/freemium |  software). |  As the name
+candidate pos=2532, best=0, span=1, weight=0.00002, string=of free trials or freemium |  software, |  this is sometimes only
+candidate pos=2551, best=0, span=1, weight=0.00002, string=with limited functionality. |  software |  available for a fee,
+candidate pos=2562, best=0, span=1, weight=0.00002, string=often inaccurately termed "commercial |  software", |  which can only be
+candidate pos=2579, best=0, span=1, weight=0.00002, string=license. Open source |  software, |  on the other hand,
+candidate pos=2590, best=0, span=1, weight=0.00002, string=comes with a free |  software |  license, granting the recipient
+candidate pos=2603, best=0, span=1, weight=0.00002, string=to modify and redistribute the |  software. |  Patents Software
+candidate pos=2608, best=0, span=1, weight=0.00002, string=software. Patents |  Software |  patents, like other types
+candidate pos=2648, best=0, span=1, weight=0.00002, string=to implement a piece of |  software, |  or a component of
+candidate pos=2657, best=0, span=1, weight=0.00002, string=component of a piece of |  software. |  Ideas for useful things
+candidate pos=2664, best=0, span=1, weight=0.00002, string=Ideas for useful things that |  software |  could do, and user
+candidate pos=2688, best=0, span=1, weight=0.00002, string=the actual |  software |  packages implementing the patent)
+candidate pos=2713, best=0, span=1, weight=0.00002, string=generally automatically. So |  software |  patents are supposed to cover
+candidate pos=2756, best=0, span=1, weight=0.00002, string=of the requirements for a |  software |  patent to be held valid—although
+candidate pos=2766, best=0, span=1, weight=0.00002, string=valid—although since all useful |  software |  has effects on the physical
+candidate pos=2782, best=0, span=1, weight=0.00002, string=be open to debate. |  Software |  patents are controversial in the
+candidate pos=2788, best=0, span=1, weight=0.00002, string=patents are controversial in the |  software |  industry with many people holding
+candidate pos=2874, best=0, span=1, weight=0.00002, string=experts and companies arguing that |  software |  is such a fast-moving
+candidate pos=2882, best=0, span=1, weight=0.00002, string=a fast-moving field that |  software |  patents merely create vast additional
+candidate pos=2904, best=0, span=1, weight=0.00002, string=the case of debates about |  software |  patents outside the United States,
+candidate pos=2936, best=0, span=1, weight=0.00002, string=allowing or continue to allow |  software |  patents. Design and
+candidate pos=2948, best=0, span=1, weight=0.00002, string=Design and implementation of |  software |  varies depending on the complexity
+candidate pos=2956, best=0, span=1, weight=0.00002, string=on the complexity of the |  software. |  For instance, the
+candidate pos=2987, best=0, span=1, weight=0.00002, string=much more basic functionality. |  Software |  is usually designed and created
+candidate pos=3022, best=0, span=1, weight=0.00002, string=the process and compile the |  software |  (if applicable).
+candidate pos=3035, best=0, span=1, weight=0.00002, string=in a different section, |  software |  is usually created on top
+candidate pos=3043, best=0, span=1, weight=0.00002, string=created on top of existing |  software |  and the application programming interface
+candidate pos=3055, best=0, span=1, weight=0.00002, string=that the underlying |  software |  provides like GTK+, JavaBeans
+candidate pos=3227, best=0, span=1, weight=0.00002, string=applications are written using their |  software |  libraries that usually have numerous
+candidate pos=3261, best=0, span=36, weight=0.00002, string=can be useful for creating |  software. Computer software has special economic characteristics that make its design, creation, and distribution different from most other economic goods. A person who creates software is called a programmer, software engineer |  or software developer, terms
+candidate pos=3264, best=0, span=33, weight=0.00002, string=for creating software. Computer |  software has special economic characteristics that make its design, creation, and distribution different from most other economic goods. A person who creates software is called a programmer, software engineer |  or software developer, terms
+candidate pos=3289, best=0, span=8, weight=0.00003, string=A person who creates |  software is called a programmer, software engineer |  or software developer, terms
+candidate pos=3295, best=0, span=2, weight=0.00004, string=is called a programmer, |  software engineer |  or software developer, terms
+candidate pos=3296, best=0, span=3, weight=0.00003, string=called a programmer, software |  engineer or software |  developer, terms that all
+candidate pos=3359, best=0, span=1, weight=0.00002, string=A great variety of |  software |  companies and programmers in the
+candidate pos=3368, best=0, span=1, weight=0.00002, string=in the world comprise a |  software |  industry. Software can be
+candidate pos=3371, best=0, span=1, weight=0.00002, string=comprise a software industry. |  Software |  can be quite a profitable
+candidate pos=3417, best=0, span=1, weight=0.00002, string=Microsoft Windows and Microsoft Office |  software |  products. Non-profit software
+candidate pos=3422, best=0, span=1, weight=0.00002, string=software products. Non-profit |  software |  organizations include the Free Software
+candidate pos=3427, best=0, span=1, weight=0.00002, string=software organizations include the Free |  Software |  Foundation, GNU Project and
+candidate pos=3436, best=0, span=1, weight=0.00002, string=Project and Mozilla Foundation. |  Software |  standard organizations like the W3C,
+candidate pos=3446, best=0, span=1, weight=0.00002, string=W3C, IETF develop recommended |  software |  standards such as XML,
+candidate pos=3458, best=0, span=1, weight=0.00002, string=and HTML, so that |  software |  can interoperate through these standards.
+candidate pos=3469, best=0, span=1, weight=0.00002, string=Other well-known large |  software |  companies include Oracle, Novell,
+candidate pos=3497, best=0, span=1, weight=0.00002, string=See also |  Software |  release life cycle List
+candidate pos=3504, best=0, span=1, weight=0.00002, string=life cycle List of |  software |  Software asset management
+candidate pos=3506, best=0, span=1, weight=0.00002, string=List of software |  Software |  asset management Crystal Clear
+candidate pos=3517, best=0, span=1, weight=0.00002, string=device cdrom unmount.png |  Software |  portal Free and open-source
+candidate pos=3524, best=0, span=1, weight=0.00002, string=Free and open-source |  software |  Desktop computer clipart -
+candidate pos=3548, best=0, span=1, weight=0.00002, string=construction". "System |  Software". |  The University of Mississippi.
+candidate pos=3558, best=0, span=1, weight=0.00002, string=Mississippi. "Embedded |  Software—Technologies |  and Trends". IEEE
+candidate pos=3593, best=0, span=1, weight=0.00002, string="The Economic Properties of |  Software". |  Jena Economic Research Papers.
+candidate pos=3614, best=0, span=1, weight=0.00002, string=The Optimum Economic Paradigm for |  Software". | 
 best match pos=193, span=2, is_docstart=0
 best match phrase pos=189, span=42, has start 1, has end=1, string='In computer science and <b>software</b> <b>engineering,</b> computer <b>software</b> is all information processed by computer systems, programs and data. Computer <b>software</b> includes computer programs, libraries and related non-executable data, such as online documentation or digital media.'
 ' 1
 	debug:query = 'calculate BM25pff
-feature weights: 0.5000000 0.5000000, sum=1.000000
-title ff increments=0.0000000 0.0000000
+feature weights: 0.50000 0.50000, sum=1.00000
+title ff increments=0.00000 0.00000
 fallback to BM25 (too few query features)
-[0] result=0.000021, ff=151.000000, title ff incr=0.000000, idf=0.000010, doclen=3099
-[1] result=0.000013, ff=6.000000, title ff incr=0.000000, idf=0.000010, doclen=3099
-sum result=0.000034
+[0] result=0.00002, ff=151.00000, title ff incr=0.00000, idf=0.00001, doclen=3099
+[1] result=0.00001, ff=6.00000, title ff incr=0.00000, idf=0.00001, doclen=3099
+sum result=0.00003
 ' 1
