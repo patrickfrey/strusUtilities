@@ -1,27 +1,27 @@
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
 [1] score 1.000000
-	attribute:title = 'Software' 1
-	attribute:docid = '123' 1
+	title = 'Software' 1
+	docid = '123' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
 [1] score 1.000000
-	attribute:title = 'Software' 1
-	attribute:docid = '123' 1
+	title = 'Software' 1
+	docid = '123' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
 [1] score 1.000000
-	attribute:title = 'Software' 1
-	attribute:docid = '123' 1
+	title = 'Software' 1
+	docid = '123' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
 [1] score 1.000000
-	attribute:title = 'Software' 1
-	attribute:docid = '123' 1
+	title = 'Software' 1
+	docid = '123' 1
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
 [1] score 0.500000
-	attribute:title = 'Software' 1
-	attribute:docid = '123' 1
+	title = 'Software' 1
+	docid = '123' 1
 evaluated till pass 0, got 0 ranks (0 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
