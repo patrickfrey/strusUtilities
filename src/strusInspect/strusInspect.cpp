@@ -23,7 +23,9 @@
 #include "strus/postingIteratorInterface.hpp"
 #include "strus/forwardIteratorInterface.hpp"
 #include "strus/documentTermIteratorInterface.hpp"
-#include "strus/structIteratorInterface.hpp"
+#include "strus/structureIteratorInterface.hpp"
+#include "strus/structureLink.hpp"
+#include "strus/structureHeaderField.hpp"
 #include "strus/attributeReaderInterface.hpp"
 #include "strus/metaDataReaderInterface.hpp"
 #include "strus/valueIteratorInterface.hpp"
@@ -85,7 +87,7 @@ namespace strus
 {
 	typedef strus::Reference<PostingIteratorInterface> PostingIteratorReference;
 	typedef strus::Reference<DocumentTermIteratorInterface> DocumentTermIteratorReference;
-	typedef strus::Reference<StructIteratorInterface> StructIteratorReference;
+	typedef strus::Reference<StructureIteratorInterface> StructureIteratorReference;
 	typedef strus::Reference<ForwardIteratorInterface> ForwardIteratorReference;
 	typedef strus::Reference<MetaDataReaderInterface> MetaDataReaderReference;
 }
@@ -286,7 +288,7 @@ static void inspectDocumentIndexStructures( strus::StorageClientInterface& stora
 		viewer.reset( storage.createForwardIterator( std::string(key[2])));
 		if (!viewer.get()) throw std::runtime_error( _TXT("failed to create forward index iterator for representing structure content"));
 	}
-	strus::StructIteratorReference itr( storage.createStructIterator());
+	strus::StructureIteratorReference itr( storage.createStructureIterator());
 	strus::Index structno = storage.structTypeNumber( key[0]);
 
 	if (!itr.get()) throw std::runtime_error( _TXT("failed to create document structure iterator"));

@@ -136,7 +136,6 @@ int main( int argc_, const char* argv_[])
 	try
 	{
 		bool printUsageAndExit = false;
-		bool withDebugInfo = false;
 
 		strus::ProgramOptions opt(
 				errorBuffer.get(), argc_, argv_, 18,
@@ -156,10 +155,6 @@ int main( int argc_, const char* argv_[])
 			std::vector<std::string>::const_iterator gi = dbglist.begin(), ge = dbglist.end();
 			for (; gi != ge; ++gi)
 			{
-				if (*gi == "weighting")
-				{
-					withDebugInfo = true;
-				}
 				if (!dbgtrace->enable( *gi))
 				{
 					throw strus::runtime_error(_TXT("failed to enable debug '%s'"), gi->c_str());
@@ -276,7 +271,7 @@ int main( int argc_, const char* argv_[])
 			std::cout << "-F|--fileinput" << std::endl;
 			std::cout << "    " << _TXT("Interpret query argument as a file name containing the input") << std::endl;
 			std::cout << "-G|--debug <COMP>" << std::endl;
-			std::cout << "    " << _TXT("Issue debug messages for component <COMP> to stderr") << std::endl;
+			std::cout << "    " << _TXT("Print debug messages for component <COMP> to stderr") << std::endl;
 			std::cout << "-m|--module <MOD>" << std::endl;
 			std::cout << "    " << _TXT("Load components from module <MOD>") << std::endl;
 			std::cout << "-M|--moduledir <DIR>" << std::endl;
@@ -488,10 +483,6 @@ int main( int argc_, const char* argv_[])
 			if (!strus::loadQuery( *query, analyzer.get(), selectionFeatureSet, weightingFeatureSet, qproc, qs, errorBuffer.get()))
 			{
 				throw strus::runtime_error(_TXT("failed to load query from source: %s"), errorBuffer->fetchError());
-			}
-			if (withDebugInfo)
-			{
-				query->setDebugMode( true);
 			}
 			if (!username.empty())
 			{
