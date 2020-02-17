@@ -1,10 +1,10 @@
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
-[1] score 0.000037
+[1] score 0.000031
 	attribute = 'Software' 1
-	matchphrase = 'Computer science is more theoretical (Turing's essay is an example of computer science), whereas software engineering focuses on more practical concerns.' 1e-05
+	matchphrase = 'Computer science is more theoretical (Turing's essay is an example of computer science), whereas software engineering focuses on more practical concerns.' 4.775e-05
 evaluated till pass 0, got 1 ranks (1 without restrictions applied):
 ranked list (starting with rank 0, maximum 20 results):
-[1] score 0.000037
+[1] score 0.000031
 	attribute = 'Software' 1
-	matchphrase = 'Computer science is more theoretical (Turing's essay is an example of computer science), whereas software engineering focuses on more practical concerns.' 1e-05
+	matchphrase = 'Computer science is more theoretical (Turing's essay is an example of computer science), whereas software engineering focuses on more practical concerns.' 4.775e-05
