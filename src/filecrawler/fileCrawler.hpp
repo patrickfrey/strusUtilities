@@ -9,7 +9,7 @@
 #define _STRUS_INSERTER_FILE_CRAWLER_HPP_INCLUDED
 #include "strus/base/fileio.hpp"
 #include "strus/base/thread.hpp"
-#include "strus/index.hpp"
+#include "strus/storage/index.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/fileCrawlerInterface.hpp"
 #include <vector>

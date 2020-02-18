@@ -21,7 +21,7 @@
 #include "strus/versionBase.hpp"
 #include "strus/reference.hpp"
 #include "strus/constants.hpp"
-#include "strus/wordVector.hpp"
+#include "strus/storage/wordVector.hpp"
 #include "private/versionUtilities.hpp"
 #include "private/errorUtils.hpp"
 #include "private/internationalization.hpp"

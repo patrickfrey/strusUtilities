@@ -12,7 +12,7 @@
 #include "strus/fileCrawlerInterface.hpp"
 #include "strus/moduleLoaderInterface.hpp"
 #include "strus/analyzerObjectBuilderInterface.hpp"
-#include "strus/index.hpp"
+#include "strus/storage/index.hpp"
 #include "strus/reference.hpp"
 #include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/textProcessorInterface.hpp"

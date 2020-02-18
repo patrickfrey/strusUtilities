@@ -7,7 +7,7 @@
  */
 #include "insertProcessor.hpp"
 #include "strus/constants.hpp"
-#include "strus/index.hpp"
+#include "strus/storage/index.hpp"
 #include "strus/numericVariant.hpp"
 #include "strus/documentAnalyzerInstanceInterface.hpp"
 #include "strus/documentAnalyzerContextInterface.hpp"

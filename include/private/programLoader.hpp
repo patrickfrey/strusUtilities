@@ -10,7 +10,7 @@
 #ifndef _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #define _STRUS_UTILITIES_PROGRAM_LOADER_HPP_INCLUDED
 #include "strus/analyzer/documentClass.hpp"
-#include "strus/index.hpp"
+#include "strus/storage/index.hpp"
 #include "strus/base/stdint.h"
 #include <string>
 #include <vector>

@@ -27,7 +27,7 @@
 #include "strus/versionTrace.hpp"
 #include "strus/versionAnalyzer.hpp"
 #include "strus/versionBase.hpp"
-#include "strus/index.hpp"
+#include "strus/storage/index.hpp"
 #include "private/versionUtilities.hpp"
 #include "strus/errorBufferInterface.hpp"
 #include "strus/analyzer/documentClass.hpp"

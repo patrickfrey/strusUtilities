@@ -7,7 +7,7 @@
  */
 #ifndef _STRUS_KEYMAP_GENERATE_PROCESSOR_HPP_INCLUDED
 #define _STRUS_KEYMAP_GENERATE_PROCESSOR_HPP_INCLUDED
-#include "strus/index.hpp"
+#include "strus/storage/index.hpp"
 #include <vector>
 #include <string>
 #include "strus/base/thread.hpp"

@@ -9,7 +9,7 @@
 #define _STRUS_INSERTER_COMMIT_QUEUE_HPP_INCLUDED
 #include "strus/storageClientInterface.hpp"
 #include "strus/storageTransactionInterface.hpp"
-#include "strus/index.hpp"
+#include "strus/storage/index.hpp"
 #include "strus/reference.hpp"
 #include "strus/base/thread.hpp"
 #include <vector>

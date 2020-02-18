@@ -7,7 +7,7 @@
  */
 #ifndef _STRUS_INSERTER_FILE_CRAWLER_INTERFACE_HPP_INCLUDED
 #define _STRUS_INSERTER_FILE_CRAWLER_INTERFACE_HPP_INCLUDED
-#include "strus/index.hpp"
+#include "strus/storage/index.hpp"
 #include <vector>
 #include <string>
 
