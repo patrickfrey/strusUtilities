@@ -54,7 +54,8 @@
 	cithead= empty content //citlink@id;
 
 	sent = empty content //T;
-	title = lc word /doc/title();
+	titleword = lc word /doc/title//();
+	headword = lc word /doc/heading//();
 
 	entity = lc:entityid content {position=succ} //N@id;
 	entity = lc:entityid content {position=succ} //E@id;
