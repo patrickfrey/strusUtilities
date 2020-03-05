@@ -299,6 +299,42 @@ static void inspectSimFeatSearch( strus::VectorStorageClientInterface* storage, 
 	}
 }
 
+static void inspectDumpNeighbourVectors( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize, int maxNofRanks)
+{
+	if (inspectargsize < 3) throw std::runtime_error( _TXT("too few arguments (expected <dist> <type> <value> {<op> <type> <value>})"));
+	double dist = strus::numstring_conv::todouble( inspectarg[ 0]);
+
+	std::string type = inspectarg[ 1];
+	std::string value = inspectarg[ 2];
+	std::vector<std::string> resultTypes = storage->types();
+	strus::WordVector vec = parseVectorOperation( storage, 1, inspectarg, inspectargsize);
+	if (vec.empty()) throw std::runtime_error( g_errorBuffer->fetchError());
+
+	std::cout << "{\n\"vstorage\": {\n  \"feature\": [";
+	std::vector<std::string>::const_iterator ti = resultTypes.begin(), te = resultTypes.end();
+	for (; ti != te; ++ti)
+	{
+		std::vector<strus::VectorQueryResult> res = storage->findSimilar( *ti, vec, maxNofRanks, dist, 0.8, true/*realVecWeights*/);
+		std::vector<strus::VectorQueryResult>::const_iterator ri = res.begin(), re = res.end();
+		for (int ridx=0; ri != re; ++ri,++ridx)
+		{
+			strus::WordVector neighborvec = storage->featureVector( *ti, ri->value());
+			if (neighborvec.empty()) throw std::runtime_error(_TXT("logic error: vector of found neighbor not defined"));
+			std::string vectorstr;
+			strus::WordVector::const_iterator vi = neighborvec.begin(), ve = neighborvec.end();
+			for (int vidx=0; vi != ve; ++vi,++vidx)
+			{
+				vectorstr.append( strus::string_format( vidx?",%.6f":"%.6f", *vi));
+			}
+			if (ridx) std::cout << ",";
+			std::cout << strus::string_format(
+				"\n  {\n    \"name\":\"%s\"\n    \"type\":\"%s\"\n    \"vector\":[%s]}",
+				ri->value().c_str(), ti->c_str(), vectorstr.c_str());
+		}
+	}
+	std::cout << "]}\n}" << std::endl;
+}
+
 // Inspect strus::VectorStorageClientInterface::types()
 static void inspectTypes( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize)
 {
@@ -602,8 +638,7 @@ int main( int argc, const char* argv[])
 			std::cout << "               = " << _TXT("Return the vector associated with a") << std::endl;
 			std::cout << "                 " << _TXT("feature the storage.") << std::endl;
 			std::cout << "            \"nofvec\" [<feat type>]" << std::endl;
-			std::cout << "               = " << _TXT("Return the number of vectors associated with") << std::endl;
-			std::cout << "                 " << _TXT("features the storage.") << std::endl;
+			std::cout << "               = " << _TXT("Return the number of features with vectors defined for that type.") << std::endl;
 			std::cout << "            \"opvec\" <feat type> <feat value> { '+'/'-' <feat type> <feat value> }" << std::endl;
 			std::cout << "               = " << _TXT("Return the vector resulting from an addition of") << std::endl;
 			std::cout << "                 " << _TXT("vectors in the storage.") << std::endl;
@@ -612,6 +647,9 @@ int main( int argc, const char* argv[])
 			std::cout << "                 " << _TXT("addition of vectors in the storage.") << std::endl;
 			std::cout << "            \"opfeatw\" <result type> <feat type> <feat value> { '+'/'-' <feat type> <feat value> }" << std::endl;
 			std::cout << "               = " << _TXT("Same as 'opfeat' but also returning the weights.") << std::endl;
+			std::cout << "            \"neighbor\" <dist> <type> <value> {<op> <type> <value>}" << std::endl;
+			std::cout << "               = " << _TXT("Dump all vectors within a distance of <dist>") << std::endl;
+			std::cout << "                 " << _TXT("of the input vector operation specified with the rest arguments.") << std::endl;
 			std::cout << "            \"config\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the configuration the vector storage.") << std::endl;
 			std::cout << "            \"dump\"" << std::endl;
@@ -775,6 +813,10 @@ int main( int argc, const char* argv[])
 		else if (strus::caseInsensitiveEquals( what, "opfeatw"))
 		{
 			inspectSimFeatSearch( storage.get(), inspectarg, inspectargsize, maxNofRanks, doMeasureDuration, true/*with weights*/);
+		}
+		else if (strus::caseInsensitiveEquals( what, "neighbor") || strus::caseInsensitiveEquals( what, "neighbour"))
+		{
+			inspectDumpNeighbourVectors( storage.get(), inspectarg, inspectargsize, maxNofRanks);
 		}
 		else if (strus::caseInsensitiveEquals( what, "config"))
 		{
