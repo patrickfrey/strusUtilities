@@ -304,8 +304,6 @@ static void inspectDumpNeighbourVectors( const strus::VectorStorageClientInterfa
 	if (inspectargsize < 3) throw std::runtime_error( _TXT("too few arguments (expected <dist> <type> <value> {<op> <type> <value>})"));
 	double dist = strus::numstring_conv::todouble( inspectarg[ 0]);
 
-	std::string type = inspectarg[ 1];
-	std::string value = inspectarg[ 2];
 	std::vector<std::string> resultTypes = storage->types();
 	strus::WordVector vec = parseVectorOperation( storage, 1, inspectarg, inspectargsize);
 	if (vec.empty()) throw std::runtime_error( g_errorBuffer->fetchError());
