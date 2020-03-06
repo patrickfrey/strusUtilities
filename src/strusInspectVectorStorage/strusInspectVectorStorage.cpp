@@ -322,7 +322,7 @@ static void inspectDumpNeighbourVectors( const strus::VectorStorageClientInterfa
 			strus::WordVector::const_iterator vi = neighborvec.begin(), ve = neighborvec.end();
 			for (int vidx=0; vi != ve; ++vi,++vidx)
 			{
-				vectorstr.append( strus::string_format( vidx?",%.6f":"%.6f", *vi));
+				vectorstr.append( strus::string_format( vidx?",\"%.6f\"":"\"%.6f\"", *vi));
 			}
 			if (ridx) std::cout << ",";
 			std::cout << strus::string_format(
