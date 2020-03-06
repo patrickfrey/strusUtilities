@@ -326,7 +326,7 @@ static void inspectDumpNeighbourVectors( const strus::VectorStorageClientInterfa
 			}
 			if (ridx) std::cout << ",";
 			std::cout << strus::string_format(
-				"\n  {\n    \"name\":\"%s\"\n    \"type\":\"%s\"\n    \"vector\":[%s]}",
+				"\n  {\n    \"name\":\"%s\",\n    \"type\":\"%s\",\n    \"vector\":[%s]}",
 				ri->value().c_str(), ti->c_str(), vectorstr.c_str());
 		}
 	}
