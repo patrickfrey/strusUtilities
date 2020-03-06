@@ -309,12 +309,13 @@ static void inspectDumpNeighbourVectors( const strus::VectorStorageClientInterfa
 	if (vec.empty()) throw std::runtime_error( g_errorBuffer->fetchError());
 
 	std::cout << "{\n\"vstorage\": {\n  \"feature\": [";
+	int ridx = 0;
 	std::vector<std::string>::const_iterator ti = resultTypes.begin(), te = resultTypes.end();
 	for (; ti != te; ++ti)
 	{
 		std::vector<strus::VectorQueryResult> res = storage->findSimilar( *ti, vec, maxNofRanks, dist, 0.8, true/*realVecWeights*/);
 		std::vector<strus::VectorQueryResult>::const_iterator ri = res.begin(), re = res.end();
-		for (int ridx=0; ri != re; ++ri,++ridx)
+		for (; ri != re; ++ri,++ridx)
 		{
 			strus::WordVector neighborvec = storage->featureVector( *ti, ri->value());
 			if (neighborvec.empty()) throw std::runtime_error(_TXT("logic error: vector of found neighbor not defined"));
