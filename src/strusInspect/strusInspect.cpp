@@ -131,7 +131,7 @@ static void inspectPositions( strus::StorageClientInterface& storage, const char
 
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
-			std::string(key[0]), std::string(key[1]), 1));
+			std::string(key[0]), std::string(key[1]), 1, strus::TermStatistics()));
 	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 
 	if (size == 2)
@@ -400,7 +400,7 @@ static void inspectDocumentFrequency( strus::StorageClientInterface& storage, co
 
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
-			std::string(key[0]), std::string(key[1]), 1));
+			std::string(key[0]), std::string(key[1]), 1, strus::TermStatistics()));
 	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 	std::cout << itr->documentFrequency() << std::endl;
 }
@@ -466,7 +466,7 @@ static void inspectFeatureFrequency( strus::StorageClientInterface& storage, con
 
 	strus::PostingIteratorReference itr(
 		storage.createTermPostingIterator(
-			std::string(key[0]), std::string(key[1]), 1));
+			std::string(key[0]), std::string(key[1]), 1, strus::TermStatistics()));
 	if (!itr.get()) throw std::runtime_error( _TXT("failed to create term posting iterator"));
 
 	if (size == 2)
