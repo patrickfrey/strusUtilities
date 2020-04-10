@@ -334,6 +334,43 @@ static void inspectDumpNeighbourVectors( const strus::VectorStorageClientInterfa
 	std::cout << "]}\n}" << std::endl;
 }
 
+static void inspectDumpVectorListFromFile( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize, int maxNofRanks)
+{
+	if (inspectargsize < 2) throw std::runtime_error( _TXT("too few arguments (expected <type> <filename>"));
+	if (inspectargsize > 2) throw std::runtime_error( _TXT("too many arguments (expected <type> <filename>"));
+
+	std::string type = inspectarg[0];
+	std::string content;
+	int ec = strus::readFile( inspectarg[1], content);
+	if (ec) throw strus::runtime_error(_TXT("failed to read input file with feature values: %s"), ::strerror(ec));
+	std::vector<std::string> featurelist;
+	char const* ci = content.c_str();
+	char const* cn = std::strchr( ci, '\n');
+	for (; cn; ci=cn+1,cn = std::strchr( ci, '\n'))
+	{
+		featurelist.push_back( strus::string_conv::trim( ci, cn-ci));
+	}
+	featurelist.push_back( strus::string_conv::trim( ci, std::strlen( ci)));
+
+	std::cout << "{\n\"vstorage\": {\n  \"feature\": [";
+	std::vector<std::string>::const_iterator fi = featurelist.begin(), fe = featurelist.end();
+	for (int fidx=0; fi != fe; ++fi,++fidx)
+	{
+		strus::WordVector vec = storage->featureVector( type, *fi);
+		std::string vectorstr;
+		strus::WordVector::const_iterator vi = vec.begin(), ve = vec.end();
+		for (int vidx=0; vi != ve; ++vi,++vidx)
+		{
+			vectorstr.append( strus::string_format( vidx?",\"%.6f\"":"\"%.6f\"", *vi));
+		}
+		if (fidx) std::cout << ",";
+		std::cout << strus::string_format(
+			"\n  {\n    \"name\":\"%s\",\n    \"type\":\"%s\",\n    \"vector\":[%s]}",
+			fi->c_str(), type.c_str(), vectorstr.c_str());
+	}
+	std::cout << "]}\n}" << std::endl;
+}
+
 // Inspect strus::VectorStorageClientInterface::types()
 static void inspectTypes( const strus::VectorStorageClientInterface* storage, const char** inspectarg, std::size_t inspectargsize)
 {
@@ -816,6 +853,10 @@ int main( int argc, const char* argv[])
 		else if (strus::caseInsensitiveEquals( what, "neighbor") || strus::caseInsensitiveEquals( what, "neighbour"))
 		{
 			inspectDumpNeighbourVectors( storage.get(), inspectarg, inspectargsize, maxNofRanks);
+		}
+		else if (strus::caseInsensitiveEquals( what, "veclist"))
+		{
+			inspectDumpVectorListFromFile( storage.get(), inspectarg, inspectargsize, maxNofRanks);
 		}
 		else if (strus::caseInsensitiveEquals( what, "config"))
 		{
