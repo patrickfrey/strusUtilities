@@ -354,7 +354,11 @@ static void inspectDumpVectorListFromFile( const strus::VectorStorageClientInter
 			featurelist.push_back( featstr);
 		}
 	}
-	featurelist.push_back( strus::string_conv::trim( ci, std::strlen( ci)));
+	std::string featstr = strus::string_conv::trim(  ci, std::strlen( ci));
+	if (!featstr.empty())
+	{
+		featurelist.push_back( featstr);
+	}
 
 	std::cout << "{\n\"vstorage\": {\n  \"feature\": [";
 	std::vector<std::string>::const_iterator fi = featurelist.begin(), fe = featurelist.end();
