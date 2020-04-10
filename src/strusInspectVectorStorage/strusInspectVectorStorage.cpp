@@ -348,7 +348,11 @@ static void inspectDumpVectorListFromFile( const strus::VectorStorageClientInter
 	char const* cn = std::strchr( ci, '\n');
 	for (; cn; ci=cn+1,cn = std::strchr( ci, '\n'))
 	{
-		featurelist.push_back( strus::string_conv::trim( ci, cn-ci));
+		std::string featstr = strus::string_conv::trim( ci, cn-ci);
+		if (!featstr.empty())
+		{
+			featurelist.push_back( featstr);
+		}
 	}
 	featurelist.push_back( strus::string_conv::trim( ci, std::strlen( ci)));
 
@@ -686,6 +690,9 @@ int main( int argc, const char* argv[])
 			std::cout << "            \"neighbor\" <dist> <type> <value> {<op> <type> <value>}" << std::endl;
 			std::cout << "               = " << _TXT("Dump all vectors within a distance of <dist>") << std::endl;
 			std::cout << "                 " << _TXT("of the input vector operation specified with the rest arguments.") << std::endl;
+			std::cout << "            \"veclist\" <type> <file>" << std::endl;
+			std::cout << "               = " << _TXT("Dump all vectors of features of type <type> with values") << std::endl;
+			std::cout << "                 " << _TXT("listed as lines in the text file <file>.") << std::endl;
 			std::cout << "            \"config\"" << std::endl;
 			std::cout << "               = " << _TXT("Get the configuration the vector storage.") << std::endl;
 			std::cout << "            \"dump\"" << std::endl;
