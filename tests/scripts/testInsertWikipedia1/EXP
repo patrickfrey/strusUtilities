@@ -6,10 +6,10 @@
 	29 67 a
 	30 13 j
 	10 74 ayer
+	6 2 sir_alfred_jules
 	6 3 sir
 	7 9 alfred
 	8 9 jules
-	6 2 sir_alfred_jules
 	9 2 freddie
 	16 1 29
 	17 3 october
@@ -34,11 +34,11 @@
 	48 2 particularly
 	50 78 in
 	52 5 books
+	53 3 language-truth-and_logic
 	53 16 language
 	54 11 truth
 	55 88 and
 	56 13 logic
-	53 3 language-truth-and_logic
 	58 5 1936
 	61 144 the
 	62 2 problem
@@ -47,57 +47,57 @@
 	70 54 he
 	72 2 educated
 	74 22 at
+	75 3 eton_college
 	75 9 eton
 	76 7 college
-	75 3 eton_college
+	79 2 oxford_university
 	79 14 oxford
 	80 10 university
-	79 2 oxford_university
 	82 7 after
 	83 9 which
 	85 1 studied
 	88 31 philosophy
-	98 7 vienna
 	96 1 university_of_vienna
+	98 7 vienna
 	100 13 from
 	101 1 1933
 	103 52 to
 	104 4 1940
 	106 2 lectured
 	108 23 on
+	112 3 christ_church-oxford
 	112 3 christ
 	113 3 church
-	112 3 christ_church-oxford
 	117 1 during
+	119 2 second_world_war
 	119 6 second
 	120 5 world
 	121 5 war
-	119 2 second_world_war
+	127 2 special_operations_executive
 	127 3 special
 	128 2 operations
 	129 2 executive
-	127 2 special_operations_executive
 	132 3 mi6
 	133 1 agent
+	138 1 grote_professor_of_the_philosophy_of_mind_and_logic
 	138 1 grote
 	139 5 professor
 	144 1 mind
-	138 1 grote_professor_of_the_philosophy_of_mind_and_logic
-	151 34 london
 	149 1 university_college_london
+	151 34 london
 	154 4 1946
 	156 4 until
 	157 3 1959
 	162 3 returned
 	168 1 become
-	169 3 wykeham
 	169 2 wykeham_professor
-	176 13 new
+	169 3 wykeham
 	176 1 new_college
+	176 13 new
 	182 4 president
+	186 1 aristotelian_society
 	186 1 aristotelian
 	187 4 society
-	186 1 aristotelian_society
 	190 1 1951
 	193 2 1952
 	196 2 knighted
@@ -105,20 +105,20 @@
 	207 1 advocacy
 	210 2 humanism
 	229 1 humanists_uk
+	221 3 british_humanist_association
 	222 11 humanist
 	223 6 association
-	221 3 british_humanist_association
 	225 3 now
 	229 1 humanists
 	230 1 uk
 	233 1 http-dictionary-reference-com
+	235 1 random_house_webster-s_unabridged_dictionary
 	235 2 random
 	236 2 house
 	237 1 webster
 	238 21 s
 	239 1 unabridged
 	240 3 dictionary
-	235 1 random_house_webster-s_unabridged_dictionary
 	242 20 cite
 	243 3 news
 	244 13 url
@@ -131,9 +131,9 @@
 	253 9 last
 	254 2 spurling
 	255 5 work
+	256 2 the_new_york_times
 	258 9 york
 	259 6 times
-	256 2 the_new_york_times
 	260 12 date
 	261 2 24
 	262 4 december
@@ -153,12 +153,12 @@
 	275 1 infobox
 	277 2 name
 	281 1 region
-	282 1 western
 	282 1 western_philosophy
+	282 1 western
 	284 1 era
+	285 1 20th-century_philosophy
 	285 2 20th
 	286 4 century
-	285 1 20th-century_philosophy
 	288 3 birth
 	290 5 alfred_jules_ayer
 	297 3 place
@@ -169,24 +169,24 @@
 	313 1 mater
 	317 5 school
 	318 1 tradition
-	319 3 analytic
 	319 1 analytic_philosophy
+	319 3 analytic
 	321 2 logical_positivism
 	323 1 influences
 	3151 2 david_hume
 	324 4 hume
-	326 6 circle
 	325 5 vienna_circle
+	326 6 circle
 	327 1 popper
 	328 8 russell
 	329 3 wittgenstein
 	331 1 kant
 	332 3 voltaire
 	333 2 influenced
+	334 1 r-m-hare
 	334 1 r
 	335 4 m
 	336 1 hare
-	334 1 r-m-hare
 	337 1 strawson
 	338 2 honderich
 	339 1 marković
@@ -209,9 +209,9 @@
 	362 3 routledge
 	363 8 location
 	365 2 pages
+	366 1 37-39
 	366 1 37
 	367 1 39
-	366 1 37-39
 	368 7 isbn
 	369 13 0
 	370 2 415
@@ -219,10 +219,10 @@
 	372 1 5
 	374 8 web
 	376 1 http-biography-yourdictionary-com
-	380 1 facts
 	377 1 alfred_jules_ayer_facts
-	382 1 your
+	380 1 facts
 	382 1 your_dictionary
+	382 1 your
 	385 2 18
 	387 1 2015
 	392 3 politics
@@ -244,17 +244,17 @@
 	423 12 978
 	426 1 24445
 	435 3 http-plato-stanford-edu
+	436 3 stanford_encyclopedia_of_philosophy
 	436 3 stanford
 	437 3 encyclopedia
-	436 3 stanford_encyclopedia_of_philosophy
 	441 1 15
 	443 1 2016
 	445 2 2005
 	446 10 life
 	449 1 born
+	452 1 st_john
 	452 3 st
 	453 2 john
-	452 1 st_john
 	456 1 wood
 	459 1 north
 	460 1 west
@@ -263,9 +263,9 @@
 	469 1 continental
 	470 1 europe
 	473 1 mother
+	475 1 reine_citroën
 	475 1 reine
 	476 2 citroën
-	475 1 reine_citroën
 	482 1 dutch
 	484 1 jewish
 	486 7 who
@@ -280,11 +280,11 @@
 	507 1 calvinist
 	508 1 financier
 	510 1 worked
-	514 1 rothschild
 	514 1 rothschild_family
+	514 1 rothschild
+	523 1 ascham_st_vincent
 	523 1 ascham
 	525 1 vincent
-	523 1 ascham_st_vincent
 	531 3 former
 	532 3 boarding
 	533 1 preparatory
@@ -358,27 +358,27 @@
 	792 1 served
 	795 14 an
 	796 2 officer
+	800 2 welsh_guards
 	800 2 welsh
 	801 2 guards
-	800 2 welsh_guards
 	803 1 chiefly
 	806 2 intelligence
 	812 1 soe
 	821 1 commissioned
 	823 1 lieutenant
 	825 4 into
+	831 1 officer_cadet_training_unit
 	832 1 cadet
 	833 1 training
 	834 1 unit
-	831 1 officer_cadet_training_unit
 	837 3 21
 	838 3 september
 	846 1 briefly
 	852 3 where
 	857 3 fellow
 	860 1 dean
-	863 1 wadham
 	863 1 wadham_college
+	863 1 wadham
 	867 1 thereafter
 	868 2 taught
 	872 1 london_university
@@ -401,9 +401,9 @@
 	941 1 noted
 	942 1 cricketer
 	947 1 supporter
+	950 1 tottenham_hotspur
 	950 1 tottenham
 	951 1 hotspur
-	950 1 tottenham_hotspur
 	952 1 football
 	953 1 team
 	952 1 football_team
@@ -434,22 +434,22 @@
 	1024 2 marriage
 	1028 1 1932
 	1029 1 1941
+	1033 1 grace_isabel
 	1033 1 grace
 	1034 1 isabel
-	1033 1 grace_isabel
 	1036 1 renée
 	1038 1 d
 	1039 3 1980
 	1042 1 subsequently
+	1045 1 stuart_hampshire
 	1045 1 stuart
 	1046 1 hampshire
-	1045 1 stuart_hampshire
 	1051 1 friend
 	1054 1 colleague
 	1057 1 1960
+	1060 1 alberta_constance
 	1060 1 alberta
 	1061 1 constance
-	1060 1 alberta_constance
 	1063 2 dee
 	1065 3 wells
 	1068 1 whom
@@ -458,14 +458,14 @@
 	1082 1 dissolved
 	1085 1 1983
 	1089 3 same
+	1093 1 vanessa_salmon
 	1093 1 vanessa
 	1094 1 salmon
-	1093 1 vanessa_salmon
 	1097 1 wife
 	1100 1 politician
+	1101 1 nigel_lawson
 	1101 1 nigel
 	1102 1 lawson
-	1101 1 nigel_lawson
 	1104 1 she
 	1105 3 died
 	1108 1 1985
@@ -476,20 +476,20 @@
 	1127 1 daughter
 	1130 1 hollywood
 	1131 1 columnist
+	1132 1 sheilah_graham
 	1132 1 sheilah
 	1133 3 graham
-	1132 1 sheilah_graham
 	1134 1 westbrook
 	1141 1 retirement
 	1144 1 1978
 	1146 1 sir_alfred
 	1148 3 held
-	1152 1 chair
 	1151 1 wykeham_chair
+	1152 1 chair
 	1184 2 lived
 	1187 1 51
-	1189 1 street
 	1188 1 york_street
+	1189 1 street
 	1191 1 marylebone
 	1196 1 memorial
 	1197 1 plaque
@@ -509,19 +509,19 @@
 	1256 1 42
 	1257 1 44
 	1267 1 https-www-theguardian-com
-	1271 1 guardian
 	1270 1 the_guardian
+	1271 1 guardian
 	1273 2 richard
 	1275 1 norton
 	1277 1 taylor
-	1280 1 greene
 	1279 1 graham_greene
+	1280 1 greene
+	1282 1 arthur_ransome
 	1282 1 arthur
 	1283 1 ransome
-	1282 1 arthur_ransome
+	1286 1 somerset_maugham
 	1286 1 somerset
 	1287 1 maugham
-	1286 1 somerset_maugham
 	1289 3 all
 	1290 1 spied
 	1293 2 britain
@@ -533,14 +533,14 @@
 	1306 2 supp
 	1307 4 y
 	1309 1 5776
+	1317 1 iris_murdoch
 	1317 1 iris
 	1318 1 murdoch
-	1317 1 iris_murdoch
 	1321 29 i
 	1322 1 knew
 	1323 1 her
-	1326 3 n
 	1325 1 a-n
+	1326 3 n
 	1328 1 wilson
 	1330 1 hutchinson
 	1332 1 2003
@@ -594,9 +594,9 @@
 	1442 2 literally
 	1443 1 nonsense
 	1447 1 criticises
+	1448 1 c-a-mace
 	1448 2 c
 	1450 1 mace
-	1448 1 c-a-mace
 	1453 1 opinion
 	1456 6 metaphysics
 	1460 1 form
@@ -610,9 +610,9 @@
 	1483 1 referred
 	1487 1 igtheism
 	1490 2 example
+	1493 2 paul_kurtz
 	1493 4 paul
 	1494 3 kurtz
-	1493 2 paul_kurtz
 	1500 3 later
 	1501 1 years
 	1503 1 reiterated
@@ -624,14 +624,14 @@
 	1524 4 atheist
 	1527 1 followed
 	1531 1 footsteps
-	1534 2 bertrand
 	1534 2 bertrand_russell
+	1534 2 bertrand
 	1538 1 debating
 	1542 1 jesuit
 	1543 1 scholar
+	1544 1 frederick_copleston
 	1544 1 frederick
 	1545 1 copleston
-	1544 1 frederick_copleston
 	1549 1 topic
 	1552 1 religion
 	1557 2 version
@@ -702,9 +702,9 @@
 	1764 1 1945
 	1767 2 1947
 	1769 1 together
+	1775 1 george_orwell
 	1775 2 george
 	1776 1 orwell
-	1775 1 george_orwell
 	1779 1 contributed
 	1782 1 series
 	1785 1 articles
@@ -716,76 +716,76 @@
 	1803 3 edited
 	1807 1 ex
 	1809 1 communist
+	1810 1 humphrey_slater
 	1810 1 humphrey
 	1811 1 slater
-	1810 1 humphrey_slater
 	1817 1 closely
 	1818 1 associated
 	1825 1 movement
+	1831 1 honorary_associate
 	1831 2 honorary
 	1832 1 associate
-	1831 1 honorary_associate
+	1836 2 rationalist_press_association
 	1836 2 rationalist
 	1837 7 press
-	1836 2 rationalist_press_association
 	1849 1 elected
-	1852 1 foreign
 	1852 1 foreign_honorary_member
+	1852 1 foreign
+	1858 2 american_academy_of_arts_and_sciences
 	1859 3 academy
 	1861 2 arts
 	1863 2 sciences
-	1858 2 american_academy_of_arts_and_sciences
 	1866 3 1963
 	1871 1 1965
 	1882 1 agnostics
-	1884 1 adoption
 	1884 1 adoption_society
+	1884 1 adoption
 	1892 1 succeeded
+	1893 1 julian_huxley
 	1893 1 julian
 	1894 1 huxley
-	1893 1 julian_huxley
 	1914 2 1968
-	1919 1 outlook
 	1918 1 humanist_outlook
+	1919 1 outlook
 	1922 1 collection
 	1925 10 essays
 	1929 3 meaning
 	1935 2 addition
 	1942 1 signers
 	2615 1 humanist_manifesto_ii
-	1947 2 manifesto
 	1946 1 humanist_manifesto
+	1947 2 manifesto
 	1955 1 several
+	1960 1 united_states
 	1960 1 united
 	1961 1 states
-	1960 1 united_states
 	1963 3 including
 	1964 1 serving
 	1968 1 visiting
-	1972 1 bard
 	1972 1 bard_college
+	1972 1 bard
 	1977 1 fall
 	1980 1 1987
 	1984 1 party
 	1991 1 fashion
 	1992 1 designer
 	1991 1 fashion_designer
+	1993 1 fernando_sanchez
 	1993 1 fernando
 	1994 1 sanchez
-	1993 1 fernando_sanchez
 	1998 3 then
 	1999 1 77
 	2001 1 confronted
+	2002 1 mike_tyson
 	2002 1 mike
 	2003 3 tyson
-	2002 1 mike_tyson
 	2006 1 forcing
 	2009 1 upon
 	2014 1 little
 	2017 1 model
+	2018 2 naomi_campbell
 	2018 2 naomi
 	2019 2 campbell
-	2018 2 naomi_campbell
 	2023 1 demanded
 	2027 1 stop
 	2030 1 boxer
@@ -810,21 +810,21 @@
 	2110 1 while
 	2113 1 slipped
 	2114 2 out
+	2116 1 representation_and_expression
 	2116 1 representation
 	2118 1 expression
-	2116 1 representation_and_expression
 	2120 3 analysis
-	2122 7 vol
 	2122 1 vol-1
+	2122 7 vol
 	2126 4 3
 	2125 1 no-3
-	2130 1 emotive
 	2128 1 metaphysics_and_emotive_language
+	2130 1 emotive
 	2133 1 analysis_vol
 	2136 2 ii
 	2137 1 nos
-	2140 2 2
 	2138 1 1_and_2
+	2140 2 2
 	2154 2 dover
 	2164 1 seems
 	2167 2 me
@@ -849,11 +849,11 @@
 	2213 1 anything_answers
 	2224 1 1966
 	2227 6 what
-	2235 1 81
 	2234 1 vol-81
+	2235 1 81
+	2237 1 8-august
 	2237 2 8
 	2238 2 august
-	2237 1 8-august
 	2241 1 226
 	2244 1 trust
 	2247 12 my
@@ -862,19 +862,19 @@
 	2253 1 allay
 	2256 1 anxieties
 	2261 1 supporters
-	2276 1 south
 	2276 1 south_place_ethical_society
+	2276 1 south
 	2285 1 12
 	2290 1 103
 	2295 1 106
 	2300 1 107
 	2301 2 https-books-google-com
 	2305 1 344
-	2312 1 skepticism
 	2310 1 the_new_skepticism
+	2312 1 skepticism
+	2314 1 inquiry_and_reliable_knowledge
 	2314 1 inquiry
 	2316 1 reliable
-	2314 1 inquiry_and_reliable_knowledge
 	2319 1 194
 	2324 1 authorlink
 	2328 2 1992
@@ -934,15 +934,15 @@
 	2531 1 https-www-independent-co-uk
 	2536 1 hirsts
 	2540 1 1930s
-	2545 1 independent
 	2544 1 the_independent
+	2545 1 independent
 	2549 3 13
 	2551 1 1998
 	2553 1 buckman
 	2555 3 david
+	2560 1 absent_minds
 	2560 1 absent
 	2561 2 minds
-	2560 1 absent_minds
 	2563 1 intellectuals
 	2567 1 collini
 	2569 1 stefan
@@ -951,8 +951,8 @@
 	2580 1 929105
 	2587 1 members
 	2588 1 1780
-	2590 2 chapter
 	2590 1 chapter_a
+	2590 2 chapter
 	2593 1 http-www-amacad-org
 	2601 2 28
 	2606 3 10
@@ -990,9 +990,9 @@
 	2759 1 attitude
 	2761 1 towards
 	2767 5 2001
+	2768 1 dr_jeremy_george
 	2768 1 dr
 	2769 1 jeremy
-	2768 1 dr_jeremy_george
 	2774 1 physician
 	2776 1 claimed
 	2781 1 confided
@@ -1023,21 +1023,21 @@
 	2912 1 ask
 	2919 1 march
 	2924 1 dennett
-	2926 1 daniel
 	2926 1 daniel_c
+	2926 1 daniel
 	2929 1 http-edge-org
+	2930 1 thank_goodness-
 	2930 1 thank
 	2931 1 goodness
-	2930 1 thank_goodness-
+	2933 1 edge-org
 	2933 1 edge
 	2934 1 org
-	2933 1 edge-org
 	2946 1 cash
 	2948 1 william
 	2950 1 http-variousenthusiasms-wordpress-com
 	2954 2 see
-	2963 1 national
 	2963 1 national_post
+	2963 1 national
 	2973 1 works
 	2976 1 best
 	2980 1 popularising
@@ -1053,9 +1053,9 @@
 	3037 1 others
 	3042 1 leading
 	3043 1 light
+	3049 1 moritz_schlick
 	3049 2 moritz
 	3050 2 schlick
-	3049 1 moritz_schlick
 	3052 4 were
 	3053 1 already
 	3054 1 offering
@@ -1102,16 +1102,16 @@
 	3244 1 behaviour
 	3249 2 argument
 	3251 1 anticipates
+	3254 1 turing_test
 	3254 1 turing
 	3255 2 test
-	3254 1 turing_test
 	3259 1 1950
 	3268 1 capability
 	3271 1 demonstrate
 	3276 1 two
 	3288 2 moore
-	3292 2 heritage
 	3290 1 the_analytic_heritage
+	3292 2 heritage
 	3294 2 1971
 	3299 4 1972
 	3307 1 introductory
@@ -1119,9 +1119,9 @@
 	3330 1 strong
 	3331 1 critic
 	3335 1 german
+	3337 1 martin_heidegger
 	3337 1 martin
 	3338 3 heidegger
-	3337 1 martin_heidegger
 	3343 1 positivist
 	3348 1 conflict
 	3355 1 vast
@@ -1143,21 +1143,21 @@
 	3414 1 useless
 	3418 2 1973
 	3420 1 gave
+	3423 1 gifford_lectures
 	3423 2 gifford
 	3424 2 lectures
-	3423 1 gifford_lectures
-	3430 1 andrews
 	3427 1 university_of_st_andrews
+	3430 1 andrews
+	3437 1 central_questions
 	3437 3 central
 	3438 4 questions
-	3437 1 central_questions
 	3445 1 preface
 	3452 1 defends
 	3454 1 selection
 	3457 1 hold
 	3460 1 lectureship
-	3466 1 lord
 	3466 1 lord_gifford
+	3466 1 lord
 	3468 1 wished
 	3471 1 promote
 	3472 1 natural
@@ -1186,8 +1186,8 @@
 	3559 1 matters
 	3563 1 judged
 	3580 1 discuss
-	3593 5 other
 	3593 1 other_essays
+	3593 5 other
 	3599 1 heavily
 	3600 1 criticized
 	4138 1 ludwig_wittgenstein
@@ -1201,19 +1201,19 @@
 	3623 1 famously
 	3624 1 criticised
 	3628 1 oxonian
+	3629 1 j-l-austin
 	3630 1 l
 	3631 4 austin
-	3629 1 j-l-austin
-	3636 1 sensibilia
 	3634 1 sense_and_sensibilia
+	3636 1 sensibilia
 	3639 1 landmark
 	3640 1 1950s
 	3644 3 common
 	3645 1 language_philosophy
 	3649 1 responded
 	3655 2 essay
-	3658 2 refuted
 	3657 2 austin_refuted
+	3658 2 refuted
 	3670 1 found
 	3677 1 common_sense
 	3680 4 1969
@@ -1222,8 +1222,8 @@
 	3695 2 140
 	3714 1 journal
 	3720 1 http-www-the-philosopher-co-uk
-	3721 1 unanswerable
 	3721 1 unanswerable_questions
+	3721 1 unanswerable
 	3724 1 the_philosopher
 	3726 2 volume
 	3727 1 xiii
@@ -1231,9 +1231,9 @@
 	3734 1 awards
 	3737 1 awarded
 	3740 1 knighthood
+	3743 1 knight_bachelor
 	3743 1 knight
 	3744 1 bachelor
-	3743 1 knight_bachelor
 	3748 1 london_gazette
 	3753 2 january
 	3761 1 44999
@@ -1281,11 +1281,11 @@
 	3980 1 reply
 	3992 1 russell_and_moore
 	3996 1 the_analytical_heritage
-	4009 1 evidence
 	4007 1 probability_and_evidence
+	4009 1 evidence
+	4022 1 fontana_modern_masters
 	4022 1 fontana
 	4024 1 masters
-	4022 1 fontana_modern_masters
 	4037 3 weidenfeld
 	4041 1 1977
 	4042 1 part
@@ -1294,27 +1294,27 @@
 	4054 2 replies
 	4057 1 g
 	4058 2 macdonald
+	4061 1 perception_and_identity
 	4061 1 perception
 	4063 1 identity
-	4061 1 perception_and_identity
 	4066 1 presented
 	4073 1 with_his_replies
 	4081 1 ithaca
 	4083 1 n-y
-	4086 1 cornell
 	4086 1 cornell_university_press
+	4086 1 cornell
 	4100 1 1982
 	4111 3 1984
-	4115 1 morality
 	4113 1 freedom_and_morality_and_other_essays
-	4122 1 clarendon
+	4115 1 morality
 	4122 1 clarendon_press
+	4122 1 clarendon
 	4136 2 1986
 	4138 1 ludwig
 	4152 1 random_house
+	4157 1 thomas_paine
 	4157 1 thomas
 	4158 1 paine
-	4157 1 thomas_paine
 	4162 1 secker
 	4163 1 warburg
 	4167 2 undiscovered
@@ -1323,18 +1323,18 @@
 	4182 1 1990
 	4192 1 nicolson
 	4204 1 library
+	4207 1 living_philosophers_volume_xxi
 	4207 1 living
 	4210 1 xxi
-	4207 1 living_philosophers_volume_xxi
+	4216 1 lewis_edwin_hahn
 	4216 1 lewis
 	4217 1 edwin
 	4218 1 hahn
-	4216 1 lewis_edwin_hahn
+	4220 1 open_court_publishing_co
 	4220 1 open
 	4221 1 court
 	4222 1 publishing
 	4223 1 co
-	4220 1 open_court_publishing_co
 	4224 1 416788667
 	4227 1 14
 	4228 1 118604
@@ -1355,12 +1355,12 @@
 	4254 1 00
 	4255 1 216017
 	4261 1 priori
-	4264 1 list
 	4264 1 list_of_british_philosophers
+	4264 1 list
 	4268 1 notes
 	4269 1 references
-	4310 1 grove
 	4310 1 grove_press
+	4310 1 grove
 	4320 3 review
 	4336 1 8021
 	4337 1 3869
@@ -1368,14 +1368,14 @@
 	4349 1 2004
 	4359 2 id
 	4360 1 39796
+	4364 1 jim_holt
 	4364 1 jim
 	4365 1 holt
-	4364 1 jim_holt
 	4367 1 positive
 	4368 2 thinking
+	4372 1 karl_sigmund
 	4372 1 karl
 	4373 1 sigmund
-	4372 1 karl_sigmund
 	4375 1 exact
 	4378 1 demented
 	4386 1 epic
@@ -1387,13 +1387,13 @@
 	4412 1 2017
 	4414 1 74
 	4415 1 76
-	4416 1 ted
 	4416 1 ted_honderich
+	4416 1 ted
 	4419 1 http-www-ucl-ac-uk
 	4425 1 greatness
+	4427 1 anthony_quinton
 	4427 1 anthony
 	4428 1 quinton
-	4427 1 anthony_quinton
 	4434 1 proceedings
 	4440 1 94
 	4444 1 255
@@ -1410,9 +1410,9 @@
 	4503 1 entry
 	4510 1 http-down-7-com
 	4516 1 http-www-marxists-org
+	4525 1 alex_callinicos
 	4525 1 alex
 	4526 1 callinicos
-	4525 1 alex_callinicos
 	4527 1 http-www-bbc-co-uk
 	4528 1 appearance
 	4530 1 desert
@@ -1420,33 +1420,300 @@
 	4532 1 discs
 	4541 1 2044497
 1:
+	233 53 ayer
+	6 2 sir_alfred_jules
+	4357 1 freddie
+	17 1 october
+	21 2 june
+	29 6 a-j-ayer
+	1794 1 british
 	51 107 a_j_ayer
+	53 3 language-truth-and_logic
+	740 9 language
+	742 3 truth
+	173 6 logic
+	62 1 problem
+	65 1 knowledge
 	70 8 sir_alfred_jules_freddie_ayer
+	75 3 eton_college
+	586 5 eton
 	79 2 university_of_oxford
+	79 2 oxford_university
+	165 6 oxford
+	1797 3 philosophy
+	96 1 university_of_vienna
+	727 1 vienna
+	112 3 christ_church-oxford
+	119 2 second_world_war
+	127 2 special_operations_executive
 	132 3 secret_intelligence_service
+	132 3 mi6
+	138 1 grote_professor_of_the_philosophy_of_mind_and_logic
+	1154 1 professor
+	149 1 university_college_london
+	298 31 london
+	169 2 wykeham_professor
 	176 1 new_college-oxford
-	221 3 humanists_uk
-	758 1 logical_positivism
-	324 1 david_hume
+	176 1 new_college
+	217 1 president
+	186 1 aristotelian_society
+	221 4 humanists_uk
+	221 3 british_humanist_association
+	2232 1 humanist
+	235 1 random_house_webster-s_unabridged_dictionary
+	252 1 hilary
+	254 1 spurling
+	256 2 the_new_york_times
+	282 1 western_philosophy
+	285 1 20th-century_philosophy
+	290 5 alfred_jules_ayer
+	300 3 england
+	528 1 school
+	319 1 analytic_philosophy
+	321 2 logical_positivism
+	324 3 david_hume
+	324 2 hume
+	325 5 vienna_circle
+	327 1 popper
+	1772 4 russell
+	3601 1 wittgenstein
+	3324 2 voltaire
+	334 1 r-m-hare
+	337 1 strawson
+	345 1 gbr
+	348 1 fba
+	362 2 routledge
+	366 1 37-39
+	377 1 alfred_jules_ayer_facts
+	382 1 your_dictionary
+	413 1 scott
+	415 1 smith
+	417 1 giles
+	436 3 stanford_encyclopedia_of_philosophy
+	446 2 life
+	452 1 st_john
+	4470 1 john
+	456 1 wood
+	470 1 europe
+	475 1 reine_citroën
+	490 1 citroën
+	495 1 france
+	500 1 jules_ayer
 	507 1 calvinism
+	507 1 calvinist
+	514 1 rothschild_family
+	523 1 ascham_st_vincent
+	545 1 eastbourne
+	548 1 sussex
 	573 1 world_war_i
+	573 1 first_world_war
 	586 5 eton-berkshire
 	589 1 windsor-berkshire
+	589 1 windsor
+	592 1 berkshire
 	640 1 eton_wall_game
+	718 1 oxford_university_ayer
+	755 1 english
 	788 1 world_war_ii
+	800 2 welsh_guards
+	812 1 soe
+	831 1 officer_cadet_training_unit
+	838 1 september
+	860 1 dean
+	863 1 wadham_college
 	872 1 university_of_london
+	872 1 london_university
+	918 5 new_york
 	950 1 tottenham_hotspur_f-c
-	1772 3 bertrand_russell
+	950 1 tottenham_hotspur
+	1033 1 grace_isabel
+	1036 1 renée
+	1045 1 stuart_hampshire
+	1060 1 alberta_constance
+	1063 1 dee
+	1065 2 wells
+	1093 1 vanessa_salmon
+	1101 1 nigel_lawson
+	1115 1 dee_wells
+	1130 1 hollywood
+	1132 1 sheilah_graham
+	1134 1 westbrook
+	1146 1 sir_alfred
+	1151 1 wykeham_chair
+	1188 1 york_street
+	1191 1 marylebone
+	1203 1 november
+	1214 3 a_life
+	1217 3 rogers
+	1219 3 ben
+	1221 2 vintage
+	1237 6 a-j
+	1270 1 the_guardian
+	1273 2 richard
+	1275 1 norton
+	1277 1 taylor
+	1279 1 graham_greene
+	1282 1 arthur_ransome
+	1286 1 somerset_maugham
+	1293 1 britain
+	1317 1 iris_murdoch
+	1325 1 a-n
+	1328 1 wilson
+	1330 1 hutchinson
+	1343 2 wollheim
+	1371 3 truth_and_logic
+	1405 5 god
+	4176 2 may
+	1448 1 c-a-mace
+	3674 1 metaphysics
+	1493 2 paul_kurtz
+	2323 1 paul
+	2321 1 kurtz
+	2915 1 atheist
+	1534 5 bertrand_russell
+	1542 1 jesuit
+	1544 1 frederick_copleston
+	3590 1 person
+	1775 1 george_orwell
+	1788 1 polemic
+	1799 1 psychology
+	1802 1 aesthetics
+	1809 1 communist
+	1810 1 humphrey_slater
+	1831 1 honorary_associate
 	1836 2 rationalist_association
-	1946 1 humanist_manifesto_ii
+	1836 2 rationalist_press_association
+	1852 1 foreign_honorary_member
+	1858 2 american_academy_of_arts_and_sciences
+	1882 1 agnostics
+	1884 1 adoption_society
+	1893 1 julian_huxley
+	1918 1 humanist_outlook
+	4065 1 essays
+	1946 2 humanist_manifesto_ii
+	1946 1 humanist_manifesto
+	1960 1 united_states
+	1972 1 bard_college
 	1993 1 fernando_sánchez
-	2026 2 mike_tyson
+	1993 1 fernando_sanchez
+	2002 3 mike_tyson
+	2026 2 tyson
+	2018 2 naomi_campbell
+	2116 1 representation_and_expression
+	2120 1 analysis
+	2122 1 vol-1
+	2128 1 metaphysics_and_emotive_language
+	2133 1 analysis_vol
+	2138 1 1_and_2
+	2154 1 dover
 	2181 2 a_j_ayer-mike_tyson
+	3586 1 concept
+	2234 1 vol-81
+	2237 1 8-august
 	2276 1 conway_hall_ethical_society
-	3351 2 martin_heidegger
-	4065 1 other_essays
-	3601 1 ludwig_wittgenstein
-	3919 1 common_sense
+	2276 1 south_place_ethical_society
+	2310 1 the_new_skepticism
+	2314 1 inquiry_and_reliable_knowledge
+	2330 1 prometheus
+	2332 1 buffalo
+	2334 1 ny
+	2536 1 hirsts
+	2544 1 the_independent
+	2553 1 buckman
+	2555 1 david
+	2560 1 absent_minds
+	2567 1 collini
+	2569 1 stefan
+	2571 2 oxford_university_press
+	2590 1 chapter_a
+	2619 1 american_humanist_association
+	2633 1 near-death_experience
+	2768 1 dr_jeremy_george
+	2790 1 divine
+	2820 1 nick
+	2885 1 what_i_saw_when_i_was_dead
+	2893 1 pdf
+	2900 1 lougrhan
+	2902 1 gerry
+	2924 1 dennett
+	2926 1 daniel_c
+	2930 1 thank_goodness-
+	2933 1 edge-org
+	2946 1 cash
+	2948 1 william
+	2963 1 national_post
+	2973 1 works
+	3049 1 moritz_schlick
+	3718 1 moritz
+	3716 1 schlick
+	3254 1 turing_test
+	3288 1 moore
+	3290 1 the_analytic_heritage
+	3337 3 martin_heidegger
+	3351 2 heidegger
+	3423 1 gifford_lectures
+	3427 1 university_of_st_andrews
+	3437 1 central_questions
+	3466 1 lord_gifford
+	3661 2 sense
+	3593 2 other_essays
+	3601 2 ludwig_wittgenstein
+	3617 1 foundations
+	3620 1 empirical_knowledge
+	3628 1 oxonian
+	3629 1 j-l-austin
+	3634 1 sense_and_sensibilia
+	3657 2 austin_refuted
+	3677 2 common_sense
+	3691 4 penguin
+	3721 1 unanswerable_questions
+	3724 1 the_philosopher
+	3727 1 xiii
+	3734 1 awards
+	3740 1 knighthood
+	3743 1 knight_bachelor
+	3748 1 london_gazette
+	3753 1 january
+	3781 1 gollancz
+	3811 9 macmillan
+	3816 1 philosophical_essays
+	3865 1 dover_publications
+	3954 1 metaphysics_and_common_sense
+	3992 1 russell_and_moore
+	3996 1 the_analytical_heritage
+	4007 1 probability_and_evidence
+	4022 1 fontana_modern_masters
+	4037 2 weidenfeld
+	4049 2 collins
+	4054 1 replies
+	4061 1 perception_and_identity
+	4073 1 with_his_replies
+	4081 1 ithaca
+	4083 1 n-y
+	4086 1 cornell_university_press
+	4113 1 freedom_and_morality_and_other_essays
+	4122 1 clarendon_press
+	4152 1 random_house
+	4157 1 thomas_paine
+	4170 2 new_humanist
+	4204 1 library
+	4207 1 living_philosophers_volume_xxi
+	4216 1 lewis_edwin_hahn
+	4220 1 open_court_publishing_co
+	4264 1 list_of_british_philosophers
+	4268 1 notes
+	4269 1 references
+	4310 1 grove_press
+	4364 1 jim_holt
+	4372 1 karl_sigmund
+	4394 1 basic_books
+	4399 1 the_new_york_review_of_books
+	4416 1 ted_honderich
+	4427 1 anthony_quinton
+	4446 1 graham_macdonald
+	4468 1 foster
+	4472 1 071020602x
+	4525 1 alex_callinicos
 1:
 	69 136 
 1: Sir Alfred Jules Freddie Ayer ,   ( ; 29 October 1910  –  27 June 1989 ), usually cited  as  A. J. Ayer ,  was  a  British philosopher known  for  his promotion  of  logical positivism ,  particularly  in  his books Language, Truth, and Logic ( 1936 ) and  The  Problem  of  Knowledge ( 1956 ) .  He was educated  at  Eton College  and  Oxford University , after  which he studied  the  philosophy  of  logical positivism  at the  University of Vienna . From  1933  to  1940 he lectured  on  philosophy  at  Christ Church, Oxford . During the  Second World War  Ayer  was  a  Special Operations Executive  and  MI6 agent . He was Grote Professor of the Philosophy of Mind and Logic  at  University College London  from  1946  until  1959 , after  which he returned  to  Oxford  to  become Wykeham Professor  of  Logic  at  New College . He was president  of the  Aristotelian Society  from  1951  to  1952  and  knighted  in  1970 .  He was known  for  his advocacy  of  humanism , and  was  the  second President  of the  British Humanist Association ( now known  as  Humanists UK ) . Ayer .  Random House Webster's Unabridged Dictionary . cite news url title The Wickedest Man in  Oxford first Hilary last Spurling work The New York Times date 24 December 2000 accessdate 1 February 2008 archiveurl archivedate 9 April 2009 deadurl no Infobox philosopher name A. J. Ayer region Western philosophy era 20th-century philosophy birth name Alfred Jules Ayer birth date birth place London ,  England death date death place London ,  England education Eton College alma mater Christ Church, Oxford school tradition Analytic philosophy Logical positivism influences Hume Vienna Circle Popper Russell Wittgenstein Kant Voltaire influenced R. M. Hare Strawson Honderich Marković P. Unger post-nominals country GBR commas on FBA ɛər cite book title Biographical Dictionary of Twentieth-Century Philosophers year 1996 publisher Routledge location London pages 37–39 isbn 0-415-06043-5 cite web url title Alfred Jules Ayer Facts publisher Your Dictionary accessdate 18 April 2015 cite book title The politics of apolitical culture: the Congress for Cultural Freedom, the CIA, and post-war American hegemony publisher Routledge year 2002 author Scott - Smith ,  Giles page 109 location London isbn 978-0-415-24445-9 cite web title Alfred Jules Ayer url publisher Stanford Encyclopedia of Philosophy accessdate 15 April 2016 date 2005 Life Ayer was born  in  St John 's  Wood , in  north west London , to a  wealthy family  from  continental Europe .  His mother ,  Reine Citroën ,  was  from the  Dutch - Jewish family who founded  the  Citroën car company  in  France .  His father ,  Jules Ayer ,  was  a  Swiss Calvinist financier who worked  for the  Rothschild family . Ayer was educated  at  Ascham St Vincent 's  School , a  former boarding preparatory school  for  boys  in the  seaside town  of  Eastbourne  in  Sussex , in  which he started boarding  at the  comparatively early age  of  seven  for  reasons  to  do  with the  First World War , and  Eton College , a  boarding school  in  Eton (near  Windsor ) in  Berkshire .  It was  at  Eton  that  Ayer first became known  for  his characteristic bravado  and  precocity . Although  primarily interested  in  furthering his intellectual pursuits ,  he was very keen  on  sports ,  particularly rugby , and  reputedly played  the  Eton Wall Game very well .  In the  final examinations  at  Eton ,  Ayer came second  in  his year , and  first  in  classics . In  his final year , as a  member  of  Eton 's  senior council ,  he unsuccessfully campaigned  for the  abolition  of  corporal punishment  at the  school .  He won  a  classics scholarship  to  Christ Church, Oxford .  After  graduation  from  Oxford University Ayer spent  a  year  in  Vienna ,  returned  to  England  and  published his first book ,  Language ,  Truth  and  Logic  in  1936 . The  first exposition  in  English  of  Logical Positivism  as  newly developed  by the  Vienna Circle , this  made Ayer  at  age 26  the ' enfant terrible ' of  British philosophy . In the  Second World War he served  as an  officer  in the  Welsh Guards ,  chiefly  in  intelligence ( Special Operations Executive ( SOE ) and  MI6 ) .  Ayer was commissioned second lieutenant  into the  Welsh Guards  from  Officer Cadet Training Unit  on  21 September 1940 . After the  war he briefly returned  to  Oxford University where he became  a  fellow  and  Dean  of  Wadham College .  He thereafter taught philosophy  at  London University  from  1946  until  1959 ,  when he also started  to  appear  on  radio  and  television .  He was  an  extrovert  and  social mixer who liked dancing  and  attending  the  clubs  in  London  and  New York .  He was also obsessed  with  sport :  he had played rugby  for  Eton , and  was  a  noted cricketer  and a  keen supporter  of  Tottenham Hotspur football team . For an  academic ,  Ayer was  an  unusually well - connected figure  in  his time , with  close links  to ' high society ' and the  establishment .  Presiding  over  Oxford high - tables ,  he is often described  as  charming , but at  times he could also be intimidating . Ayer was married four times  to  three women . His first marriage was  from  1932–1941  to  ( Grace Isabel )  Renée ( d. 1980 ),  who subsequently married philosopher Stuart Hampshire ,  Ayer 's  friend  and  colleague . In  1960 he married Alberta Constance ( Dee )  Wells , with  whom he had one son .  Ayer 's  marriage  to  Wells was dissolved  in  1983  and that  same year he married Vanessa Salmon ,  former wife  of  politician Nigel Lawson .  She died  in  1985  and in  1989 he remarried Dee Wells ,  who survived him .  Ayer also had  a  daughter  with  Hollywood columnist Sheilah Graham Westbrook .  From  1959  to  his retirement  in  1978 ,  Sir Alfred held  the  Wykeham Chair ,  Professor  of  Logic  at  Oxford .  He was knighted  in  1970 .  Ayer died  on  27 June 1989 . From  1980  to  1989 ,  Ayer lived  at  51 York Street ,  Marylebone ,  where  a  memorial plaque was unveiled  on  19 November 1995 . cite book title A.J. Ayer :  A Life author Rogers ,  Ben publisher Vintage location London year 2000 origyear 1999 isbn 978-0-09-953681-9 cite book title A.J. Ayer :  A Life author Rogers ,  Ben publisher Vintage location London year 2000 origyear 1999 pages 42–44 isbn 978-0-09-953681-9 cite news url location London work The Guardian first Richard last Norton - Taylor title Graham Greene ,  Arthur Ransome  and  Somerset Maugham  all  spied  for  Britain ,  admits MI6 date 21 September 2010 London  Gazette issue 34957 supp y page 5776 date 27 September 1940 cite book title Iris Murdoch  as I  knew her first A. N. last Wilson publisher Hutchinson year 2003 page 156 location London isbn 978-0-09-174246-1 Wollheim 2011 cite web url title City of Westminster green plaques accessdate 2011-07-07 deadurl yes archiveurl archivedate 16 July 2012  Philosophical ideas  In  Language ,  Truth and Logic ( 1936 ),  Ayer presents  the  verification principle  as the  only valid basis  for  philosophy . Unless  logical  or  empirical verification is possible ,  statements  like  God exists  or  charity is good are not true  or  untrue  but  meaningless , and  may thus be excluded  or  ignored .  Religious language  in  particular was unverifiable  and  as such literally nonsense .  He also criticises C. A. Mace 's  opinion  that  metaphysics is  a  form  of  intellectual poetry .  The  stance that  a  belief  in  God denotes  no  verifiable hypothesis is sometimes referred  to as  igtheism (for  example , by  Paul Kurtz ) .  In  later years Ayer reiterated  that  he did not believe  in  God  and  began  to  refer  to himself as an  atheist . He followed  in the  footsteps  of  Bertrand Russell  by  debating  with the  Jesuit scholar Frederick Copleston  on the  topic  of  religion .  Ayer 's  version  of  emotivism divides the  ordinary system  of  ethics  into  four classes :  # Propositions that express definitions of ethical terms, or judgements about the legitimacy or possibility of certain definitions # Propositions describing the phenomena of moral experience, and their causes # Exhortations to moral virtue # Actual ethical judgments He focuses  on  propositions  of the  first class — moral judgments — saying  that those of the  second class belong  to  science , those of the  third are mere commands , and those of the  fourth ( which are considered  in  normative ethics  as  opposed  to  meta - ethics )  are too concrete  for  ethical philosophy .  Ayer argues  that  moral judgments can not be translated  into  non - ethical ,  empirical terms  and  thus can not be verified ; in this  he agrees  with  ethical intuitionists . But  he differs  from  intuitionists  by  discarding appeals  to  intuition  of  non - empirical moral truths as worthless  since the  intuition  of  one person often contradicts  that of another .  Instead ,  Ayer concludes  that  ethical concepts are mere pseudo - concepts :  Between  1945  and  1947 ,  together  with  Russell  and  George Orwell ,  he contributed  a  series  of  articles  to  Polemic , a  short - lived British Magazine of  Philosophy ,  Psychology , and  Aesthetics edited  by the  ex - Communist Humphrey Slater . Ayer was closely associated  with the  British humanist  movement .  He was  an  Honorary Associate  of the  Rationalist Press Association  from  1947  until  his death .  He was elected  a  Foreign Honorary Member  of the  American Academy of Arts and Sciences  in  1963 .  In  1965 ,  he became  the  first president  of the  Agnostics '  Adoption Society  and in the  same year succeeded Julian Huxley  as  president  of the  British Humanist Association , a  post he held  until  1970 . In  1968 he edited The  Humanist Outlook , a  collection  of  essays  on the  meaning  of  humanism . In  addition he was one  of the  signers  of the  Humanist Manifesto . He taught  or  lectured several times  in the  United States ,  including serving  as a  visiting professor  at  Bard College  in the  fall  of  1987 . At a  party that same year held  by  fashion designer Fernando Sanchez ,  Ayer ,  then 77 ,  confronted Mike Tyson who was forcing  himself upon the  ( then )  little - known model Naomi Campbell .  When Ayer demanded  that  Tyson stop , the  boxer said :  Do  you  know who  the  fuck  I  am ? I 'm  the  heavyweight champion  of the  world ,  to  which Ayer replied :  And I  am  the  former Wykeham Professor  of  Logic . We  are  both  pre - eminent  in our  field . I  suggest  that we  talk  about this like  rational men .  Ayer  and  Tyson then began  to  talk , while  Naomi Campbell slipped out . Representation and Expression , Analysis ,  Vol.1 ,  No.3 ;  Metaphysics and Emotive Language , Analysis Vol . II, nos.  1 and 2 , Language ,  Truth  and  Logic 1946/1952 ,  New York / Dover I  do not believe  in  God .  It seems  to me that  theists  of all  kinds have very largely failed  to  make their concept  of a  deity intelligible ; and to the  extent  that  they have made it intelligible ,  they have given  us no  reason  to  think  that  anything answers  to  it . Ayer ,  A.J. ( 1966 ) .  What  I  Believe , Humanist ,  Vol.81  ( 8) August ,  p. 226 . I  trust  that my  remaining  an  atheist will allay  the  anxieties  of my  fellow supporters  of the  British Humanist Association , the  Rationalist Press Association  and the  South Place Ethical Society .  (Ayer 1989, p. 12) Ayer ,  Language ,  103 Ayer ,  Language ,  106 Ayer ,  Language ,  107  Rogers (1999), p. 344 . cite book title The New Skepticism :  Inquiry and Reliable Knowledge page 194 author Kurtz ,  Paul authorlink Paul Kurtz year 1992 publisher Prometheus location Buffalo ,  NY isbn 978-0-87975-766-3 The  presence  of an  ethical symbol  in a  proposition adds nothing  to  its factual content .  Thus  if I  say  to  someone ,  You  acted wrongly  in  stealing  that  money ,  I  am not stating anything more  than if I  had simply said ,  You  stole  that  money .  In  adding  that this  action is wrong  I  am not making  any  further statement  about  it . I  am simply evincing  my  moral disapproval  of  it .  It is  as if I  had said ,  You  stole  that  money ,  in a  peculiar tone  of  horror , or  written it  with the  addition  of some  special exclamation marks . … If  now  I  generalise  my  previous statement  and  say ,  Stealing money is wrong ,  I  produce  a  sentence that has  no  factual meaning — that is ,  expresses  no  proposition that can be  either  true  or  false . … I  am merely expressing certain moral sentiments . cite news url title Where are  the  Hirsts  of the  1930s now ? work The Independent location London date 13 November 1998 author Buckman ,  David cite book url title Absent Minds : Intellectuals in Britain author Collini ,  Stefan publisher Oxford University Press year 2006 isbn 978-0-19-929105-2 cite web title Book of Members, 1780–2010:  Chapter A url publisher American Academy of Arts and Sciences accessdate 28 April 2011 archiveurl archivedate 10 May 2011 deadurl no cite web url title Humanist Manifesto II publisher American Humanist Association accessdate 4 October 2012 deadurl yes archiveurl archivedate 20 October 2012 Near-death experience In  1988 ,  shortly  before  his death ,  Ayer wrote  an  article entitled ,  What  I  saw when  I  was dead , describing  an  unusual near - death experience . Of the  experience ,  Ayer first said  that  it slightly weakened  my  conviction  that my  genuine death ...  will be  the  end  of me , though I  continue  to  hope  that  it will be . However , a  few days later he revised  this ,  saying what  I  should have said is  that my  experiences have weakened ,  not  my  belief  that  there is  no  life  after  death , but my  inflexible attitude  towards that  belief . In  2001 Dr Jeremy George , the  attending physician ,  claimed  that  Ayer had confided  to  him :  I  saw  a  Divine Being . I 'm afraid  I 'm going  to  have  to  revise all  my  books  and  opinions . Ayer 's  son Nick ,  however ,  said  that  he had never mentioned  this to  him  though  he did find his father 's  words  to  be extraordinary , and  said he had long felt there was something possibly suspect  about  his father 's  version  of  his near death experience . cite web last Ayer first A. J. url title What I Saw When I Was Dead format PDF accessdate 4 November 2011 citation last Lougrhan first Gerry title Can There Be Life  After  Life ?  Ask  the  Atheist ! date 18 March 2001 cite web last Dennett first Daniel C. url title THANK GOODNESS! publisher Edge.org date 3 November 2006 accessdate 4 November 2011 cite web last Cash first William url title Did atheist philosopher see God when he  ' died ' ? publisher National Post date 28 April 2009 accessdate 4 November 2011 Works Ayer is best known  for  popularising  the  verification principle , in  particular  through  his presentation  of  it  in  Language, Truth, and Logic ( 1936 ) . The  principle was  at the  time  at the  heart  of the  debates  of the  so - called Vienna Circle which Ayer visited  as a  young guest .  Others ,  including  the  leading light  of the  circle ,  Moritz Schlick ,  were already offering their own papers  on the  issue . Ayer 's  own formulation was  that a  sentence can only be meaningful  if  it has verifiable empirical import ,  otherwise it is  either  analytical  if  tautologous , or  metaphysical ( i.e.  meaningless , or  literally senseless ) .  He started  to  work  on the  book  at the  age  of  23  and  it was published when he was 26 .  Ayer 's  philosophical ideas were deeply influenced  by those of the  Vienna Circle  and  David Hume .  His clear ,  vibrant  and  polemical exposition  of them  makes Language ,  Truth  and  Logic essential reading  on the  tenets  of  logical empiricism–  the  book is regarded  as a  classic  of  20th century analytic philosophy , and  is widely read  in  philosophy courses  around the  world . In  it ,  Ayer also proposed  that the  distinction  between a  conscious man  and an  unconscious machine resolves  itself into a  distinction  between ' different types  of  perceptible behaviour ' ,  an  argument which anticipates  the  Turing test published  in  1950  to  test  a  machine 's  capability  to  demonstrate intelligence .  Ayer wrote two books  on the  philosopher Bertrand Russell ,  Russell  and  Moore :  The Analytic Heritage ( 1971 ) and  Russell ( 1972 ) .  He also wrote  an  introductory book  on the  philosophy  of  David Hume  and a  short biography  of  Voltaire .  Ayer was  a  strong critic  of the  German philosopher Martin Heidegger . As a  logical positivist Ayer was  in  conflict  with  Heidegger 's  proposed vast ,  overarching theories regarding existence . These  he felt were completely unverifiable  through  empirical demonstration  and  logical analysis . This  sort  of  philosophy was  an  unfortunate strain  in  modern thought .  He considered Heidegger  to  be  the  worst example  of  such philosophy ,  which Ayer believed  to  be entirely useless .  In  1972–1973 Ayer gave  the  Gifford Lectures  at  University of St Andrews ,  later published  as  The  Central Questions  of  Philosophy . In the  preface  to the  book ,  he defends his selection  to  hold  the  lectureship  on the  basis that Lord Gifford wished  to  promote natural theology , in the  widest sense  of that  term ' , and that  non - believers are allowed  to  give  the  lectures  if  they are able reverent men ,  true thinkers ,  sincere lovers  of and  earnest inquirers  after  truth . He still believed  in the  viewpoint he shared  with the  logical positivists : that  large parts  of  what was traditionally called philosophy– including  the  whole  of  metaphysics ,  theology  and  aesthetics– were not matters that could be judged  as  being true  or  false  and that  it was thus meaningless  to  discuss  them .  In  The  Concept  of a  Person  and  Other Essays ( 1963 ),  Ayer heavily criticized Wittgenstein 's  private language argument .  Ayer 's  sense - data theory  in  Foundations  of  Empirical Knowledge was famously criticised  by  fellow Oxonian J. L. Austin  in  Sense and Sensibilia , a  landmark 1950s work  of  common language philosophy .  Ayer responded  to this in the  essay Has Austin Refuted  the  Sense - data Theory ? ,  which can be found  in  his Metaphysics  and  Common Sense ( 1969 ) . page ix,  Language ,  Truth and Logic ,  Penguin , 2001 page 140,  Language ,  Truth and Logic ,  Penguin , 2001 The Central Questions of Philosophy , p. ix cite journal last Schlick first Moritz url title Unanswerable Questions publisher The Philosopher volume XIII year 1935 accessdate 4 November 2011 Awards He was awarded  a  Knighthood  as  Knight Bachelor  in the  London Gazette  on  1 January 1970 . London  Gazette issue 44999 supp y page 1 date 30 December 1969 Selected publications 1936 ,  Language, Truth, and Logic ,  London :  Gollancz . (2nd edition, 1946. )  Reprinted 2001  with a  new introduction ,  London :  Penguin .   1940,  The Foundations of Empirical Knowledge ,  London :  Macmillan .  1954 ,  Philosophical Essays ,  London :  Macmillan . (Essays on freedom, phenomenalism, basic propositions, utilitarianism, other minds, the past, ontology.)   1957,  The conception of probability as a logical relation , in S. Korner, ed.,  Observation and Interpretation in the Philosophy of Physics ,  New York , N.Y.:  Dover Publications .  1956,  The Problem of Knowledge ,  London :  Macmillan .   1963,  The Concept of a Person and Other Essays ,  London :  Macmillan . (Essays on truth, privacy and private languages, laws of nature, the concept of a person, probability.)  1967 ,  Has Austin Refuted  the  Sense - Data Theory ? Synthese  vol . XVIII, pp. 117–140.  ( Reprinted  in  Ayer 1969 ) .  1968,  The Origins of Pragmatism ,  London :  Macmillan .  1969 ,  Metaphysics and Common Sense ,  London :  Macmillan . (Essays on knowledge, man as a subject for science, chance, philosophy and politics, existentialism, metaphysics, and a reply to Austin on sense-data theory [Ayer 1967].)  1971 ,  Russell and Moore :  The Analytical Heritage ,  London :  Macmillan .  1972 ,  Probability and Evidence ,  London :  Macmillan .   1972,  Russell ,  London :  Fontana Modern Masters .   1973,  The Central Questions of Philosophy ,  London :  Weidenfeld .   1977,  Part of My Life ,  London :  Collins .   1979,  Replies , in G. Macdonald, ed. ,  Perception and Identity :  Essays Presented  to  A. J. Ayer ,  With His Replies ,  London :  Macmillan ;  Ithaca ,  N.Y. :  Cornell University Press . 1980 ,  Hume ,  Oxford :  Oxford University Press  1982,  Philosophy in the Twentieth Century ,  London :  Weidenfeld . 1984 ,  Freedom and Morality and Other Essays ,  Oxford :  Clarendon Press .  1984,  More of My Life ,  London :  Collins . 1986 ,  Ludwig Wittgenstein ,  London :  Penguin . 1986 ,  Voltaire ,  New York :  Random House . 1988 ,  Thomas Paine ,  London : Secker & Warburg.  1989,  That undiscovered country ,  New Humanist , Vol. 104 (1),  May , pp. 10–13.  1990,  The Meaning of Life and Other Essays , Weidenfeld & Nicolson. 1992 ,  The  Philosophy  of  A.J. Ayer (The  Library  of  Living Philosophers Volume XXI ) ,  edited  by  Lewis Edwin Hahn ,  Open Court Publishing Co. 416788667 978-0-14-118604-7 2028651 186636305 557578816 3573935 641463982 978-0-333-10517-7 464766212 978-0-333-12756-8 186128708 978-0-297-76634-6 978-0-00-216017-9  See also  A priori  knowledge List of British philosophers Notes References Ayer ,  A.J. ( 1989 ) .  That undiscovered country ,  New Humanist , Vol. 104 (1),  May , pp. 10–13. Rogers ,  Ben ( 1999 ) .  A.J. Ayer :  A Life .  New York :  Grove Press .  . (  Chapter one and a review by Hilary Spurling ,  The New York Times , 24 December 2000.) 978-0-8021-3869-9 Cite ODNB last Wollheim first Richard date January 2011 origyear 2004 title Ayer ,  Sir Alfred Jules [ Freddie ] id 39796  Further reading  Jim Holt ,  Positive Thinking  (review of  Karl Sigmund ,  Exact Thinking in Demented Times: The  Vienna Circle  and the Epic Quest for the Foundations of Science ,  Basic Books , 449 pp.),  The New York Review of Books , vol. LXIV, no. 20 (21 December 2017), pp. 74–76. Ted Honderich ,   Ayer's Philosophy and its Greatness . Anthony Quinton ,  Alfred Jules Ayer .  Proceedings of the British Academy ,  94  (1996), pp. 255–282. Graham Macdonald ,  Alfred Jules Ayer ,  Stanford Encyclopedia of Philosophy , 7 May 2005. Citation publisher Routledge & Kegan Paul author Foster ,  John id 071020602X  External links  Ayer 's  essay  ' What  I  Saw When  I  was Dead '  Ayer's Elizabeth Rathbone Lecture on Philosophy & Politics  Ayer entry in the  Stanford Encyclopedia of Philosophy A.J. Ayer  at Philosophy A.J. Ayer : Out of time  by  Alex Callinicos  Appearance on Desert Island Discs - 3 August 1984 Alfred Jules Ayer 2044497
