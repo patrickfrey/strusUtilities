@@ -16,6 +16,7 @@ namespace strus {
 class FileCrawlerInterface
 {
 public:
+	virtual ~FileCrawlerInterface(){}
 	virtual std::vector<std::string> fetch()=0;
 };
 
