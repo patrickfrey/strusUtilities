@@ -388,6 +388,19 @@ static bool diffTestOutput( std::string& output, std::string& expected)
 	return true;
 }
 
+static std::string normalizePath( const char* path)
+{
+	std::string rt( path);
+	int ec = strus::resolveUpdirReferences( rt);
+	if (ec)
+	{
+		char msgbuf[ 1024];
+		snprintf( msgbuf, sizeof(msgbuf), _TXT("error normalizing file path '%s': %s"), rt.c_str(), strerror( ec));
+		throw std::runtime_error( msgbuf);
+	}
+	return rt;
+}
+
 int main( int argc, const char* argv[])
 {
 	int rt = 0;
@@ -429,9 +442,9 @@ int main( int argc, const char* argv[])
 			throw std::runtime_error( msgbuf);
 		}
 		g_testname = argv[ argi + 0];
-		g_maindir = argv[ argi + 1];
+		g_maindir = normalizePath( argv[ argi + 1]);
 		g_testdir = g_maindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + g_testname;
-		g_bindir = argv[ argi + 2];
+		g_bindir = normalizePath( argv[ argi + 2]);
 
 		std::string mainexecdir = g_bindir + strus::dirSeparator() + "tests" + strus::dirSeparator() + "scripts" + strus::dirSeparator() + "exec";
 		g_execdir = mainexecdir + strus::dirSeparator() + g_testname;
