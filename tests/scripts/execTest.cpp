@@ -527,11 +527,13 @@ int main( int argc, const char* argv[])
 		}
 		else if (!diffTestOutput( output, expected))
 		{
+			if (g_verbose) std::cerr << "Write file '" << (g_execdir + strus::dirSeparator() + "OUT") << std::endl;
 			rt = strus::writeFile( g_execdir + strus::dirSeparator() + "OUT", output);
 			if (rt)
 			{
 				std::cerr << _TXT("failed to write OUT file of test: ") << ::strerror(rt) << std::endl;
 			}
+			if (g_verbose) std::cerr << "Write file '" << (g_execdir + strus::dirSeparator() + "EXP") << std::endl;
 			rt = strus::writeFile( g_execdir + strus::dirSeparator() + "EXP", expected);
 			if (rt)
 			{
@@ -544,6 +546,7 @@ int main( int argc, const char* argv[])
 			if (g_verbose)
 			{
 				std::cerr << "OUTPUT:\n" << output << std::endl;
+				std::cerr << "Remove file '" << (g_execdir + strus::dirSeparator() + "OUT") << std::endl;
 			}
 			strus::removeFile( g_execdir + strus::dirSeparator() + "OUT");
 			std::cerr << _TXT("done.") << std::endl;
