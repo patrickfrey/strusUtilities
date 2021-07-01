@@ -541,6 +541,11 @@ int main( int argc, const char* argv[])
 		}
 		else
 		{
+			if (g_verbose)
+			{
+				std::cerr << "OUTPUT:\n" << output << std::endl;
+			}
+			strus::removeFile( g_execdir + strus::dirSeparator() + "OUT");
 			std::cerr << _TXT("done.") << std::endl;
 		}
 	}
