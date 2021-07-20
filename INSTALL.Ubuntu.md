@@ -2,8 +2,8 @@ Ubuntu 16.04 on x86_64, i686
 ----------------------------
 
 # Build system
-Cmake with gcc or clang. Here in this description we build with 
-gcc >= 4.9 (has C++11 support). Build with C++98 is possible.
+Cmake with gcc or clang. Here in this description we build with
+gcc >= 4.9 (has C++11 support).
 
 # Prerequisites
 Install packages with 'apt-get'/aptitude.
@@ -40,7 +40,7 @@ each of these flags toggled to YES another section.
 	atlas-dev lapack-dev blas-dev
 
 # Strus prerequisite packages to install before
-	strusBase strus strusAnalyzer strusTrace strusModule strusRpc  
+	strusBase strus strusAnalyzer strusTrace strusModule strusRpc
 
 # Strus prerequisite packages to install before with -DWITH_STRUS_VECTOR=YES
 	strusVector
