@@ -24,7 +24,6 @@
 #include "strus/storageTransactionInterface.hpp"
 #include "strus/documentTermIteratorInterface.hpp"
 #include "strus/statisticsProcessorInterface.hpp"
-#include "strus/statisticsIteratorInterface.hpp"
 #include "strus/statisticsViewerInterface.hpp"
 #include "strus/scalarFunctionParserInterface.hpp"
 #include "strus/scalarFunctionInterface.hpp"
@@ -73,12 +72,8 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
-	strus::printIndentMultilineString(
-				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient), errorhnd);
-	strus::printIndentMultilineString(
-				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient), errorhnd);
+	strus::printIndentMultilineString( out, 12, dbi->getConfigDescription(), errorhnd);
+	strus::printIndentMultilineString( out, 12, sti->getConfigDescription(), errorhnd);
 }
 
 typedef std::map<std::string,strus::GlobalCounter> DfMap;
@@ -87,12 +82,10 @@ static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const
 {
 	const strus::StatisticsProcessorInterface* statproc = storage->getStatisticsProcessor();
 	if (!statproc) throw std::runtime_error( _TXT("failed to get statistics processor"));
-	strus::Reference<strus::StatisticsIteratorInterface> statitr( storage->createAllStatisticsIterator());
-	if (!statitr.get()) throw std::runtime_error( _TXT("failed to initialize statistics iterator"));
-	collectionSize += storage->nofDocumentsInserted();
+	std::vector<strus::StatisticsMessage> stats = storage->loadAllStatisticsMessages();
+	if (stats.empty()) throw std::runtime_error( _TXT("failed to get storage statistics"));
 
-	strus::StatisticsMessage msg = statitr->getNext();
-	for (; !msg.empty(); msg = statitr->getNext())
+	for (auto& msg : stats)
 	{
 		strus::Reference<strus::StatisticsViewerInterface> viewer( statproc->createViewer( msg.ptr(), msg.size()));
 		if (!viewer.get()) throw std::runtime_error( _TXT("failed to statistics viewer"));
@@ -105,6 +98,7 @@ static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const
 				dfmap[ dfchg.value()] += dfchg.increment();
 			}
 		}
+		collectionSize += viewer->nofDocumentsInsertedChange();
 	}
 }
 
@@ -148,7 +142,7 @@ static void updateStorageWithFormula( const DfMap& dfmap, const std::string& fea
 			fprintf( stderr, "\rupdated %u documents           ", transactionTotalCount);
 			transactionCount = 0;
 		}
-		
+
 	}
 	if (transactionCount)
 	{

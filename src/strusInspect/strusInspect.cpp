@@ -75,12 +75,8 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
-	strus::printIndentMultilineString(
-				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient), errorhnd);
-	strus::printIndentMultilineString(
-				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient), errorhnd);
+	strus::printIndentMultilineString( out, 12, dbi->getConfigDescription(), errorhnd);
+	strus::printIndentMultilineString( out, 12, sti->getConfigDescription(), errorhnd);
 }
 
 namespace strus

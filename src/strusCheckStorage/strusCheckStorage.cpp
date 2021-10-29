@@ -58,12 +58,8 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
-	strus::printIndentMultilineString(
-				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient), errorhnd);
-	strus::printIndentMultilineString(
-				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient), errorhnd);
+	strus::printIndentMultilineString( out, 12, dbi->getConfigDescription(), errorhnd);
+	strus::printIndentMultilineString( out, 12, sti->getConfigDescription(), errorhnd);
 }
 
 int main( int argc, const char* argv[])
@@ -280,7 +276,7 @@ int main( int argc, const char* argv[])
 			strus::local_ptr<strus::StorageClientInterface>
 				storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 			if (!storage.get()) throw std::runtime_error( _TXT("failed to create storage client"));
-	
+
 			if (!storage->checkStorage( std::cerr))
 			{
 				if (errorBuffer->hasError())

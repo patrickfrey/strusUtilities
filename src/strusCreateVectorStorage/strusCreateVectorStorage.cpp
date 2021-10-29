@@ -65,14 +65,9 @@ static void printVectorStorageConfigOptions( std::ostream& out, const strus::Mod
 	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
 	std::string storageInfo = strus::string_format(  "storage=<type of storage (optional, default '%s')>", strus::Constants::standard_vector_storage());
-	strus::printIndentMultilineString(
-				out, 12, storageInfo.c_str(), errorhnd);
-	strus::printIndentMultilineString(
-				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreate), errorhnd);
-	strus::printIndentMultilineString(
-				out, 12, sti->getConfigDescription(
-					strus::VectorStorageInterface::CmdCreate), errorhnd);
+	strus::printIndentMultilineString( out, 12, storageInfo.c_str(), errorhnd);
+	strus::printIndentMultilineString( out, 12, dbi->getConfigDescription(), errorhnd);
+	strus::printIndentMultilineString( out, 12, sti->getConfigDescription( strus::VectorStorageInterface::CmdCreate), errorhnd);
 }
 
 int main( int argc, const char* argv[])
@@ -193,7 +188,7 @@ int main( int argc, const char* argv[])
 		int transactionSize = 10000;
 		if (opt("commit"))
 		{
-			transactionSize = opt.asUint( "commit"); 
+			transactionSize = opt.asUint( "commit");
 		}
 		bool portable = opt("portable");
 		char typeFeatureSeparator = strus::Constants::standard_word2vec_type_feature_separator();

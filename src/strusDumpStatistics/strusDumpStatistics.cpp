@@ -19,7 +19,6 @@
 #include "strus/databaseClientInterface.hpp"
 #include "strus/storageInterface.hpp"
 #include "strus/storageClientInterface.hpp"
-#include "strus/statisticsIteratorInterface.hpp"
 #include "strus/statisticsProcessorInterface.hpp"
 #include "strus/statisticsViewerInterface.hpp"
 #include "strus/versionStorage.hpp"
@@ -63,12 +62,8 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
-	strus::printIndentMultilineString(
-				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient), errorhnd);
-	strus::printIndentMultilineString(
-				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient), errorhnd);
+	strus::printIndentMultilineString( out, 12, dbi->getConfigDescription(), errorhnd);
+	strus::printIndentMultilineString( out, 12, sti->getConfigDescription(), errorhnd);
 }
 
 
@@ -92,7 +87,7 @@ int main( int argc, const char* argv[])
 		bool printUsageAndExit = false;
 		strus::ProgramOptions opt(
 				errorBuffer.get(), argc, argv, 10,
-				"h,help", "v,version", "license", 
+				"h,help", "v,version", "license",
 				"G,debug:", "m,module:", "M,moduledir:", "r,rpc:",
 				"b,binary", "s,storage:", "T,trace:");
 		if (errorBuffer->hasError())
@@ -277,19 +272,15 @@ int main( int argc, const char* argv[])
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw std::runtime_error( _TXT("could not create storage client"));
 
-		strus::local_ptr<strus::StatisticsIteratorInterface> statsqueue( storage->createAllStatisticsIterator());
-		if (!statsqueue.get())
-		{
-			throw strus::runtime_error( "%s",  _TXT("no valid statistics processor defined in storage config (statsproc=default for example)"));
-		}
+		std::vector<strus::StatisticsMessage> stats = storage->loadAllStatisticsMessages();
+		if (stats.empty()) throw std::runtime_error( _TXT("failed to get storage statistics"));
 		FILE* outfile = ::fopen( outputfile.c_str(), "ab");
 		if (!outfile) throw strus::runtime_error( _TXT( "error opening file '%s' for writing (errno %u)"), outputfile.c_str(), errno);
 
 		if (dumpBinary)
 		{
 			std::cerr << "Dumping statistics in binary format ..." << std::endl;
-			strus::StatisticsMessage msg = statsqueue->getNext();
-			for (; !msg.empty(); msg = statsqueue->getNext())
+			for (auto& msg : stats)
 			{
 				std::size_t written = ::fwrite( msg.ptr(), 1, msg.size(), outfile);
 				if (written != msg.size())
@@ -304,9 +295,8 @@ int main( int argc, const char* argv[])
 
 			const strus::StatisticsProcessorInterface* statsproc = storage->getStatisticsProcessor();
 			long nofDocuments = 0;
-			
-			strus::StatisticsMessage msg = statsqueue->getNext();
-			for (; !msg.empty(); msg = statsqueue->getNext())
+
+			for (auto& msg : stats)
 			{
 				char buf[ 4096];
 				strus::local_ptr<strus::StatisticsViewerInterface> viewer( statsproc->createViewer( msg.ptr(), msg.size()));

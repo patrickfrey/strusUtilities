@@ -49,9 +49,7 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	const strus::DatabaseInterface* dbi = storageBuilder->getDatabase( dbname);
 	if (!dbi) throw std::runtime_error( _TXT("failed to get database interface"));
 
-	strus::printIndentMultilineString(
-				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient), errorhnd);
+	strus::printIndentMultilineString(out, 12, dbi->getConfigDescription(), errorhnd);
 }
 
 

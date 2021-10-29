@@ -56,12 +56,8 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
-	strus::printIndentMultilineString(
-				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient), errorhnd);
-	strus::printIndentMultilineString(
-				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient), errorhnd);
+	strus::printIndentMultilineString( out, 12, dbi->getConfigDescription(), errorhnd);
+	strus::printIndentMultilineString( out, 12, sti->getConfigDescription(), errorhnd);
 }
 
 class AlterMetaDataCommand
@@ -180,7 +176,7 @@ static std::vector<AlterMetaDataCommand> parseCommands( const std::string& sourc
 		else if (strus::caseInsensitiveEquals( cmd, "Clear"))
 		{
 			std::string name( parseIdentifier( si, se, _TXT("element name")));
-			
+
 			rt.push_back( AlterMetaDataCommand::ClearValue( name));
 		}
 		si = skipSpaces( si, se);
@@ -224,7 +220,7 @@ int main( int argc, const char* argv[])
 			errorBuffer.get(), argc, argv, 9,
 			"h,help", "v,version", "license", "G,debug:",
 			"m,module:", "M,moduledir:",
-			"s,storage:", "S,configfile:", 
+			"s,storage:", "S,configfile:",
 			"T,trace:");
 		if (errorBuffer->hasError())
 		{

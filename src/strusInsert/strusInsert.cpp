@@ -75,12 +75,8 @@ static void printStorageConfigOptions( std::ostream& out, const strus::ModuleLoa
 	const strus::StorageInterface* sti = storageBuilder->getStorage();
 	if (!sti) throw std::runtime_error( _TXT("failed to get storage interface"));
 
-	strus::printIndentMultilineString(
-				out, 12, dbi->getConfigDescription(
-					strus::DatabaseInterface::CmdCreateClient), errorhnd);
-	strus::printIndentMultilineString(
-				out, 12, sti->getConfigDescription(
-					strus::StorageInterface::CmdCreateClient), errorhnd);
+	strus::printIndentMultilineString( out, 12, dbi->getConfigDescription(), errorhnd);
+	strus::printIndentMultilineString( out, 12, sti->getConfigDescription(), errorhnd);
 }
 
 static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderInterface* moduleLoader)
@@ -92,7 +88,7 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 	if (strus::isExplicitPath( programFileName))
 	{
 		ec = strus::getParentPath( programFileName, programDir);
-		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from explicit path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from explicit path '%s': %s"), programFileName.c_str(), ::strerror(ec));
 		moduleLoader->addResourcePath( programDir);
 	}
 	else
@@ -100,9 +96,9 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 		std::string filedir;
 		std::string filenam;
 		ec = strus::getFileName( programFileName, filenam);
-		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec));
 		ec = strus::getParentPath( programFileName, filedir);
-		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec));
 		programDir = filedir;
 		programFileName = filenam;
 		moduleLoader->addResourcePath( programDir);
@@ -442,11 +438,11 @@ int main( int argc_, const char* argv_[])
 			std::size_t hdrsize = input.readAhead( hdrbuf, sizeof( hdrbuf));
 			if (input.error())
 			{
-				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), datapath[0].c_str(), ::strerror(input.error())); 
+				throw strus::runtime_error( _TXT("failed to read document file '%s': %s"), datapath[0].c_str(), ::strerror(input.error()));
 			}
 			if (!textproc->detectDocumentClass( documentClass, hdrbuf, hdrsize, hdrsize < sizeof(hdrbuf)))
 			{
-				throw strus::runtime_error( "%s",  _TXT("failed to detect document class")); 
+				throw strus::runtime_error( "%s",  _TXT("failed to detect document class"));
 			}
 		}
 		// Load analyzer program(s):
