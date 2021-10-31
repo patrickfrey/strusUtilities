@@ -474,7 +474,7 @@ public:
 		}
 		else
 		{
-			
+
 			SegmenterMap::const_iterator si = m_processSegmenterMap.find( documentClass.mimeType());
 			if (si == m_processSegmenterMap.end())
 			{
@@ -512,7 +512,7 @@ public:
 		}
 		else
 		{
-			
+
 			SegmenterMap::const_iterator si = m_docidSegmenterMap.find( documentClass.mimeType());
 			if (si == m_docidSegmenterMap.end())
 			{
@@ -547,7 +547,7 @@ public:
 		const strus::SegmenterInstanceInterface* segmenterInstance = getDocidSegmenterInstance( content, documentClass);
 		strus::local_ptr<strus::SegmenterContextInterface> segmenter( segmenterInstance->createContext( documentClass));
 		if (!segmenter.get()) throw std::runtime_error(g_errorhnd->fetchError());
-			
+
 		segmenter->putInput( content.c_str(), content.size(), true);
 		int id;
 		strus::SegmenterPosition segmentpos;
@@ -847,7 +847,7 @@ public:
 	}
 
 	void markupResults( std::ostream& out,
-				const SegmenterPositionMap& segmentposmap, 
+				const SegmenterPositionMap& segmentposmap,
 				const std::vector<strus::analyzer::PatternMatcherResult>& results,
 				const strus::analyzer::DocumentClass& documentClass,
 				const std::string& src,
@@ -961,7 +961,7 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 	if (strus::isExplicitPath( programFileName))
 	{
 		ec = strus::getParentPath( programFileName, programDir);
-		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from explicit path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from explicit path '%s': %s"), programFileName.c_str(), ::strerror(ec));
 		moduleLoader->addResourcePath( programDir);
 	}
 	else
@@ -969,9 +969,9 @@ static std::string getFileArg( const std::string& filearg, strus::ModuleLoaderIn
 		std::string filedir;
 		std::string filenam;
 		ec = strus::getFileName( programFileName, filenam);
-		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file name from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec));
 		ec = strus::getParentPath( programFileName, filedir);
-		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec)); 
+		if (ec) throw strus::runtime_error( _TXT("failed to get program file directory from absolute path '%s': %s"), programFileName.c_str(), ::strerror(ec));
 		programDir = filedir;
 		programFileName = filenam;
 		moduleLoader->addResourcePath( programDir);
@@ -1407,7 +1407,9 @@ int main( int argc, const char* argv[])
 		const strus::PatternLexerInterface* lxi = textproc->getPatternLexer( lexer);
 		if (!lxi) throw std::runtime_error( _TXT("unknown pattern lexer"));
 		strus::local_ptr<strus::PatternMatcherInstanceInterface> ptinst( pti->createInstance());
+		if (!ptinst.get()) throw std::runtime_error( _TXT("failed to create pattern matcher instance"));
 		strus::local_ptr<strus::PatternLexerInstanceInterface> lxinst( lxi->createInstance());
+		if (!lxinst.get()) throw std::runtime_error( _TXT("failed to create pattern lexer instance"));
 
 		strus::analyzer::DocumentClass documentClass;
 		if (!contenttype.empty())
@@ -1451,7 +1453,7 @@ int main( int argc, const char* argv[])
 		{
 			if (inputpath == "-")
 			{
-				
+
 			}
 			else if (strus::isDir( inputpath))
 			{

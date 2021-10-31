@@ -272,7 +272,7 @@ int main( int argc, const char* argv[])
 			storage( strus::createStorageClient( storageBuilder.get(), errorBuffer.get(), storagecfg));
 		if (!storage.get()) throw std::runtime_error( _TXT("could not create storage client"));
 
-		std::vector<strus::StatisticsMessage> stats = storage->loadAllStatisticsMessages();
+		std::vector<strus::StatisticsMessage> stats = storage->loadInitStatisticsMessages();
 		if (stats.empty()) throw std::runtime_error( _TXT("failed to get storage statistics"));
 		FILE* outfile = ::fopen( outputfile.c_str(), "ab");
 		if (!outfile) throw strus::runtime_error( _TXT( "error opening file '%s' for writing (errno %u)"), outputfile.c_str(), errno);
@@ -306,7 +306,7 @@ int main( int argc, const char* argv[])
 				strus::TermStatisticsChange rec;
 				while (viewer->nextDfChange( rec))
 				{
-					std::size_t nn = std::snprintf( buf, sizeof(buf), "%d %s %s\n", rec.increment(), rec.type(), rec.value());
+					std::size_t nn = std::snprintf( buf, sizeof(buf), "%d %s %s\n", rec.increment(), rec.type().c_str(), rec.value().c_str());
 					if (nn >= sizeof(buf))
 					{
 						buf[ sizeof(buf)-5] = '.';

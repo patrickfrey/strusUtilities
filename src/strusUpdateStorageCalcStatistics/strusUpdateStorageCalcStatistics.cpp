@@ -82,7 +82,7 @@ static void fillDfMap( DfMap& dfmap, strus::GlobalCounter& collectionSize, const
 {
 	const strus::StatisticsProcessorInterface* statproc = storage->getStatisticsProcessor();
 	if (!statproc) throw std::runtime_error( _TXT("failed to get statistics processor"));
-	std::vector<strus::StatisticsMessage> stats = storage->loadAllStatisticsMessages();
+	std::vector<strus::StatisticsMessage> stats = storage->loadInitStatisticsMessages();
 	if (stats.empty()) throw std::runtime_error( _TXT("failed to get storage statistics"));
 
 	for (auto& msg : stats)

@@ -67,7 +67,7 @@ static void printVectorStorageConfigOptions( std::ostream& out, const strus::Mod
 	std::string storageInfo = strus::string_format(  "storage=<type of storage (optional, default '%s')>", strus::Constants::standard_vector_storage());
 	strus::printIndentMultilineString( out, 12, storageInfo.c_str(), errorhnd);
 	strus::printIndentMultilineString( out, 12, dbi->getConfigDescription(), errorhnd);
-	strus::printIndentMultilineString( out, 12, sti->getConfigDescription( strus::VectorStorageInterface::CmdCreate), errorhnd);
+	strus::printIndentMultilineString( out, 12, sti->getConfigDescription(), errorhnd);
 }
 
 int main( int argc, const char* argv[])
